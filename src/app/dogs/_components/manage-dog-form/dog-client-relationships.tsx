@@ -1,0 +1,222 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { Edit3Icon, MoreVerticalIcon, Trash2Icon, UserCircle } from "lucide-react";
+import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+
+import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
+import { Label } from "~/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { generateId } from "~/api/utils";
+import { type ClientWithDogRelationships, type DogWithClientRelationships } from "~/db/drizzle-schema";
+import { InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
+import { useDidUpdate } from "~/hooks/use-did-update";
+import { SearchClients } from "../search-clients";
+import { type ManageDogFormSchema } from "./manage-dog-form";
+
+function DogClientRelationships({ control }: { control: Control<ManageDogFormSchema> }) {
+	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
+
+	const dogClientRelationships = useFieldArray({
+		control,
+		name: "clientRelationships",
+		keyName: "rhfId",
+	});
+
+	const [editingClient, setEditingClient] = useState<ClientWithDogRelationships | null>(null);
+	const searchClientsComboboxButtonRef = useRef<HTMLButtonElement>(null);
+
+	function toggleDogClientRelationship(client: ClientWithDogRelationships) {
+		const dogClientRelationshipActions = { ...getValues("actions.clientRelationships") };
+
+		const relationshipId = dogClientRelationships.fields.find(
+			(clientRelationship) => clientRelationship.clientId === client.id,
+		)?.relationship;
+
+		if (relationshipId) {
+			dogClientRelationships.remove(dogClientRelationships.fields.findIndex((field) => field.id === relationshipId));
+
+			if (dogClientRelationshipActions[relationshipId]?.type === "INSERT") {
+				delete dogClientRelationshipActions[relationshipId];
+			} else {
+				dogClientRelationshipActions[relationshipId] = {
+					type: "DELETE",
+					payload: relationshipId,
+				};
+			}
+		} else {
+			const id = generateId();
+
+			dogClientRelationships.append({
+				id,
+				dogId: getValues("id"),
+				clientId: client.id,
+				relationship: "owner",
+				client,
+			});
+
+			dogClientRelationshipActions[id] = {
+				type: "INSERT",
+				payload: {
+					id,
+					dogId: getValues("id"),
+					clientId: client.id,
+					relationship: "owner",
+				},
+			};
+		}
+
+		console.log({ dogClientRelationshipActions });
+
+		setValue("actions.clientRelationships", dogClientRelationshipActions);
+	}
+
+	useDidUpdate(() => {
+		if (!editingClient) {
+			searchClientsComboboxButtonRef?.current?.focus();
+		}
+	}, [editingClient]);
+
+	return (
+		<>
+			{editingClient && (
+				<ManageClientSheet client={editingClient} open setOpen={() => setEditingClient(null)} withoutTrigger />
+			)}
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+				<div className="col-span-full">
+					<h3 className="text-base font-semibold leading-7 text-gray-900">Clients</h3>
+					<p className="mt-1 text-sm leading-6 text-muted-foreground">
+						Manage the relationships between this dog and clients.
+					</p>
+				</div>
+				<div className="sm:col-span-6">
+					<Label htmlFor="dog-search">Search Clients</Label>
+					<div className="mt-2">
+						<SearchClients
+							ref={searchClientsComboboxButtonRef}
+							selectedClients={dogClientRelationships.fields.map((clientRelationship) => clientRelationship.client)}
+							onClientSelect={(client) => {
+								toggleDogClientRelationship(client);
+							}}
+						/>
+					</div>
+				</div>
+				<div className="sm:col-span-6">
+					<ul role="list" className="divide-y divide-gray-100">
+						{dogClientRelationships.fields.map((clientRelationship, index) => (
+							<li key={clientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+								<div className="flex items-center gap-x-4">
+									<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-gray-50">
+										<UserCircle className="h-5 w-5" />
+									</div>
+
+									<div className="min-w-0 flex-auto">
+										<p className="text-sm font-semibold leading-6 text-gray-900">
+											{clientRelationship.client.givenName} {clientRelationship.client.familyName}
+										</p>
+										<p className="truncate text-xs leading-5 text-gray-500">{clientRelationship.client.emailAddress}</p>
+									</div>
+								</div>
+
+								<div className="flex space-x-4">
+									<FormField
+										control={control}
+										name={`clientRelationships.${index}.relationship`}
+										rules={{ required: "Please select a relationship" }}
+										defaultValue={clientRelationship.relationship}
+										render={({ field }) => (
+											<FormItem>
+												<Select
+													onValueChange={(value) => {
+														field.onChange(value as typeof field.value);
+														setValue(`actions.clientRelationships.${clientRelationship.id}`, {
+															type: "UPDATE",
+															payload: {
+																...clientRelationship,
+																relationship: value as typeof field.value,
+															},
+														});
+													}}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger>
+															<SelectValue placeholder="Select a relation">
+																<span className="capitalize">{field.value?.split("-").join(" ")}</span>
+															</SelectValue>
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														<SelectGroup>
+															<SelectLabel>Relationships</SelectLabel>
+															{Object.values(InsertDogClientRelationshipSchema.shape.relationship.Values).map(
+																(relation) => (
+																	<SelectItem key={relation} value={relation} className="capitalize">
+																		{relation.split("-").join(" ")}
+																	</SelectItem>
+																),
+															)}
+														</SelectGroup>
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<div className="flex items-center">
+										<DropdownMenu>
+											<DropdownMenuTrigger className="flex items-center rounded-full text-gray-400 hover:text-gray-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+												<span className="sr-only">Open options</span>
+												<MoreVerticalIcon className="h-5 w-5" />
+											</DropdownMenuTrigger>
+											<DropdownMenuContent>
+												<DropdownMenuLabel>Actions</DropdownMenuLabel>
+												<DropdownMenuSeparator />
+												<DropdownMenuItem
+													onSelect={() => {
+														setEditingClient(clientRelationship.client);
+													}}
+												>
+													<Edit3Icon className="mr-2 h-4 w-4" />
+													<span>Edit Client</span>
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onSelect={() => {
+														toggleDogClientRelationship(clientRelationship.client);
+													}}
+												>
+													<Trash2Icon className="mr-2 h-4 w-4" />
+													<span>Remove</span>
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
+								</div>
+							</li>
+						))}
+					</ul>
+				</div>
+			</div>
+		</>
+	);
+}
+
+export { DogClientRelationships };
