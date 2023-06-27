@@ -28,6 +28,14 @@ const config = {
 			},
 		],
 		"@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+		"no-restricted-imports": [
+			"error",
+			{
+				name: "lucide-react",
+				message:
+					"Icons should be imported from '~/components/ui/icons' instead of 'lucide-react' to ensure consistent styling",
+			},
+		],
 	},
 	settings: {
 		tailwindcss: {

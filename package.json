@@ -17,7 +17,6 @@
 	"dependencies": {
 		"@clerk/nextjs": "^4.21.7",
 		"@headlessui/react": "^1.7.15",
-		"@heroicons/react": "^2.0.18",
 		"@hookform/resolvers": "^3.1.1",
 		"@paralleldrive/cuid2": "^2.2.1",
 		"@planetscale/database": "^1.7.0",

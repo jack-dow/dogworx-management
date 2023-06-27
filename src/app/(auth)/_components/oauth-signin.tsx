@@ -3,10 +3,9 @@
 import * as React from "react";
 import { isClerkAPIResponseError, useSignIn } from "@clerk/nextjs";
 import type { OAuthStrategy } from "@clerk/types";
-import { AppleIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { GoogleIcon, type Icon } from "~/components/ui/icons";
+import { AppleIcon, GoogleIcon, type Icon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 
@@ -19,7 +18,7 @@ const oauthProviders = [
 	strategy: OAuthStrategy;
 }[];
 
-export function OAuthSignIn() {
+function OAuthSignIn() {
 	const [isLoading, setIsLoading] = React.useState<OAuthStrategy | null>(null);
 	const { signIn, isLoaded: signInLoaded } = useSignIn();
 	const { toast } = useToast();
@@ -40,7 +39,7 @@ export function OAuthSignIn() {
 
 			isClerkAPIResponseError(error)
 				? toast({
-						title: `OAuth sign in failed`,
+						title: `Failed OAuth sign in`,
 						description: error.errors[0]?.longMessage ?? unknownError,
 				  })
 				: toast({
@@ -51,7 +50,7 @@ export function OAuthSignIn() {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
 			{oauthProviders.map((provider) => {
 				return (
 					<Button
@@ -62,7 +61,7 @@ export function OAuthSignIn() {
 						onClick={() => void oauthSignIn(provider.strategy)}
 					>
 						{isLoading === provider.strategy ? (
-							<Loader className="mr-2 h-4 w-4 animate-spin" />
+							<Loader className="mr-2" variant="muted" size="sm" />
 						) : (
 							<provider.icon className="mr-2 h-4 w-4" aria-hidden="true" />
 						)}
@@ -73,3 +72,5 @@ export function OAuthSignIn() {
 		</div>
 	);
 }
+
+export { OAuthSignIn };

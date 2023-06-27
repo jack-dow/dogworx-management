@@ -1,6 +1,7 @@
 import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
@@ -9,16 +10,24 @@ import { cx } from "~/lib/utils";
 // If loading a variable font, you don't need to specify the font weight
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
-			<body className={cx("min-h-screen font-sans antialiased bg-gray-50", fontSans.variable)}>
-				<div className="relative flex min-h-screen flex-col">
-					<div className="flex-1">{children}</div>
+		<ClerkProvider>
+			<html lang="en" suppressHydrationWarning className="h-full">
+				<body
+					className={cx(
+						"min-h-full font-sans antialiased  flex flex-col text-gray-600",
+						fontSans.variable,
+						true ? "bg-gray-50" : "bg-gray-950",
+					)}
+				>
+					{children}
 					<TailwindIndicator />
-				</div>
-				<Toaster />
-			</body>
-		</html>
+					<Toaster />
+				</body>
+			</html>
+		</ClerkProvider>
 	);
 }
+
+export default RootLayout;

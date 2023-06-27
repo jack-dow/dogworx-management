@@ -4,7 +4,6 @@ specifiers:
   '@clerk/nextjs': ^4.21.7
   '@clerk/types': ^3.46.0
   '@headlessui/react': ^1.7.15
-  '@heroicons/react': ^2.0.18
   '@hookform/resolvers': ^3.1.1
   '@ianvs/prettier-plugin-sort-imports': ^4.0.2
   '@paralleldrive/cuid2': ^2.2.1
@@ -68,7 +67,6 @@ specifiers:
 dependencies:
   '@clerk/nextjs': 4.21.7_beomsnwnvoyap5ewkkd5o2pmcm
   '@headlessui/react': 1.7.15_biqbaboplfbrettd7655fr4n2y
-  '@heroicons/react': 2.0.18_react@18.2.0
   '@hookform/resolvers': 3.1.1_react-hook-form@7.45.0
   '@paralleldrive/cuid2': 2.2.1
   '@planetscale/database': 1.7.0
@@ -1079,14 +1077,6 @@ packages:
       client-only: 0.0.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@heroicons/react/2.0.18_react@18.2.0:
-    resolution: {integrity: sha512-7TyMjRrZZMBPa+/5Y8lN0iyvUU/01PeMGX2+RE7cQWpEUIcb4QotzUObFkJDejj/HUH4qjP/eQ0gzzKs2f+6Yw==}
-    peerDependencies:
-      react: '>= 16'
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /@hookform/resolvers/3.1.1_react-hook-form@7.45.0:

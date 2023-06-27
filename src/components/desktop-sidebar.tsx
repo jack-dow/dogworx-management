@@ -1,11 +1,10 @@
 "use client";
 
-import Image, { type ImageProps } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cx } from "~/lib/utils";
-import DogworxLogoGradient from "../../../../public/dogworx-logo-gradient.svg";
 import {
 	CalendarDaysIcon,
 	ClipboardListIcon,
@@ -15,7 +14,7 @@ import {
 	StoreIcon,
 	UserIcon,
 	type Icon,
-} from "../icons";
+} from "./ui/icons";
 
 type Navigation = {
 	name: string;
@@ -34,13 +33,13 @@ const navigation: Record<string, Navigation> = {
 	"/bookings": { name: "Bookings", href: "/bookings", icon: ClipboardListIcon, disabled: true },
 };
 
-const teams = [
-	{ id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
-	{ id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
-	{ id: 3, name: "Workcation", href: "#", initial: "W", current: false },
-];
+// const teams = [
+// 	{ id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
+// 	{ id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
+// 	{ id: 3, name: "Workcation", href: "#", initial: "W", current: false },
+// ];
 
-export function DesktopSidebar() {
+function DesktopSidebar() {
 	const pathname = usePathname();
 
 	return (
@@ -49,7 +48,7 @@ export function DesktopSidebar() {
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
 					<Link href="/" shallow>
-						<Image src={DogworxLogoGradient as ImageProps["src"]} alt="Dogworx Logo Full" className="h-10 w-auto" />
+						<Image src="/dogworx-logo-gradient.svg" alt="Dogworx Paw Logo Gradient" height={56} width={47} />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">
@@ -69,7 +68,7 @@ export function DesktopSidebar() {
 														: !item.disabled
 														? "text-gray-700 hover:text-indigo-600 hover:bg-gray-50"
 														: "opacity-50 cursor-not-allowed text-gray-700 hover:bg-transparent hover:text-gray-700",
-													"group flex gap-x-4 rounded-md p-2 text-base leading-6 items-center",
+													"group flex gap-x-4 rounded-md p-2 font-medium text-base leading-6 items-center",
 												)}
 											>
 												<item.icon
@@ -80,7 +79,7 @@ export function DesktopSidebar() {
 															? "text-gray-400 group-hover:text-indigo-600"
 															: "cursor-not-allowed text-gray-700 hover:text-gray-700",
 
-														"h-6 w-6 shrink-0",
+														"h-5 w-5 shrink-0",
 													)}
 													aria-hidden="true"
 												/>
@@ -141,3 +140,5 @@ export function DesktopSidebar() {
 		</div>
 	);
 }
+
+export { DesktopSidebar };

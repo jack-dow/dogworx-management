@@ -1,5 +1,5 @@
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
-import { Layout, LayoutContent, LayoutHeader, LayoutNavigation, LayoutTitle } from "~/components/ui/layout";
+import { PageHeader } from "~/components/page-header";
 import { api } from "~/api";
 import { ClientTable } from "./_components/client-table";
 
@@ -7,11 +7,10 @@ async function ClientsPage() {
 	const result = await api.clients.list();
 
 	return (
-		<Layout>
-			<LayoutHeader>
-				<LayoutNavigation />
-				<div className="flex justify-between">
-					<LayoutTitle>Manage Clients</LayoutTitle>
+		<>
+			<PageHeader
+				title="Manage Clients"
+				action={
 					<ManageClientSheet
 						defaultValues={{
 							givenName: "John",
@@ -25,12 +24,11 @@ async function ClientsPage() {
 							postalCode: "94114",
 						}}
 					/>
-				</div>
-			</LayoutHeader>
-			<LayoutContent>
-				<ClientTable clients={result.data ?? []} />
-			</LayoutContent>
-		</Layout>
+				}
+			/>
+
+			<ClientTable clients={result.data ?? []} />
+		</>
 	);
 }
 
