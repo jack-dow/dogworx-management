@@ -3,24 +3,24 @@
 import Image, { type ImageProps } from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { cx } from "~/lib/utils";
+import DogworxLogoGradient from "../../../../public/dogworx-logo-gradient.svg";
 import {
 	CalendarDaysIcon,
-	ClipboardList,
+	ClipboardListIcon,
 	ContactIcon,
 	DogIcon,
 	ReceiptIcon,
 	StoreIcon,
 	UserIcon,
-	type LucideIcon,
-} from "lucide-react";
-
-import { cx } from "~/lib/utils";
-import DogworxLogoGradient from "../../../../public/dogworx-logo-gradient.svg";
+	type Icon,
+} from "../icons";
 
 type Navigation = {
 	name: string;
 	href: string;
-	icon: LucideIcon;
+	icon: Icon;
 	disabled: boolean;
 };
 
@@ -31,7 +31,7 @@ const navigation: Record<string, Navigation> = {
 	"/vets": { name: "Vets", href: "/vets", icon: ContactIcon, disabled: true },
 	"/vet-clinics": { name: "Vet Clinics", href: "/vet-clinics", icon: StoreIcon, disabled: true },
 	"/invoices": { name: "Invoices", href: "/invoices", icon: ReceiptIcon, disabled: true },
-	"/bookings": { name: "Bookings", href: "/bookings", icon: ClipboardList, disabled: true },
+	"/bookings": { name: "Bookings", href: "/bookings", icon: ClipboardListIcon, disabled: true },
 };
 
 const teams = [

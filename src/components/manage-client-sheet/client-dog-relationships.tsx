@@ -1,6 +1,6 @@
-import { DogIcon, MoreVerticalIcon, Trash2Icon } from "lucide-react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
+import { DogIcon, MoreVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import {
 	Select,
 	SelectContent,
@@ -117,7 +117,7 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 													<DropdownMenuSeparator />
 
 													<DropdownMenuItem>
-														<Trash2Icon className="mr-2 h-4 w-4" />
+														<TrashIcon className="mr-2 h-4 w-4" />
 														<span>Remove</span>
 													</DropdownMenuItem>
 												</DropdownMenuContent>

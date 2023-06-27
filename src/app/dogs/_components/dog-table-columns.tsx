@@ -3,16 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { type Column, type ColumnDef, type Row } from "@tanstack/react-table";
-import {
-	ChevronsUpDown,
-	CopyIcon,
-	Edit2Icon,
-	EyeOff,
-	MoreVerticalIcon,
-	SortAsc,
-	SortDesc,
-	Trash2Icon,
-} from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -22,6 +12,15 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+	ChevronsUpDownIcon,
+	EditIcon,
+	EyeOffIcon,
+	MoreVerticalIcon,
+	SortAscIcon,
+	SortDescIcon,
+	TrashIcon,
+} from "~/components/ui/icons";
 import { type Dog } from "~/db/drizzle-schema";
 import { cx } from "~/lib/utils";
 import { DogTableContext } from "./dog-table";
@@ -97,7 +96,7 @@ function DogTableRowActions({ row }: { row: Row<Dog> }) {
 				<DropdownMenuContent align="end" className="w-[160px]">
 					<Link href={`/dogs/${row.original.id}`}>
 						<DropdownMenuItem>
-							<Edit2Icon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+							<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 							Edit
 						</DropdownMenuItem>
 					</Link>
@@ -110,7 +109,7 @@ function DogTableRowActions({ row }: { row: Row<Dog> }) {
 							}
 						}}
 					>
-						<Trash2Icon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+						<TrashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 						Delete
 					</DropdownMenuItem>
 					{/* <DropdownMenuItem>
@@ -140,26 +139,26 @@ function DataTableColumnHeader<TData, TValue>({ column, title, className }: Data
 					<Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
 						<span>{title}</span>
 						{column.getIsSorted() === "desc" ? (
-							<SortDesc className="ml-2 h-4 w-4" />
+							<SortDescIcon className="ml-2 h-4 w-4" />
 						) : column.getIsSorted() === "asc" ? (
-							<SortAsc className="ml-2 h-4 w-4" />
+							<SortAscIcon className="ml-2 h-4 w-4" />
 						) : (
-							<ChevronsUpDown className="ml-2 h-4 w-4" />
+							<ChevronsUpDownIcon className="ml-2 h-4 w-4" />
 						)}
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="start">
 					<DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-						<SortAsc className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+						<SortAscIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 						Asc
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-						<SortDesc className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+						<SortDescIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 						Desc
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-						<EyeOff className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+						<EyeOffIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 						Hide
 					</DropdownMenuItem>
 				</DropdownMenuContent>
