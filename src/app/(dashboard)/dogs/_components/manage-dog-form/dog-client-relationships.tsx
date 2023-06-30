@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Edit3Icon, MoreVerticalIcon, Trash2Icon, UserCircle } from "lucide-react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
@@ -14,6 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
+import { EditIcon, MoreVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
 import { Label } from "~/components/ui/label";
 import {
 	Select,
@@ -25,7 +25,7 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { generateId } from "~/api/utils";
-import { type ClientWithDogRelationships, type DogWithClientRelationships } from "~/db/drizzle-schema";
+import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
 import { InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { SearchClients } from "../search-clients";
@@ -37,7 +37,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 	const dogClientRelationships = useFieldArray({
 		control,
 		name: "clientRelationships",
-		keyName: "rhfId",
+		keyName: "rhf-id",
 	});
 
 	const [editingClient, setEditingClient] = useState<ClientWithDogRelationships | null>(null);
@@ -124,7 +124,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 							<li key={clientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
 								<div className="flex items-center gap-x-4">
 									<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-gray-50">
-										<UserCircle className="h-5 w-5" />
+										<UserCircleIcon className="h-5 w-5" />
 									</div>
 
 									<div className="min-w-0 flex-auto">
@@ -195,7 +195,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 														setEditingClient(clientRelationship.client);
 													}}
 												>
-													<Edit3Icon className="mr-2 h-4 w-4" />
+													<EditIcon className="mr-2 h-4 w-4" />
 													<span>Edit Client</span>
 												</DropdownMenuItem>
 												<DropdownMenuItem
@@ -203,7 +203,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 														toggleDogClientRelationship(clientRelationship.client);
 													}}
 												>
-													<Trash2Icon className="mr-2 h-4 w-4" />
+													<TrashIcon className="mr-2 h-4 w-4" />
 													<span>Remove</span>
 												</DropdownMenuItem>
 											</DropdownMenuContent>

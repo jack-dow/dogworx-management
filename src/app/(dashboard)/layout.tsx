@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs";
 
-import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
+// import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
 
 const BackgroundGradients = {
@@ -48,7 +48,7 @@ async function DashboardLayout1({ children }: DashboardLayoutProps) {
 	return (
 		<>
 			<DesktopSidebar />
-			<main className="py-6 lg:pl-72">
+			<main className="py-6 lg:pl-72 xl:pl-80">
 				<div className="relative isolate flex h-full flex-col  px-4 sm:px-6 lg:px-8">
 					<BackgroundGradients.GradientTop />
 					<div className="mx-auto w-full max-w-screen-2xl rounded-md bg-white/80 p-10 shadow backdrop-blur-3xl">
@@ -60,23 +60,24 @@ async function DashboardLayout1({ children }: DashboardLayoutProps) {
 		</>
 	);
 }
-async function DashboardLayout2({ children }: DashboardLayoutProps) {
-	const user = await currentUser();
 
-	if (!user) {
-		redirect("/sign-in");
-	}
+// async function DashboardLayout2({ children }: DashboardLayoutProps) {
+// 	const user = await currentUser();
 
-	return (
-		<>
-			<DarkDesktopSidebar />
-			<main className="flex h-full flex-1 flex-col  lg:pl-72 xl:pl-80">
-				<div className="relative isolate flex h-full flex-1 flex-col rounded-tl-[2rem] bg-white p-4 sm:p-6 lg:p-10 ">
-					<div className="mx-auto w-full max-w-screen-2xl rounded-md bg-white pb-10">{children}</div>
-				</div>
-			</main>
-		</>
-	);
-}
+// 	if (!user) {
+// 		redirect("/sign-in");
+// 	}
+
+// 	return (
+// 		<>
+// 			<DarkDesktopSidebar />
+// 			<main className="flex h-full flex-1 flex-col  lg:pl-72 xl:pl-80">
+// 				<div className="relative isolate flex h-full flex-1 flex-col rounded-tl-[2rem] bg-white p-4 sm:p-6 lg:p-10 ">
+// 					<div className="mx-auto w-full max-w-screen-2xl rounded-md bg-white pb-10">{children}</div>
+// 				</div>
+// 			</main>
+// 		</>
+// 	);
+// }
 
 export default DashboardLayout1;

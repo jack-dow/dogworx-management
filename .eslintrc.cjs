@@ -35,6 +35,21 @@ const config = {
 				message:
 					"Icons should be imported from '~/components/ui/icons' instead of 'lucide-react' to ensure consistent styling",
 			},
+			{
+				name: "@heroicons/react/20/solid",
+				message:
+					"Icons should be imported from '~/components/ui/icons' instead of '@heroicons/react to ensure consistent styling'",
+			},
+			{
+				name: "@heroicons/react/24/solid",
+				message:
+					"Icons should be imported from '~/components/ui/icons' instead of '@heroicons/react to ensure consistent styling'",
+			},
+			{
+				name: "@heroicons/react/20/outline",
+				message:
+					"Icons should be imported from '~/components/ui/icons' instead of '@heroicons/react to ensure consistent styling'",
+			},
 		],
 	},
 	settings: {

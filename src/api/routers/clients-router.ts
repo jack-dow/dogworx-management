@@ -6,13 +6,8 @@ import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { clients, dogClientRelationships } from "~/db/drizzle-schema";
-import {
-	InsertClientSchema,
-	UpdateClientSchema,
-	type InsertDogClientRelationshipSchema,
-	type UpdateDogClientRelationshipSchema,
-} from "~/db/drizzle-zod";
-import { createRouterResponse, SearchTermSchema } from "../utils";
+import { InsertClientSchema, UpdateClientSchema } from "~/db/drizzle-zod";
+import { createRouterResponse, SearchTermSchema, separateActionSchema } from "../utils";
 
 const listClients = createRouterResponse(async (limit?: number) => {
 	try {
@@ -73,26 +68,16 @@ const insertClient = createRouterResponse(async (values: InsertClientSchema) => 
 	}
 
 	try {
-		const { actions, dogRelationships: _, ...data } = safeValues.data;
+		const { actions, ...data } = safeValues.data;
 
-		const newDogRelationships: Array<InsertDogClientRelationshipSchema> = [];
+		delete data.dogRelationships;
 
-		for (const id in actions.dogRelationships) {
-			const dogRelationship = actions.dogRelationships[id];
-
-			if (!dogRelationship) {
-				continue;
-			}
-
-			if (dogRelationship.type === "INSERT") {
-				newDogRelationships.push(dogRelationship.payload);
-			}
-		}
+		const dogClientRelationshipActions = separateActionSchema(actions.dogRelationships);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(clients).values(data);
-			if (newDogRelationships.length > 0) {
-				await trx.insert(dogClientRelationships).values(newDogRelationships);
+			if (dogClientRelationshipActions.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(dogClientRelationshipActions.inserts);
 			}
 		});
 
@@ -128,41 +113,21 @@ const updateClient = createRouterResponse(async (values: UpdateClientSchema) => 
 	}
 
 	try {
-		const { id, actions, dogRelationships: _, ...data } = safeValues.data;
+		const { id, actions, ...data } = safeValues.data;
 
-		const newDogRelationships: Array<InsertDogClientRelationshipSchema> = [];
-		const updatedDogRelationships: Array<UpdateDogClientRelationshipSchema> = [];
-		const deletedDogRelationships: Array<string> = [];
+		delete data.dogRelationships;
 
-		for (const id in actions.dogRelationships) {
-			const dogRelationship = actions.dogRelationships[id];
-
-			if (!dogRelationship) {
-				continue;
-			}
-
-			if (dogRelationship.type === "INSERT") {
-				newDogRelationships.push(dogRelationship.payload);
-			}
-
-			if (dogRelationship.type === "UPDATE") {
-				updatedDogRelationships.push(dogRelationship.payload);
-			}
-
-			if (dogRelationship.type === "DELETE") {
-				deletedDogRelationships.push(id);
-			}
-		}
+		const dogClientRelationshipActions = separateActionSchema(actions.dogRelationships);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(clients).set(data).where(eq(clients.id, id));
 
-			if (newDogRelationships.length > 0) {
-				await trx.insert(dogClientRelationships).values(newDogRelationships);
+			if (dogClientRelationshipActions.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(dogClientRelationshipActions.inserts);
 			}
 
-			if (updatedDogRelationships.length > 0) {
-				for (const relationship of updatedDogRelationships) {
+			if (dogClientRelationshipActions.updates.length > 0) {
+				for (const relationship of dogClientRelationshipActions.updates) {
 					await trx
 						.update(dogClientRelationships)
 						.set(relationship)
@@ -170,8 +135,10 @@ const updateClient = createRouterResponse(async (values: UpdateClientSchema) => 
 				}
 			}
 
-			if (deletedDogRelationships.length > 0) {
-				await trx.delete(dogClientRelationships).where(inArray(dogClientRelationships.id, deletedDogRelationships));
+			if (dogClientRelationshipActions.deletes.length > 0) {
+				await trx
+					.delete(dogClientRelationships)
+					.where(inArray(dogClientRelationships.id, dogClientRelationshipActions.deletes));
 			}
 		});
 

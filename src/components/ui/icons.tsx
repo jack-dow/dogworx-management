@@ -1,4 +1,7 @@
+/* eslint-disable no-restricted-imports */
+import { UserCircleIcon as UserCircle } from "@heroicons/react/20/solid";
 import {
+	Calendar,
 	CalendarDays,
 	Check,
 	ChevronDown,
@@ -12,7 +15,7 @@ import {
 	Contact,
 	Copy,
 	Dog,
-	Edit2,
+	Edit3,
 	Eye,
 	EyeOff,
 	Loader2,
@@ -25,6 +28,7 @@ import {
 	Store,
 	Trash2,
 	User,
+	UserPlus,
 	X,
 	type LucideIcon,
 	type LucideProps,
@@ -60,6 +64,7 @@ const AppleIcon = (props: LucideProps) => (
 
 export {
 	AppleIcon,
+	Calendar as CalendarIcon,
 	CalendarDays as CalendarDaysIcon,
 	Check as CheckIcon,
 	ChevronDown as ChevronDownIcon,
@@ -73,7 +78,7 @@ export {
 	Contact as ContactIcon,
 	Copy as CopyIcon,
 	Dog as DogIcon,
-	Edit2 as EditIcon,
+	Edit3 as EditIcon,
 	Eye as EyeIcon,
 	EyeOff as EyeOffIcon,
 	GoogleIcon,
@@ -87,6 +92,8 @@ export {
 	Store as StoreIcon,
 	Trash2 as TrashIcon,
 	User as UserIcon,
+	UserCircle as UserCircleIcon,
+	UserPlus as UserPlusIcon,
 	X as XIcon,
 	type Icon,
 };

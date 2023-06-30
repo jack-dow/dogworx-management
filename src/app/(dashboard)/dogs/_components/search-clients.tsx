@@ -1,14 +1,14 @@
 "use client";
 
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { CheckIcon, ChevronsUpDownIcon, UserPlusIcon } from "lucide-react";
 
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
 import { Button } from "~/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
+import { CheckIcon, ChevronsUpDownIcon, UserPlusIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { api } from "~/api";
-import { type Client, type ClientWithDogRelationships } from "~/db/drizzle-schema";
+import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { cx } from "~/lib/utils";
 

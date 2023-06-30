@@ -55,9 +55,6 @@ const clientTableColumns: ColumnDef<ClientWithDogRelationships>[] = [
 				</div>
 			);
 		},
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id));
-		},
 	},
 	{
 		accessorKey: "phoneNumber",
@@ -69,13 +66,10 @@ const clientTableColumns: ColumnDef<ClientWithDogRelationships>[] = [
 				</div>
 			);
 		},
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id));
-		},
 	},
 	{
 		id: "actions",
-		cell: ({ row }) => {
+		cell: () => {
 			return (
 				<div className="flex justify-end">
 					<DropdownMenu>

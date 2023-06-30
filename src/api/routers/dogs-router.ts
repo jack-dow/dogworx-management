@@ -1,18 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clerkClient } from "@clerk/nextjs";
+import { type User } from "@clerk/nextjs/dist/types/server";
 import { eq, inArray, like } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogClientRelationships, dogs } from "~/db/drizzle-schema";
-import {
-	InsertDogSchema,
-	UpdateDogSchema,
-	type InsertDogClientRelationshipSchema,
-	type UpdateDogClientRelationshipSchema,
-} from "~/db/drizzle-zod";
-import { createRouterResponse, SearchTermSchema } from "../utils";
+import { dogClientRelationships, dogs, dogSessionHistory } from "~/db/drizzle-schema";
+import { InsertDogSchema, UpdateDogSchema } from "~/db/drizzle-zod";
+import { createRouterResponse, SearchTermSchema, separateActionSchema } from "../utils";
 
 const listDogs = createRouterResponse(async (limit?: number) => {
 	try {
@@ -71,10 +68,44 @@ const getDogById = createRouterResponse(async (id: string) => {
 						},
 					},
 				},
+				sessionHistory: true,
 			},
 		});
 
-		return { success: true, data };
+		const userIds = data?.sessionHistory.map((session) => session.userId);
+		let users: User[] = [];
+
+		if (userIds && userIds.length > 0) {
+			users = await clerkClient.users.getUserList({
+				userId: userIds,
+			});
+		}
+
+		return {
+			success: true,
+			data: data
+				? {
+						...data,
+						sessionHistory: data?.sessionHistory.map((session) => {
+							const user = users.find((user) => user.id === session.userId);
+							return {
+								...session,
+								user: user
+									? {
+											id: user.id,
+											firstName: user.firstName,
+											lastName: user.lastName,
+											emailAddresses: user.emailAddresses.map((email) => ({
+												id: email.id,
+												emailAddress: email.emailAddress,
+											})),
+									  }
+									: undefined,
+							};
+						}),
+				  }
+				: undefined,
+		};
 	} catch (error) {
 		console.error(error);
 		return { success: false, error: `Failed to fetch dog with id: ${id}` };
@@ -89,26 +120,23 @@ const insertDog = createRouterResponse(async (values: InsertDogSchema) => {
 	}
 
 	try {
-		const { actions, clientRelationships: _, ...data } = safeValues.data;
+		const { actions, ...data } = safeValues.data;
 
-		const newClientRelationships: Array<InsertDogClientRelationshipSchema> = [];
+		delete data.clientRelationships;
+		delete data.sessionHistory;
 
-		for (const id in actions.clientRelationships) {
-			const clientRelationship = actions.clientRelationships[id];
-
-			if (!clientRelationship) {
-				continue;
-			}
-
-			if (clientRelationship.type === "INSERT") {
-				newClientRelationships.push(clientRelationship.payload);
-			}
-		}
+		const clientRelationshipActions = separateActionSchema(actions.clientRelationships);
+		const sessionHistory = separateActionSchema(actions.sessionHistory);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(dogs).values(data);
-			if (newClientRelationships.length > 0) {
-				await trx.insert(dogClientRelationships).values(newClientRelationships);
+
+			if (clientRelationshipActions.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(clientRelationshipActions.inserts);
+			}
+
+			if (sessionHistory.inserts.length > 0) {
+				await trx.insert(dogSessionHistory).values(sessionHistory.inserts);
 			}
 		});
 
@@ -130,41 +158,49 @@ const updateDog = createRouterResponse(async (values: UpdateDogSchema) => {
 	}
 
 	try {
-		const { id, actions, clientRelationships: _, ...data } = safeValues.data;
+		const { id, actions, ...data } = safeValues.data;
 
-		const newClientRelationships: Array<InsertDogClientRelationshipSchema> = [];
-		const updatedClientRelationships: Array<UpdateDogClientRelationshipSchema> = [];
-		const deletedClientRelationships: Array<string> = [];
+		delete data.clientRelationships;
+		delete data.sessionHistory;
 
-		for (const id in actions.clientRelationships) {
-			const clientRelationship = actions.clientRelationships[id];
+		// Have to remove user from session history otherwise it causes drizzle error
+		// because it's not a valid column
+		const sessionHistory = {};
 
-			if (!clientRelationship) {
-				continue;
-			}
-
-			if (clientRelationship.type === "INSERT") {
-				newClientRelationships.push(clientRelationship.payload);
-			}
-
-			if (clientRelationship.type === "UPDATE") {
-				updatedClientRelationships.push(clientRelationship.payload);
-			}
-
-			if (clientRelationship.type === "DELETE") {
-				deletedClientRelationships.push(id);
+		if (actions.sessionHistory) {
+			for (const [key, session] of Object.entries(actions.sessionHistory)) {
+				if (session.type === "INSERT" || session.type === "UPDATE") {
+					sessionHistory[key] = {
+						type: session.type,
+						payload: {
+							...session.payload,
+							user: undefined,
+						},
+					};
+				} else {
+					sessionHistory[key] = {
+						type: session.type,
+						payload: session.payload,
+					};
+				}
 			}
 		}
+
+		const clientRelationshipActions = separateActionSchema(actions.clientRelationships);
+		const sessionHistoryActions = separateActionSchema(sessionHistory);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(dogs).set(data).where(eq(dogs.id, id));
 
-			if (newClientRelationships.length > 0) {
-				await trx.insert(dogClientRelationships).values(newClientRelationships);
+			//
+			// ## Client Relationship Actions
+			//
+			if (clientRelationshipActions.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(clientRelationshipActions.inserts);
 			}
 
-			if (updatedClientRelationships.length > 0) {
-				for (const updatedClientRelationship of updatedClientRelationships) {
+			if (clientRelationshipActions.updates.length > 0) {
+				for (const updatedClientRelationship of clientRelationshipActions.updates) {
 					await trx
 						.update(dogClientRelationships)
 						.set(updatedClientRelationship)
@@ -172,8 +208,32 @@ const updateDog = createRouterResponse(async (values: UpdateDogSchema) => {
 				}
 			}
 
-			if (deletedClientRelationships.length > 0) {
-				await trx.delete(dogClientRelationships).where(inArray(dogClientRelationships.id, deletedClientRelationships));
+			if (clientRelationshipActions.deletes.length > 0) {
+				await trx
+					.delete(dogClientRelationships)
+					.where(inArray(dogClientRelationships.id, clientRelationshipActions.deletes));
+			}
+
+			//
+			// ## Session History
+			//
+			if (sessionHistoryActions.inserts.length > 0) {
+				await trx.insert(dogSessionHistory).values(sessionHistoryActions.inserts);
+			}
+
+			if (sessionHistoryActions.updates.length > 0) {
+				for (const updatedSessionHistory of sessionHistoryActions.updates) {
+					delete updatedSessionHistory.user;
+
+					await trx
+						.update(dogSessionHistory)
+						.set(updatedSessionHistory)
+						.where(eq(dogSessionHistory.id, updatedSessionHistory.id));
+				}
+			}
+
+			if (sessionHistoryActions.deletes.length > 0) {
+				await trx.delete(dogSessionHistory).where(inArray(dogSessionHistory.id, sessionHistoryActions.deletes));
 			}
 		});
 

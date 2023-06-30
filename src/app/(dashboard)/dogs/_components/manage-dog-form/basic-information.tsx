@@ -9,12 +9,14 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
-function GeneralInformation({ control }: { control: Control<ManageDogFormSchema> }) {
+function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
 		<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
 			<div>
-				<h2 className="text-base font-semibold leading-7 text-foreground">General Information</h2>
-				<p className="text-sm leading-6 text-muted-foreground">Use a permanent address where you can receive mail.</p>
+				<h2 className="text-base font-semibold leading-7 text-foreground">Basic Information</h2>
+				<p className="text-sm leading-6 text-muted-foreground">
+					The information you provide here will be used to create your dog&apos;s profile.
+				</p>
 			</div>
 
 			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-gray-900/5 md:col-span-2">
@@ -94,9 +96,9 @@ function GeneralInformation({ control }: { control: Control<ManageDogFormSchema>
 										<Select onValueChange={field.onChange} value={field.value ?? ""}>
 											<FormControl>
 												<SelectTrigger>
-													<SelectValue placeholder="Select a sex">
+													<SelectValue>
 														{/* This is required because field is black for a second on page load otherwise */}
-														<span className="capitalize">{field.value ?? ""}</span>
+														<span className="capitalize">{field.value ?? "Select a sex"}</span>
 													</SelectValue>
 												</SelectTrigger>
 											</FormControl>
@@ -153,4 +155,4 @@ function GeneralInformation({ control }: { control: Control<ManageDogFormSchema>
 	);
 }
 
-export { GeneralInformation };
+export { BasicInformation };

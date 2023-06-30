@@ -10,7 +10,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
 import { InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
 import {
 	DropdownMenu,
@@ -29,7 +28,7 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 	const clientDogRelationships = useFieldArray({
 		control,
 		name: "dogRelationships",
-		keyName: "rhfId",
+		keyName: "rhf-id",
 	});
 
 	if (clientDogRelationships.fields.length === 0) {

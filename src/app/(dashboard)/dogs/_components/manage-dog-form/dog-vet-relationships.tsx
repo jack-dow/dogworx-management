@@ -1,7 +1,6 @@
 "use client";
 
-import { ContactIcon } from "lucide-react";
-
+import { ContactIcon } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {

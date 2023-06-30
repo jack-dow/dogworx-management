@@ -43,7 +43,7 @@ function DesktopSidebar() {
 	const pathname = usePathname();
 
 	return (
-		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col xl:w-80">
 			{/* Sidebar component, swap this element with another sidebar if you like */}
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">

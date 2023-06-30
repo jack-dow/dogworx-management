@@ -58,9 +58,6 @@ export const dogTableColumns: ColumnDef<Dog>[] = [
 				</div>
 			);
 		},
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id));
-		},
 	},
 	{
 		accessorKey: "color",
@@ -71,9 +68,6 @@ export const dogTableColumns: ColumnDef<Dog>[] = [
 					<span>{row.getValue("color")}</span>
 				</div>
 			);
-		},
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id));
 		},
 	},
 	{

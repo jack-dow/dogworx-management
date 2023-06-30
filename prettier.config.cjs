@@ -18,12 +18,8 @@ const config = {
 		"^~/(.*)$",
 		"^[./]",
 	],
-	importOrderSeparation: false,
-	importOrderSortSpecifiers: true,
-	importOrderBuiltinModulesToTop: true,
 	importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
-	importOrderMergeDuplicateImports: true,
-	importOrderCombineTypeAndValueImports: true,
+	importOrderTypeScriptVersion: "5.0.4",
 	useTabs: true,
 };
 

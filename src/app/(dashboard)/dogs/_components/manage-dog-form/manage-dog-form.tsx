@@ -12,11 +12,12 @@ import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { api } from "~/api";
 import { generateId } from "~/api/utils";
-import { type ClientWithDogRelationships, type DogWithClientRelationships } from "~/db/drizzle-schema";
-import { InsertDogSchema, type InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
+import { type DogWithClientRelationships } from "~/db/drizzle-schema";
+import { InsertDogSchema } from "~/db/drizzle-zod";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { BasicInformation } from "./basic-information";
 import { DogClientRelationships } from "./dog-client-relationships";
-import { GeneralInformation } from "./general-information";
+import { SessionHistory } from "./session-history";
 
 export const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: InsertDogSchema.shape.givenName.max(50),
@@ -44,10 +45,11 @@ function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
 		resolver: zodResolver(ManageDogFormSchema),
 		defaultValues: {
 			id: dog?.id || generateId(),
+			desexed: false,
 			...dog,
-			clientRelationships: dog?.clientRelationships,
 			actions: {
 				clientRelationships: {},
+				sessionHistory: {},
 			},
 		},
 	});
@@ -55,27 +57,29 @@ function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
 	useDidUpdate(() => {
 		if (dog) {
 			// All of this must be done as reset was overriding the dirty values of clientRelationships D:
-			const currClientRelationships = form.getValues("clientRelationships").reduce((acc, curr) => {
+			const currClientRelationships = form.getValues("clientRelationships")?.reduce((acc, curr) => {
 				acc[curr.id] = curr;
 				return acc;
-			}, {} as Record<string, InsertDogClientRelationshipSchema & { client: ClientWithDogRelationships }>);
+			}, {} as Record<string, NonNullable<ManageDogFormSchema["clientRelationships"]>[number]>);
 
-			for (const clientRelationship of dog.clientRelationships) {
-				const existingClientRelationshipIndex = currClientRelationships[clientRelationship.id];
-				const action = form.getValues(`actions.clientRelationships.${clientRelationship.id}`);
+			if (currClientRelationships && dog.clientRelationships) {
+				for (const clientRelationship of dog.clientRelationships) {
+					const existingClientRelationshipIndex = currClientRelationships[clientRelationship.id];
+					const action = form.getValues(`actions.clientRelationships.${clientRelationship.id}`);
 
-				if (existingClientRelationshipIndex) {
-					if (!action || action.type !== "DELETE") {
-						currClientRelationships[clientRelationship.id] = clientRelationship;
-					}
-				} else {
-					if (!action) {
-						currClientRelationships[clientRelationship.id] = clientRelationship;
-					} else if (action.type === "UPDATE") {
-						currClientRelationships[clientRelationship.id] = {
-							...clientRelationship,
-							...action.payload,
-						};
+					if (existingClientRelationshipIndex) {
+						if (!action || action.type !== "DELETE") {
+							currClientRelationships[clientRelationship.id] = clientRelationship;
+						}
+					} else {
+						if (!action) {
+							currClientRelationships[clientRelationship.id] = clientRelationship;
+						} else if (action.type === "UPDATE") {
+							currClientRelationships[clientRelationship.id] = {
+								...clientRelationship,
+								...action.payload,
+							};
+						}
 					}
 				}
 			}
@@ -83,7 +87,8 @@ function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
 			form.reset(
 				{
 					...dog,
-					clientRelationships: Object.values(currClientRelationships),
+					clientRelationships: Object.values(currClientRelationships ?? {}),
+					sessionHistory: form.getValues("sessionHistory"),
 					actions: form.getValues("actions"),
 				},
 				{
@@ -129,7 +134,11 @@ function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
 	return (
 		<Form {...form}>
 			<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-10 ">
-				<GeneralInformation control={form.control} />
+				<BasicInformation control={form.control} />
+
+				<Separator />
+
+				<SessionHistory control={form.control} />
 
 				<Separator />
 
