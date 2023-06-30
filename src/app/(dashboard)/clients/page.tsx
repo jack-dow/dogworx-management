@@ -12,17 +12,18 @@ async function ClientsPage() {
 				title="Manage Clients"
 				action={
 					<ManageClientSheet
-						defaultValues={{
-							givenName: "John",
-							familyName: "Doe",
-							emailAddress: "john@exmaple.com",
-							phoneNumber: "0444444444",
-
-							streetAddress: "123 Main St",
-							state: "San Francisco",
-							city: "CA",
-							postalCode: "94114",
-						}}
+						defaultValues={
+							{
+								// givenName: "John",
+								// familyName: "Doe",
+								// emailAddress: "john@exmaple.com",
+								// phoneNumber: "0444444444",
+								// streetAddress: "123 Main St",
+								// state: "San Francisco",
+								// city: "CA",
+								// postalCode: "94114",
+							}
+						}
 					/>
 				}
 			/>

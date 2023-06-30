@@ -19,6 +19,7 @@ import {
 import { InsertDogSessionHistorySchema } from "~/api/validations/dog-session-history";
 import { InsertDogSchema, SelectDogSchema } from "~/api/validations/dogs";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { BasicInformation } from "./basic-information";
 import { DogClientRelationships } from "./dog-client-relationships";
 import { SessionHistory } from "./session-history";
@@ -32,16 +33,11 @@ const ClientSchema = SelectClientSchema.extend({
 });
 
 const ManageDogFormSchema = InsertDogSchema.extend({
-	givenName: InsertDogSchema.shape.givenName.max(50),
-	breed: InsertDogSchema.shape.breed.max(50),
-	age: InsertDogSchema.shape.age.max(5),
-	color: InsertDogSchema.shape.color.max(50),
-	notes: z
-		.string()
-		.max(500, {
-			message: "Notes must be at most 500 characters long",
-		})
-		.nullish(),
+	givenName: prettyStringValidationMessage("Name", 2, 50),
+	breed: prettyStringValidationMessage("Breed", 2, 50),
+	age: prettyStringValidationMessage("Age", 1, 5),
+	color: prettyStringValidationMessage("Color", 2, 25),
+	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
 	clientRelationships: z.array(
 		InsertDogClientRelationshipSchema.extend({
 			client: ClientSchema,

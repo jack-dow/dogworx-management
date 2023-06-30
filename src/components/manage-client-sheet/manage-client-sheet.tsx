@@ -29,6 +29,7 @@ import {
 import { generateId } from "~/api/utils";
 import { InsertClientSchema } from "~/api/validations/clients";
 import { InsertDogClientRelationshipSchema } from "~/api/validations/dog-client-relationships";
+import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -45,45 +46,17 @@ import { ClientDogRelationships } from "./client-dog-relationships";
 import { PersonalInformation } from "./personal-information";
 
 const ManageClientSheetFormSchema = InsertClientSchema.extend({
-	givenName: InsertClientSchema.shape.givenName
-		.min(1, {
-			message: "First name must be at least 1 character long",
-		})
-		.max(50, {
-			message: "First name must be at most 50 characters long",
-		}),
-	familyName: z
-		.string()
-		.min(1, {
-			message: "Last name must be at least 1 character long",
-		})
-		.max(50, {
-			message: "Last name must be at most 50 characters long",
-		}),
-	emailAddress: InsertClientSchema.shape.emailAddress
-		.email({
-			message: "Email must be a valid email address",
-		})
-		.max(75, {
-			message: "Email must be at most 75 characters long",
-		}),
-	phoneNumber: InsertClientSchema.shape.phoneNumber
-		.min(9, {
-			message: "Phone number must be at least 9 characters long",
-		})
-		.max(16, {
-			message: "Phone number must be at most 16 characters long",
-		}),
-	streetAddress: InsertClientSchema.shape.streetAddress.max(50),
-	city: InsertClientSchema.shape.city.max(50),
-	state: InsertClientSchema.shape.state.max(50),
-	postalCode: InsertClientSchema.shape.postalCode.max(50),
-	notes: z
-		.string()
-		.max(500, {
-			message: "Notes must be at most 500 characters long",
-		})
-		.nullish(),
+	givenName: prettyStringValidationMessage("First name", 2, 50),
+	familyName: prettyStringValidationMessage("Last name", 1, 50).optional(),
+	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
+		message: "Email address must be a valid email",
+	}),
+	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
+	streetAddress: prettyStringValidationMessage("Stress address", 5, 75),
+	city: prettyStringValidationMessage("City", 1, 50),
+	state: prettyStringValidationMessage("State", 1, 25),
+	postalCode: prettyStringValidationMessage("Postal code", 1, 15),
+	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
 	dogRelationships: z.array(InsertDogClientRelationshipSchema.extend({ dog: SelectDogSchema })),
 });
 
