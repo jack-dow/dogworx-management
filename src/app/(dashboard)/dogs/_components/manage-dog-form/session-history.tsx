@@ -20,8 +20,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/
 import { CalendarIcon, EditIcon, MoreVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Textarea } from "~/components/ui/textarea";
+import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
 import { generateId } from "~/api/utils";
-import { InsertDogSessionHistorySchema } from "~/db/drizzle-zod";
 import { cx } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
@@ -213,6 +213,7 @@ const EditableSessionDetailFormSchema = InsertDogSessionHistorySchema.extend({
 		.string()
 		.nonempty({ message: "Please enter some details about the session." })
 		.max(500, { message: "Details must be less than 500 characters long." }),
+	user: UserSchema,
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 

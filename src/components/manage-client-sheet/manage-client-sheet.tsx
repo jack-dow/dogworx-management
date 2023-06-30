@@ -18,10 +18,17 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "~/components/ui/sheet";
-import { api } from "~/api";
+import {
+	api,
+	SelectDogSchema,
+	type ClientInsert,
+	type ClientsList,
+	type ClientsSearch,
+	type ClientUpdate,
+} from "~/api";
 import { generateId } from "~/api/utils";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
-import { InsertClientSchema } from "~/db/drizzle-zod";
+import { InsertClientSchema } from "~/api/validations/clients";
+import { InsertDogClientRelationshipSchema } from "~/api/validations/dog-client-relationships";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -37,14 +44,29 @@ import { useToast } from "../ui/use-toast";
 import { ClientDogRelationships } from "./client-dog-relationships";
 import { PersonalInformation } from "./personal-information";
 
-const formSchema = InsertClientSchema.extend({
-	givenName: InsertClientSchema.shape.givenName.max(50),
-	familyName: z.string().max(50).optional(),
+const ManageClientSheetFormSchema = InsertClientSchema.extend({
+	givenName: InsertClientSchema.shape.givenName
+		.min(1, {
+			message: "First name must be at least 1 character long",
+		})
+		.max(50, {
+			message: "First name must be at most 50 characters long",
+		}),
+	familyName: z
+		.string()
+		.min(1, {
+			message: "Last name must be at least 1 character long",
+		})
+		.max(50, {
+			message: "Last name must be at most 50 characters long",
+		}),
 	emailAddress: InsertClientSchema.shape.emailAddress
 		.email({
 			message: "Email must be a valid email address",
 		})
-		.max(75),
+		.max(75, {
+			message: "Email must be at most 75 characters long",
+		}),
 	phoneNumber: InsertClientSchema.shape.phoneNumber
 		.min(9, {
 			message: "Phone number must be at least 9 characters long",
@@ -62,38 +84,42 @@ const formSchema = InsertClientSchema.extend({
 			message: "Notes must be at most 500 characters long",
 		})
 		.nullish(),
+	dogRelationships: z.array(InsertDogClientRelationshipSchema.extend({ dog: SelectDogSchema })),
 });
 
-type ManageClientSheetFormSchema = z.infer<typeof formSchema>;
+type ManageClientSheetFormSchema = z.infer<typeof ManageClientSheetFormSchema>;
 
 type DefaultValues = Partial<ManageClientSheetFormSchema>;
+type ExistingClient = ClientsList[number] | ClientsSearch[number];
 
-type ManageClientProps =
+type ManageClientProps<ClientProp extends ExistingClient | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-			onSuccessfulSubmit?: (client: ClientWithDogRelationships) => void;
+
+			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
+			client?: ClientProp;
 			defaultValues?: DefaultValues;
-			client?: ClientWithDogRelationships;
 			withoutTrigger?: boolean;
 	  }
 	| {
 			open?: undefined;
 			setOpen?: null;
-			onSuccessfulSubmit?: (client: ClientWithDogRelationships) => void;
-			client?: ClientWithDogRelationships;
+
+			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
+			client?: ClientProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
 	  };
 
-function ManageClientSheet({
+function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	open,
 	setOpen,
 	onSuccessfulSubmit,
 	withoutTrigger = false,
 	client,
 	defaultValues,
-}: ManageClientProps) {
+}: ManageClientProps<ClientProp>) {
 	const isNew = !client;
 
 	const { toast } = useToast();
@@ -105,7 +131,7 @@ function ManageClientSheet({
 	const setInternalOpen = setOpen ?? _setOpen;
 
 	const form = useForm<ManageClientSheetFormSchema>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(ManageClientSheetFormSchema),
 		defaultValues: {
 			id: client?.id || defaultValues?.id || generateId(),
 			dogRelationships: client?.dogRelationships,
@@ -125,7 +151,7 @@ function ManageClientSheet({
 
 	async function onSubmit(data: ManageClientSheetFormSchema) {
 		let success = false;
-		let newClient: ClientWithDogRelationships | undefined;
+		let newClient: ClientUpdate | ClientInsert | undefined;
 
 		if (client) {
 			const response = await api.clients.update(data);

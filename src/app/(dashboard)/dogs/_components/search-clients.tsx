@@ -8,13 +8,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { CheckIcon, ChevronsUpDownIcon, UserPlusIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { api } from "~/api";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { cx } from "~/lib/utils";
+import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type SearchClientsProps = {
-	selectedClients: Array<ClientWithDogRelationships>;
-	onClientSelect: (client: ClientWithDogRelationships) => void;
+	selectedClients: Array<ManageDogFormSchema["clientRelationships"][number]["client"]>;
+	onClientSelect: (client: ManageDogFormSchema["clientRelationships"][number]["client"]) => void;
 };
 
 const SearchClients = forwardRef<HTMLButtonElement, SearchClientsProps>(({ selectedClients, onClientSelect }, ref) => {
@@ -26,7 +26,8 @@ const SearchClients = forwardRef<HTMLButtonElement, SearchClientsProps>(({ selec
 
 	const [confirmedNoResults, setConfirmedNoResults] = useState(false);
 
-	const [results, setResults] = useState<Array<ClientWithDogRelationships>>(selectedClients);
+	const [results, setResults] =
+		useState<Array<ManageDogFormSchema["clientRelationships"][number]["client"]>>(selectedClients);
 
 	useDidUpdate(() => {
 		setResults([]);

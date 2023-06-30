@@ -24,9 +24,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { generateId } from "~/api/utils";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
-import { InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
+import { generateId, InsertDogClientRelationshipSchema } from "~/api";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { SearchClients } from "../search-clients";
 import { type ManageDogFormSchema } from "./manage-dog-form";
@@ -40,10 +38,12 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 		keyName: "rhf-id",
 	});
 
-	const [editingClient, setEditingClient] = useState<ClientWithDogRelationships | null>(null);
+	const [editingClient, setEditingClient] = useState<
+		ManageDogFormSchema["clientRelationships"][number]["client"] | null
+	>(null);
 	const searchClientsComboboxButtonRef = useRef<HTMLButtonElement>(null);
 
-	function toggleDogClientRelationship(client: ClientWithDogRelationships) {
+	function toggleDogClientRelationship(client: ManageDogFormSchema["clientRelationships"][number]["client"]) {
 		const dogClientRelationshipActions = { ...getValues("actions.clientRelationships") };
 
 		const relationshipId = dogClientRelationships.fields.find(

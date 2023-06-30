@@ -16,20 +16,19 @@ import {
 import { DataTable } from "~/components/ui/data-table";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { api } from "~/api";
-import { type Dog } from "~/db/drizzle-schema";
+import { api, type DogsList } from "~/api";
 import { dogTableColumns } from "./dog-table-columns";
 
 const DogTableContext = React.createContext<{
-	deletingDog: Dog | null;
-	setDeletingDog: (id: Dog) => void;
+	deletingDog: DogsList[number] | null;
+	setDeletingDog: (id: DogsList[number]) => void;
 } | null>(null);
 
-function DogTable({ dogs }: { dogs: Dog[] }) {
+function DogTable({ dogs }: { dogs: DogsList }) {
 	const router = useRouter();
 	const { toast } = useToast();
 
-	const [deletingDog, setDeletingDog] = React.useState<Dog | null>(null);
+	const [deletingDog, setDeletingDog] = React.useState<DogsList[number] | null>(null);
 	const [isDeleting, setIsDeleting] = React.useState(false);
 
 	async function handleDogDelete() {

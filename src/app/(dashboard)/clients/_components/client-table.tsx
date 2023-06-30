@@ -4,11 +4,11 @@ import * as React from "react";
 
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
 import { DataTable } from "~/components/ui/data-table";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
+import { type ClientsList } from "~/api";
 import { clientTableColumns } from "./client-table-columns";
 
-function ClientTable({ clients }: { clients: ClientWithDogRelationships[] }) {
-	const [editingClient, setEditingClient] = React.useState<ClientWithDogRelationships | null>();
+function ClientTable({ clients }: { clients: ClientsList }) {
+	const [editingClient, setEditingClient] = React.useState<ClientsList[number] | null>();
 
 	return (
 		<>

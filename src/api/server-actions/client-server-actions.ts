@@ -6,10 +6,11 @@ import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { clients, dogClientRelationships } from "~/db/drizzle-schema";
-import { InsertClientSchema, UpdateClientSchema } from "~/db/drizzle-zod";
-import { createRouterResponse, SearchTermSchema, separateActionSchema } from "../utils";
+import { createServerAction } from "../utils";
+import { InsertClientSchema, UpdateClientSchema } from "../validations/clients";
+import { SearchTermSchema, separateActionLogSchema } from "../validations/utils";
 
-const listClients = createRouterResponse(async (limit?: number) => {
+const listClients = createServerAction(async (limit?: number) => {
 	try {
 		const data = await drizzle.query.clients.findMany({
 			limit: limit ?? 50,
@@ -29,16 +30,16 @@ const listClients = createRouterResponse(async (limit?: number) => {
 	}
 });
 
-const searchClients = createRouterResponse(async (searchTerm: string) => {
-	const safeSearchTerm = SearchTermSchema.safeParse(searchTerm);
+const searchClients = createServerAction(async (searchTerm: string) => {
+	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
-	if (!safeSearchTerm.success) {
-		return { success: false, error: safeSearchTerm.error.issues };
+	if (!validSearchTerm.success) {
+		return { success: false, error: validSearchTerm.error.issues };
 	}
 
 	try {
 		const data = await drizzle.query.clients.findMany({
-			where: sql`concat(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${safeSearchTerm.data}, '%')`,
+			where: sql`concat(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			limit: 50,
 			with: {
 				dogRelationships: {
@@ -60,24 +61,22 @@ const searchClients = createRouterResponse(async (searchTerm: string) => {
 	}
 });
 
-const insertClient = createRouterResponse(async (values: InsertClientSchema) => {
-	const safeValues = InsertClientSchema.safeParse(values);
+const insertClient = createServerAction(async (values: InsertClientSchema) => {
+	const validValues = InsertClientSchema.safeParse(values);
 
-	if (!safeValues.success) {
-		return { success: false, error: safeValues.error.issues };
+	if (!validValues.success) {
+		return { success: false, error: validValues.error.issues };
 	}
 
 	try {
-		const { actions, ...data } = safeValues.data;
+		const { actions, ...data } = validValues.data;
 
-		delete data.dogRelationships;
-
-		const dogClientRelationshipActions = separateActionSchema(actions.dogRelationships);
+		const dogClientRelationshipActionLog = separateActionLogSchema(actions.dogRelationships);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(clients).values(data);
-			if (dogClientRelationshipActions.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(dogClientRelationshipActions.inserts);
+			if (dogClientRelationshipActionLog.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(dogClientRelationshipActionLog.inserts);
 			}
 		});
 
@@ -105,29 +104,27 @@ const insertClient = createRouterResponse(async (values: InsertClientSchema) => 
 	}
 });
 
-const updateClient = createRouterResponse(async (values: UpdateClientSchema) => {
-	const safeValues = UpdateClientSchema.safeParse(values);
+const updateClient = createServerAction(async (values: UpdateClientSchema) => {
+	const validValues = UpdateClientSchema.safeParse(values);
 
-	if (!safeValues.success) {
-		return { success: false, error: safeValues.error.issues };
+	if (!validValues.success) {
+		return { success: false, error: validValues.error.issues };
 	}
 
 	try {
-		const { id, actions, ...data } = safeValues.data;
+		const { id, actions, ...data } = validValues.data;
 
-		delete data.dogRelationships;
-
-		const dogClientRelationshipActions = separateActionSchema(actions.dogRelationships);
+		const dogClientRelationshipActionLog = separateActionLogSchema(actions?.dogRelationships ?? {});
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(clients).set(data).where(eq(clients.id, id));
 
-			if (dogClientRelationshipActions.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(dogClientRelationshipActions.inserts);
+			if (dogClientRelationshipActionLog.inserts.length > 0) {
+				await trx.insert(dogClientRelationships).values(dogClientRelationshipActionLog.inserts);
 			}
 
-			if (dogClientRelationshipActions.updates.length > 0) {
-				for (const relationship of dogClientRelationshipActions.updates) {
+			if (dogClientRelationshipActionLog.updates.length > 0) {
+				for (const relationship of dogClientRelationshipActionLog.updates) {
 					await trx
 						.update(dogClientRelationships)
 						.set(relationship)
@@ -135,14 +132,15 @@ const updateClient = createRouterResponse(async (values: UpdateClientSchema) => 
 				}
 			}
 
-			if (dogClientRelationshipActions.deletes.length > 0) {
+			if (dogClientRelationshipActionLog.deletes.length > 0) {
 				await trx
 					.delete(dogClientRelationships)
-					.where(inArray(dogClientRelationships.id, dogClientRelationshipActions.deletes));
+					.where(inArray(dogClientRelationships.id, dogClientRelationshipActionLog.deletes));
 			}
 		});
 
 		revalidatePath("/clients");
+		revalidatePath("/dogs/[id]");
 
 		const client = await drizzle.query.clients.findFirst({
 			where: eq(clients.id, id),
@@ -166,16 +164,16 @@ const updateClient = createRouterResponse(async (values: UpdateClientSchema) => 
 	}
 });
 
-const deleteClient = createRouterResponse(async (id: string) => {
-	const safeId = z.string().safeParse(id);
+const deleteClient = createServerAction(async (id: string) => {
+	const validId = z.string().safeParse(id);
 
-	if (!safeId.success) {
-		return { success: false, error: safeId.error.issues };
+	if (!validId.success) {
+		return { success: false, error: validId.error.issues };
 	}
 
 	try {
 		const client = await drizzle.query.clients.findFirst({
-			where: eq(clients.id, safeId.data),
+			where: eq(clients.id, validId.data),
 			columns: {
 				id: true,
 			},
@@ -200,7 +198,7 @@ const deleteClient = createRouterResponse(async (id: string) => {
 
 		revalidatePath("/clients");
 
-		return { success: true, data: safeId.data };
+		return { success: true, data: validId.data };
 	} catch (error) {
 		console.error(error);
 		return { success: false, error: "Failed to delete client" };

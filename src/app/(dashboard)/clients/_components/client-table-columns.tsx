@@ -19,10 +19,10 @@ import {
 	SortAscIcon,
 	SortDescIcon,
 } from "~/components/ui/icons";
-import { type ClientWithDogRelationships } from "~/db/drizzle-schema";
+import { type ClientsList } from "~/api";
 import { cx } from "~/lib/utils";
 
-const clientTableColumns: ColumnDef<ClientWithDogRelationships>[] = [
+const clientTableColumns: ColumnDef<ClientsList[number]>[] = [
 	{
 		accessorKey: "givenName",
 		header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,

@@ -10,7 +10,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { InsertDogClientRelationshipSchema } from "~/db/drizzle-zod";
+import { InsertDogClientRelationshipSchema } from "~/api/validations/dog-client-relationships";
 import {
 	DropdownMenu,
 	DropdownMenuContent,

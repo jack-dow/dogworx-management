@@ -21,11 +21,11 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type Dog } from "~/db/drizzle-schema";
+import { type DogsList } from "~/api";
 import { cx } from "~/lib/utils";
 import { DogTableContext } from "./dog-table";
 
-export const dogTableColumns: ColumnDef<Dog>[] = [
+export const dogTableColumns: ColumnDef<DogsList[number]>[] = [
 	{
 		accessorKey: "id",
 		header: ({ column }) => <DataTableColumnHeader column={column} title="Id" />,
@@ -76,7 +76,7 @@ export const dogTableColumns: ColumnDef<Dog>[] = [
 	},
 ];
 
-function DogTableRowActions({ row }: { row: Row<Dog> }) {
+function DogTableRowActions({ row }: { row: Row<DogsList[number]> }) {
 	const dogTableContext = React.useContext(DogTableContext);
 	return (
 		<div className="flex justify-end">

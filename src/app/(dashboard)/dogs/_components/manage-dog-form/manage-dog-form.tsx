@@ -10,16 +10,28 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { api } from "~/api";
+import { api, SelectClientSchema, UserSchema, type DogById } from "~/api";
 import { generateId } from "~/api/utils";
-import { type DogWithClientRelationships } from "~/db/drizzle-schema";
-import { InsertDogSchema } from "~/db/drizzle-zod";
+import {
+	InsertDogClientRelationshipSchema,
+	SelectDogClientRelationshipSchema,
+} from "~/api/validations/dog-client-relationships";
+import { InsertDogSessionHistorySchema } from "~/api/validations/dog-session-history";
+import { InsertDogSchema, SelectDogSchema } from "~/api/validations/dogs";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { BasicInformation } from "./basic-information";
 import { DogClientRelationships } from "./dog-client-relationships";
 import { SessionHistory } from "./session-history";
 
-export const ManageDogFormSchema = InsertDogSchema.extend({
+const ClientSchema = SelectClientSchema.extend({
+	dogRelationships: z.array(
+		SelectDogClientRelationshipSchema.extend({
+			dog: SelectDogSchema,
+		}),
+	),
+});
+
+const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: InsertDogSchema.shape.givenName.max(50),
 	breed: InsertDogSchema.shape.breed.max(50),
 	age: InsertDogSchema.shape.age.max(5),
@@ -30,11 +42,21 @@ export const ManageDogFormSchema = InsertDogSchema.extend({
 			message: "Notes must be at most 500 characters long",
 		})
 		.nullish(),
+	clientRelationships: z.array(
+		InsertDogClientRelationshipSchema.extend({
+			client: ClientSchema,
+		}),
+	),
+	sessionHistory: z.array(
+		InsertDogSessionHistorySchema.extend({
+			user: UserSchema,
+		}),
+	),
 });
 
-export type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
+type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
 
-function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
+function ManageDogForm({ dog }: { dog?: DogById }) {
 	const params = useParams();
 	const router = useRouter();
 	const { toast } = useToast();
@@ -182,4 +204,4 @@ function ManageDogForm({ dog }: { dog?: DogWithClientRelationships }) {
 	);
 }
 
-export { ManageDogForm };
+export { ManageDogFormSchema, ManageDogForm };
