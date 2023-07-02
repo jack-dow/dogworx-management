@@ -6,10 +6,13 @@ await import("./src/env.mjs");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ["mysql2"],
-    serverActions: true,
-  },
+	reactStrictMode: true,
+	experimental: {
+		serverComponentsExternalPackages: ["mysql2"],
+		serverActions: true,
+	},
+	images: {
+		domains: ["images.clerk.dev"],
+	},
 };
 export default config;

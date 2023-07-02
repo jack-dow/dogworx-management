@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import {
 	CalendarDaysIcon,
 	ClipboardListIcon,
@@ -55,7 +55,7 @@ function DarkDesktopSidebar() {
 											<a
 												aria-disabled={item.disabled}
 												href={item.disabled ? "#" : item.href}
-												className={cx(
+												className={cn(
 													current
 														? "bg-gray-900 text-white"
 														: !item.disabled
@@ -65,7 +65,7 @@ function DarkDesktopSidebar() {
 												)}
 											>
 												<item.icon
-													className={cx(
+													className={cn(
 														current
 															? "text-gray-50"
 															: !item.disabled

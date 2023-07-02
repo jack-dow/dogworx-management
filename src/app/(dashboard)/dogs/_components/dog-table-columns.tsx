@@ -22,7 +22,7 @@ import {
 	TrashIcon,
 } from "~/components/ui/icons";
 import { type DogsList } from "~/api";
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { DogTableContext } from "./dog-table";
 
 export const dogTableColumns: ColumnDef<DogsList[number]>[] = [
@@ -123,11 +123,11 @@ interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes
 
 function DataTableColumnHeader<TData, TValue>({ column, title, className }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
-		return <div className={cx(className)}>{title}</div>;
+		return <div className={cn(className)}>{title}</div>;
 	}
 
 	return (
-		<div className={cx("flex items-center space-x-2", className)}>
+		<div className={cn("flex items-center space-x-2", className)}>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">

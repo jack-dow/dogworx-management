@@ -14,7 +14,12 @@ const InsertDogSessionHistorySchema = createInsertSchema(dogSessionHistory)
 	});
 type InsertDogSessionHistorySchema = z.infer<typeof InsertDogSessionHistorySchema>;
 
-const UpdateDogSessionHistorySchema = InsertDogSessionHistorySchema.pick({ id: true, date: true, details: true })
+const UpdateDogSessionHistorySchema = InsertDogSessionHistorySchema.pick({
+	id: true,
+	date: true,
+	details: true,
+	userId: true,
+})
 	.partial()
 	.extend({
 		id: IdSchema,

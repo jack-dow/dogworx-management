@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { Textarea } from "~/components/ui/textarea";
 import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
 import { generateId } from "~/api/utils";
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Session = NonNullable<ManageDogFormSchema["sessionHistory"]>[number];
@@ -306,7 +306,7 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 												<PopoverTrigger asChild>
 													<Button
 														variant={"outline"}
-														className={cx(
+														className={cn(
 															"w-[280px] justify-start text-left font-normal",
 															!field.value && "text-muted-foreground",
 														)}

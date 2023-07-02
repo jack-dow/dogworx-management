@@ -51,7 +51,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 						name="emailAddress"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Email address</FormLabel>
+								<FormLabel>Email Address</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
 								</FormControl>
@@ -67,7 +67,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 						name="phoneNumber"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Phone number</FormLabel>
+								<FormLabel>Phone Number</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
 								</FormControl>
@@ -83,7 +83,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 						name="streetAddress"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Street address</FormLabel>
+								<FormLabel>Street Address</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
 								</FormControl>
@@ -131,7 +131,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 						name="postalCode"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>ZIP / Postal code</FormLabel>
+								<FormLabel>ZIP / Postal Code</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
 								</FormControl>

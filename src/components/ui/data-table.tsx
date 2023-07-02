@@ -24,7 +24,7 @@ import {
 	ChevronsRightIcon,
 	SlidersHorizontalIcon,
 } from "~/components/ui/icons";
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { Button } from "./button";
 import {
 	DropdownMenu,
@@ -101,7 +101,7 @@ function DataTable<TData, TValue>({ columns, data, onTableRowClick }: DataTableP
 									}}
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
-									className={cx(onTableRowClick && "cursor-pointer")}
+									className={cn(onTableRowClick && "cursor-pointer")}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>

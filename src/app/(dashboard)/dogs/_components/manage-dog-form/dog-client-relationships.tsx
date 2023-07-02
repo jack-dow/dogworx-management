@@ -83,8 +83,6 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 			};
 		}
 
-		console.log({ dogClientRelationshipActions });
-
 		setValue("actions.clientRelationships", dogClientRelationshipActions);
 	}
 

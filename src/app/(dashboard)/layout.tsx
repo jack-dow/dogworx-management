@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
-import { currentUser } from "@clerk/nextjs";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
@@ -38,11 +40,17 @@ interface DashboardLayoutProps {
 	children: React.ReactNode;
 }
 
-async function DashboardLayout1({ children }: DashboardLayoutProps) {
-	const user = await currentUser();
+function DashboardLayout1({ children }: DashboardLayoutProps) {
+	const { isLoaded, isSignedIn } = useUser();
+	const router = useRouter();
 
-	if (!user) {
-		redirect("/sign-in");
+	if (!isLoaded) {
+		return null;
+	}
+
+	if (!isSignedIn) {
+		router.replace("/sign-in");
+		return null;
 	}
 
 	return (

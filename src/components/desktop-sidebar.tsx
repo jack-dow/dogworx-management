@@ -1,20 +1,37 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useClerk, useUser } from "@clerk/nextjs";
 
-import { cx } from "~/lib/utils";
+import { DogworxPawLogoGradient } from "~/assets/dogworx-paw-logo-gradient";
+import { cn } from "~/lib/utils";
+import { Button } from "./ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import {
 	CalendarDaysIcon,
 	ClipboardListIcon,
 	ContactIcon,
 	DogIcon,
+	LogOutIcon,
 	ReceiptIcon,
 	StoreIcon,
+	UserCircleIcon,
 	UserIcon,
 	type Icon,
 } from "./ui/icons";
+import { Loader } from "./ui/loader";
+import { useToast } from "./ui/use-toast";
 
 type Navigation = {
 	name: string;
@@ -23,15 +40,15 @@ type Navigation = {
 	disabled: boolean;
 };
 
-const navigation: Record<string, Navigation> = {
-	"/test": { name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
-	"/dogs": { name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
-	"/clients": { name: "Clients", href: "/clients", icon: UserIcon, disabled: false },
-	"/vets": { name: "Vets", href: "/vets", icon: ContactIcon, disabled: true },
-	"/vet-clinics": { name: "Vet Clinics", href: "/vet-clinics", icon: StoreIcon, disabled: true },
-	"/invoices": { name: "Invoices", href: "/invoices", icon: ReceiptIcon, disabled: true },
-	"/bookings": { name: "Bookings", href: "/bookings", icon: ClipboardListIcon, disabled: true },
-};
+const navigation: Array<Navigation> = [
+	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
+	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
+	{ name: "Clients", href: "/clients", icon: UserIcon, disabled: false },
+	{ name: "Vets", href: "/vets", icon: ContactIcon, disabled: true },
+	{ name: "Vet Clinics", href: "/vet-clinics", icon: StoreIcon, disabled: true },
+	{ name: "Invoices", href: "/invoices", icon: ReceiptIcon, disabled: true },
+	{ name: "Bookings", href: "/bookings", icon: ClipboardListIcon, disabled: true },
+];
 
 // const teams = [
 // 	{ id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
@@ -40,7 +57,12 @@ const navigation: Record<string, Navigation> = {
 // ];
 
 function DesktopSidebar() {
+	const { signOut } = useClerk();
+	const { user } = useUser();
 	const pathname = usePathname();
+	const { toast } = useToast();
+
+	const [isSigningOut, setIsSigningOut] = React.useState(false);
 
 	return (
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col xl:w-80">
@@ -48,7 +70,7 @@ function DesktopSidebar() {
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
 					<Link href="/" shallow>
-						<Image src="/dogworx-logo-gradient.svg" alt="Dogworx Paw Logo Gradient" height={56} width={47} />
+						<DogworxPawLogoGradient />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">
@@ -62,7 +84,7 @@ function DesktopSidebar() {
 											<a
 												aria-disabled={item.disabled}
 												href={item.disabled ? "#" : item.href}
-												className={cx(
+												className={cn(
 													current
 														? "bg-gray-50 text-indigo-600"
 														: !item.disabled
@@ -72,7 +94,7 @@ function DesktopSidebar() {
 												)}
 											>
 												<item.icon
-													className={cx(
+													className={cn(
 														current
 															? "text-indigo-600"
 															: !item.disabled
@@ -120,20 +142,95 @@ function DesktopSidebar() {
                   ))}
                 </ul>
               </li>
-              <li className="-mx-6 mt-auto">
-                <a
-                  href="#"
-                  className="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50"
-                >
-                  <img
-                    className="h-8 w-8 rounded-full bg-gray-50"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                  <span className="sr-only">Your profile</span>
-                  <span aria-hidden="true">Tom Cook</span>
-                </a>
-                          </li> */}
+				*/}
+						{user && (
+							<li className="-mx-2 mt-auto">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3">
+											{user?.profileImageUrl ? (
+												<Image
+													src={user.profileImageUrl}
+													alt="User profile image"
+													width={40}
+													height={40}
+													className="overflow-hidden rounded-md"
+												/>
+											) : (
+												<div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 ">
+													{user.firstName ? (
+														user.firstName[0]
+													) : (
+														<UserCircleIcon className="h-6 w-6 text-gray-500" aria-hidden="true" />
+													)}
+												</div>
+											)}
+											<div className="flex flex-col items-center justify-start">
+												<span className="sr-only">Open user settings</span>
+												<span aria-hidden="true" className="block text-xs text-muted-foreground">
+													Administrator
+												</span>
+												<span aria-hidden="true" className="mt-0.5 w-full text-left">
+													{user.fullName && user.fullName.length > 0
+														? user.fullName
+														: user.primaryEmailAddress?.emailAddress ?? "My Account"}
+												</span>
+											</div>
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent className="w-[256px] xl:w-[288px]">
+										{user.primaryEmailAddress ? (
+											<p className="truncate px-2 py-1.5">
+												<span className="block text-xs text-muted-foreground">Signed in as</span>
+												<span className="mt-0.5 text-sm font-semibold">{user.primaryEmailAddress.emailAddress}</span>
+											</p>
+										) : (
+											<DropdownMenuLabel>My Account</DropdownMenuLabel>
+										)}
+										<DropdownMenuSeparator />
+										<DropdownMenuGroup>
+											<DropdownMenuItem asChild>
+												<a href="/account-settings">
+													<UserIcon className="mr-2 h-4 w-4" />
+													<span>Account Settings</span>
+												</a>
+											</DropdownMenuItem>
+										</DropdownMenuGroup>
+										<DropdownMenuItem
+											onClick={(e) => {
+												e.preventDefault();
+												setIsSigningOut(true);
+
+												signOut()
+													.then(() => {
+														toast({
+															title: "Signed out",
+															description: "You have successfully been signed out of your account.",
+														});
+													})
+													.catch((error) => {
+														console.log(error);
+														toast({
+															title: "Sign out failed",
+															description: "We had an issue signing you out of your account. Please try again later.",
+														});
+													})
+													.finally(() => {
+														setIsSigningOut(false);
+													});
+											}}
+										>
+											{isSigningOut ? (
+												<Loader className="mr-2" size="sm" variant="black" />
+											) : (
+												<LogOutIcon className="mr-2 h-4 w-4" />
+											)}
+											<span>Sign out</span>
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</li>
+						)}
 					</ul>
 				</nav>
 			</div>

@@ -9,7 +9,7 @@ import { CheckIcon, ChevronsUpDownIcon, UserPlusIcon } from "~/components/ui/ico
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { api } from "~/api";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type SearchClientsProps = {
@@ -124,7 +124,7 @@ const SearchClients = forwardRef<HTMLButtonElement, SearchClientsProps>(({ selec
 													inputRef?.current?.focus();
 												}}
 											>
-												<CheckIcon className={cx("mr-2 h-4 w-4", isActive ? "opacity-100" : "opacity-0")} />
+												<CheckIcon className={cn("mr-2 h-4 w-4", isActive ? "opacity-100" : "opacity-0")} />
 												<span className="flex-1">
 													{client.givenName} {client.familyName}
 												</span>

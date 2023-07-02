@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { LoaderIcon } from "./icons";
 
 const loaderVariants = cva("animate-spin", {
@@ -27,7 +27,7 @@ interface LoaderProps extends VariantProps<typeof loaderVariants> {
 }
 
 function Loader({ className, size, variant }: LoaderProps) {
-	return <LoaderIcon className={cx(loaderVariants({ size, variant, className }))} />;
+	return <LoaderIcon className={cn(loaderVariants({ size, variant, className }))} />;
 }
 
 export { Loader };

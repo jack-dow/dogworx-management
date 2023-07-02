@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "./ui/icons";
 
 type PageHeaderProps = {
@@ -48,7 +48,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 										<ChevronRightIcon className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
 										<Link
 											href={pathToThisPoint}
-											className={cx(
+											className={cn(
 												"ml-1 text-sm font-medium capitalize text-gray-500 hover:text-gray-700",
 												pathToThisPoint === pathname && "font-bold",
 											)}

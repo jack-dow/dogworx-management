@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { Button } from "~/components/ui/button";
 import { Input, type InputProps } from "~/components/ui/input";
-import { cx } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { EyeIcon, EyeOffIcon } from "./icons";
 
 const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => {
@@ -12,7 +12,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(({ classNam
 
 	return (
 		<div className="relative">
-			<Input type={showPassword ? "text" : "password"} className={cx("pr-10", className)} ref={ref} {...props} />
+			<Input type={showPassword ? "text" : "password"} className={cn("pr-10", className)} ref={ref} {...props} />
 			<Button
 				type="button"
 				variant="ghost"
