@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { DogIcon, MoreVerticalIcon, TrashIcon } from "~/components/ui/icons";
+import { DogIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import {
 	Select,
 	SelectContent,
@@ -46,17 +46,17 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 				</div>
 				<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-6">
 					<div className="sm:col-span-6">
-						<ul role="list" className="divide-y divide-gray-100">
+						<ul role="list" className="divide-y divide-slate-100">
 							{clientDogRelationships.fields.map((dogRelationship, index) => (
 								<li key={dogRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
 									<div className="flex items-center gap-x-4">
-										<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-gray-50">
+										<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 											<DogIcon className="h-5 w-5" />
 										</div>
-										{/* <img className="h-12 w-12 flex-none rounded-full bg-gray-50" src={person.imageUrl} alt="" /> */}
+										{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
 										<div className="min-w-0 flex-auto">
-											<p className="text-sm font-semibold leading-6 text-gray-900">{dogRelationship.dog.givenName}</p>
-											<p className="truncate text-xs leading-5 text-gray-500">{dogRelationship.dog.color}</p>
+											<p className="text-sm font-semibold leading-6 text-slate-900">{dogRelationship.dog.givenName}</p>
+											<p className="truncate text-xs leading-5 text-slate-500">{dogRelationship.dog.color}</p>
 										</div>
 									</div>
 									<div className="flex space-x-4">
@@ -107,9 +107,9 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 
 										<div className="flex items-center">
 											<DropdownMenu>
-												<DropdownMenuTrigger className="flex items-center rounded-full text-gray-400 hover:text-gray-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+												<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
 													<span className="sr-only">Open options</span>
-													<MoreVerticalIcon className="h-5 w-5" />
+													<EllipsisVerticalIcon className="h-5 w-5" />
 												</DropdownMenuTrigger>
 												<DropdownMenuContent>
 													<DropdownMenuLabel>Actions</DropdownMenuLabel>

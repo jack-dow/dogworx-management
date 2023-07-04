@@ -12,7 +12,15 @@ const config = {
 		serverActions: true,
 	},
 	images: {
-		domains: ["images.clerk.dev"],
+		domains: ["images.clerk.dev", "www.gravatar.com"],
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "*.googleusercontent.com",
+				port: "",
+				pathname: "**",
+			},
+		],
 	},
 };
 export default config;

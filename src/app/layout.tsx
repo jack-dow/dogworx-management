@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import { auth, ClerkProvider } from "@clerk/nextjs";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
@@ -11,14 +11,18 @@ import { cn } from "~/lib/utils";
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 function RootLayout({ children }: { children: React.ReactNode }) {
+	const { userId } = auth();
+
+	/* cspell:disable-next-line */
+	const prefersDarkMode = userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
 	return (
 		<ClerkProvider>
 			<html lang="en" suppressHydrationWarning className="h-full">
 				<body
 					className={cn(
-						"min-h-full font-sans antialiased  flex flex-col text-gray-600",
+						"min-h-full font-sans antialiased  flex flex-col text-slate-600",
 						fontSans.variable,
-						true ? "bg-gray-50" : "bg-gray-950",
+						prefersDarkMode ? "bg-slate-950" : "bg-slate-50",
 					)}
 				>
 					{children}

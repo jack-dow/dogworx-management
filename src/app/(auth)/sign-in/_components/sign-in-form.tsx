@@ -50,15 +50,35 @@ function SignInForm() {
 			} catch (error) {
 				const unknownError = "Something went wrong, please try again.";
 
-				isClerkAPIResponseError(error)
-					? toast({
-							title: `Failed to sign in`,
-							description: error.errors[0]?.longMessage ?? unknownError,
-					  })
-					: toast({
-							title: `An unknown error occurred`,
-							description: unknownError,
-					  });
+				if (isClerkAPIResponseError(error)) {
+					console.log(error.errors);
+					if (error.errors[0]?.code === "session_exists") {
+						toast({
+							title: `You are already signed in`,
+							description: "To sign into another account, please sign out of your current account first.",
+						});
+						return;
+					}
+
+					if (
+						error.errors[0]?.code === "form_password_incorrect" ||
+						error.errors[0]?.code === "form_identifier_not_found"
+					) {
+						form.setError("email", { type: "manual", message: "Invalid email or password" });
+						form.setError("password", { type: "manual", message: "Invalid email or password" });
+						return;
+					}
+
+					toast({
+						title: `Failed to sign in`,
+						description: error.errors[0]?.longMessage ?? unknownError,
+					});
+				} else {
+					toast({
+						title: `An unknown error occurred`,
+						description: unknownError,
+					});
+				}
 			}
 		});
 	}
@@ -93,7 +113,7 @@ function SignInForm() {
 					)}
 				/>
 				<Button disabled={isPending}>
-					{isPending && <Loader className="mr-2" aria-hidden="true" size="sm" />}
+					{isPending && <Loader aria-hidden="true" size="sm" />}
 					Continue
 				</Button>
 			</form>

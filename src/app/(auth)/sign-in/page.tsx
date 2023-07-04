@@ -1,9 +1,9 @@
 import { type Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { OAuthSignIn } from "../_components/oauth-signin";
+import { DogworxLogoFull } from "~/assets/dogworx-logo-full";
+import { OAuthSignIn } from "../_components/oauth-sign-in";
 import { SignInForm } from "./_components/sign-in-form";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ function SignInPage() {
 	return (
 		<>
 			<div className="mb-8 flex w-full items-center justify-center">
-				<Image src="/dogworx-logo-full.svg" alt="Dogworx Logo Full" width={237} height={60} />
+				<DogworxLogoFull className="h-[60px] w-[237px]" />
 			</div>
 			<Card className="w-full sm:max-w-lg">
 				<CardHeader className="space-y-1">

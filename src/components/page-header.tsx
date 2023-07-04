@@ -23,9 +23,9 @@ function PageHeader({ title, action }: PageHeaderProps) {
 				<nav className="sm:hidden" aria-label="Back">
 					<button
 						onClick={() => router.back()}
-						className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
+						className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-700"
 					>
-						<ChevronLeftIcon className="-ml-1 mr-0.5 h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+						<ChevronLeftIcon className="-ml-1 mr-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
 						<span>Back</span>
 					</button>
 				</nav>
@@ -34,7 +34,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 					<ol role="list" className="flex items-center space-x-1">
 						<li>
 							<div className="flex">
-								<Link href="/" className="text-sm font-medium text-gray-500 hover:text-gray-700">
+								<Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
 									Dashboard
 								</Link>
 							</div>
@@ -45,15 +45,15 @@ function PageHeader({ title, action }: PageHeaderProps) {
 							return (
 								<li key={`${path}-${index}`}>
 									<div className="flex items-center">
-										<ChevronRightIcon className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+										<ChevronRightIcon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
 										<Link
 											href={pathToThisPoint}
 											className={cn(
-												"ml-1 text-sm font-medium capitalize text-gray-500 hover:text-gray-700",
+												"ml-1 text-sm font-medium capitalize text-slate-500 hover:text-slate-700",
 												pathToThisPoint === pathname && "font-bold",
 											)}
 										>
-											{path}
+											{path.split("-").join(" ")}
 										</Link>
 									</div>
 								</li>
@@ -64,7 +64,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 			</div>
 
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+				<h1 className="text-2xl font-bold leading-7 text-slate-900 sm:truncate sm:text-3xl sm:tracking-tight">
 					{title}
 				</h1>
 				{action}
@@ -73,4 +73,4 @@ function PageHeader({ title, action }: PageHeaderProps) {
 	);
 }
 
-export { PageHeader, type PageHeaderProps };
+export { PageHeader };

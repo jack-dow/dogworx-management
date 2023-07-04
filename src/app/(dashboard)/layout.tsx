@@ -1,10 +1,10 @@
-"use client";
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs";
 
-import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-
+import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
+import { cn } from "~/lib/utils";
 
 const BackgroundGradients = {
 	GradientTop() {
@@ -40,52 +40,40 @@ interface DashboardLayoutProps {
 	children: React.ReactNode;
 }
 
-function DashboardLayout1({ children }: DashboardLayoutProps) {
-	const { isLoaded, isSignedIn } = useUser();
-	const router = useRouter();
+async function DashboardLayout({ children }: DashboardLayoutProps) {
+	const user = await currentUser();
 
-	if (!isLoaded) {
-		return null;
+	if (!user) {
+		redirect("/sign-in");
 	}
 
-	if (!isSignedIn) {
-		router.replace("/sign-in");
-		return null;
-	}
+	/* cspell:disable-next-line */
+	const prefersDarkMode = user?.id === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
 
 	return (
 		<>
-			<DesktopSidebar />
-			<main className="py-6 lg:pl-72 xl:pl-80">
-				<div className="relative isolate flex h-full flex-col  px-4 sm:px-6 lg:px-8">
-					<BackgroundGradients.GradientTop />
-					<div className="mx-auto w-full max-w-screen-2xl rounded-md bg-white/80 p-10 shadow backdrop-blur-3xl">
+			{prefersDarkMode ? <DarkDesktopSidebar /> : <DesktopSidebar user={JSON.stringify(user)} />}
+			<main className={cn("py-6 lg:pl-72 xl:pl-80", prefersDarkMode && "py-0")}>
+				<div
+					className={cn(
+						"relative isolate flex h-full flex-col px-4 sm:px-6 lg:px-8",
+						prefersDarkMode && "flex-1 flex-col rounded-tl-[2rem] bg-white p-4 sm:p-6 lg:p-10",
+					)}
+				>
+					{!prefersDarkMode && <BackgroundGradients.GradientTop />}
+					<div
+						className={cn(
+							"mx-auto w-full max-w-screen-2xl min-h-screen rounded-md  ",
+							prefersDarkMode ? "bg-white" : "bg-white/80 p-10 shadow backdrop-blur-3xl",
+						)}
+					>
 						{children}
 					</div>
-					<BackgroundGradients.GradientBottom />
+					{!prefersDarkMode && <BackgroundGradients.GradientBottom />}
 				</div>
 			</main>
 		</>
 	);
 }
 
-// async function DashboardLayout2({ children }: DashboardLayoutProps) {
-// 	const user = await currentUser();
-
-// 	if (!user) {
-// 		redirect("/sign-in");
-// 	}
-
-// 	return (
-// 		<>
-// 			<DarkDesktopSidebar />
-// 			<main className="flex h-full flex-1 flex-col  lg:pl-72 xl:pl-80">
-// 				<div className="relative isolate flex h-full flex-1 flex-col rounded-tl-[2rem] bg-white p-4 sm:p-6 lg:p-10 ">
-// 					<div className="mx-auto w-full max-w-screen-2xl rounded-md bg-white pb-10">{children}</div>
-// 				</div>
-// 			</main>
-// 		</>
-// 	);
-// }
-
-export default DashboardLayout1;
+export default DashboardLayout;

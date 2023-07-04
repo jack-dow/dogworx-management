@@ -74,7 +74,7 @@ function DogTable({ dogs }: { dogs: DogsList }) {
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction disabled={isDeleting} onClick={() => void handleDogDelete()}>
-							{isDeleting && <Loader className="mr-2" size="sm" />}
+							{isDeleting && <Loader size="sm" />}
 							Continue
 						</AlertDialogAction>
 					</AlertDialogFooter>

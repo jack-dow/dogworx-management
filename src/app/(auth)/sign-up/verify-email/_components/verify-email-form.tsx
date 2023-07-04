@@ -85,7 +85,7 @@ function VerifyEmailForm() {
 					)}
 				/>
 				<Button disabled={isPending}>
-					{isPending && <Loader className="mr-2" size="sm" aria-hidden="true" />}
+					{isPending && <Loader size="sm" aria-hidden="true" />}
 					Create account
 					<span className="sr-only">Create account</span>
 				</Button>

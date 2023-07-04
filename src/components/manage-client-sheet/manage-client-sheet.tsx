@@ -204,7 +204,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 						<Button>Create Client</Button>
 					</SheetTrigger>
 				)}
-				<SheetContent size="xl">
+				<SheetContent className="sm:max-w-md md:max-w-lg xl:max-w-xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Client</SheetTitle>
 						<SheetDescription>
@@ -236,7 +236,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 									<Button variant="outline">Cancel</Button>
 								</SheetClose>
 								<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
-									{form.formState.isSubmitting && <Loader className="mr-2" size="sm" />}
+									{form.formState.isSubmitting && <Loader size="sm" />}
 									{isNew ? "Create" : "Update"} client
 								</Button>
 							</SheetFooter>

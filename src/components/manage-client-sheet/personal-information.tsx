@@ -131,7 +131,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 						name="postalCode"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>ZIP / Postal Code</FormLabel>
+								<FormLabel>Postal Code</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
 								</FormControl>

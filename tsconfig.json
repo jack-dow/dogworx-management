@@ -27,7 +27,7 @@
 		],
 		"types": ["react-dom/experimental"]
 	},
-	"include": [".eslintrc.cjs", "next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.mjs", ".next/types/**/*.ts"],
+	"include": [".eslintrc.cjs", "next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.mjs", ".next/types/**/*.ts", "src/db/seed/data.ts", "src/db/seed/seed.ts"],
 
 	"exclude": ["node_modules"]
 }

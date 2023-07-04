@@ -17,7 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/ui/form";
-import { CalendarIcon, EditIcon, MoreVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
+import { CalendarIcon, EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Textarea } from "~/components/ui/textarea";
 import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
@@ -42,7 +42,7 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 				<p className="text-sm leading-6 text-muted-foreground">Keep track of details about this dog&apos;s sessions.</p>
 			</div>
 
-			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-gray-900/5 md:col-span-2">
+			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 				<div className="space-y-8 sm:p-8">
 					<EditableSessionDetail
 						dogId={getValues("id")}
@@ -123,7 +123,9 @@ function SessionDetail({
 	return (
 		<li>
 			<div className="relative flex justify-between pb-10">
-				{!isLast ? <span className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" /> : null}
+				{!isLast ? (
+					<span className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-slate-200" aria-hidden="true" />
+				) : null}
 				{isEditing ? (
 					<EditableSessionDetail
 						dogId={dogId}
@@ -135,33 +137,33 @@ function SessionDetail({
 					/>
 				) : (
 					<div className="relative flex items-start space-x-3">
-						<div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 ring-8 ring-white">
+						<div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
 							{session.user && session.user.firstName ? (
 								session.user.firstName[0]
 							) : (
-								<UserCircleIcon className="h-6 w-6 text-gray-500" aria-hidden="true" />
+								<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
 							)}
 							{/* <img
-														className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-400 ring-8 ring-white"
+														className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-400 ring-8 ring-white"
 														src={activityItem.imageUrl}
 														alt=""
 													/> */}
 
 							{/* <span className="absolute -bottom-0.5 -right-1 rounded-tl bg-white px-0.5 py-px">
-														<ChatBubbleLeftEllipsisIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+														<ChatBubbleLeftEllipsisIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
 													</span> */}
 						</div>
 						<div className="min-w-0 flex-1">
 							<div>
 								<div className="text-sm">
-									<p className="font-medium text-gray-900">
+									<p className="font-medium text-slate-900">
 										{session.user?.firstName}
 										{session.user?.lastName ? ` ${session.user.lastName}` : ""}
 									</p>
 								</div>
-								<p className="mt-0.5 text-sm text-gray-500">{format(session?.date, "MMMM do, yyyy")}</p>
+								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div className="mt-2 text-sm text-gray-700">
+							<div className="mt-2 text-sm text-slate-700">
 								<p>{session.details}</p>
 							</div>
 						</div>
@@ -172,7 +174,7 @@ function SessionDetail({
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
-								<MoreVerticalIcon className="h-4 w-4" />
+								<EllipsisVerticalIcon className="h-4 w-4" />
 								<span className="sr-only">Open menu</span>
 							</Button>
 						</DropdownMenuTrigger>
@@ -251,11 +253,11 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 	return (
 		<Form {...form}>
 			<div className="flex flex-1 items-start space-x-4">
-				<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 ring-8 ring-white">
+				<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
 					{user && user.firstName ? (
 						user.firstName[0]
 					) : (
-						<UserCircleIcon className="h-6 w-6 text-gray-500" aria-hidden="true" />
+						<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
 					)}
 				</div>
 				<div className="min-w-0 flex-1 space-y-2">

@@ -96,7 +96,7 @@ function SignUpForm() {
 					)}
 				/>
 				<Button disabled={isPending}>
-					{isPending && <Loader className="mr-2" size="sm" aria-hidden="true" />}
+					{isPending && <Loader size="sm" aria-hidden="true" />}
 					Continue
 					<span className="sr-only">Continue to email verification page</span>
 				</Button>

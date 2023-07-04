@@ -85,24 +85,28 @@ const FormLabel = React.forwardRef<
 	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
 	const { error, formItemId } = useFormField();
-	const itemContext = React.useContext(FormItemContext);
+	const formItemContext = React.useContext(FormItemContext);
 
-	if (!itemContext) {
-		throw new Error("<FormLabel/> should be used within <FormField>");
+	if (!formItemContext) {
+		throw new Error("<FormLabel /> should be used within <FormItem>");
 	}
 
-	if (itemContext.optional) {
-		return (
-			<div className="flex justify-between">
-				<Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />
-				<span className="text-sm leading-6 text-muted-foreground" id="email-optional">
-					Optional
-				</span>
-			</div>
-		);
+	const LabelComponent = (
+		<Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />
+	);
+
+	if (!formItemContext.optional) {
+		return LabelComponent;
 	}
 
-	return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
+	return (
+		<div className="flex justify-between">
+			{LabelComponent}
+			<span className="text-sm leading-6 text-muted-foreground" id="email-optional">
+				Optional
+			</span>
+		</div>
+	);
 });
 FormLabel.displayName = "FormLabel";
 
@@ -127,7 +131,9 @@ const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
 	({ className, ...props }, ref) => {
 		const { formDescriptionId } = useFormField();
 
-		return <p ref={ref} id={formDescriptionId} className={cn("text-sm text-muted-foreground", className)} {...props} />;
+		return (
+			<p ref={ref} id={formDescriptionId} className={cn("text-[0.8rem] text-muted-foreground", className)} {...props} />
+		);
 	},
 );
 FormDescription.displayName = "FormDescription";
@@ -142,7 +148,12 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 		}
 
 		return (
-			<p ref={ref} id={formMessageId} className={cn("text-sm font-medium text-destructive", className)} {...props}>
+			<p
+				ref={ref}
+				id={formMessageId}
+				className={cn("text-[0.8rem] font-medium text-destructive", className)}
+				{...props}
+			>
 				{body}
 			</p>
 		);

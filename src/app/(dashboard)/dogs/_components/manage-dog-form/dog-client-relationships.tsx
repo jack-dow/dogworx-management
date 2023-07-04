@@ -13,7 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
-import { EditIcon, MoreVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
+import { EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
 import { Label } from "~/components/ui/label";
 import {
 	Select,
@@ -99,7 +99,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 			)}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
 				<div className="col-span-full">
-					<h3 className="text-base font-semibold leading-7 text-gray-900">Clients</h3>
+					<h3 className="text-base font-semibold leading-7 text-slate-900">Clients</h3>
 					<p className="mt-1 text-sm leading-6 text-muted-foreground">
 						Manage the relationships between this dog and clients.
 					</p>
@@ -117,19 +117,21 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 					</div>
 				</div>
 				<div className="sm:col-span-6">
-					<ul role="list" className="divide-y divide-gray-100">
+					<ul role="list" className="divide-y divide-slate-100">
 						{dogClientRelationships.fields.map((clientRelationship, index) => (
 							<li key={clientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
 								<div className="flex items-center gap-x-4">
-									<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-gray-50">
+									<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 										<UserCircleIcon className="h-5 w-5" />
 									</div>
 
 									<div className="min-w-0 flex-auto">
-										<p className="text-sm font-semibold leading-6 text-gray-900">
+										<p className="text-sm font-semibold leading-6 text-slate-900">
 											{clientRelationship.client.givenName} {clientRelationship.client.familyName}
 										</p>
-										<p className="truncate text-xs leading-5 text-gray-500">{clientRelationship.client.emailAddress}</p>
+										<p className="truncate text-xs leading-5 text-slate-500">
+											{clientRelationship.client.emailAddress}
+										</p>
 									</div>
 								</div>
 
@@ -181,9 +183,9 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 
 									<div className="flex items-center">
 										<DropdownMenu>
-											<DropdownMenuTrigger className="flex items-center rounded-full text-gray-400 hover:text-gray-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+											<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
 												<span className="sr-only">Open options</span>
-												<MoreVerticalIcon className="h-5 w-5" />
+												<EllipsisVerticalIcon className="h-5 w-5" />
 											</DropdownMenuTrigger>
 											<DropdownMenuContent>
 												<DropdownMenuLabel>Actions</DropdownMenuLabel>

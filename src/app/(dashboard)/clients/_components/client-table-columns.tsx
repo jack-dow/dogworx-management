@@ -11,11 +11,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
-	ChevronsUpDownIcon,
+	ChevronUpDownIcon,
 	CopyIcon,
 	EditIcon,
-	EyeOffIcon,
-	MoreVerticalIcon,
+	EllipsisVerticalIcon,
+	EyeSlashIcon,
 	SortAscIcon,
 	SortDescIcon,
 } from "~/components/ui/icons";
@@ -75,7 +75,7 @@ const clientTableColumns: ColumnDef<ClientsList[number]>[] = [
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
-								<MoreVerticalIcon className="h-4 w-4" />
+								<EllipsisVerticalIcon className="h-4 w-4" />
 								<span className="sr-only">Open menu</span>
 							</Button>
 						</DropdownMenuTrigger>
@@ -118,7 +118,7 @@ function DataTableColumnHeader<TData, TValue>({ column, title, className }: Data
 						) : column.getIsSorted() === "asc" ? (
 							<SortAscIcon className="ml-2 h-4 w-4" />
 						) : (
-							<ChevronsUpDownIcon className="ml-2 h-4 w-4" />
+							<ChevronUpDownIcon className="ml-2 h-4 w-4" />
 						)}
 					</Button>
 				</DropdownMenuTrigger>
@@ -133,7 +133,7 @@ function DataTableColumnHeader<TData, TValue>({ column, title, className }: Data
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-						<EyeOffIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+						<EyeSlashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 						Hide
 					</DropdownMenuItem>
 				</DropdownMenuContent>

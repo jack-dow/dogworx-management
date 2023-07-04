@@ -167,7 +167,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 							Manage the relationships of this dog between other clients and vets within the system.
 						</p>
 					</div>
-					<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-gray-900/5 md:col-span-2">
+					<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 						<div className="space-y-8 sm:p-8">
 							<DogClientRelationships control={form.control} />
 
@@ -191,7 +191,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						Back
 					</Button>
 					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
-						{form.formState.isSubmitting && <Loader className="mr-2" size="sm" />}
+						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} dog
 					</Button>
 				</div>

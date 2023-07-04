@@ -18,11 +18,11 @@ import {
 } from "@tanstack/react-table";
 
 import {
+	AdjustmentsHorizontalIcon,
+	ChevronDoubleLeftIcon,
+	ChevronDoubleRightIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
-	ChevronsLeftIcon,
-	ChevronsRightIcon,
-	SlidersHorizontalIcon,
 } from "~/components/ui/icons";
 import { cn } from "~/lib/utils";
 import { Button } from "./button";
@@ -165,7 +165,7 @@ function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) 
 						disabled={!table.getCanPreviousPage()}
 					>
 						<span className="sr-only">Go to first page</span>
-						<ChevronsLeftIcon className="h-4 w-4" />
+						<ChevronDoubleLeftIcon className="h-4 w-4" />
 					</Button>
 					<Button
 						variant="outline"
@@ -192,7 +192,7 @@ function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) 
 						disabled={!table.getCanNextPage()}
 					>
 						<span className="sr-only">Go to last page</span>
-						<ChevronsRightIcon className="h-4 w-4" />
+						<ChevronDoubleRightIcon className="h-4 w-4" />
 					</Button>
 				</div>
 			</div>
@@ -244,7 +244,7 @@ function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex">
-						<SlidersHorizontalIcon className="mr-2 h-4 w-4" />
+						<AdjustmentsHorizontalIcon className="mr-2 h-4 w-4" />
 						View
 					</Button>
 				</DropdownMenuTrigger>

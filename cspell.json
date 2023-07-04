@@ -1,7 +1,5 @@
 {
-	"dictionaries": [
-		"typescript"
-	],
+	"dictionaries": ["typescript"],
 	"ignorePaths": [
 		".github",
 		"CHANGELOG.md",
@@ -9,9 +7,12 @@
 		"lib",
 		"node_modules",
 		"pnpm-lock.yaml",
-		"src/setup/*.json"
+		"src/setup/*.json",
+		"src/db/migrations/*"
 	],
 	"words": [
+		"clsx",
+		"cmdk",
 		"Codecov",
 		"codespace",
 		"commitlint",
@@ -19,15 +20,26 @@
 		"conventionalcommits",
 		"dogworx",
 		"execa",
+		"googleusercontent",
+		"heroicons",
+		"hookform",
+		"ianvs",
 		"knip",
 		"lcov",
 		"lucide",
+		"mantine",
 		"markdownlintignore",
+		"nextjs",
 		"npmpackagejsonlintrc",
 		"outro",
 		"packagejson",
+		"paralleldrive",
+		"planetscale",
 		"quickstart",
+		"superjson",
+		"tailwindcss",
 		"tanstack",
+		"trpc",
 		"Unstaged",
 		"valtio",
 		"wontfix"

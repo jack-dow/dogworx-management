@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
 import { Button } from "~/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
-import { CheckIcon, ChevronsUpDownIcon, UserPlusIcon } from "~/components/ui/icons";
+import { CheckIcon, ChevronUpDownIcon, UserPlusIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { api } from "~/api";
 import { useDidUpdate } from "~/hooks/use-did-update";
@@ -92,7 +92,7 @@ const SearchClients = forwardRef<HTMLButtonElement, SearchClientsProps>(({ selec
 							{selectedClients.length === 1 && "1 client selected"}
 							{selectedClients.length > 1 && `${selectedClients.length} clients selected`}
 						</span>
-						<ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						<ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="max-w-3xl p-0 " align="start">

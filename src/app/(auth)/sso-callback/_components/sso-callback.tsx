@@ -20,7 +20,7 @@ function SSOCallback({ searchParams }: SSOCallbackPageProps) {
 			aria-describedby="loading-description"
 			className="flex items-center justify-center"
 		>
-			<Loader className="h-16 w-16" aria-hidden="true" />
+			<Loader className="mr-0 h-16 w-16" aria-hidden="true" variant="black" />
 		</div>
 	);
 }

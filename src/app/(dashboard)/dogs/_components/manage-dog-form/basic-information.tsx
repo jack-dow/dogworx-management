@@ -19,7 +19,7 @@ function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }
 				</p>
 			</div>
 
-			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-gray-900/5 md:col-span-2">
+			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 				<div className="sm:p-8">
 					<div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div className="sm:col-span-2">

@@ -1,19 +1,12 @@
 import * as z from "zod";
 
+import { prettyStringValidationMessage } from "./utils";
+
 const AuthSchema = z.object({
 	email: z.string().email({
 		message: "Please enter a valid email address",
 	}),
-	password: z
-		.string()
-		.min(8, {
-			message: "Password must be at least 8 characters long",
-		})
-		.max(100)
-		.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/, {
-			message:
-				"Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character",
-		}),
+	password: prettyStringValidationMessage("Your current password", 8, 100),
 });
 type AuthSchema = z.infer<typeof AuthSchema>;
 

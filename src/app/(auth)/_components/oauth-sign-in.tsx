@@ -5,16 +5,17 @@ import { isClerkAPIResponseError, useSignIn } from "@clerk/nextjs";
 import type { OAuthStrategy } from "@clerk/types";
 
 import { Button } from "~/components/ui/button";
-import { AppleIcon, GoogleIcon, type Icon } from "~/components/ui/icons";
+import { AppleIcon, GoogleIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 
-const oauthProviders = [
+const OAuthProviders = [
 	{ name: "Google", strategy: "oauth_google", icon: GoogleIcon },
 	{ name: "Apple", strategy: "oauth_apple", icon: AppleIcon },
 ] satisfies {
 	name: string;
-	icon: Icon;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	icon: (...args: any[]) => JSX.Element;
 	strategy: OAuthStrategy;
 }[];
 
@@ -51,7 +52,7 @@ function OAuthSignIn() {
 
 	return (
 		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
-			{oauthProviders.map((provider) => {
+			{OAuthProviders.map((provider) => {
 				return (
 					<Button
 						aria-label={`Sign in with ${provider.name}`}
@@ -61,7 +62,7 @@ function OAuthSignIn() {
 						onClick={() => void oauthSignIn(provider.strategy)}
 					>
 						{isLoading === provider.strategy ? (
-							<Loader className="mr-2" variant="muted" size="sm" />
+							<Loader variant="muted" size="sm" />
 						) : (
 							<provider.icon className="mr-2 h-4 w-4" aria-hidden="true" />
 						)}
@@ -73,4 +74,4 @@ function OAuthSignIn() {
 	);
 }
 
-export { OAuthSignIn };
+export { OAuthSignIn, OAuthProviders };

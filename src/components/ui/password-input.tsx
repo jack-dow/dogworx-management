@@ -5,7 +5,7 @@ import * as React from "react";
 import { Button } from "~/components/ui/button";
 import { Input, type InputProps } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
-import { EyeIcon, EyeOffIcon } from "./icons";
+import { EyeIcon, EyeSlashIcon } from "./icons";
 
 const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => {
 	const [showPassword, setShowPassword] = React.useState(false);
@@ -22,7 +22,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(({ classNam
 				disabled={props.value === "" || props.disabled}
 			>
 				{showPassword ? (
-					<EyeOffIcon className="h-4 w-4" aria-hidden="true" />
+					<EyeSlashIcon className="h-4 w-4" aria-hidden="true" />
 				) : (
 					<EyeIcon className="h-4 w-4" aria-hidden="true" />
 				)}

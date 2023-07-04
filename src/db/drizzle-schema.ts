@@ -78,7 +78,7 @@ const dogs = mysqlTable("dogs", {
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	givenName: varchar("givenName", { length: 50 }).notNull(),
 	breed: varchar("breed", { length: 100 }).notNull(),
-	age: varchar("age", { length: 10 }).notNull(),
+	age: varchar("age", { length: 64 }).notNull(),
 	sex: varchar("sex", { length: 256 }).notNull(),
 	desexed: boolean("desexed").notNull(),
 	color: varchar("city", { length: 50 }).notNull(),
