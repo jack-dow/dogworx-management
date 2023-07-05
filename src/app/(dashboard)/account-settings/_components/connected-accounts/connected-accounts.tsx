@@ -40,18 +40,20 @@ function ConnectedAccounts({ control }: { control: Control<AccountSettingsPageFo
 			</div>
 			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 				<div className="space-y-4 sm:p-8">
-					<Accordion type="single" collapsible className="w-full">
-						{externalAccounts.fields.map((field, index) => (
-							<ConnectedAccountField
-								key={field.id}
-								index={index}
-								field={field}
-								onDelete={(index) => {
-									externalAccounts.remove(index);
-								}}
-							/>
-						))}
-					</Accordion>
+					{externalAccounts.fields.length > 0 && (
+						<Accordion type="single" collapsible className="w-full">
+							{externalAccounts.fields.map((field, index) => (
+								<ConnectedAccountField
+									key={field.id}
+									index={index}
+									field={field}
+									onDelete={(index) => {
+										externalAccounts.remove(index);
+									}}
+								/>
+							))}
+						</Accordion>
+					)}
 
 					<AddConnectedAccountDialog />
 				</div>

@@ -39,7 +39,7 @@ function AddConnectedAccountDialog() {
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
 				<Button type="button" variant="ghost" className="-ml-4">
-					<PlusIcon className="mr-2 h-4 w-4" /> Connect another account
+					<PlusIcon className="mr-2 h-4 w-4" /> Connect account
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">

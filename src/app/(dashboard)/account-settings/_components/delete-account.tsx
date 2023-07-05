@@ -48,7 +48,6 @@ function DeleteAccount() {
 								Once you delete your account, it and all associated data will be permanently deleted.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
-						<div className="w-full space-y-4 "></div>
 						<AlertDialogFooter>
 							<AlertDialogCancel>Cancel</AlertDialogCancel>
 							<AlertDialogAction

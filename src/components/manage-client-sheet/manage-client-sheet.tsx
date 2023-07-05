@@ -174,7 +174,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() => {
-								if (setOpen) setOpen(false);
 								setInternalOpen(false);
 								form.reset();
 							}}
@@ -194,7 +193,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 						return;
 					}
 
-					if (setOpen) setOpen(value);
 					setInternalOpen(value);
 					form.reset();
 				}}

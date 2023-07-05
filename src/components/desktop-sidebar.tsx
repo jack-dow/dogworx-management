@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { type User } from "@clerk/nextjs/dist/types/server";
 
 import { DogworxPawLogoGradient } from "~/assets/dogworx-paw-logo-gradient";
@@ -57,15 +57,15 @@ const navigation: Array<Navigation> = [
 // 	{ id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
 // ];
 
-function DesktopSidebar(props: { user: Stringified<User> }) {
-	const user = JSON.parse(props.user);
+function DesktopSidebar() {
+	const { user } = useUser();
 	const pathname = usePathname();
 	const { signOut } = useClerk();
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
 
-	const primaryEmailAddress = user.emailAddresses.find(
+	const primaryEmailAddress = user?.emailAddresses.find(
 		(emailAddress) => emailAddress.id === user.primaryEmailAddressId,
 	);
 

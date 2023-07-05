@@ -4,7 +4,7 @@ function RootPage() {
 	return (
 		<>
 			<PageHeader title="Dashboard" />
-			<div className="flex flex-col space-y-4">{/* <ToastDemo /> */}</div>
+			<div className="flex flex-col space-y-4"></div>
 		</>
 	);
 }

@@ -11,14 +11,15 @@ import { useToast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
 import { type AccountSettingsPageFormSchema } from "./account-settings-page-form";
 
-function ProfileImage() {
+function ProfileImage({ setUploadedProfileImage }: { setUploadedProfileImage: (file: File | null) => void }) {
 	const { toast } = useToast();
 	const { setValue, watch } = useFormContext<AccountSettingsPageFormSchema>();
 
 	const onDrop = React.useCallback(
 		(acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 			acceptedFiles.forEach((file) => {
-				setValue("uploadedProfileImage", file);
+				// setValue("uploadedProfileImage", file);
+				setUploadedProfileImage(file);
 
 				setValue("profileImageUrl", URL.createObjectURL(file));
 			});
@@ -38,7 +39,7 @@ function ProfileImage() {
 				});
 			});
 		},
-		[setValue, toast],
+		[setValue, toast, setUploadedProfileImage],
 	);
 
 	const profileImageUrl = watch("profileImageUrl");
@@ -113,7 +114,7 @@ function ProfileImage() {
 										e.preventDefault();
 										e.stopPropagation();
 										setValue("profileImageUrl", undefined);
-										setValue("uploadedProfileImage", null);
+										setUploadedProfileImage(null);
 									}}
 								>
 									<TrashIcon className="h-4 w-4" />

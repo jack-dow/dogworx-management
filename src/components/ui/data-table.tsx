@@ -42,9 +42,15 @@ interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	onTableRowClick?: (row: TData) => void;
+	filterInputPlaceholder?: string;
 }
 
-function DataTable<TData, TValue>({ columns, data, onTableRowClick }: DataTableProps<TData, TValue>) {
+function DataTable<TData, TValue>({
+	columns,
+	data,
+	onTableRowClick,
+	filterInputPlaceholder,
+}: DataTableProps<TData, TValue>) {
 	const [rowSelection, setRowSelection] = React.useState({});
 	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -74,7 +80,7 @@ function DataTable<TData, TValue>({ columns, data, onTableRowClick }: DataTableP
 
 	return (
 		<div className="space-y-4">
-			<DataTableToolbar table={table} />
+			<DataTableToolbar table={table} filterInputPlaceholder={filterInputPlaceholder} />
 			<div className="rounded-md border">
 				<Table>
 					<TableHeader>
@@ -202,16 +208,17 @@ function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) 
 
 interface DataTableToolbarProps<TData> {
 	table: TanstackTable<TData>;
+	filterInputPlaceholder?: string;
 }
 
-function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+function DataTableToolbar<TData>({ table, filterInputPlaceholder }: DataTableToolbarProps<TData>) {
 	// const isFiltered = table.getPreFilteredRowModel().rows.length > table.getFilteredRowModel().rows.length;
 
 	return (
 		<div className="flex items-center justify-between">
 			<div className="flex flex-1 items-center space-x-2">
 				<Input
-					placeholder="Filter dogs..."
+					placeholder={filterInputPlaceholder ?? "Filter..."}
 					value={(table.getColumn("givenName")?.getFilterValue() as string) ?? ""}
 					onChange={(event) => table.getColumn("givenName")?.setFilterValue(event.target.value)}
 					className="h-8 w-[150px] lg:w-[250px]"

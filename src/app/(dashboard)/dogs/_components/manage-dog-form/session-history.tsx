@@ -10,10 +10,13 @@ import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
+import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/ui/form";
@@ -35,73 +38,91 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 		keyName: "rhf-id",
 	});
 
+	const [confirmSessionDelete, setConfirmSessionDelete] = React.useState<Session | null>(null);
+
 	return (
-		<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
-			<div>
-				<h2 className="text-base font-semibold leading-7 text-foreground">Session history</h2>
-				<p className="text-sm leading-6 text-muted-foreground">Keep track of details about this dog&apos;s sessions.</p>
-			</div>
+		<>
+			<DestructiveActionDialog
+				title="Are you sure?"
+				description="Once you save this dog, this session will be permanently deleted."
+				open={!!confirmSessionDelete}
+				onOpenChange={() => setConfirmSessionDelete(null)}
+				actionText="Delete session"
+				onConfirm={() => {
+					if (confirmSessionDelete) {
+						sessionHistory.remove(sessionHistory.fields.findIndex((f) => f.id === confirmSessionDelete.id));
+						setValue("actions.sessionHistory", {
+							...getValues("actions.sessionHistory"),
+							[confirmSessionDelete.id]: {
+								type: "DELETE",
+								payload: confirmSessionDelete.id,
+							},
+						});
+					}
+				}}
+			/>
 
-			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
-				<div className="space-y-8 sm:p-8">
-					<EditableSessionDetail
-						dogId={getValues("id")}
-						onSubmit={(sessionDetail) => {
-							sessionHistory.append(sessionDetail);
+			<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+				<div>
+					<h2 className="text-base font-semibold leading-7 text-foreground">Session history</h2>
+					<p className="text-sm leading-6 text-muted-foreground">
+						Keep track of details about this dog&apos;s sessions.
+					</p>
+				</div>
 
-							setValue("actions.sessionHistory", {
-								...getValues("actions.sessionHistory"),
-								[sessionDetail.id]: {
-									type: "INSERT",
-									payload: sessionDetail,
-								},
-							});
-						}}
-					/>
+				<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
+					<div className="space-y-8 sm:p-8">
+						<EditableSessionDetail
+							dogId={getValues("id")}
+							onSubmit={(sessionDetail) => {
+								sessionHistory.append(sessionDetail);
 
-					<div>
-						<ul role="list" className="-mb-8">
-							{sessionHistory.fields
-								.sort((a, b) => b.date.getTime() - a.date.getTime())
-								.map((session, index) => {
-									return (
-										<SessionDetail
-											key={session.id}
-											dogId={getValues("id")}
-											session={session}
-											index={index}
-											isLast={index === sessionHistory.fields.length - 1}
-											onUpdate={(sessionDetail) => {
-												const sessionHistoryActions = { ...getValues("actions.sessionHistory") };
+								setValue("actions.sessionHistory", {
+									...getValues("actions.sessionHistory"),
+									[sessionDetail.id]: {
+										type: "INSERT",
+										payload: sessionDetail,
+									},
+								});
+							}}
+						/>
 
-												sessionHistoryActions[sessionDetail.id] = {
-													type: "UPDATE",
-													payload: sessionDetail,
-												};
+						<div>
+							<ul role="list" className="-mb-8">
+								{sessionHistory.fields
+									.sort((a, b) => b.date.getTime() - a.date.getTime())
+									.map((session, index) => {
+										return (
+											<SessionDetail
+												key={session.id}
+												dogId={getValues("id")}
+												session={session}
+												index={index}
+												isLast={index === sessionHistory.fields.length - 1}
+												onUpdate={(sessionDetail) => {
+													const sessionHistoryActions = { ...getValues("actions.sessionHistory") };
 
-												sessionHistory.update(index, sessionDetail);
+													sessionHistoryActions[sessionDetail.id] = {
+														type: "UPDATE",
+														payload: sessionDetail,
+													};
 
-												setValue("actions.sessionHistory", sessionHistoryActions);
-											}}
-											onDelete={() => {
-												sessionHistory.remove(index);
+													sessionHistory.update(index, sessionDetail);
 
-												setValue("actions.sessionHistory", {
-													...getValues("actions.sessionHistory"),
-													[session.id]: {
-														type: "DELETE",
-														payload: session.id,
-													},
-												});
-											}}
-										/>
-									);
-								})}
-						</ul>
+													setValue("actions.sessionHistory", sessionHistoryActions);
+												}}
+												onDelete={(session) => {
+													setConfirmSessionDelete(session);
+												}}
+											/>
+										);
+									})}
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
@@ -116,8 +137,8 @@ function SessionDetail({
 	session: Session;
 	isLast: boolean;
 	dogId: string;
-	onUpdate: (sessionHistory: Session) => void;
-	onDelete: () => void;
+	onUpdate: (session: Session) => void;
+	onDelete: (session: Session) => void;
 }) {
 	const [isEditing, setIsEditing] = React.useState(false);
 	return (
@@ -130,6 +151,9 @@ function SessionDetail({
 					<EditableSessionDetail
 						dogId={dogId}
 						sessionHistory={session}
+						onCancel={() => {
+							setIsEditing(false);
+						}}
 						onSubmit={(session) => {
 							setIsEditing(false);
 							onUpdate(session);
@@ -179,6 +203,8 @@ function SessionDetail({
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-[160px]">
+							<DropdownMenuLabel>Actions</DropdownMenuLabel>
+							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								className="cursor-pointer"
 								onClick={() => {
@@ -192,7 +218,7 @@ function SessionDetail({
 								className="cursor-pointer"
 								onClick={(e) => {
 									e.stopPropagation();
-									onDelete();
+									onDelete(session);
 								}}
 							>
 								<TrashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
@@ -219,13 +245,21 @@ const EditableSessionDetailFormSchema = InsertDogSessionHistorySchema.extend({
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
-type EditableSessionDetailProps = {
-	sessionHistory?: Session;
-	onSubmit: (sessionHistory: Session) => void;
-	dogId: string;
-};
+type EditableSessionDetailProps =
+	| {
+			sessionHistory: Session;
+			onCancel: () => void;
+			onSubmit: (sessionHistory: Session) => void;
+			dogId: string;
+	  }
+	| {
+			sessionHistory?: never;
+			onCancel?: never;
+			onSubmit: (sessionHistory: Session) => void;
+			dogId: string;
+	  };
 
-function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSessionDetailProps) {
+function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: EditableSessionDetailProps) {
 	const { user } = useUser();
 
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
@@ -252,8 +286,8 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 
 	return (
 		<Form {...form}>
-			<div className="flex flex-1 items-start space-x-4">
-				<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
+			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-4")}>
+				<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
 					{user && user.firstName ? (
 						user.firstName[0]
 					) : (
@@ -275,7 +309,7 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 												rows={3}
 												name="comment"
 												id="comment"
-												className="resize-none rounded-b-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+												className="resize-none rounded-b-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
 												placeholder="Add session details..."
 											/>
 										</FormControl>
@@ -309,7 +343,7 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 													<Button
 														variant={"outline"}
 														className={cn(
-															"w-[280px] justify-start text-left font-normal",
+															"justify-start text-left font-normal",
 															!field.value && "text-muted-foreground",
 														)}
 													>
@@ -335,7 +369,18 @@ function EditableSessionDetail({ sessionHistory, onSubmit, dogId }: EditableSess
 									</FormItem>
 								)}
 							/>
-							<div className="shrink-0">
+							<div className="shrink-0 space-x-2.5">
+								{sessionHistory && (
+									<Button
+										variant="outline"
+										onClick={() => {
+											onCancel();
+										}}
+										size="sm"
+									>
+										Cancel
+									</Button>
+								)}
 								<Button
 									onClick={(e) => {
 										e.preventDefault();

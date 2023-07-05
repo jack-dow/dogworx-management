@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { currentUser } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs";
 
 import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
@@ -40,19 +39,15 @@ interface DashboardLayoutProps {
 	children: React.ReactNode;
 }
 
-async function DashboardLayout({ children }: DashboardLayoutProps) {
-	const user = await currentUser();
-
-	if (!user) {
-		redirect("/sign-in");
-	}
+function DashboardLayout({ children }: DashboardLayoutProps) {
+	const { userId } = auth();
 
 	/* cspell:disable-next-line */
-	const prefersDarkMode = user?.id === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
+	const prefersDarkMode = userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
 
 	return (
 		<>
-			{prefersDarkMode ? <DarkDesktopSidebar /> : <DesktopSidebar user={JSON.stringify(user)} />}
+			{prefersDarkMode ? <DarkDesktopSidebar /> : <DesktopSidebar />}
 			<main className={cn("py-6 lg:pl-72 xl:pl-80", prefersDarkMode && "py-0")}>
 				<div
 					className={cn(

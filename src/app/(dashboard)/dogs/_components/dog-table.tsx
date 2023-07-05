@@ -3,99 +3,58 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import { DataTable } from "~/components/ui/data-table";
-import { Loader } from "~/components/ui/loader";
+import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { api, type DogsList } from "~/api";
-import { dogTableColumns } from "./dog-table-columns";
-
-const DogTableContext = React.createContext<{
-	deletingDog: DogsList[number] | null;
-	setDeletingDog: (id: DogsList[number]) => void;
-} | null>(null);
+import { generateDogTableColumns } from "./dog-table-columns";
 
 function DogTable({ dogs }: { dogs: DogsList }) {
 	const router = useRouter();
 	const { toast } = useToast();
 
-	const [deletingDog, setDeletingDog] = React.useState<DogsList[number] | null>(null);
-	const [isDeleting, setIsDeleting] = React.useState(false);
-
-	async function handleDogDelete() {
-		setIsDeleting(true);
-
-		if (deletingDog) {
-			const result = await api.dogs.delete(deletingDog.id);
-
-			if (result.success) {
-				toast({
-					title: `Dog deleted`,
-					description: `Successfully deleted dog "${deletingDog.givenName}"`,
-				});
-			} else {
-				toast({
-					title: `Dog deletion failed`,
-					description: `There was an error deleting dog "${deletingDog.givenName}". Please try again.`,
-				});
-			}
-		}
-
-		setDeletingDog(null);
-		setIsDeleting(false);
-	}
+	const [confirmDogDelete, setConfirmDogDelete] = React.useState<DogsList[number] | null>(null);
 
 	return (
 		<>
-			<AlertDialog
-				open={!!deletingDog}
-				onOpenChange={(value) => {
-					if (!value) {
-						setDeletingDog(null);
+			<DestructiveActionDialog
+				open={!!confirmDogDelete}
+				onOpenChange={() => {
+					setConfirmDogDelete(null);
+				}}
+				title="Are you sure?"
+				description="This action will permanently delete this dog and any associated relationships. This action cannot be undone."
+				actionText="Delete dog"
+				onConfirm={async () => {
+					if (confirmDogDelete == null) return;
+
+					const result = await api.dogs.delete(confirmDogDelete.id);
+
+					if (result.success) {
+						toast({
+							title: `Dog deleted`,
+							description: `Successfully deleted dog "${confirmDogDelete.givenName}"`,
+						});
+					} else {
+						toast({
+							title: `Dog deletion failed`,
+							description: `There was an error deleting dog "${confirmDogDelete.givenName}". Please try again.`,
+						});
 					}
 				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This action cannot be undone. This will permanently delete this dog and any associated relationships.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction disabled={isDeleting} onClick={() => void handleDogDelete()}>
-							{isDeleting && <Loader size="sm" />}
-							Continue
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-			<DogTableContext.Provider
-				value={{
-					deletingDog,
-					setDeletingDog,
+			/>
+			<DataTable
+				data={dogs}
+				columns={generateDogTableColumns((dog) => {
+					setConfirmDogDelete(dog);
+				})}
+				onTableRowClick={(dog) => {
+					router.push(`/dogs/${dog.id}`);
 				}}
-			>
-				<DataTable
-					data={dogs}
-					columns={dogTableColumns}
-					onTableRowClick={(dog) => {
-						router.push(`/dogs/${dog.id}`);
-					}}
-				/>
-			</DogTableContext.Provider>
+				filterInputPlaceholder="Filter dogs..."
+			/>
 		</>
 	);
 }
 
-export { DogTable, DogTableContext };
+export { DogTable };

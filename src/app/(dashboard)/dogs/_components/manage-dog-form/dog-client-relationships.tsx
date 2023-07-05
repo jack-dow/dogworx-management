@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
+import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -29,6 +30,8 @@ import { useDidUpdate } from "~/hooks/use-did-update";
 import { SearchClients } from "../search-clients";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
+type Client = ManageDogFormSchema["clientRelationships"][number]["client"];
+
 function DogClientRelationships({ control }: { control: Control<ManageDogFormSchema> }) {
 	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
 
@@ -38,12 +41,12 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 		keyName: "rhf-id",
 	});
 
-	const [editingClient, setEditingClient] = useState<
-		ManageDogFormSchema["clientRelationships"][number]["client"] | null
-	>(null);
-	const searchClientsComboboxButtonRef = useRef<HTMLButtonElement>(null);
+	const [editingClient, setEditingClient] = React.useState<Client | null>(null);
+	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<Client | null>(null);
 
-	function toggleDogClientRelationship(client: ManageDogFormSchema["clientRelationships"][number]["client"]) {
+	const searchClientsComboboxButtonRef = React.useRef<HTMLButtonElement>(null);
+
+	function toggleDogClientRelationship(client: Client) {
 		const dogClientRelationshipActions = { ...getValues("actions.clientRelationships") };
 
 		const relationshipId = dogClientRelationships.fields.find(
@@ -94,9 +97,26 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 
 	return (
 		<>
-			{editingClient && (
-				<ManageClientSheet client={editingClient} open setOpen={() => setEditingClient(null)} withoutTrigger />
-			)}
+			<ManageClientSheet
+				client={editingClient ?? undefined}
+				open={!!editingClient}
+				setOpen={() => setEditingClient(null)}
+				withoutTrigger
+			/>
+
+			<DestructiveActionDialog
+				title="Are you sure?"
+				description="Once you save this dog, this relationship will be permanently deleted."
+				open={!!confirmRelationshipDelete}
+				onOpenChange={() => setConfirmRelationshipDelete(null)}
+				actionText="Delete relationship"
+				onConfirm={() => {
+					if (confirmRelationshipDelete) {
+						toggleDogClientRelationship(confirmRelationshipDelete);
+					}
+				}}
+			/>
+
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
 				<div className="col-span-full">
 					<h3 className="text-base font-semibold leading-7 text-slate-900">Clients</h3>
@@ -200,7 +220,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													onSelect={() => {
-														toggleDogClientRelationship(clientRelationship.client);
+														setConfirmRelationshipDelete(clientRelationship.client);
 													}}
 												>
 													<TrashIcon className="mr-2 h-4 w-4" />

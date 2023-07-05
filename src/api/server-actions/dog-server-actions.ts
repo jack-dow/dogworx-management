@@ -223,11 +223,23 @@ const deleteDog = createServerAction(async (id: string) => {
 			},
 			with: {
 				clientRelationships: true,
+				sessionHistory: true,
 			},
 		});
 
 		if (dog) {
 			await drizzle.transaction(async (trx) => {
+				await trx.delete(dogs).where(eq(dogs.id, id));
+
+				if (dog.sessionHistory.length > 0) {
+					await trx.delete(dogSessionHistory).where(
+						inArray(
+							dogSessionHistory.id,
+							dog.sessionHistory.map((s) => s.id),
+						),
+					);
+				}
+
 				if (dog.clientRelationships.length > 0) {
 					await trx.delete(dogClientRelationships).where(
 						inArray(
@@ -236,7 +248,6 @@ const deleteDog = createServerAction(async (id: string) => {
 						),
 					);
 				}
-				await trx.delete(dogs).where(eq(dogs.id, id));
 			});
 		}
 

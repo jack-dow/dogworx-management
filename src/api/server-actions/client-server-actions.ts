@@ -184,6 +184,8 @@ const deleteClient = createServerAction(async (id: string) => {
 
 		if (client) {
 			await drizzle.transaction(async (trx) => {
+				await trx.delete(clients).where(eq(clients.id, id));
+
 				if (client.dogRelationships.length > 0) {
 					await trx.delete(dogClientRelationships).where(
 						inArray(
@@ -192,7 +194,6 @@ const deleteClient = createServerAction(async (id: string) => {
 						),
 					);
 				}
-				await trx.delete(clients).where(eq(clients.id, id));
 			});
 		}
 

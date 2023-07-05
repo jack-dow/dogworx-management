@@ -53,7 +53,6 @@ const AccountSettingsPageFormSchema = z.object({
 	primaryEmailAddress: EmailAddressSchema.optional(),
 	emailAddresses: z.array(EmailAddressSchema),
 	profileImageUrl: z.string().url().optional(),
-	uploadedProfileImage: z.instanceof(File).nullish(),
 	currentPassword: prettyStringValidationMessage("Your current password", 8, 100).nullish(),
 	newPassword: prettyStringValidationMessage("Your new password", 8, 100).nullish(),
 	newPasswordConfirm: prettyStringValidationMessage("Your new password", 8, 100).nullish(),
@@ -95,6 +94,8 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 			externalAccounts: user.externalAccounts ?? [],
 		},
 	});
+	// Have to hold the file here because Clerk only supports uploading a File object not a url and if you use a File in zod it errors when run on the server as File doesn't exist there
+	const [uploadedProfileImage, setUploadedProfileImage] = React.useState<File | null>(null);
 
 	React.useEffect(() => {
 		user
@@ -140,8 +141,8 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 				lastName: data.familyName,
 			});
 
-			if (data.uploadedProfileImage !== undefined) {
-				await user.setProfileImage({ file: data.uploadedProfileImage });
+			if (data.profileImageUrl !== user.profileImageUrl) {
+				await user.setProfileImage({ file: uploadedProfileImage });
 			}
 
 			if (data.newPassword) {
@@ -211,7 +212,11 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 
 				<Separator className="my-4" />
 
-				<ProfileImage />
+				<ProfileImage
+					setUploadedProfileImage={(file) => {
+						setUploadedProfileImage(file);
+					}}
+				/>
 
 				<Separator className="my-4" />
 

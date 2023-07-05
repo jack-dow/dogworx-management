@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"build": "next build",
+		"clean": "rm -rf .next node_modules/",
 		"db:generate": "pnpm drizzle-kit generate:mysql --config=./drizzle.config.ts",
 		"db:push": "pnpm with-env drizzle-kit push:mysql --config=./drizzle.config.ts",
 		"dev": "next dev",
