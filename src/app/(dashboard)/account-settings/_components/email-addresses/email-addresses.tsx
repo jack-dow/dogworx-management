@@ -44,7 +44,7 @@ function EmailAddresses({ control }: { control: Control<AccountSettingsPageFormS
 	if (!user) return null;
 
 	return (
-		<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+		<div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
 			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Email Addresses</h2>
 				<p className="text-sm leading-6 text-muted-foreground">

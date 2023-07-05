@@ -8,7 +8,7 @@ import { type ManageClientSheetFormSchema } from "./manage-client-sheet";
 function PersonalInformation({ control }: { control: Control<ManageClientSheetFormSchema> }) {
 	return (
 		<div>
-			<div className="px-4 sm:px-0">
+			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Personal Information</h2>
 				<p className="text-sm leading-6 text-muted-foreground">Use a permanent address where you can receive mail.</p>
 			</div>

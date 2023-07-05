@@ -22,7 +22,7 @@ function RootLayout({ children }: { children: React.ReactNode }) {
 					className={cn(
 						"min-h-full font-sans antialiased  flex flex-col text-slate-600",
 						fontSans.variable,
-						prefersDarkMode ? "bg-slate-950" : "bg-slate-50",
+						prefersDarkMode ? "bg-slate-950" : "bg-white",
 					)}
 				>
 					{children}

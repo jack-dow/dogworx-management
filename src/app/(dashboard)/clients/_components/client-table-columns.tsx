@@ -52,8 +52,8 @@ function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Email Address" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex w-[100px] items-center">
-						<span>{row.getValue("emailAddress")}</span>
+					<div className="flex max-w-[500px] items-center">
+						<span className="truncate">{row.getValue("emailAddress")}</span>
 					</div>
 				);
 			},
@@ -64,7 +64,7 @@ function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center">
-						<span>{row.getValue("phoneNumber")}</span>
+						<span className="truncate">{row.getValue("phoneNumber")}</span>
 					</div>
 				);
 			},

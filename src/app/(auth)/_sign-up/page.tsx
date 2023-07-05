@@ -1,8 +1,9 @@
 import { type Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { DogworxLogoFull } from "~/assets/dogworx-logo-full";
+import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
 import { OAuthSignIn } from "../_components/oauth-sign-in";
 import { SignUpForm } from "./_components/sign-up-form";
 
@@ -14,7 +15,7 @@ function SignUpPage() {
 	return (
 		<>
 			<div className="mb-8 flex w-full items-center justify-center">
-				<DogworxLogoFull className="h-[60px] w-[237px]" />
+				<Image src={DogworxLogoGradient as string} alt="Dogworx Logo (Gradient Version)" width={237} height={60} />
 			</div>
 			<Card className="w-full sm:max-w-lg">
 				<CardHeader className="space-y-1">

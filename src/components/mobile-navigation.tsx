@@ -6,9 +6,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
 
+import { Button } from "~/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { cn } from "~/lib/utils";
-import { Button } from "./ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -25,6 +26,7 @@ import {
 	DogIcon,
 	InvoiceIcon,
 	LogOutIcon,
+	MobileMenuIcon,
 	UserCircleIcon,
 	UserIcon,
 	VetClinicIcon,
@@ -51,7 +53,7 @@ const navigation: Array<Navigation> = [
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
 ];
 
-function DesktopSidebar() {
+function MobileNavigation() {
 	const { user } = useUser();
 	const pathname = usePathname();
 	const { signOut } = useClerk();
@@ -62,16 +64,21 @@ function DesktopSidebar() {
 	const primaryEmailAddress = user?.emailAddresses.find(
 		(emailAddress) => emailAddress.id === user.primaryEmailAddressId,
 	);
-
 	return (
-		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
-			{/* Sidebar component, swap this element with another sidebar if you like */}
-			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 shadow-sm">
-				<div className="flex shrink-0 items-center pb-3 pt-6">
-					<Link href="/" shallow>
-						<Image src={DogworxPawLogoGradient as string} alt="Dogworx Paw Logo (Gradient Version)" />
-					</Link>
-				</div>
+		<Sheet>
+			<SheetTrigger asChild className="fixed bottom-4 left-4 z-50 shadow-md lg:hidden">
+				<Button variant="outline" size="icon" className="h-14 w-14 rounded-full">
+					<MobileMenuIcon className="h-5 w-5" />
+					<span className="sr-only">Open mobile navigation</span>
+				</Button>
+			</SheetTrigger>
+			<SheetContent className="flex flex-col sm:max-w-md md:max-w-lg lg:hidden" side="left">
+				<Link href="/" shallow>
+					<Image src={DogworxPawLogoGradient as string} alt="Dogworx Paw Logo (Gradient Version)" />
+				</Link>
+				<SheetHeader>
+					<SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
+				</SheetHeader>
 				<nav className="flex flex-1 flex-col">
 					<ul role="list" className="flex flex-1 flex-col gap-y-7">
 						<li>
@@ -151,7 +158,7 @@ function DesktopSidebar() {
 											</div>
 										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent className="w-[256px] 2xl:w-[288px]">
+									<DropdownMenuContent className="w-[256px]">
 										{primaryEmailAddress ? (
 											<p className="truncate px-2 py-1.5">
 												<span className="block text-xs text-muted-foreground">Signed in as</span>
@@ -202,9 +209,9 @@ function DesktopSidebar() {
 						)}
 					</ul>
 				</nav>
-			</div>
-		</div>
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-export { DesktopSidebar };
+export { MobileNavigation };

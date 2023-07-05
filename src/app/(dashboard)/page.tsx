@@ -4,7 +4,9 @@ function RootPage() {
 	return (
 		<>
 			<PageHeader title="Dashboard" />
-			<div className="flex flex-col space-y-4"></div>
+			<div className="flex flex-col space-y-4 ">
+				<div className="flex shrink-0 items-center pb-3 pt-6"></div>
+			</div>
 		</>
 	);
 }

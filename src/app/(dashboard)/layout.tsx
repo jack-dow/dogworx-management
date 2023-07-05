@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs";
 import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
+import { MobileNavigation } from "~/components/mobile-navigation";
 import { cn } from "~/lib/utils";
 
 const BackgroundGradients = {
@@ -47,19 +48,24 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
 	return (
 		<>
+			<MobileNavigation />
 			{prefersDarkMode ? <DarkDesktopSidebar /> : <DesktopSidebar />}
-			<main className={cn("py-6 lg:pl-72 xl:pl-80", prefersDarkMode && "py-0")}>
+			<main className="lg:pl-72 2xl:pl-80">
 				<div
 					className={cn(
-						"relative isolate flex h-full flex-col px-4 sm:px-6 lg:px-8",
-						prefersDarkMode && "flex-1 flex-col rounded-tl-[2rem] bg-white p-4 sm:p-6 lg:p-10",
+						"relative isolate flex h-full flex-col",
+						prefersDarkMode
+							? "flex-1 flex-col lg:rounded-tl-[2rem] bg-background p-6 lg:p-10"
+							: " sm:p-4 md:p-6 lg:px-8",
 					)}
 				>
 					{!prefersDarkMode && <BackgroundGradients.GradientTop />}
 					<div
 						className={cn(
 							"mx-auto w-full max-w-screen-2xl min-h-screen rounded-md  ",
-							prefersDarkMode ? "bg-white" : "bg-white/80 p-10 shadow backdrop-blur-3xl",
+							prefersDarkMode
+								? "bg-white"
+								: "bg-white/80 py-6 px-4 sm:px-6 sm:py-8 md:px-8 lg:p-10 shadow backdrop-blur-3xl",
 						)}
 					>
 						{children}

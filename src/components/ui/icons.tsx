@@ -2,6 +2,7 @@
 import {
 	AdjustmentsHorizontalIcon,
 	ArrowLeftOnRectangleIcon,
+	Bars3BottomLeftIcon,
 	BarsArrowDownIcon,
 	BarsArrowUpIcon,
 	CalendarIcon,
@@ -89,6 +90,7 @@ export {
 	ArrowLeftOnRectangleIcon as LogOutIcon,
 	BarsArrowDownIcon as SortDescIcon,
 	BarsArrowUpIcon as SortAscIcon,
+	Bars3BottomLeftIcon as MobileMenuIcon,
 	BookingIcon,
 	CalendarIcon,
 	CalendarDaysIcon,

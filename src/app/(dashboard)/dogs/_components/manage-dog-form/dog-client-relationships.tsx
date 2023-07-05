@@ -139,13 +139,13 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
 						{dogClientRelationships.fields.map((clientRelationship, index) => (
-							<li key={clientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+							<li key={clientRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
 								<div className="flex items-center gap-x-4">
-									<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
+									<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 										<UserCircleIcon className="h-5 w-5" />
 									</div>
 
-									<div className="min-w-0 flex-auto">
+									<div className="min-w-0 flex-auto truncate">
 										<p className="text-sm font-semibold leading-6 text-slate-900">
 											{clientRelationship.client.givenName} {clientRelationship.client.familyName}
 										</p>
@@ -179,7 +179,7 @@ function DogClientRelationships({ control }: { control: Control<ManageDogFormSch
 													<FormControl>
 														<SelectTrigger>
 															<SelectValue placeholder="Select a relation">
-																<span className="capitalize">{field.value?.split("-").join(" ")}</span>
+																<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
 															</SelectValue>
 														</SelectTrigger>
 													</FormControl>

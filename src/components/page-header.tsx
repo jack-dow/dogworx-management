@@ -18,7 +18,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 	const pathnameArray = pathname.split("/").filter((path) => path !== "");
 
 	return (
-		<div className="flex shrink-0 flex-col pb-6">
+		<div className="flex shrink-0 flex-col pb-4 lg:pb-6">
 			<div className="mb-2">
 				<nav className="sm:hidden" aria-label="Back">
 					<button

@@ -32,7 +32,7 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex space-x-2">
+					<div className="flex select-none space-x-2">
 						<span className="max-w-[500px] truncate font-medium">{row.getValue("givenName")}</span>
 					</div>
 				);
@@ -43,7 +43,7 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Breed" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex w-[100px] items-center">
+					<div className="flex w-[100px] select-none items-center">
 						<span>{row.getValue("breed")}</span>
 					</div>
 				);
@@ -54,7 +54,7 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Color" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex items-center">
+					<div className="flex select-none items-center">
 						<span>{row.getValue("color")}</span>
 					</div>
 				);

@@ -20,7 +20,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/ui/form";
-import { CalendarIcon, EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
+import { CalendarIcon, EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon, XIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Textarea } from "~/components/ui/textarea";
 import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
@@ -62,7 +62,7 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 				}}
 			/>
 
-			<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+			<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 				<div>
 					<h2 className="text-base font-semibold leading-7 text-foreground">Session history</h2>
 					<p className="text-sm leading-6 text-muted-foreground">
@@ -141,6 +141,7 @@ function SessionDetail({
 	onDelete: (session: Session) => void;
 }) {
 	const [isEditing, setIsEditing] = React.useState(false);
+
 	return (
 		<li>
 			<div className="relative flex justify-between pb-10">
@@ -208,11 +209,20 @@ function SessionDetail({
 							<DropdownMenuItem
 								className="cursor-pointer"
 								onClick={() => {
-									setIsEditing(true);
+									setIsEditing(!isEditing);
 								}}
 							>
-								<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-								Edit
+								{isEditing ? (
+									<>
+										<XIcon className="mr-2 h-4 w-4 text-muted-foreground/70" />
+										Cancel edit
+									</>
+								) : (
+									<>
+										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+										Edit
+									</>
+								)}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="cursor-pointer"
@@ -286,7 +296,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 
 	return (
 		<Form {...form}>
-			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-4")}>
+			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
 				<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
 					{user && user.firstName ? (
 						user.firstName[0]
@@ -371,13 +381,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 							/>
 							<div className="shrink-0 space-x-2.5">
 								{sessionHistory && (
-									<Button
-										variant="outline"
-										onClick={() => {
-											onCancel();
-										}}
-										size="sm"
-									>
+									<Button variant="outline" size="sm" onClick={onCancel} className="hidden 2xl:inline-flex">
 										Cancel
 									</Button>
 								)}
@@ -401,7 +405,13 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 									}}
 									size="sm"
 								>
-									{sessionHistory?.id ? "Update Session" : "Add session"}
+									{sessionHistory?.id ? (
+										<div>
+											Update <span className="hidden md:inline">Session</span>
+										</div>
+									) : (
+										"Create Session"
+									)}
 								</Button>
 							</div>
 						</div>

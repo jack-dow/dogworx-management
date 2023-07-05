@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
 
-import { DogworxLogoWhite } from "~/assets/dogworx-logo-white";
+import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 import {
@@ -62,11 +62,11 @@ function DarkDesktopSidebar() {
 	if (!user) return null;
 
 	return (
-		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col xl:w-80">
+		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-950 px-6 ">
 				<div className="flex shrink-0 items-center pb-4 pt-6">
 					<Link href="/" shallow>
-						<DogworxLogoWhite />
+						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" width={150} />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">
@@ -147,7 +147,7 @@ function DarkDesktopSidebar() {
 										</div>
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent className="w-[256px] xl:w-[288px]">
+								<DropdownMenuContent className="w-[256px] 2xl:w-[288px]">
 									{user.primaryEmailAddress ? (
 										<p className="truncate px-2 py-1.5">
 											<span className="block text-xs text-muted-foreground">Signed in as</span>

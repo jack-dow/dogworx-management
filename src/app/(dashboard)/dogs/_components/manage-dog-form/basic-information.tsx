@@ -11,7 +11,7 @@ import { type ManageDogFormSchema } from "./manage-dog-form";
 
 function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
-		<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Basic Information</h2>
 				<p className="text-sm leading-6 text-muted-foreground">
@@ -21,7 +21,7 @@ function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }
 
 			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 				<div className="sm:p-8">
-					<div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-y-6">
 						<div className="sm:col-span-2">
 							<FormField
 								control={control}

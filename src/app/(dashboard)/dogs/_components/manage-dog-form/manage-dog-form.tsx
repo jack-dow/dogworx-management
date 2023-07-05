@@ -151,7 +151,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-10 ">
+			<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10 ">
 				<BasicInformation control={form.control} />
 
 				<Separator />
@@ -160,7 +160,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 				<Separator />
 
-				<div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+				<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 					<div>
 						<h2 className="text-base font-semibold leading-7 text-foreground">Relationships</h2>
 						<p className="text-sm leading-6 text-muted-foreground">
