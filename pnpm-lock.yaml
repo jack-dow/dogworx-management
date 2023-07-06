@@ -22,8 +22,10 @@ specifiers:
   '@radix-ui/react-switch': ^1.0.3
   '@radix-ui/react-toast': ^1.1.4
   '@t3-oss/env-nextjs': ^0.6.0
+  '@tanstack/match-sorter-utils': ^8.8.4
   '@tanstack/react-query': ^4.29.19
   '@tanstack/react-table': ^8.9.3
+  '@tanstack/table-core': ^8.9.3
   '@trpc/client': ^10.33.0
   '@trpc/next': ^10.33.0
   '@trpc/react-query': ^10.33.0
@@ -89,8 +91,10 @@ dependencies:
   '@radix-ui/react-switch': 1.0.3_hrrtw4it2dqo6rzcqzvl36ff7i
   '@radix-ui/react-toast': 1.1.4_hrrtw4it2dqo6rzcqzvl36ff7i
   '@t3-oss/env-nextjs': 0.6.0_zno6rcmvi3mruj4xg7lanqhjom
+  '@tanstack/match-sorter-utils': 8.8.4
   '@tanstack/react-query': 4.29.19_biqbaboplfbrettd7655fr4n2y
   '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+  '@tanstack/table-core': 8.9.3
   '@trpc/client': 10.33.0_@trpc+server@10.33.0
   '@trpc/next': 10.33.0_g55cwnszvpmr7erkt3utkmx3re
   '@trpc/react-query': 10.33.0_v4ot636hay54jou5hl5jptvgw4
@@ -2521,6 +2525,13 @@ packages:
       '@t3-oss/env-core': 0.6.0_zno6rcmvi3mruj4xg7lanqhjom
       typescript: 5.1.6
       zod: 3.21.4
+    dev: false
+
+  /@tanstack/match-sorter-utils/8.8.4:
+    resolution: {integrity: sha512-rKH8LjZiszWEvmi01NR72QWZ8m4xmXre0OOwlRGnjU01Eqz/QnN+cqpty2PJ0efHblq09+KilvyR7lsbzmXVEw==}
+    engines: {node: '>=12'}
+    dependencies:
+      remove-accents: 0.4.2
     dev: false
 
   /@tanstack/query-core/4.29.19:
@@ -6112,6 +6123,10 @@ packages:
       define-properties: 1.2.0
       functions-have-names: 1.2.3
     dev: true
+
+  /remove-accents/0.4.2:
+    resolution: {integrity: sha512-7pXIJqJOq5tFgG1A2Zxti3Ht8jJF337m4sowbuHsW30ZnkQFnDzy9qBNhgzX8ZLW4+UBcXiiR7SwR6pokHsxiA==}
+    dev: false
 
   /repeat-string/1.6.1:
     resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}

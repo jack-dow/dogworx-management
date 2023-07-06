@@ -202,7 +202,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 						<Button>Create Client</Button>
 					</SheetTrigger>
 				)}
-				<SheetContent className="sm:max-w-md md:max-w-lg xl:max-w-xl">
+				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Client</SheetTitle>
 						<SheetDescription>

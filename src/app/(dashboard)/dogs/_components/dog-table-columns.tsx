@@ -37,6 +37,8 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 					</div>
 				);
 			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "breed",
@@ -48,6 +50,8 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 					</div>
 				);
 			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "color",
@@ -59,6 +63,8 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 					</div>
 				);
 			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			id: "actions",

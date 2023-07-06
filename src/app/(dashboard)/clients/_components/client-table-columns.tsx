@@ -26,41 +26,41 @@ import { cn } from "~/lib/utils";
 function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void): ColumnDef<ClientsList[number]>[] {
 	return [
 		{
-			accessorKey: "givenName",
-			header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,
+			accessorKey: "fullName",
+			accessorFn: (row) => `${row.givenName} ${row.familyName}`,
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex space-x-2">
-						<span className="max-w-[500px] truncate font-medium">{row.getValue("givenName")}</span>
+					<div className="flex max-w-[500px] flex-col">
+						<span className="truncate font-medium">{row.getValue("fullName")}</span>
+						<span className="text-xs text-muted-foreground sm:hidden">{row.original.emailAddress}</span>
 					</div>
 				);
 			},
-		},
-		{
-			accessorKey: "familyName",
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Last Name" />,
-			cell: ({ row }) => {
-				return (
-					<div className="flex space-x-2">
-						<span className="max-w-[500px] truncate font-medium">{row.getValue("familyName")}</span>
-					</div>
-				);
-			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "emailAddress",
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Email Address" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader className="hidden sm:flex" column={column} title="Email Address" />
+			),
 			cell: ({ row }) => {
 				return (
-					<div className="flex max-w-[500px] items-center">
+					<div className="hidden max-w-[500px] items-center sm:flex">
 						<span className="truncate">{row.getValue("emailAddress")}</span>
 					</div>
 				);
 			},
+			meta: {
+				className: "hidden sm:flex",
+			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "phoneNumber",
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Phone Number" />,
+			header: ({ column }) => <DataTableColumnHeader className="truncate" column={column} title="Phone Number" />,
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center">
@@ -68,6 +68,8 @@ function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void
 					</div>
 				);
 			},
+			filterFn: "fuzzy",
+			sortingFn: "fuzzy",
 		},
 		{
 			id: "actions",
@@ -100,17 +102,6 @@ function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void
 									<TrashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 									Delete
 								</DropdownMenuItem>
-
-								{/* <DropdownMenuItem
-								className="opacity-75"
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-								}}
-							>
-								<CopyIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-								Make a copy
-							</DropdownMenuItem> */}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
