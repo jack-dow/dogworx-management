@@ -1,5 +1,7 @@
 {
-	"dictionaries": ["typescript"],
+	"dictionaries": [
+		"typescript"
+	],
 	"ignorePaths": [
 		".github",
 		"CHANGELOG.md",
@@ -11,6 +13,7 @@
 		"src/db/migrations/*"
 	],
 	"words": [
+		"chrono",
 		"clsx",
 		"cmdk",
 		"Codecov",

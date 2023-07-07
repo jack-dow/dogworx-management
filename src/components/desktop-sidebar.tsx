@@ -31,6 +31,7 @@ import {
 	VetsIcon,
 } from "./ui/icons";
 import { Loader } from "./ui/loader";
+import { Skeleton } from "./ui/skeleton";
 import { useToast } from "./ui/use-toast";
 
 type Navigation = {
@@ -112,8 +113,8 @@ function DesktopSidebar() {
 							</ul>
 						</li>
 
-						{user && (
-							<li className="-mx-2 mt-auto">
+						<li className="-mx-2 mt-auto">
+							{user ? (
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3">
@@ -198,8 +199,16 @@ function DesktopSidebar() {
 										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>
-							</li>
-						)}
+							) : (
+								<div className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3">
+									<Skeleton className="h-10 w-10 rounded-md" />
+									<div className="flex flex-col items-center justify-start">
+										<Skeleton className="h-4 w-[70px]" />
+										<Skeleton className="mr-auto mt-0.5 h-5 w-[60px]" />
+									</div>
+								</div>
+							)}
+						</li>
 					</ul>
 				</nav>
 			</div>

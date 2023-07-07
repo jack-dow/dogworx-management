@@ -4,7 +4,9 @@
 import * as React from "react";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as chrono from "chrono-node";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import { useFieldArray, useForm, useFormContext, type Control } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,7 +22,17 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/ui/form";
-import { CalendarIcon, EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon, XIcon } from "~/components/ui/icons";
+import {
+	CalendarIcon,
+	ChevronUpDownIcon,
+	EditIcon,
+	EllipsisVerticalIcon,
+	TrashIcon,
+	UserCircleIcon,
+	XIcon,
+} from "~/components/ui/icons";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Textarea } from "~/components/ui/textarea";
 import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
@@ -182,6 +194,7 @@ function SessionDetail({
 							<div>
 								<div className="text-sm">
 									<p className="font-medium text-slate-900">
+										{!session.user ? "Unknown" : ""}
 										{session.user?.firstName}
 										{session.user?.lastName ? ` ${session.user.lastName}` : ""}
 									</p>
@@ -272,8 +285,6 @@ type EditableSessionDetailProps =
 function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: EditableSessionDetailProps) {
 	const { user } = useUser();
 
-	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-
 	const form = useForm<EditableSessionDetailFormSchema>({
 		resolver: zodResolver(EditableSessionDetailFormSchema),
 		defaultValues: {
@@ -286,6 +297,10 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 			...sessionHistory,
 		},
 	});
+
+	const [inputValue, setInputValue] = React.useState("");
+	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
+	const [month, setMonth] = React.useState<Date>(form.getValues("date"));
 
 	React.useEffect(() => {
 		if (user) {
@@ -317,8 +332,6 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 											<Textarea
 												{...field}
 												rows={3}
-												name="comment"
-												id="comment"
 												className="resize-none rounded-b-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
 												placeholder="Add session details..."
 											/>
@@ -350,28 +363,43 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										<FormControl>
 											<Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
 												<PopoverTrigger asChild>
-													<Button
-														variant={"outline"}
-														className={cn(
-															"justify-start text-left font-normal",
-															!field.value && "text-muted-foreground",
-														)}
-													>
+													<Button className="w-full" variant="outline">
 														<CalendarIcon className="mr-2 h-4 w-4" />
-														{field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+														<span className="mr-2 truncate">{dayjs(field.value).format("MMMM D, YYYY")}</span>
+														<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 													</Button>
 												</PopoverTrigger>
 												<PopoverContent className="w-auto p-0">
+													<div className="space-y-2 p-3 pb-1">
+														<Label htmlFor="session-date-input">Date</Label>
+														<Input
+															id="session-date-input"
+															autoComplete="off"
+															value={inputValue}
+															onChange={(e) => {
+																const val = e.target.value;
+																setInputValue(val);
+
+																const date = chrono.parseDate(val) ?? new Date();
+
+																form.setValue("date", date);
+																setMonth(date);
+															}}
+														/>
+													</div>
 													<Calendar
 														mode="single"
-														selected={field.value}
+														selected={field.value ?? new Date()}
+														month={month}
+														onMonthChange={setMonth}
 														onSelect={(value) => {
 															if (value) {
 																field.onChange(value);
 															}
 															setIsDatePickerOpen(false);
+															setInputValue("");
 														}}
-														initialFocus
+														initialFocus={false}
 													/>
 												</PopoverContent>
 											</Popover>

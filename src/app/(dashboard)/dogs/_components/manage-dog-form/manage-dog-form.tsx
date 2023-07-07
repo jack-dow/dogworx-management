@@ -35,9 +35,9 @@ const ClientSchema = SelectClientSchema.extend({
 const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: prettyStringValidationMessage("Name", 2, 50),
 	breed: prettyStringValidationMessage("Breed", 2, 50),
-	age: prettyStringValidationMessage("Age", 1, 5),
 	color: prettyStringValidationMessage("Color", 2, 25),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
+	age: InsertDogSchema.shape.age.nullable(),
 	clientRelationships: z.array(
 		InsertDogClientRelationshipSchema.extend({
 			client: ClientSchema,
@@ -119,6 +119,14 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 	async function onSubmit(data: ManageDogFormSchema) {
 		let success = false;
+
+		if (data.age == null) {
+			form.setError("age", {
+				type: "manual",
+				message: "Age is required",
+			});
+			return;
+		}
 
 		if (dog) {
 			const response = await api.dogs.update(data);

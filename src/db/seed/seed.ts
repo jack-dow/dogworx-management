@@ -2,9 +2,12 @@
 
 import { drizzle } from "../drizzle";
 import * as schema from "../drizzle-schema";
-import * as data from "./data";
+import generateSeedData from "./generate-seed-data";
+
+const data = generateSeedData();
 
 const seed = async () => {
+	data.dogSessionHistory
 	try {
 		await drizzle.transaction(async (db) => {
 			await db.delete(schema.clients);
@@ -18,7 +21,7 @@ const seed = async () => {
 			await db.insert(schema.clients).values(data.clients);
 			await db.insert(schema.dogs).values(data.dogs);
 			await db.insert(schema.dogClientRelationships).values(data.dogClientRelationships);
-			await db.insert(schema.dogSessionHistory).values(data.dogSessions);
+			await db.insert(schema.dogSessionHistory).values(data.dogSessionHistory);
 		});
 		console.log("[Success] Inserted seed data");
 	} catch (error) {

@@ -149,7 +149,7 @@ function PersonalInformation({ control }: { control: Control<ManageClientSheetFo
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<Textarea {...field} value={field.value ?? ""} />
+									<Textarea rows={3} {...field} value={field.value ?? ""} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

@@ -33,7 +33,7 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			cell: ({ row }) => {
 				return (
 					<div className="flex select-none space-x-2">
-						<span className="max-w-[500px] truncate font-medium">{row.getValue("givenName")}</span>
+						<span className="truncate font-medium capitalize">{row.getValue("givenName")}</span>
 					</div>
 				);
 			},
@@ -45,8 +45,8 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Breed" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex w-[100px] select-none items-center">
-						<span>{row.getValue("breed")}</span>
+					<div className="flex max-w-[500px] select-none items-center capitalize">
+						<span className="truncate capitalize">{row.getValue("breed")}</span>
 					</div>
 				);
 			},
@@ -58,8 +58,8 @@ function generateDogTableColumns(onDeleteClick: (dog: DogsList[number]) => void)
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Color" />,
 			cell: ({ row }) => {
 				return (
-					<div className="flex select-none items-center">
-						<span>{row.getValue("color")}</span>
+					<div className="flex select-none items-center ">
+						<span className="truncate capitalize">{row.getValue("color")}</span>
 					</div>
 				);
 			},

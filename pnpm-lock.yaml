@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@clerk/nextjs': ^4.21.13
   '@clerk/types': ^3.46.1
+  '@faker-js/faker': ^8.0.2
   '@heroicons/react': ^2.0.18
   '@hookform/resolvers': ^3.1.1
   '@ianvs/prettier-plugin-sort-imports': ^4.0.2
@@ -38,11 +39,13 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.61.0
   '@typescript-eslint/parser': ^5.61.0
   autoprefixer: ^10.4.14
+  chrono-node: ^2.6.3
   class-variance-authority: ^0.6.1
   clsx: ^1.2.1
   cmdk: ^0.2.0
   cspell: ^6.31.1
   date-fns: ^2.30.0
+  dayjs: ^1.11.9
   dotenv-cli: ^7.2.1
   drizzle-kit: 0.19.3
   drizzle-orm: ^0.27.0
@@ -99,10 +102,12 @@ dependencies:
   '@trpc/next': 10.33.0_g55cwnszvpmr7erkt3utkmx3re
   '@trpc/react-query': 10.33.0_v4ot636hay54jou5hl5jptvgw4
   '@trpc/server': 10.33.0
+  chrono-node: 2.6.3
   class-variance-authority: 0.6.1
   clsx: 1.2.1
   cmdk: 0.2.0_qzycrpzqvmvb7wd2jdibmpq2cy
   date-fns: 2.30.0
+  dayjs: 1.11.9
   drizzle-orm: 0.27.0_3ak4x5plwk5ua42qity65zmm7q
   drizzle-zod: 0.4.4_qjjpcqug25dnjuaqgbskv7qvum
   lucide-react: 0.258.0_react@18.2.0
@@ -122,6 +127,7 @@ dependencies:
 
 devDependencies:
   '@clerk/types': 3.46.1
+  '@faker-js/faker': 8.0.2
   '@ianvs/prettier-plugin-sort-imports': 4.0.2_prettier@2.8.8
   '@types/eslint': 8.40.2
   '@types/node': 20.3.3
@@ -1159,6 +1165,11 @@ packages:
   /@eslint/js/8.44.0:
     resolution: {integrity: sha512-Ag+9YM4ocKQx9AarydN0KY2j0ErMHNIocPDrVo8zAE44xLTjEtz81OdR68/cydGtk6m6jDb5Za3r2useMzYmSw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dev: true
+
+  /@faker-js/faker/8.0.2:
+    resolution: {integrity: sha512-Uo3pGspElQW91PCvKSIAXoEgAUlRnH29sX2/p89kg7sP1m2PzCufHINd0FhTXQf6DYGiUlVncdSPa2F9wxed2A==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
     dev: true
 
   /@floating-ui/core/1.3.1:
@@ -3274,6 +3285,13 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
+  /chrono-node/2.6.3:
+    resolution: {integrity: sha512-VkWaaZnNulqzNH9i4XCdyI05OX6MFEnCMNKdZOR4w//wS5/E2qkwAss/O5sj6SfTZK84fX4SSOG4pzqjqIseiA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      dayjs: 1.11.9
+    dev: false
+
   /class-variance-authority/0.6.1:
     resolution: {integrity: sha512-eurOEGc7YVx3majOrOb099PNKgO3KnKSApOprXI4BTq6bcfbqbQXPN2u+rPPmIJ2di23bMwhk0SxCCthBmszEQ==}
     dependencies:
@@ -3595,6 +3613,10 @@ packages:
     engines: {node: '>=0.11'}
     dependencies:
       '@babel/runtime': 7.22.5
+    dev: false
+
+  /dayjs/1.11.9:
+    resolution: {integrity: sha512-QvzAURSbQ0pKdIye2txOzNaHmxtUBXerpY0FJsFXUMKbIZeFm5ht1LS/jFsrncjnmtv8HsG0W2g6c0zUjZWmpA==}
     dev: false
 
   /debug/3.2.7:

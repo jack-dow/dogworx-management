@@ -55,8 +55,12 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 										</div>
 										{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
 										<div className="min-w-0 flex-auto">
-											<p className="text-sm font-semibold leading-6 text-slate-900">{dogRelationship.dog.givenName}</p>
-											<p className="truncate text-xs leading-5 text-slate-500">{dogRelationship.dog.color}</p>
+											<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
+												{dogRelationship.dog.givenName}
+											</p>
+											<p className="truncate text-xs capitalize leading-5 text-slate-500">
+												{dogRelationship.dog.color}
+											</p>
 										</div>
 									</div>
 									<div className="flex space-x-4">

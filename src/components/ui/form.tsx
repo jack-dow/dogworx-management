@@ -102,7 +102,7 @@ const FormLabel = React.forwardRef<
 	return (
 		<div className="flex justify-between">
 			{LabelComponent}
-			<span className="text-sm leading-6 text-muted-foreground" id="email-optional">
+			<span className="text-sm leading-6 text-muted-foreground" id={`${formItemId}-optional`}>
 				Optional
 			</span>
 		</div>
