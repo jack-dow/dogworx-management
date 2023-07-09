@@ -150,7 +150,7 @@ function ConnectedAccountField({
 													onDelete(index);
 												})
 												.catch((error) => {
-													console.error(error);
+													console.log(error);
 													toast({
 														title: "Failed to remove connection",
 														description:

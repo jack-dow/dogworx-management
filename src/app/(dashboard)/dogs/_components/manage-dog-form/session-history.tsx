@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 "use client";
 
 import * as React from "react";
@@ -35,18 +34,18 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Textarea } from "~/components/ui/textarea";
-import { InsertDogSessionHistorySchema, UserSchema } from "~/api";
+import { InsertDogSessionSchema, UserSchema } from "~/api";
 import { generateId } from "~/api/utils";
 import { cn } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
-type Session = NonNullable<ManageDogFormSchema["sessionHistory"]>[number];
+type Session = NonNullable<ManageDogFormSchema["sessions"]>[number];
 
 function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) {
 	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
 	const sessionHistory = useFieldArray({
 		control,
-		name: "sessionHistory",
+		name: "sessions",
 		keyName: "rhf-id",
 	});
 
@@ -63,8 +62,8 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 				onConfirm={() => {
 					if (confirmSessionDelete) {
 						sessionHistory.remove(sessionHistory.fields.findIndex((f) => f.id === confirmSessionDelete.id));
-						setValue("actions.sessionHistory", {
-							...getValues("actions.sessionHistory"),
+						setValue("actions.sessions", {
+							...getValues("actions.sessions"),
 							[confirmSessionDelete.id]: {
 								type: "DELETE",
 								payload: confirmSessionDelete.id,
@@ -89,8 +88,8 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 							onSubmit={(sessionDetail) => {
 								sessionHistory.append(sessionDetail);
 
-								setValue("actions.sessionHistory", {
-									...getValues("actions.sessionHistory"),
+								setValue("actions.sessions", {
+									...getValues("actions.sessions"),
 									[sessionDetail.id]: {
 										type: "INSERT",
 										payload: sessionDetail,
@@ -112,7 +111,7 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 												index={index}
 												isLast={index === sessionHistory.fields.length - 1}
 												onUpdate={(sessionDetail) => {
-													const sessionHistoryActions = { ...getValues("actions.sessionHistory") };
+													const sessionHistoryActions = { ...getValues("actions.sessions") };
 
 													sessionHistoryActions[sessionDetail.id] = {
 														type: "UPDATE",
@@ -121,7 +120,7 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 
 													sessionHistory.update(index, sessionDetail);
 
-													setValue("actions.sessionHistory", sessionHistoryActions);
+													setValue("actions.sessions", sessionHistoryActions);
 												}}
 												onDelete={(session) => {
 													setConfirmSessionDelete(session);
@@ -259,7 +258,7 @@ function SessionDetail({
 	);
 }
 
-const EditableSessionDetailFormSchema = InsertDogSessionHistorySchema.extend({
+const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
 	details: z
 		.string()
 		.nonempty({ message: "Please enter some details about the session." })

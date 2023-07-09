@@ -7,7 +7,7 @@ import { eq, inArray, like } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogClientRelationships, dogs, dogSessionHistory } from "~/db/drizzle-schema";
+import { dogs, dogSessions, dogToClientRelationships, dogToVetRelationships } from "~/db/drizzle-schema";
 import { createServerAction } from "../utils";
 import { UserSchema } from "../validations/clerk";
 import { InsertDogSchema, UpdateDogSchema } from "../validations/dogs";
@@ -21,7 +21,7 @@ const listDogs = createServerAction(async (limit?: number) => {
 
 		return { success: true, data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to list dogs" };
 	}
 });
@@ -41,7 +41,7 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to search dogs" };
 	}
 });
@@ -57,11 +57,12 @@ const getDogById = createServerAction(async (id: string) => {
 		const data = await drizzle.query.dogs.findFirst({
 			where: eq(dogs.id, validId.data),
 			with: {
-				clientRelationships: {
+				sessions: true,
+				dogToClientRelationships: {
 					with: {
 						client: {
 							with: {
-								dogRelationships: {
+								dogToClientRelationships: {
 									with: {
 										dog: true,
 									},
@@ -70,11 +71,28 @@ const getDogById = createServerAction(async (id: string) => {
 						},
 					},
 				},
-				sessionHistory: true,
+				dogToVetRelationships: {
+					with: {
+						vet: {
+							with: {
+								dogToVetRelationships: {
+									with: {
+										dog: true,
+									},
+								},
+								vetToVetClinicRelationships: {
+									with: {
+										vetClinic: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		});
 
-		const userIds = data?.sessionHistory.map((session) => session.userId);
+		const userIds = data?.sessions.map((session) => session.userId);
 		let users: User[] = [];
 
 		if (userIds && userIds.length > 0) {
@@ -88,7 +106,7 @@ const getDogById = createServerAction(async (id: string) => {
 			data: data
 				? {
 						...data,
-						sessionHistory: data?.sessionHistory.map((session) => {
+						sessions: data?.sessions.map((session) => {
 							const user = UserSchema.safeParse(users.find((user) => user.id === session.userId));
 							return {
 								...session,
@@ -99,7 +117,7 @@ const getDogById = createServerAction(async (id: string) => {
 				: undefined,
 		};
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: `Failed to fetch dog with id: ${id}` };
 	}
 });
@@ -114,18 +132,23 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 	try {
 		const { actions, ...data } = validValues.data;
 
-		const clientRelationshipActionLog = separateActionLogSchema(actions.clientRelationships);
-		const sessionHistoryActionLog = separateActionLogSchema(actions.sessionHistory);
+		const sessionsActionLog = separateActionLogSchema(actions.sessions);
+		const dogToClientRelationshipsActionLog = separateActionLogSchema(actions.dogToClientRelationships);
+		const dogToVetRelationshipsActionLog = separateActionLogSchema(actions.dogToVetRelationships);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(dogs).values(data);
 
-			if (clientRelationshipActionLog.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(clientRelationshipActionLog.inserts);
+			if (sessionsActionLog.inserts.length > 0) {
+				await trx.insert(dogSessions).values(sessionsActionLog.inserts);
 			}
 
-			if (sessionHistoryActionLog.inserts.length > 0) {
-				await trx.insert(dogSessionHistory).values(sessionHistoryActionLog.inserts);
+			if (dogToClientRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionLog.inserts);
+			}
+
+			if (dogToVetRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToVetRelationships).values(dogToVetRelationshipsActionLog.inserts);
 			}
 		});
 
@@ -134,7 +157,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 
 		return { success: true };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: `Failed to insert dog with id: ${validValues.data.id}` };
 	}
 });
@@ -149,52 +172,72 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 	try {
 		const { id, actions, ...data } = validValues.data;
 
-		const clientRelationshipActionLog = separateActionLogSchema(actions?.clientRelationships ?? {});
-		const sessionHistoryActionLog = separateActionLogSchema(actions?.sessionHistory ?? {});
+		const sessionsActionLog = separateActionLogSchema(actions?.sessions ?? {});
+		const dogToClientRelationshipsActionLog = separateActionLogSchema(actions?.dogToClientRelationships ?? {});
+		const dogToVetRelationshipsActionLog = separateActionLogSchema(actions?.dogToVetRelationships ?? {});
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(dogs).set(data).where(eq(dogs.id, id));
 
 			//
-			// ## Client Relationship Actions
-			//
-			if (clientRelationshipActionLog.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(clientRelationshipActionLog.inserts);
-			}
-
-			if (clientRelationshipActionLog.updates.length > 0) {
-				for (const updatedClientRelationship of clientRelationshipActionLog.updates) {
-					await trx
-						.update(dogClientRelationships)
-						.set(updatedClientRelationship)
-						.where(eq(dogClientRelationships.id, updatedClientRelationship.id));
-				}
-			}
-
-			if (clientRelationshipActionLog.deletes.length > 0) {
-				await trx
-					.delete(dogClientRelationships)
-					.where(inArray(dogClientRelationships.id, clientRelationshipActionLog.deletes));
-			}
-
-			//
 			// ## Session History
 			//
-			if (sessionHistoryActionLog.inserts.length > 0) {
-				await trx.insert(dogSessionHistory).values(sessionHistoryActionLog.inserts);
+			if (sessionsActionLog.inserts.length > 0) {
+				await trx.insert(dogSessions).values(sessionsActionLog.inserts);
 			}
 
-			if (sessionHistoryActionLog.updates.length > 0) {
-				for (const updatedSessionHistory of sessionHistoryActionLog.updates) {
-					await trx
-						.update(dogSessionHistory)
-						.set(updatedSessionHistory)
-						.where(eq(dogSessionHistory.id, updatedSessionHistory.id));
+			if (sessionsActionLog.updates.length > 0) {
+				for (const updatedSessionHistory of sessionsActionLog.updates) {
+					await trx.update(dogSessions).set(updatedSessionHistory).where(eq(dogSessions.id, updatedSessionHistory.id));
 				}
 			}
 
-			if (sessionHistoryActionLog.deletes.length > 0) {
-				await trx.delete(dogSessionHistory).where(inArray(dogSessionHistory.id, sessionHistoryActionLog.deletes));
+			if (sessionsActionLog.deletes.length > 0) {
+				await trx.delete(dogSessions).where(inArray(dogSessions.id, sessionsActionLog.deletes));
+			}
+
+			//
+			// ## Client Relationship Actions
+			//
+			if (dogToClientRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionLog.inserts);
+			}
+
+			if (dogToClientRelationshipsActionLog.updates.length > 0) {
+				for (const updatedClientRelationship of dogToClientRelationshipsActionLog.updates) {
+					await trx
+						.update(dogToClientRelationships)
+						.set(updatedClientRelationship)
+						.where(eq(dogToClientRelationships.id, updatedClientRelationship.id));
+				}
+			}
+
+			if (dogToClientRelationshipsActionLog.deletes.length > 0) {
+				await trx
+					.delete(dogToClientRelationships)
+					.where(inArray(dogToClientRelationships.id, dogToClientRelationshipsActionLog.deletes));
+			}
+
+			//
+			// ## Vet Relationship Actions
+			//
+			if (dogToVetRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToVetRelationships).values(dogToVetRelationshipsActionLog.inserts);
+			}
+
+			if (dogToVetRelationshipsActionLog.updates.length > 0) {
+				for (const updatedClientRelationship of dogToVetRelationshipsActionLog.updates) {
+					await trx
+						.update(dogToVetRelationships)
+						.set(updatedClientRelationship)
+						.where(eq(dogToVetRelationships.id, updatedClientRelationship.id));
+				}
+			}
+
+			if (dogToVetRelationshipsActionLog.deletes.length > 0) {
+				await trx
+					.delete(dogToVetRelationships)
+					.where(inArray(dogToVetRelationships.id, dogToVetRelationshipsActionLog.deletes));
 			}
 		});
 
@@ -203,7 +246,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 
 		return { success: true };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: `Failed to update dog with id: ${validValues.data.id}` };
 	}
 });
@@ -222,8 +265,9 @@ const deleteDog = createServerAction(async (id: string) => {
 				id: true,
 			},
 			with: {
-				clientRelationships: true,
-				sessionHistory: true,
+				sessions: true,
+				dogToClientRelationships: true,
+				dogToVetRelationships: true,
 			},
 		});
 
@@ -231,20 +275,29 @@ const deleteDog = createServerAction(async (id: string) => {
 			await drizzle.transaction(async (trx) => {
 				await trx.delete(dogs).where(eq(dogs.id, id));
 
-				if (dog.sessionHistory.length > 0) {
-					await trx.delete(dogSessionHistory).where(
+				if (dog.sessions.length > 0) {
+					await trx.delete(dogSessions).where(
 						inArray(
-							dogSessionHistory.id,
-							dog.sessionHistory.map((s) => s.id),
+							dogSessions.id,
+							dog.sessions.map((s) => s.id),
 						),
 					);
 				}
 
-				if (dog.clientRelationships.length > 0) {
-					await trx.delete(dogClientRelationships).where(
+				if (dog.dogToClientRelationships.length > 0) {
+					await trx.delete(dogToClientRelationships).where(
 						inArray(
-							dogClientRelationships.id,
-							dog.clientRelationships.map((c) => c.id),
+							dogToClientRelationships.id,
+							dog.dogToClientRelationships.map((c) => c.id),
+						),
+					);
+				}
+
+				if (dog.dogToVetRelationships.length > 0) {
+					await trx.delete(dogToVetRelationships).where(
+						inArray(
+							dogToVetRelationships.id,
+							dog.dogToVetRelationships.map((v) => v.id),
 						),
 					);
 				}
@@ -255,7 +308,7 @@ const deleteDog = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: `Failed to fetch dog with id: ${id}` };
 	}
 });

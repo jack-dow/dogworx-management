@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
 import { api } from "~/api";
-import { DogTable } from "./_components/dog-table";
+import { DogsTable } from "./_components/dogs-table";
 
 async function DogsPage() {
 	const { data: dogs } = await api.dogs.list();
@@ -19,7 +19,7 @@ async function DogsPage() {
 				}
 			/>
 
-			<DogTable dogs={dogs ?? []} />
+			<DogsTable dogs={dogs ?? []} />
 		</>
 	);
 }

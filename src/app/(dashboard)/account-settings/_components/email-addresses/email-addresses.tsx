@@ -298,7 +298,7 @@ function EmailAddressField({
 													setIsDeletingEmailAddressModalOpen(false);
 												})
 												.catch((error) => {
-													console.error(error);
+													console.log(error);
 													toast({
 														title: "Failed to remove email address",
 														description: "An error occurred while removing email address. Please try again later.",

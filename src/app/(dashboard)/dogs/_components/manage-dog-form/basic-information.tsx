@@ -13,8 +13,8 @@ import { CalendarIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { SegmentedControl } from "~/components/ui/segmented-control";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
@@ -144,13 +144,25 @@ function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }
 									<FormItem>
 										<FormLabel>Desexed</FormLabel>
 										<FormControl>
-											<SegmentedControl
+											{/* <SegmentedControl
 												data={["Yes", "No"]}
 												value={field.value ? "Yes" : "No"}
 												onChange={(value) => {
 													field.onChange(value === "Yes");
 												}}
-											/>
+											/> */}
+											<Tabs
+												value={field.value ? "yes" : "no"}
+												onValueChange={(value) => {
+													field.onChange(value === "yes");
+												}}
+												className="w-full"
+											>
+												<TabsList className="grid w-full grid-cols-2">
+													<TabsTrigger value="yes">Yes</TabsTrigger>
+													<TabsTrigger value="no">No</TabsTrigger>
+												</TabsList>
+											</Tabs>
 										</FormControl>
 
 										<FormMessage />

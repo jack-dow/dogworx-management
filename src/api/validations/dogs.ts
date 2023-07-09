@@ -2,8 +2,9 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { dogs } from "~/db/drizzle-schema";
-import { DogClientRelationshipActionLogSchema } from "./dog-client-relationships";
-import { DogSessionHistoryActionLogSchema } from "./dog-session-history";
+import { DogSessionActionLogSchema } from "./dog-sessions";
+import { DogToClientRelationshipActionLogSchema } from "./dog-to-client-relationships";
+import { DogToVetRelationshipActionLogSchema } from "./dog-to-vet-relationships";
 import { IdSchema } from "./utils";
 
 const SelectDogSchema = createSelectSchema(dogs);
@@ -13,8 +14,9 @@ const InsertDogSchema = createInsertSchema(dogs)
 	.extend({
 		id: IdSchema,
 		actions: z.object({
-			clientRelationships: DogClientRelationshipActionLogSchema,
-			sessionHistory: DogSessionHistoryActionLogSchema,
+			sessions: DogSessionActionLogSchema,
+			dogToClientRelationships: DogToClientRelationshipActionLogSchema,
+			dogToVetRelationships: DogToVetRelationshipActionLogSchema,
 		}),
 	});
 type InsertDogSchema = z.infer<typeof InsertDogSchema>;

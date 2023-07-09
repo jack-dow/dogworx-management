@@ -33,45 +33,41 @@ import { useToast } from "~/components/ui/use-toast";
 import {
 	api,
 	generateId,
-	InsertClientSchema,
-	InsertDogToClientRelationshipSchema,
+	InsertDogToVetRelationshipSchema,
+	InsertVetSchema,
+	InsertVetToVetClinicRelationshipSchema,
 	SelectDogSchema,
-	type ClientInsert,
-	type ClientsList,
-	type ClientsSearch,
-	type ClientUpdate,
+	SelectVetSchema,
+	type VetInsert,
+	type VetsList,
+	type VetsSearch,
+	type VetUpdate,
 } from "~/api";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
-import { ClientPersonalInformation } from "./client-personal-information";
-import { ClientToDogRelationships } from "./client-to-dog-relationships";
+import { VetContactInformation } from "./vet-contact-information";
 
-const ManageClientSheetFormSchema = InsertClientSchema.extend({
-	givenName: prettyStringValidationMessage("First name", 2, 50),
-	familyName: prettyStringValidationMessage("Last name", 1, 50).optional(),
+const ManageVetSheetFormSchema = InsertVetSchema.extend({
+	name: prettyStringValidationMessage("Name", 2, 50),
 	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
 		message: "Email address must be a valid email",
 	}),
 	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
-	streetAddress: prettyStringValidationMessage("Stress address", 5, 75),
-	city: prettyStringValidationMessage("City", 1, 50),
-	state: prettyStringValidationMessage("State", 1, 25),
-	postalCode: prettyStringValidationMessage("Postal code", 1, 15),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema.extend({ dog: SelectDogSchema })),
+	dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
+	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
 });
+type ManageVetSheetFormSchema = z.infer<typeof ManageVetSheetFormSchema>;
 
-type ManageClientSheetFormSchema = z.infer<typeof ManageClientSheetFormSchema>;
+type DefaultValues = Partial<ManageVetSheetFormSchema>;
+type ExistingVet = VetsList[number] | VetsSearch[number];
 
-type DefaultValues = Partial<ManageClientSheetFormSchema>;
-type ExistingClient = ClientsList[number] | ClientsSearch[number];
-
-type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
+type ManageVetSheetProps<VetProp extends ExistingVet | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
 
-			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
-			client?: ClientProp;
+			onSuccessfulSubmit?: (vet: VetProp extends ExistingVet ? VetUpdate : VetInsert) => void;
+			vet?: VetProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
 	  }
@@ -79,21 +75,21 @@ type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
 			open?: undefined;
 			setOpen?: null;
 
-			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
-			client?: ClientProp;
+			onSuccessfulSubmit?: (vet: VetProp extends ExistingVet ? VetUpdate : VetInsert) => void;
+			vet?: VetProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
 	  };
 
-function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
+function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 	open,
 	setOpen,
 	onSuccessfulSubmit,
 	withoutTrigger = false,
-	client,
+	vet,
 	defaultValues,
-}: ManageClientSheetProps<ClientProp>) {
-	const isNew = !client;
+}: ManageVetSheetProps<VetProp>) {
+	const isNew = !vet;
 
 	const { toast } = useToast();
 
@@ -103,58 +99,58 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
 
-	const form = useForm<ManageClientSheetFormSchema>({
-		resolver: zodResolver(ManageClientSheetFormSchema),
+	const form = useForm<ManageVetSheetFormSchema>({
+		resolver: zodResolver(ManageVetSheetFormSchema),
 		defaultValues: {
-			id: client?.id || defaultValues?.id || generateId(),
-			dogToClientRelationships: client?.dogToClientRelationships,
-			...client,
+			id: vet?.id || defaultValues?.id || generateId(),
+			dogToVetRelationships: vet?.dogToVetRelationships,
+			vetToVetClinicRelationships: vet?.vetToVetClinicRelationships,
+			...vet,
 			...defaultValues,
 			actions: {
-				dogToClientRelationships: {},
+				dogToVetRelationships: {},
+				vetToVetClinicRelationships: {},
 			},
 		},
 	});
 
 	React.useEffect(() => {
-		form.reset(client, {
+		form.reset(vet, {
 			keepDirtyValues: true,
 		});
-	}, [client, form]);
+	}, [vet, form]);
 
-	async function onSubmit(data: ManageClientSheetFormSchema) {
+	async function onSubmit(data: ManageVetSheetFormSchema) {
 		let success = false;
-		let newClient: ClientUpdate | ClientInsert | undefined;
+		let newVet: VetUpdate | VetInsert | undefined;
 
-		if (client) {
-			const response = await api.clients.update(data);
+		if (vet) {
+			const response = await api.vets.update(data);
 			success = response.success && !!response.data;
-			newClient = response.data;
+			newVet = response.data;
 		} else {
-			const response = await api.clients.insert(data);
+			const response = await api.vets.insert(data);
 			success = response.success;
-			newClient = response.data;
+			newVet = response.data;
 		}
 
 		if (success) {
-			if (newClient && onSuccessfulSubmit) {
-				onSuccessfulSubmit(newClient);
+			if (newVet && onSuccessfulSubmit) {
+				onSuccessfulSubmit(newVet);
 			}
 
 			toast({
-				title: `Client ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
-					data.familyName ? " " + data.familyName : ""
-				}"`,
+				title: `Vet ${isNew ? "Created" : "Updated"}`,
+				description: `Successfully ${isNew ? "created" : "updated"} vet "${data.name}"`,
 			});
 
 			setInternalOpen(false);
 			form.reset();
 		} else {
 			toast({
-				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
-				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
-					data.familyName ? " " + data.familyName : ""
+				title: `Vet ${isNew ? "Creation" : "Update"} Failed`,
+				description: `There was an error ${isNew ? "creating" : "updating"} vet "${
+					data.name
 				}". Please try again later.`,
 			});
 		}
@@ -199,14 +195,14 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 			>
 				{!withoutTrigger && (
 					<SheetTrigger asChild>
-						<Button>Create Client</Button>
+						<Button>Create Vet</Button>
 					</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
 					<SheetHeader>
-						<SheetTitle>{isNew ? "Create" : "Update"} Client</SheetTitle>
+						<SheetTitle>{isNew ? "Create" : "Update"} Vet</SheetTitle>
 						<SheetDescription>
-							Use this form to {isNew ? "create" : "update"} a client. Click {isNew ? "create" : "update"} client when
+							Use this form to {isNew ? "create" : "update"} a vet. Click {isNew ? "create" : "update"} vet when
 							you&apos;re finished.
 						</SheetDescription>
 					</SheetHeader>
@@ -221,11 +217,11 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 								void form.handleSubmit(onSubmit)(e);
 							}}
 						>
-							<ClientPersonalInformation control={form.control} />
+							<VetContactInformation control={form.control} />
 
 							<Separator className="my-4" />
 
-							<ClientToDogRelationships control={form.control} />
+							{/* <ClientDogRelationships control={form.control} /> */}
 
 							{/* Separator is in ClientDogRelationships due to its dynamic-ness */}
 
@@ -235,7 +231,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 								</SheetClose>
 								<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
 									{form.formState.isSubmitting && <Loader size="sm" />}
-									{isNew ? "Create" : "Update"} client
+									{isNew ? "Create" : "Update"} vet
 								</Button>
 							</SheetFooter>
 						</form>
@@ -246,4 +242,4 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	);
 }
 
-export { type ManageClientSheetFormSchema, ManageClientSheet };
+export { type ManageVetSheetFormSchema, ManageVetSheet };

@@ -1,7 +1,7 @@
 import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
 import { PageHeader } from "~/components/page-header";
 import { api } from "~/api";
-import { ClientTable } from "./_components/client-table";
+import { ClientsTable } from "./_components/clients-table";
 
 async function ClientsPage() {
 	const result = await api.clients.list();
@@ -28,7 +28,7 @@ async function ClientsPage() {
 				}
 			/>
 
-			<ClientTable clients={result.data ?? []} />
+			<ClientsTable clients={result.data ?? []} />
 		</>
 	);
 }

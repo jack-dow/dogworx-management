@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { DogIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
+import { DogIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import {
 	Select,
 	SelectContent,
@@ -10,7 +11,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { InsertDogClientRelationshipSchema } from "~/api/validations/dog-client-relationships";
+import { InsertDogToClientRelationshipSchema } from "~/api/validations/dog-to-client-relationships";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -23,15 +24,15 @@ import { FormControl, FormField, FormItem, FormMessage } from "../ui/form";
 import { Separator } from "../ui/separator";
 import { type ManageClientSheetFormSchema } from "./manage-client-sheet";
 
-function ClientDogRelationships({ control }: { control: Control<ManageClientSheetFormSchema> }) {
+function ClientToDogRelationships({ control }: { control: Control<ManageClientSheetFormSchema> }) {
 	const { setValue } = useFormContext<ManageClientSheetFormSchema>();
-	const clientDogRelationships = useFieldArray({
+	const clientToDogRelationships = useFieldArray({
 		control,
-		name: "dogRelationships",
+		name: "dogToClientRelationships",
 		keyName: "rhf-id",
 	});
 
-	if (clientDogRelationships.fields.length === 0) {
+	if (clientToDogRelationships.fields.length === 0) {
 		return null;
 	}
 
@@ -47,8 +48,8 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 				<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-6">
 					<div className="sm:col-span-6">
 						<ul role="list" className="divide-y divide-slate-100">
-							{clientDogRelationships.fields.map((dogRelationship, index) => (
-								<li key={dogRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+							{clientToDogRelationships.fields.map((dogToClientRelationship, index) => (
+								<li key={dogToClientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
 									<div className="flex items-center gap-x-4">
 										<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 											<DogIcon className="h-5 w-5" />
@@ -56,28 +57,28 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 										{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
 										<div className="min-w-0 flex-auto">
 											<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
-												{dogRelationship.dog.givenName}
+												{dogToClientRelationship.dog.givenName}
 											</p>
 											<p className="truncate text-xs capitalize leading-5 text-slate-500">
-												{dogRelationship.dog.color}
+												{dogToClientRelationship.dog.color}
 											</p>
 										</div>
 									</div>
 									<div className="flex space-x-4">
 										<FormField
 											control={control}
-											name={`dogRelationships.${index}.relationship`}
+											name={`dogToClientRelationships.${index}.relationship`}
 											rules={{ required: "Please select a relationship" }}
-											defaultValue={dogRelationship.relationship}
+											defaultValue={dogToClientRelationship.relationship}
 											render={({ field }) => (
 												<FormItem>
 													<Select
 														onValueChange={(value) => {
 															field.onChange(value as typeof field.value);
-															setValue(`actions.dogRelationships.${dogRelationship.id}`, {
+															setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
 																type: "UPDATE",
 																payload: {
-																	...dogRelationship,
+																	...dogToClientRelationship,
 																	relationship: value as typeof field.value,
 																},
 															});
@@ -94,7 +95,7 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 														<SelectContent>
 															<SelectGroup>
 																<SelectLabel>Relationships</SelectLabel>
-																{Object.values(InsertDogClientRelationshipSchema.shape.relationship.Values).map(
+																{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map(
 																	(relation) => (
 																		<SelectItem key={relation} value={relation} className="capitalize">
 																			{relation.split("-").join(" ")}
@@ -119,6 +120,12 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 													<DropdownMenuLabel>Actions</DropdownMenuLabel>
 													<DropdownMenuSeparator />
 
+													<DropdownMenuItem asChild>
+														<Link href={`/dogs/${dogToClientRelationship.id}`}>
+															<EditIcon className="mr-2 h-4 w-4" />
+															Edit
+														</Link>
+													</DropdownMenuItem>
 													<DropdownMenuItem>
 														<TrashIcon className="mr-2 h-4 w-4" />
 														<span>Remove</span>
@@ -138,4 +145,4 @@ function ClientDogRelationships({ control }: { control: Control<ManageClientShee
 	);
 }
 
-export { ClientDogRelationships };
+export { ClientToDogRelationships };

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 declare class Stringified<T> extends String {
 	private ___stringified: T;
 }

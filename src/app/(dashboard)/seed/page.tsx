@@ -35,7 +35,7 @@ function SeedPage() {
 								setSeeded(true);
 							})
 							.catch((error) => {
-								console.error(error);
+								console.log(error);
 								toast({
 									title: "Failed to seed",
 									description: "Failed to seed the database. Check console for more details",

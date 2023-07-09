@@ -46,8 +46,8 @@ const navigation: Array<Navigation> = [
 	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
 	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
-	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: true },
-	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: true },
+	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
+	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: false },
 	{ name: "Invoices", href: "/invoices", icon: InvoiceIcon, disabled: true },
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
 ];

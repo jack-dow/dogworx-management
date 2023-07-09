@@ -7,12 +7,12 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { api, type ClientsList } from "~/api";
-import { clientTableColumns } from "./client-table-columns";
+import { createClientsTableColumns } from "./clients-table-columns";
 
-function ClientTable({ clients }: { clients: ClientsList }) {
+function ClientsTable({ clients }: { clients: ClientsList }) {
 	const { toast } = useToast();
-	const [editingClient, setEditingClient] = React.useState<ClientsList[number] | null>();
 
+	const [editingClient, setEditingClient] = React.useState<ClientsList[number] | null>();
 	const [confirmClientDelete, setConfirmClientDelete] = React.useState<ClientsList[number] | null>(null);
 
 	return (
@@ -59,7 +59,7 @@ function ClientTable({ clients }: { clients: ClientsList }) {
 
 			<DataTable
 				data={clients}
-				columns={clientTableColumns((client) => {
+				columns={createClientsTableColumns((client) => {
 					setConfirmClientDelete(client);
 				})}
 				onTableRowClick={(client) => {
@@ -73,4 +73,4 @@ function ClientTable({ clients }: { clients: ClientsList }) {
 	);
 }
 
-export { ClientTable };
+export { ClientsTable };

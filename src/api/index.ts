@@ -6,6 +6,14 @@ import {
 	updateClient,
 } from "./server-actions/client-server-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./server-actions/dog-server-actions";
+import {
+	deleteVetClinic,
+	insertVetClinic,
+	listVetClinics,
+	searchVetClinics,
+	updateVetClinic,
+} from "./server-actions/vet-clinic-server-actions";
+import { deleteVet, insertVet, listVets, searchVets, updateVet } from "./server-actions/vet-server-actions";
 import { type ExtractServerActionData } from "./utils";
 
 const api = {
@@ -24,6 +32,20 @@ const api = {
 		update: updateClient,
 		delete: deleteClient,
 	},
+	vets: {
+		list: listVets,
+		search: searchVets,
+		insert: insertVet,
+		update: updateVet,
+		delete: deleteVet,
+	},
+	vetClinics: {
+		list: listVetClinics,
+		search: searchVetClinics,
+		insert: insertVetClinic,
+		update: updateVetClinic,
+		delete: deleteVetClinic,
+	},
 };
 
 type DogsList = ExtractServerActionData<typeof listDogs>;
@@ -39,12 +61,28 @@ type ClientInsert = ExtractServerActionData<typeof insertClient>;
 type ClientUpdate = ExtractServerActionData<typeof updateClient>;
 type ClientDelete = ExtractServerActionData<typeof deleteClient>;
 
+type VetsList = ExtractServerActionData<typeof listVets>;
+type VetsSearch = ExtractServerActionData<typeof searchVets>;
+type VetInsert = ExtractServerActionData<typeof insertVet>;
+type VetUpdate = ExtractServerActionData<typeof updateVet>;
+type VetDelete = ExtractServerActionData<typeof deleteVet>;
+
+type VetClinicsList = ExtractServerActionData<typeof listVetClinics>;
+type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
+type VetClinicInsert = ExtractServerActionData<typeof insertVetClinic>;
+type VetClinicUpdate = ExtractServerActionData<typeof updateVetClinic>;
+type VetClinicDelete = ExtractServerActionData<typeof deleteVetClinic>;
+
 export * from "./validations/clerk";
 export * from "./validations/clients";
-export * from "./validations/dog-client-relationships";
-export * from "./validations/dog-session-history";
+export * from "./validations/dog-sessions";
+export * from "./validations/dog-to-client-relationships";
+export * from "./validations/dog-to-vet-relationships";
 export * from "./validations/dogs";
 export * from "./validations/utils";
+export * from "./validations/vet-clinics";
+export * from "./validations/vet-to-vet-clinic-relationships";
+export * from "./validations/vets";
 
 export { generateId } from "./utils";
 
@@ -60,5 +98,15 @@ export type {
 	ClientInsert,
 	ClientUpdate,
 	ClientDelete,
+	VetsList,
+	VetsSearch,
+	VetInsert,
+	VetUpdate,
+	VetDelete,
+	VetClinicsList,
+	VetClinicsSearch,
+	VetClinicInsert,
+	VetClinicUpdate,
+	VetClinicDelete,
 };
 export { api };

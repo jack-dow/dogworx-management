@@ -1,4 +1,4 @@
-"use client";
+"use vet";
 
 import { type Column, type ColumnDef } from "@tanstack/react-table";
 
@@ -20,19 +20,20 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type ClientsList } from "~/api";
+import { type VetClinicsList } from "~/api";
 import { cn } from "~/lib/utils";
 
-function clientTableColumns(onDeleteClick: (client: ClientsList[number]) => void): ColumnDef<ClientsList[number]>[] {
+function createVetClinicsTableColumns(
+	onDeleteClick: (vet: VetClinicsList[number]) => void,
+): ColumnDef<VetClinicsList[number]>[] {
 	return [
 		{
-			accessorKey: "fullName",
-			accessorFn: (row) => `${row.givenName} ${row.familyName}`,
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+			accessorKey: "name",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			cell: ({ row }) => {
 				return (
 					<div className="flex max-w-[500px] flex-col">
-						<span className="truncate font-medium">{row.getValue("fullName")}</span>
+						<span className="truncate font-medium">{row.getValue("name")}</span>
 						<span className="text-xs text-muted-foreground sm:hidden">{row.original.emailAddress}</span>
 					</div>
 				);
@@ -156,4 +157,4 @@ function DataTableColumnHeader<TData, TValue>({ column, title, className }: Data
 	);
 }
 
-export { clientTableColumns };
+export { createVetClinicsTableColumns };

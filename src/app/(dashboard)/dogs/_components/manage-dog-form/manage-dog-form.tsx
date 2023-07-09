@@ -12,21 +12,21 @@ import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { api, SelectClientSchema, UserSchema, type DogById } from "~/api";
 import { generateId } from "~/api/utils";
+import { InsertDogSessionSchema } from "~/api/validations/dog-sessions";
 import {
-	InsertDogClientRelationshipSchema,
-	SelectDogClientRelationshipSchema,
-} from "~/api/validations/dog-client-relationships";
-import { InsertDogSessionHistorySchema } from "~/api/validations/dog-session-history";
+	InsertDogToClientRelationshipSchema,
+	SelectDogToClientRelationshipSchema,
+} from "~/api/validations/dog-to-client-relationships";
 import { InsertDogSchema, SelectDogSchema } from "~/api/validations/dogs";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { BasicInformation } from "./basic-information";
-import { DogClientRelationships } from "./dog-client-relationships";
+import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { SessionHistory } from "./session-history";
 
 const ClientSchema = SelectClientSchema.extend({
-	dogRelationships: z.array(
-		SelectDogClientRelationshipSchema.extend({
+	dogToClientRelationships: z.array(
+		SelectDogToClientRelationshipSchema.extend({
 			dog: SelectDogSchema,
 		}),
 	),
@@ -38,14 +38,14 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	color: prettyStringValidationMessage("Color", 2, 25),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
 	age: InsertDogSchema.shape.age.nullable(),
-	clientRelationships: z.array(
-		InsertDogClientRelationshipSchema.extend({
-			client: ClientSchema,
+	sessions: z.array(
+		InsertDogSessionSchema.extend({
+			user: UserSchema,
 		}),
 	),
-	sessionHistory: z.array(
-		InsertDogSessionHistorySchema.extend({
-			user: UserSchema,
+	dogToClientRelationships: z.array(
+		InsertDogToClientRelationshipSchema.extend({
+			client: ClientSchema,
 		}),
 	),
 });
@@ -66,35 +66,35 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			desexed: false,
 			...dog,
 			actions: {
-				clientRelationships: {},
-				sessionHistory: {},
+				sessions: {},
+				dogToClientRelationships: {},
 			},
 		},
 	});
 
 	useDidUpdate(() => {
 		if (dog) {
-			// All of this must be done as reset was overriding the dirty values of clientRelationships D:
-			const currClientRelationships = form.getValues("clientRelationships")?.reduce((acc, curr) => {
+			// All of this must be done as reset was overriding the dirty values of dogToClientRelationships D:
+			const currentDogToClientRelationships = form.getValues("dogToClientRelationships")?.reduce((acc, curr) => {
 				acc[curr.id] = curr;
 				return acc;
-			}, {} as Record<string, NonNullable<ManageDogFormSchema["clientRelationships"]>[number]>);
+			}, {} as Record<string, NonNullable<ManageDogFormSchema["dogToClientRelationships"]>[number]>);
 
-			if (currClientRelationships && dog.clientRelationships) {
-				for (const clientRelationship of dog.clientRelationships) {
-					const existingClientRelationshipIndex = currClientRelationships[clientRelationship.id];
-					const action = form.getValues(`actions.clientRelationships.${clientRelationship.id}`);
+			if (currentDogToClientRelationships && dog.dogToClientRelationships) {
+				for (const dogToClientRelationship of dog.dogToClientRelationships) {
+					const existingClientRelationshipIndex = currentDogToClientRelationships[dogToClientRelationship.id];
+					const action = form.getValues(`actions.dogToClientRelationships.${dogToClientRelationship.id}`);
 
 					if (existingClientRelationshipIndex) {
 						if (!action || action.type !== "DELETE") {
-							currClientRelationships[clientRelationship.id] = clientRelationship;
+							currentDogToClientRelationships[dogToClientRelationship.id] = dogToClientRelationship;
 						}
 					} else {
 						if (!action) {
-							currClientRelationships[clientRelationship.id] = clientRelationship;
+							currentDogToClientRelationships[dogToClientRelationship.id] = dogToClientRelationship;
 						} else if (action.type === "UPDATE") {
-							currClientRelationships[clientRelationship.id] = {
-								...clientRelationship,
+							currentDogToClientRelationships[dogToClientRelationship.id] = {
+								...dogToClientRelationship,
 								...action.payload,
 							};
 						}
@@ -105,8 +105,8 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			form.reset(
 				{
 					...dog,
-					clientRelationships: Object.values(currClientRelationships ?? {}),
-					sessionHistory: form.getValues("sessionHistory"),
+					sessions: form.getValues("sessions"),
+					dogToClientRelationships: Object.values(currentDogToClientRelationships ?? {}),
 					actions: form.getValues("actions"),
 				},
 				{
@@ -129,10 +129,12 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 		}
 
 		if (dog) {
-			const response = await api.dogs.update(data);
+			// Have to spread in the age as typescript is being dumb and not inferring it properly
+			const response = await api.dogs.update({ ...data, age: data.age });
 			success = response.success;
 		} else {
-			const response = await api.dogs.insert(data);
+			// Have to spread in the age as typescript is being dumb and not inferring it properly
+			const response = await api.dogs.insert({ ...data, age: data.age });
 			success = response.success;
 		}
 
@@ -177,7 +179,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 					</div>
 					<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 						<div className="space-y-8 sm:p-8">
-							<DogClientRelationships control={form.control} />
+							<DogToClientRelationships control={form.control} />
 
 							{/* <Separator /> */}
 

@@ -5,7 +5,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { clients, dogClientRelationships } from "~/db/drizzle-schema";
+import { clients, dogToClientRelationships } from "~/db/drizzle-schema";
 import { createServerAction } from "../utils";
 import { InsertClientSchema, UpdateClientSchema } from "../validations/clients";
 import { SearchTermSchema, separateActionLogSchema } from "../validations/utils";
@@ -15,7 +15,7 @@ const listClients = createServerAction(async (limit?: number) => {
 		const data = await drizzle.query.clients.findMany({
 			limit: limit ?? 50,
 			with: {
-				dogRelationships: {
+				dogToClientRelationships: {
 					with: {
 						dog: true,
 					},
@@ -25,7 +25,7 @@ const listClients = createServerAction(async (limit?: number) => {
 
 		return { success: true, data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to list clients" };
 	}
 });
@@ -42,13 +42,9 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 			where: sql`concat(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			limit: 50,
 			with: {
-				dogRelationships: {
+				dogToClientRelationships: {
 					with: {
-						dog: {
-							with: {
-								clientRelationships: true,
-							},
-						},
+						dog: true,
 					},
 				},
 			},
@@ -56,7 +52,7 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to search clients" };
 	}
 });
@@ -71,12 +67,13 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 	try {
 		const { actions, ...data } = validValues.data;
 
-		const dogClientRelationshipActionLog = separateActionLogSchema(actions.dogRelationships);
+		const dogToClientRelationshipsActionLog = separateActionLogSchema(actions.dogToClientRelationships);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(clients).values(data);
-			if (dogClientRelationshipActionLog.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(dogClientRelationshipActionLog.inserts);
+
+			if (dogToClientRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionLog.inserts);
 			}
 		});
 
@@ -85,13 +82,9 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 		const client = await drizzle.query.clients.findFirst({
 			where: eq(clients.id, data.id),
 			with: {
-				dogRelationships: {
+				dogToClientRelationships: {
 					with: {
-						dog: {
-							with: {
-								clientRelationships: true,
-							},
-						},
+						dog: true,
 					},
 				},
 			},
@@ -99,7 +92,7 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 
 		return { success: true, data: client };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to insert client" };
 	}
 });
@@ -114,28 +107,28 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 	try {
 		const { id, actions, ...data } = validValues.data;
 
-		const dogClientRelationshipActionLog = separateActionLogSchema(actions?.dogRelationships ?? {});
+		const dogToClientRelationshipsActionLog = separateActionLogSchema(actions?.dogToClientRelationships ?? {});
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(clients).set(data).where(eq(clients.id, id));
 
-			if (dogClientRelationshipActionLog.inserts.length > 0) {
-				await trx.insert(dogClientRelationships).values(dogClientRelationshipActionLog.inserts);
+			if (dogToClientRelationshipsActionLog.inserts.length > 0) {
+				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionLog.inserts);
 			}
 
-			if (dogClientRelationshipActionLog.updates.length > 0) {
-				for (const relationship of dogClientRelationshipActionLog.updates) {
+			if (dogToClientRelationshipsActionLog.updates.length > 0) {
+				for (const relationship of dogToClientRelationshipsActionLog.updates) {
 					await trx
-						.update(dogClientRelationships)
+						.update(dogToClientRelationships)
 						.set(relationship)
-						.where(eq(dogClientRelationships.id, relationship.id));
+						.where(eq(dogToClientRelationships.id, relationship.id));
 				}
 			}
 
-			if (dogClientRelationshipActionLog.deletes.length > 0) {
+			if (dogToClientRelationshipsActionLog.deletes.length > 0) {
 				await trx
-					.delete(dogClientRelationships)
-					.where(inArray(dogClientRelationships.id, dogClientRelationshipActionLog.deletes));
+					.delete(dogToClientRelationships)
+					.where(inArray(dogToClientRelationships.id, dogToClientRelationshipsActionLog.deletes));
 			}
 		});
 
@@ -145,13 +138,9 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 		const client = await drizzle.query.clients.findFirst({
 			where: eq(clients.id, id),
 			with: {
-				dogRelationships: {
+				dogToClientRelationships: {
 					with: {
-						dog: {
-							with: {
-								clientRelationships: true,
-							},
-						},
+						dog: true,
 					},
 				},
 			},
@@ -159,7 +148,7 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 
 		return { success: true, data: client };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to update client" };
 	}
 });
@@ -178,7 +167,7 @@ const deleteClient = createServerAction(async (id: string) => {
 				id: true,
 			},
 			with: {
-				dogRelationships: true,
+				dogToClientRelationships: true,
 			},
 		});
 
@@ -186,11 +175,11 @@ const deleteClient = createServerAction(async (id: string) => {
 			await drizzle.transaction(async (trx) => {
 				await trx.delete(clients).where(eq(clients.id, id));
 
-				if (client.dogRelationships.length > 0) {
-					await trx.delete(dogClientRelationships).where(
+				if (client.dogToClientRelationships.length > 0) {
+					await trx.delete(dogToClientRelationships).where(
 						inArray(
-							dogClientRelationships.id,
-							client.dogRelationships.map((c) => c.id),
+							dogToClientRelationships.id,
+							client.dogToClientRelationships.map((c) => c.id),
 						),
 					);
 				}
@@ -201,7 +190,7 @@ const deleteClient = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch (error) {
-		console.error(error);
+		console.log(error);
 		return { success: false, error: "Failed to delete client" };
 	}
 });

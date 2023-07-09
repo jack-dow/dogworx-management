@@ -7,9 +7,9 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { api, type DogsList } from "~/api";
-import { generateDogTableColumns } from "./dog-table-columns";
+import { createDogsTableColumns } from "./dogs-table-columns";
 
-function DogTable({ dogs }: { dogs: DogsList }) {
+function DogsTable({ dogs }: { dogs: DogsList }) {
 	const router = useRouter();
 	const { toast } = useToast();
 
@@ -45,7 +45,7 @@ function DogTable({ dogs }: { dogs: DogsList }) {
 			/>
 			<DataTable
 				data={dogs}
-				columns={generateDogTableColumns((dog) => {
+				columns={createDogsTableColumns((dog) => {
 					setConfirmDogDelete(dog);
 				})}
 				onTableRowClick={(dog) => {
@@ -57,4 +57,4 @@ function DogTable({ dogs }: { dogs: DogsList }) {
 	);
 }
 
-export { DogTable };
+export { DogsTable };
