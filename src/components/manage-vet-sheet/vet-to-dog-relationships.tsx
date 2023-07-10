@@ -14,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { InsertDogToClientRelationshipSchema } from "~/api/validations/dog-to-client-relationships";
+import { InsertDogToVetRelationshipSchema } from "~/api";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -25,34 +25,29 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "../ui/form";
-import { type ManageClientSheetFormSchema } from "./manage-client-sheet";
+import { type ManageVetSheetFormSchema } from "./manage-vet-sheet";
 
-function ClientToDogRelationships({
-	control,
-	isNew,
-}: {
-	control: Control<ManageClientSheetFormSchema>;
-	isNew: boolean;
-}) {
-	const { getValues, setValue } = useFormContext<ManageClientSheetFormSchema>();
-	const dogToClientRelationships = useFieldArray({
+function VetToDogRelationships({ control, isNew }: { control: Control<ManageVetSheetFormSchema>; isNew: boolean }) {
+	const { getValues, setValue } = useFormContext<ManageVetSheetFormSchema>();
+
+	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<
+		ManageVetSheetFormSchema["dogToVetRelationships"][number] | null
+	>(null);
+
+	const dogToVetRelationships = useFieldArray({
 		control,
-		name: "dogToClientRelationships",
+		name: "dogToVetRelationships",
 		keyName: "rhf-id",
 	});
 
-	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<
-		ManageClientSheetFormSchema["dogToClientRelationships"][number] | null
-	>(null);
-
-	function handleDogToClientRelationshipDelete() {
+	function handleVetToDogRelationshipDelete() {
 		if (confirmRelationshipDelete) {
-			dogToClientRelationships.remove(
-				dogToClientRelationships.fields.findIndex((relationship) => relationship.id === confirmRelationshipDelete.id),
+			dogToVetRelationships.remove(
+				dogToVetRelationships.fields.findIndex((relationship) => relationship.id === confirmRelationshipDelete.id),
 			);
 
-			setValue("actions.dogToClientRelationships", {
-				...getValues("actions.dogToClientRelationships"),
+			setValue("actions.dogToVetRelationships", {
+				...getValues("actions.dogToVetRelationships"),
 				[confirmRelationshipDelete.id]: {
 					type: "DELETE",
 					payload: confirmRelationshipDelete.id,
@@ -70,7 +65,7 @@ function ClientToDogRelationships({
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
 				actionText="Delete relationship"
 				onConfirm={() => {
-					handleDogToClientRelationshipDelete();
+					handleVetToDogRelationshipDelete();
 				}}
 			/>
 
@@ -78,43 +73,43 @@ function ClientToDogRelationships({
 				<div>
 					<h2 className="text-base font-semibold leading-7 text-foreground">Dogs</h2>
 					<p className="text-sm leading-6 text-muted-foreground">
-						Manage the relationships between this client and their dogs.
+						Manage the relationships between this vet and the dogs they treat.
 					</p>
 				</div>
 				<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-6">
 					<div className="sm:col-span-6">
 						<ul role="list" className="divide-y divide-slate-100">
-							{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
-								<li key={dogToClientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+							{dogToVetRelationships.fields.map((dogToVetRelationship, index) => (
+								<li key={dogToVetRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
 									<div className="flex items-center gap-x-4">
 										<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 											<DogIcon className="h-5 w-5" />
 										</div>
-										{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
+
 										<div className="min-w-0 flex-auto">
 											<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
-												{dogToClientRelationship.dog.givenName}
+												{dogToVetRelationship.dog.givenName}
 											</p>
 											<p className="truncate text-xs capitalize leading-5 text-slate-500">
-												{dogToClientRelationship.dog.color}
+												{dogToVetRelationship.dog.color} {dogToVetRelationship.dog.breed}
 											</p>
 										</div>
 									</div>
 									<div className="flex space-x-4">
 										<FormField
 											control={control}
-											name={`dogToClientRelationships.${index}.relationship`}
+											name={`dogToVetRelationships.${index}.relationship`}
 											rules={{ required: "Please select a relationship" }}
-											defaultValue={dogToClientRelationship.relationship}
+											defaultValue={dogToVetRelationship.relationship}
 											render={({ field }) => (
 												<FormItem>
 													<Select
 														onValueChange={(value) => {
 															field.onChange(value as typeof field.value);
-															setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
+															setValue(`actions.dogToVetRelationships.${dogToVetRelationship.id}`, {
 																type: "UPDATE",
 																payload: {
-																	...dogToClientRelationship,
+																	...dogToVetRelationship,
 																	relationship: value as typeof field.value,
 																},
 															});
@@ -124,17 +119,17 @@ function ClientToDogRelationships({
 														<FormControl>
 															<SelectTrigger>
 																<SelectValue placeholder="Select a relation">
-																	<span className="capitalize">{field.value?.split("-").join(" ")}</span>
+																	<span className="capitalize">{field.value?.split("-").join(" ")} Vet</span>
 																</SelectValue>
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent withoutPortal>
 															<SelectGroup>
 																<SelectLabel>Relationships</SelectLabel>
-																{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map(
+																{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map(
 																	(relation) => (
 																		<SelectItem key={relation} value={relation} className="capitalize">
-																			{relation.split("-").join(" ")}
+																			{relation.split("-").join(" ")} Vet
 																		</SelectItem>
 																	),
 																)}
@@ -157,7 +152,7 @@ function ClientToDogRelationships({
 													<DropdownMenuSeparator />
 
 													<DropdownMenuItem asChild>
-														<Link href={`/dogs/${dogToClientRelationship.dogId}`}>
+														<Link href={`/dogs/${dogToVetRelationship.dogId}`}>
 															<EditIcon className="mr-2 h-4 w-4" />
 															Edit
 														</Link>
@@ -165,9 +160,9 @@ function ClientToDogRelationships({
 													<DropdownMenuItem
 														onSelect={() => {
 															if (isNew) {
-																handleDogToClientRelationshipDelete();
+																handleVetToDogRelationshipDelete();
 															} else {
-																setConfirmRelationshipDelete(dogToClientRelationship);
+																setConfirmRelationshipDelete(dogToVetRelationship);
 															}
 														}}
 													>
@@ -188,4 +183,4 @@ function ClientToDogRelationships({
 	);
 }
 
-export { ClientToDogRelationships };
+export { VetToDogRelationships };

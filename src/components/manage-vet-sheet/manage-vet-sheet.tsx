@@ -37,7 +37,9 @@ import {
 	InsertVetSchema,
 	InsertVetToVetClinicRelationshipSchema,
 	SelectDogSchema,
+	SelectVetClinicSchema,
 	SelectVetSchema,
+	SelectVetToVetClinicRelationshipSchema,
 	type VetInsert,
 	type VetsList,
 	type VetsSearch,
@@ -45,6 +47,16 @@ import {
 } from "~/api";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VetContactInformation } from "./vet-contact-information";
+import { VetToDogRelationships } from "./vet-to-dog-relationships";
+import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
+
+const VetClinicSchema = SelectVetClinicSchema.extend({
+	vetToVetClinicRelationships: z.array(
+		SelectVetToVetClinicRelationshipSchema.extend({
+			vet: SelectVetSchema,
+		}),
+	),
+});
 
 const ManageVetSheetFormSchema = InsertVetSchema.extend({
 	name: prettyStringValidationMessage("Name", 2, 50),
@@ -54,7 +66,7 @@ const ManageVetSheetFormSchema = InsertVetSchema.extend({
 	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
 	dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
-	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
+	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: VetClinicSchema })),
 });
 type ManageVetSheetFormSchema = z.infer<typeof ManageVetSheetFormSchema>;
 
@@ -221,9 +233,16 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 
 							<Separator className="my-4" />
 
-							{/* <ClientDogRelationships control={form.control} /> */}
+							<VetToVetClinicRelationships
+								control={form.control}
+								existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
+							/>
 
-							{/* Separator is in ClientDogRelationships due to its dynamic-ness */}
+							<Separator className="my-4" />
+
+							<VetToDogRelationships control={form.control} isNew={isNew} />
+
+							<Separator className="my-4" />
 
 							<SheetFooter>
 								<SheetClose asChild>
@@ -242,4 +261,4 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 	);
 }
 
-export { type ManageVetSheetFormSchema, ManageVetSheet };
+export { type ManageVetSheetFormSchema, type ExistingVet, ManageVetSheet };

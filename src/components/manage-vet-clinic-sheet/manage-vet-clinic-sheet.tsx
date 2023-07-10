@@ -35,7 +35,11 @@ import {
 	generateId,
 	InsertVetClinicSchema,
 	InsertVetToVetClinicRelationshipSchema,
+	SelectDogSchema,
+	SelectDogToVetRelationshipSchema,
+	SelectVetClinicSchema,
 	SelectVetSchema,
+	SelectVetToVetClinicRelationshipSchema,
 	type VetClinicInsert,
 	type VetClinicsList,
 	type VetClinicsSearch,
@@ -43,6 +47,20 @@ import {
 } from "~/api";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
+import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
+
+const VetSchema = SelectVetSchema.extend({
+	vetToVetClinicRelationships: z.array(
+		SelectVetToVetClinicRelationshipSchema.extend({
+			vetClinic: SelectVetClinicSchema,
+		}),
+	),
+	dogToVetRelationships: z.array(
+		SelectDogToVetRelationshipSchema.extend({
+			dog: SelectDogSchema,
+		}),
+	),
+});
 
 const ManageVetClinicSheetFormSchema = InsertVetClinicSchema.extend({
 	name: prettyStringValidationMessage("Name", 2, 50),
@@ -51,7 +69,7 @@ const ManageVetClinicSheetFormSchema = InsertVetClinicSchema.extend({
 	}),
 	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
+	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: VetSchema })),
 });
 type ManageVetClinicSheetFormSchema = z.infer<typeof ManageVetClinicSheetFormSchema>;
 
@@ -220,9 +238,12 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 
 							<Separator className="my-4" />
 
-							{/* <ClientDogRelationships control={form.control} /> */}
+							<VetClinicToVetRelationships
+								control={form.control}
+								existingVetToVetClinicRelationships={vetClinic?.vetToVetClinicRelationships}
+							/>
 
-							{/* Separator is in ClientDogRelationships due to its dynamic-ness */}
+							<Separator className="my-4" />
 
 							<SheetFooter>
 								<SheetClose asChild>
@@ -241,4 +262,4 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 	);
 }
 
-export { type ManageVetClinicSheetFormSchema, ManageVetClinicSheet };
+export { type ManageVetClinicSheetFormSchema, type ExistingVetClinic, ManageVetClinicSheet };

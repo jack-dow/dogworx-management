@@ -45,7 +45,7 @@ function createClientsTableColumns(
 		{
 			accessorKey: "emailAddress",
 			header: ({ column }) => (
-				<DataTableColumnHeader className="hidden sm:flex" column={column} title="Email Address" />
+				<DataTableColumnHeader className="hidden sm:table-cell" column={column} title="Email Address" />
 			),
 			cell: ({ row }) => {
 				return (
@@ -55,7 +55,7 @@ function createClientsTableColumns(
 				);
 			},
 			meta: {
-				className: "hidden sm:flex",
+				className: "hidden sm:table-cell",
 			},
 			filterFn: "fuzzy",
 			sortingFn: "fuzzy",

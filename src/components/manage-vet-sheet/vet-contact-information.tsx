@@ -85,7 +85,7 @@ function VetContactInformation({ control }: { control: Control<ManageVetSheetFor
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<Textarea rows={4} {...field} value={field.value ?? ""} />
+									<Textarea rows={6} {...field} value={field.value ?? ""} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

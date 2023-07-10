@@ -13,8 +13,8 @@ const InsertVetToVetClinicRelationshipSchema = createInsertSchema(vetToVetClinic
 	})
 	.extend({
 		id: IdSchema,
-		dogId: IdSchema,
-		clientId: IdSchema,
+		vetId: IdSchema,
+		vetClinicId: IdSchema,
 	});
 type InsertVetToVetClinicRelationshipSchema = z.infer<typeof InsertVetToVetClinicRelationshipSchema>;
 

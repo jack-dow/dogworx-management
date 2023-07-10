@@ -9,30 +9,38 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { cn } from "~/lib/utils";
 import { Label } from "./label";
+import { Loader } from "./loader";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function useDebouncedState<T = any>(defaultValue: T, wait: number, options = { leading: false }) {
-	const [value, setValue] = React.useState(defaultValue);
+function useDebouncedValue<T = any>(value: T, wait: number, options = { leading: false }) {
+	const [_value, setValue] = React.useState(value);
+	const mountedRef = React.useRef(false);
 	const timeoutRef = React.useRef<number | null>(null);
-	const leadingRef = React.useRef(true);
+	const cooldownRef = React.useRef(false);
 
-	const clearTimeout = () => window.clearTimeout(timeoutRef.current ?? undefined);
-	React.useEffect(() => clearTimeout, []);
+	const cancel = () => window.clearTimeout(timeoutRef.current ?? undefined);
 
-	const debouncedSetValue = (newValue: T) => {
-		clearTimeout();
-		if (leadingRef.current && options.leading) {
-			setValue(newValue);
-		} else {
-			timeoutRef.current = window.setTimeout(() => {
-				leadingRef.current = true;
-				setValue(newValue);
-			}, wait);
+	React.useEffect(() => {
+		if (mountedRef.current) {
+			if (!cooldownRef.current && options.leading) {
+				cooldownRef.current = true;
+				setValue(value);
+			} else {
+				cancel();
+				timeoutRef.current = window.setTimeout(() => {
+					cooldownRef.current = false;
+					setValue(value);
+				}, wait);
+			}
 		}
-		leadingRef.current = false;
-	};
+	}, [value, options.leading, wait]);
 
-	return [value, debouncedSetValue] as const;
+	React.useEffect(() => {
+		mountedRef.current = true;
+		return cancel;
+	}, []);
+
+	return [_value, cancel] as const;
 }
 
 type SearchComboboxContextProps = {
@@ -68,6 +76,8 @@ interface SearchComboboxProps<Result> {
 	onSelect: (result: Result) => void;
 	renderResultItemText: (result: Result) => string;
 	renderNoResultActions?: (props: SearchComboboxContextProps) => React.ReactNode;
+	/** Sets Popover modal prop to false and makes Popover content not render in a portal to ensure proper focus control when combobox is rendered within a sheet */
+	withinSheet?: boolean;
 }
 
 // HACK: Using custom type to allow generics with forwardRef. Using this method to void recasting React.forwardRef like this: https://fettblog.eu/typescript-react-generic-forward-refs/#option-3%3A-augment-forwardref
@@ -81,27 +91,34 @@ interface WithForwardRefType extends React.FC<SearchComboboxProps<RequiredResult
 
 const SearchCombobox: WithForwardRefType = React.forwardRef(
 	(
-		{ labelText, triggerText, onSearch, selected, onSelect, renderResultItemText, renderNoResultActions },
+		{
+			labelText,
+			triggerText,
+			onSearch,
+			selected,
+			onSelect,
+			renderResultItemText,
+			renderNoResultActions,
+			withinSheet = false,
+		},
 		ref: React.ForwardedRef<HTMLButtonElement>,
 	) => {
 		const [isOpen, setIsOpen] = React.useState(false);
-		const [searchTerm, setSearchTerm] = useDebouncedState("", 500);
+		const [searchTerm, setSearchTerm] = React.useState("");
+		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
 		const [confirmedNoResults, setConfirmedNoResults] = React.useState(false);
-		const [results, setResults] = React.useState<Array<RequiredResultProps>>([]);
+		const [results, setResults] = React.useState<Array<RequiredResultProps>>(selected);
 
 		const inputRef = React.useRef<HTMLInputElement>(null);
 		const triggerId = React.useId();
 
 		useDidUpdate(() => {
-			setResults([]);
-			setConfirmedNoResults(false);
-
-			if (!searchTerm) {
+			if (!debouncedSearchTerm) {
 				return;
 			}
 
 			const fetchResults = async () => {
-				const res = await onSearch(searchTerm);
+				const res = await onSearch(debouncedSearchTerm);
 
 				setResults(res ?? []);
 
@@ -111,17 +128,13 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 			};
 
 			void fetchResults();
-		}, [searchTerm]);
+		}, [debouncedSearchTerm]);
 
 		React.useEffect(() => {
-			if (!searchTerm) {
+			if (searchTerm === "") {
 				setResults(selected);
-				if (selected.length === 0) {
-					setConfirmedNoResults(true);
-				}
-				return;
 			}
-		}, [searchTerm, selected]);
+		}, [selected, searchTerm]);
 
 		return (
 			<SearchComboboxContent.Provider
@@ -134,32 +147,51 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 						onOpenChange={(open) => {
 							setIsOpen(open);
 							if (open === false) {
+								setConfirmedNoResults(true);
 								setSearchTerm("");
 							}
 						}}
+						modal={!withinSheet}
 					>
 						<PopoverTrigger asChild ref={ref}>
-							<Button
-								id={triggerId}
-								variant="outline"
-								role="combobox"
-								aria-expanded={isOpen}
-								className="w-full justify-between text-foreground"
-							>
-								<span className="truncate">{triggerText}</span>
-								<ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+							<Button id={triggerId} variant="outline" role="combobox" aria-expanded={isOpen} className="w-full">
+								<span className="mr-2 truncate">{triggerText}</span>
+								<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="max-w-3xl p-0 " align="start">
+						<PopoverContent className="max-w-3xl p-0 " align="start" withoutPortal={withinSheet}>
 							<Command
 								loop
 								filter={() => {
 									return 1;
 								}}
 							>
-								<CommandInput ref={inputRef} defaultValue={searchTerm} onValueChange={setSearchTerm} />
+								<CommandInput
+									ref={inputRef}
+									value={searchTerm}
+									onValueChange={(value) => {
+										setSearchTerm(value);
+
+										if (!value) {
+											setResults(selected);
+											if (selected.length === 0) {
+												setConfirmedNoResults(true);
+											}
+											return;
+										} else {
+											setResults([]);
+											setConfirmedNoResults(false);
+										}
+									}}
+								/>
 								<CommandList>
-									{!confirmedNoResults && <CommandEmpty>Loading...</CommandEmpty>}
+									{!confirmedNoResults && (
+										<CommandEmpty>
+											<div className="flex items-center justify-center">
+												<Loader className="m-0" variant="black" size="sm" />
+											</div>
+										</CommandEmpty>
+									)}
 
 									{results.length > 0 && (
 										<CommandGroup className="max-h-[145px] overflow-auto">

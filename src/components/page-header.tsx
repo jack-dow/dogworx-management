@@ -30,7 +30,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 					</button>
 				</nav>
 
-				<nav className="hidden sm:flex" aria-label="Breadcrumb">
+				<nav className="hidden sm:table-cell" aria-label="Breadcrumb">
 					<ol role="list" className="flex items-center space-x-1">
 						<li>
 							<div className="flex">

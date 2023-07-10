@@ -225,9 +225,9 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 							<Separator className="my-4" />
 
-							<ClientToDogRelationships control={form.control} />
+							<ClientToDogRelationships control={form.control} isNew={isNew} />
 
-							{/* Separator is in ClientDogRelationships due to its dynamic-ness */}
+							<Separator className="my-4" />
 
 							<SheetFooter>
 								<SheetClose asChild>

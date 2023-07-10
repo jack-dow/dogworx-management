@@ -21,6 +21,7 @@
 		"commitlint",
 		"contributorsrc",
 		"conventionalcommits",
+		"cooldown",
 		"dogworx",
 		"execa",
 		"googleusercontent",
