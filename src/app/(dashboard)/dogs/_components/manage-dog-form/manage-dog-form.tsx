@@ -10,7 +10,17 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { api, SelectClientSchema, UserSchema, type DogById } from "~/api";
+import {
+	api,
+	InsertDogToVetRelationshipSchema,
+	SelectClientSchema,
+	SelectDogToVetRelationshipSchema,
+	SelectVetClinicSchema,
+	SelectVetSchema,
+	SelectVetToVetClinicRelationshipSchema,
+	UserSchema,
+	type DogById,
+} from "~/api";
 import { generateId } from "~/api/utils";
 import { InsertDogSessionSchema } from "~/api/validations/dog-sessions";
 import {
@@ -19,15 +29,30 @@ import {
 } from "~/api/validations/dog-to-client-relationships";
 import { InsertDogSchema, SelectDogSchema } from "~/api/validations/dogs";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { mergeRelationships } from "~/lib/utils";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { BasicInformation } from "./basic-information";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
+import { DogToVetRelationships } from "./dog-to-vet-relationships";
 import { SessionHistory } from "./session-history";
 
 const ClientSchema = SelectClientSchema.extend({
 	dogToClientRelationships: z.array(
 		SelectDogToClientRelationshipSchema.extend({
 			dog: SelectDogSchema,
+		}),
+	),
+});
+
+const VetSchema = SelectVetSchema.extend({
+	dogToVetRelationships: z.array(
+		SelectDogToVetRelationshipSchema.extend({
+			dog: SelectDogSchema,
+		}),
+	),
+	vetToVetClinicRelationships: z.array(
+		SelectVetToVetClinicRelationshipSchema.extend({
+			vetClinic: SelectVetClinicSchema,
 		}),
 	),
 });
@@ -40,12 +65,17 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	age: InsertDogSchema.shape.age.nullable(),
 	sessions: z.array(
 		InsertDogSessionSchema.extend({
-			user: UserSchema,
+			user: UserSchema.optional(),
 		}),
 	),
 	dogToClientRelationships: z.array(
 		InsertDogToClientRelationshipSchema.extend({
 			client: ClientSchema,
+		}),
+	),
+	dogToVetRelationships: z.array(
+		InsertDogToVetRelationshipSchema.extend({
+			vet: VetSchema,
 		}),
 	),
 });
@@ -74,40 +104,22 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 	useDidUpdate(() => {
 		if (dog) {
-			// All of this must be done as reset was overriding the dirty values of dogToClientRelationships D:
-			const currentDogToClientRelationships = form.getValues("dogToClientRelationships")?.reduce((acc, curr) => {
-				acc[curr.id] = curr;
-				return acc;
-			}, {} as Record<string, NonNullable<ManageDogFormSchema["dogToClientRelationships"]>[number]>);
-
-			if (currentDogToClientRelationships && dog.dogToClientRelationships) {
-				for (const dogToClientRelationship of dog.dogToClientRelationships) {
-					const existingClientRelationshipIndex = currentDogToClientRelationships[dogToClientRelationship.id];
-					const action = form.getValues(`actions.dogToClientRelationships.${dogToClientRelationship.id}`);
-
-					if (existingClientRelationshipIndex) {
-						if (!action || action.type !== "DELETE") {
-							currentDogToClientRelationships[dogToClientRelationship.id] = dogToClientRelationship;
-						}
-					} else {
-						if (!action) {
-							currentDogToClientRelationships[dogToClientRelationship.id] = dogToClientRelationship;
-						} else if (action.type === "UPDATE") {
-							currentDogToClientRelationships[dogToClientRelationship.id] = {
-								...dogToClientRelationship,
-								...action.payload,
-							};
-						}
-					}
-				}
-			}
-
+			const actions = form.getValues("actions");
 			form.reset(
 				{
 					...dog,
 					sessions: form.getValues("sessions"),
-					dogToClientRelationships: Object.values(currentDogToClientRelationships ?? {}),
-					actions: form.getValues("actions"),
+					dogToClientRelationships: mergeRelationships(
+						form.getValues("dogToClientRelationships"),
+						dog.dogToClientRelationships,
+						actions.dogToClientRelationships,
+					),
+					dogToVetRelationships: mergeRelationships(
+						form.getValues("dogToVetRelationships"),
+						dog.dogToVetRelationships,
+						actions.dogToVetRelationships,
+					),
+					actions,
 				},
 				{
 					keepDirty: true,
@@ -178,12 +190,18 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						</p>
 					</div>
 					<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
-						<div className="space-y-8 sm:p-8">
-							<DogToClientRelationships control={form.control} />
+						<div className="sm:p-8">
+							<DogToClientRelationships
+								control={form.control}
+								existingDogToClientRelationships={dog?.dogToClientRelationships}
+							/>
 
-							{/* <Separator /> */}
+							<Separator className="my-4" />
 
-							{/* <DogVetRelationships /> */}
+							<DogToVetRelationships
+								control={form.control}
+								existingDogToVetRelationships={dog?.dogToVetRelationships}
+							/>
 						</div>
 					</div>
 				</div>

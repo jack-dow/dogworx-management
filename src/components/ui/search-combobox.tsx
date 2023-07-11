@@ -78,6 +78,7 @@ interface SearchComboboxProps<Result> {
 	renderNoResultActions?: (props: SearchComboboxContextProps) => React.ReactNode;
 	/** Sets Popover modal prop to false and makes Popover content not render in a portal to ensure proper focus control when combobox is rendered within a sheet */
 	withinSheet?: boolean;
+	disabled?: boolean;
 }
 
 // HACK: Using custom type to allow generics with forwardRef. Using this method to void recasting React.forwardRef like this: https://fettblog.eu/typescript-react-generic-forward-refs/#option-3%3A-augment-forwardref
@@ -100,6 +101,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 			renderResultItemText,
 			renderNoResultActions,
 			withinSheet = false,
+			disabled = false,
 		},
 		ref: React.ForwardedRef<HTMLButtonElement>,
 	) => {
@@ -154,7 +156,14 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 						modal={!withinSheet}
 					>
 						<PopoverTrigger asChild ref={ref}>
-							<Button id={triggerId} variant="outline" role="combobox" aria-expanded={isOpen} className="w-full">
+							<Button
+								id={triggerId}
+								variant="outline"
+								role="combobox"
+								aria-expanded={isOpen}
+								className="w-full"
+								disabled={disabled}
+							>
 								<span className="mr-2 truncate">{triggerText}</span>
 								<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 							</Button>

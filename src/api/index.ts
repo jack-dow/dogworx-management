@@ -6,6 +6,7 @@ import {
 	updateClient,
 } from "./server-actions/client-server-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./server-actions/dog-server-actions";
+import { getVetClinicRelationships, getVetRelationships } from "./server-actions/relationship-server-actions";
 import {
 	deleteVetClinic,
 	insertVetClinic,
@@ -38,6 +39,7 @@ const api = {
 		insert: insertVet,
 		update: updateVet,
 		delete: deleteVet,
+		getRelationships: getVetRelationships,
 	},
 	vetClinics: {
 		list: listVetClinics,
@@ -45,6 +47,7 @@ const api = {
 		insert: insertVetClinic,
 		update: updateVetClinic,
 		delete: deleteVetClinic,
+		getRelationships: getVetClinicRelationships,
 	},
 };
 
@@ -66,12 +69,14 @@ type VetsSearch = ExtractServerActionData<typeof searchVets>;
 type VetInsert = ExtractServerActionData<typeof insertVet>;
 type VetUpdate = ExtractServerActionData<typeof updateVet>;
 type VetDelete = ExtractServerActionData<typeof deleteVet>;
+type VetRelationships = ExtractServerActionData<typeof getVetRelationships>;
 
 type VetClinicsList = ExtractServerActionData<typeof listVetClinics>;
 type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
 type VetClinicInsert = ExtractServerActionData<typeof insertVetClinic>;
 type VetClinicUpdate = ExtractServerActionData<typeof updateVetClinic>;
 type VetClinicDelete = ExtractServerActionData<typeof deleteVetClinic>;
+type VetClinicRelationships = ExtractServerActionData<typeof getVetClinicRelationships>;
 
 export * from "./validations/clerk";
 export * from "./validations/clients";
@@ -103,10 +108,12 @@ export type {
 	VetInsert,
 	VetUpdate,
 	VetDelete,
+	VetRelationships,
 	VetClinicsList,
 	VetClinicsSearch,
 	VetClinicInsert,
 	VetClinicUpdate,
 	VetClinicDelete,
+	VetClinicRelationships,
 };
 export { api };

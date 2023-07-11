@@ -60,33 +60,12 @@ const getDogById = createServerAction(async (id: string) => {
 				sessions: true,
 				dogToClientRelationships: {
 					with: {
-						client: {
-							with: {
-								dogToClientRelationships: {
-									with: {
-										dog: true,
-									},
-								},
-							},
-						},
+						client: true,
 					},
 				},
 				dogToVetRelationships: {
 					with: {
-						vet: {
-							with: {
-								dogToVetRelationships: {
-									with: {
-										dog: true,
-									},
-								},
-								vetToVetClinicRelationships: {
-									with: {
-										vetClinic: true,
-									},
-								},
-							},
-						},
+						vet: true,
 					},
 				},
 			},

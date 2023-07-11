@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { ManageClientSheet } from "~/components/manage-client-sheet";
+import { ManageVetSheet } from "~/components/manage-vet-sheet";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -25,67 +25,65 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { api, generateId, InsertDogToClientRelationshipSchema, type DogById } from "~/api";
+import { api, generateId, InsertDogToVetRelationshipSchema, type DogById } from "~/api";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
-type Client = ManageDogFormSchema["dogToClientRelationships"][number]["client"];
+type Vet = ManageDogFormSchema["dogToVetRelationships"][number]["vet"];
 
-function DogToClientRelationships({
+function DogToVetRelationships({
 	control,
-	existingDogToClientRelationships,
+	existingDogToVetRelationships,
 }: {
 	control: Control<ManageDogFormSchema>;
-	existingDogToClientRelationships: DogById["dogToClientRelationships"] | undefined;
+	existingDogToVetRelationships: DogById["dogToVetRelationships"] | undefined;
 }) {
 	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
 
-	const dogToClientRelationships = useFieldArray({
+	const dogToVetRelationships = useFieldArray({
 		control,
-		name: "dogToClientRelationships",
+		name: "dogToVetRelationships",
 		keyName: "rhf-id",
 	});
 
-	const [editingClient, setEditingClient] = React.useState<Client | null>(null);
+	const [editingVet, setEditingVet] = React.useState<Vet | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState(false);
+	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState(false);
 
-	const searchClientsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
+	const searchVetsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
 
-	function handleDogToClientRelationshipDelete(relationshipId: string) {
-		const dogToClientRelationshipActions = { ...getValues("actions.dogToClientRelationships") };
+	function handleDogToVetRelationshipDelete(relationshipId: string) {
+		const dogToVetRelationshipActions = { ...getValues("actions.dogToVetRelationships") };
 
-		dogToClientRelationships.remove(dogToClientRelationships.fields.findIndex((field) => field.id === relationshipId));
+		dogToVetRelationships.remove(dogToVetRelationships.fields.findIndex((field) => field.id === relationshipId));
 
-		if (dogToClientRelationshipActions[relationshipId]?.type === "INSERT") {
-			delete dogToClientRelationshipActions[relationshipId];
+		if (dogToVetRelationshipActions[relationshipId]?.type === "INSERT") {
+			delete dogToVetRelationshipActions[relationshipId];
 		} else {
-			dogToClientRelationshipActions[relationshipId] = {
+			dogToVetRelationshipActions[relationshipId] = {
 				type: "DELETE",
 				payload: relationshipId,
 			};
 		}
 
-		setValue("actions.dogToClientRelationships", dogToClientRelationshipActions);
+		setValue("actions.dogToVetRelationships", dogToVetRelationshipActions);
 
 		// HACK: Focus the combobox trigger after the dialog closes
 		setTimeout(() => {
-			searchClientsComboboxTriggerRef?.current?.focus();
+			searchVetsComboboxTriggerRef?.current?.focus();
 		}, 0);
 	}
 
-	function toggleDogToClientRelationship(client: Client) {
-		const relationshipId = dogToClientRelationships.fields.find(
-			(clientRelationship) => clientRelationship.clientId === client.id,
-		)?.id;
+	function toggleDogToVetRelationship(vet: Vet) {
+		const relationshipId = dogToVetRelationships.fields.find((vetRelationship) => vetRelationship.vetId === vet.id)?.id;
 
 		if (relationshipId) {
-			const existingDogToClientRelationship = existingDogToClientRelationships?.find(
-				(dogToClientRelationship) => dogToClientRelationship.id === relationshipId,
+			const existingDogToVetRelationship = existingDogToVetRelationships?.find(
+				(dogToVetRelationship) => dogToVetRelationship.id === relationshipId,
 			);
-			if (existingDogToClientRelationship) {
-				setConfirmRelationshipDelete(existingDogToClientRelationship.id);
+			if (existingDogToVetRelationship) {
+				setConfirmRelationshipDelete(existingDogToVetRelationship.id);
 			} else {
-				handleDogToClientRelationshipDelete(relationshipId);
+				handleDogToVetRelationshipDelete(relationshipId);
 			}
 
 			return;
@@ -93,23 +91,23 @@ function DogToClientRelationships({
 
 		const id = generateId();
 
-		dogToClientRelationships.append({
+		dogToVetRelationships.append({
 			id,
 			dogId: getValues("id"),
-			clientId: client.id,
-			relationship: "owner",
-			client,
+			vetId: vet.id,
+			relationship: "primary",
+			vet,
 		});
 
-		setValue("actions.dogToClientRelationships", {
-			...getValues("actions.dogToClientRelationships"),
+		setValue("actions.dogToVetRelationships", {
+			...getValues("actions.dogToVetRelationships"),
 			[id]: {
 				type: "INSERT",
 				payload: {
 					id,
 					dogId: getValues("id"),
-					clientId: client.id,
-					relationship: "owner",
+					vetId: vet.id,
+					relationship: "primary",
 				},
 			},
 		});
@@ -117,10 +115,10 @@ function DogToClientRelationships({
 
 	return (
 		<>
-			<ManageClientSheet
-				client={editingClient ?? undefined}
-				open={!!editingClient}
-				setOpen={() => setEditingClient(null)}
+			<ManageVetSheet
+				vet={editingVet ?? undefined}
+				open={!!editingVet}
+				setOpen={() => setEditingVet(null)}
 				withoutTrigger
 			/>
 
@@ -132,32 +130,32 @@ function DogToClientRelationships({
 				actionText="Delete relationship"
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
-						handleDogToClientRelationshipDelete(confirmRelationshipDelete);
+						handleDogToVetRelationshipDelete(confirmRelationshipDelete);
 					}
 				}}
 			/>
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
 				<div className="col-span-full">
-					<h3 className="text-base font-semibold leading-7 text-slate-900">Clients</h3>
+					<h3 className="text-base font-semibold leading-7 text-slate-900">Vets</h3>
 					<p className="mt-1 text-sm leading-6 text-muted-foreground">
-						Manage the relationships between this dog and clients.
+						Manage the relationships between this dog and vets.
 					</p>
 				</div>
 				<div className="sm:col-span-6">
 					<SearchCombobox
-						ref={searchClientsComboboxTriggerRef}
-						labelText="Search Clients"
+						ref={searchVetsComboboxTriggerRef}
+						labelText="Search Vets"
 						triggerText={
-							dogToClientRelationships.fields.length === 0
-								? "Search Clients"
-								: dogToClientRelationships.fields.length === 1
-								? "1 client selected"
-								: `${dogToClientRelationships.fields.length} clients selected`
+							dogToVetRelationships.fields.length === 0
+								? "Search Vets"
+								: dogToVetRelationships.fields.length === 1
+								? "1 vet selected"
+								: `${dogToVetRelationships.fields.length} vets selected`
 						}
 						onSearch={async (searchTerm) => {
 							try {
-								const res = await api.clients.search(searchTerm);
+								const res = await api.vets.search(searchTerm);
 
 								return res.data ?? [];
 							} catch (error) {
@@ -165,17 +163,17 @@ function DogToClientRelationships({
 								return [];
 							}
 						}}
-						selected={dogToClientRelationships.fields.map((clientRelationship) => clientRelationship.client)}
-						onSelect={(client) => {
-							toggleDogToClientRelationship(client);
+						selected={dogToVetRelationships.fields.map((vetRelationship) => vetRelationship.vet)}
+						onSelect={(vet) => {
+							toggleDogToVetRelationship(vet);
 						}}
-						renderResultItemText={(client) => `${client.givenName} ${client.familyName}`}
+						renderResultItemText={(vet) => `${vet.givenName} ${vet.familyName}`}
 						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
 							<>
-								<ManageClientSheet
-									open={isCreateClientSheetOpen}
+								<ManageVetSheet
+									open={isCreateVetSheetOpen}
 									setOpen={(value) => {
-										setIsCreateClientSheetOpen(value);
+										setIsCreateVetSheetOpen(value);
 
 										if (value === false) {
 											// HACK: Focus the input after the sheet closes
@@ -190,15 +188,10 @@ function DogToClientRelationships({
 										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
 										emailAddress: "john@exmaple.com",
 										phoneNumber: "0444444444",
-
-										streetAddress: "123 Main St",
-										state: "San Francisco",
-										city: "CA",
-										postalCode: "94114",
 									}}
-									onSuccessfulSubmit={(client) => {
-										toggleDogToClientRelationship(client);
-										setResults([...results, client]);
+									onSuccessfulSubmit={(vet) => {
+										toggleDogToVetRelationship(vet);
+										setResults([...results, vet]);
 										setConfirmedNoResults(false);
 										inputRef?.current?.focus();
 									}}
@@ -207,11 +200,11 @@ function DogToClientRelationships({
 
 								<SearchNoResultActionItem
 									onSelect={() => {
-										setIsCreateClientSheetOpen(true);
+										setIsCreateVetSheetOpen(true);
 									}}
 								>
 									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new client &quot;{searchTerm}&quot;</span>
+									<span>Create new vet &quot;{searchTerm}&quot;</span>
 								</SearchNoResultActionItem>
 							</>
 						)}
@@ -219,8 +212,8 @@ function DogToClientRelationships({
 				</div>
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
-						{dogToClientRelationships.fields.map((clientRelationship, index) => (
-							<li key={clientRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
+						{dogToVetRelationships.fields.map((vetRelationship, index) => (
+							<li key={vetRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
 								<div className="flex items-center gap-x-4">
 									<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 										<UserCircleIcon className="h-5 w-5" />
@@ -228,29 +221,27 @@ function DogToClientRelationships({
 
 									<div className="min-w-0 flex-auto truncate">
 										<p className="text-sm font-semibold leading-6 text-slate-900">
-											{clientRelationship.client.givenName} {clientRelationship.client.familyName}
+											{vetRelationship.vet.givenName} {vetRelationship.vet.familyName}
 										</p>
-										<p className="truncate text-xs leading-5 text-slate-500">
-											{clientRelationship.client.emailAddress}
-										</p>
+										<p className="truncate text-xs leading-5 text-slate-500">{vetRelationship.vet.emailAddress}</p>
 									</div>
 								</div>
 
 								<div className="flex space-x-4">
 									<FormField
 										control={control}
-										name={`dogToClientRelationships.${index}.relationship`}
+										name={`dogToVetRelationships.${index}.relationship`}
 										rules={{ required: "Please select a relationship" }}
-										defaultValue={clientRelationship.relationship}
+										defaultValue={vetRelationship.relationship}
 										render={({ field }) => (
 											<FormItem>
 												<Select
 													onValueChange={(value) => {
 														field.onChange(value as typeof field.value);
-														setValue(`actions.dogToClientRelationships.${clientRelationship.id}`, {
+														setValue(`actions.dogToVetRelationships.${vetRelationship.id}`, {
 															type: "UPDATE",
 															payload: {
-																...clientRelationship,
+																...vetRelationship,
 																relationship: value as typeof field.value,
 															},
 														});
@@ -267,7 +258,7 @@ function DogToClientRelationships({
 													<SelectContent>
 														<SelectGroup>
 															<SelectLabel>Relationships</SelectLabel>
-															{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map(
+															{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map(
 																(relation) => (
 																	<SelectItem key={relation} value={relation} className="capitalize">
 																		{relation.split("-").join(" ")}
@@ -294,15 +285,15 @@ function DogToClientRelationships({
 												<DropdownMenuItem
 													onSelect={(e) => {
 														e.preventDefault();
-														setEditingClient(clientRelationship.client);
+														setEditingVet(vetRelationship.vet);
 													}}
 												>
 													<EditIcon className="mr-2 h-4 w-4" />
-													<span>Edit Client</span>
+													<span>Edit Vet</span>
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													onSelect={() => {
-														toggleDogToClientRelationship(clientRelationship.client);
+														toggleDogToVetRelationship(vetRelationship.vet);
 													}}
 												>
 													<TrashIcon className="mr-2 h-4 w-4" />
@@ -321,4 +312,4 @@ function DogToClientRelationships({
 	);
 }
 
-export { DogToClientRelationships };
+export { DogToVetRelationships };

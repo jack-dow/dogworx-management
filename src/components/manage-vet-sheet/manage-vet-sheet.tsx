@@ -38,46 +38,44 @@ import {
 	InsertVetToVetClinicRelationshipSchema,
 	SelectDogSchema,
 	SelectVetClinicSchema,
-	SelectVetSchema,
-	SelectVetToVetClinicRelationshipSchema,
 	type VetInsert,
+	type VetRelationships,
 	type VetsList,
 	type VetsSearch,
 	type VetUpdate,
 } from "~/api";
+import { mergeRelationships } from "~/lib/utils";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-const VetClinicSchema = SelectVetClinicSchema.extend({
-	vetToVetClinicRelationships: z.array(
-		SelectVetToVetClinicRelationshipSchema.extend({
-			vet: SelectVetSchema,
-		}),
-	),
-});
-
 const ManageVetSheetFormSchema = InsertVetSchema.extend({
-	name: prettyStringValidationMessage("Name", 2, 50),
+	givenName: prettyStringValidationMessage("First name", 2, 50),
+	familyName: prettyStringValidationMessage("Last name", 0, 50).optional(),
 	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
 		message: "Email address must be a valid email",
 	}),
 	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
 	dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
-	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: VetClinicSchema })),
+	vetToVetClinicRelationships: z.array(
+		InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: SelectVetClinicSchema }),
+	),
 });
 type ManageVetSheetFormSchema = z.infer<typeof ManageVetSheetFormSchema>;
 
 type DefaultValues = Partial<ManageVetSheetFormSchema>;
-type ExistingVet = VetsList[number] | VetsSearch[number];
+type ExistingVet = Omit<
+	VetsList[number] | VetsSearch[number],
+	"dogToVetRelationships" | "vetToVetClinicRelationships"
+> &
+	Partial<VetRelationships>;
 
 type ManageVetSheetProps<VetProp extends ExistingVet | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-
 			onSuccessfulSubmit?: (vet: VetProp extends ExistingVet ? VetUpdate : VetInsert) => void;
 			vet?: VetProp;
 			defaultValues?: DefaultValues;
@@ -86,7 +84,6 @@ type ManageVetSheetProps<VetProp extends ExistingVet | undefined> =
 	| {
 			open?: undefined;
 			setOpen?: null;
-
 			onSuccessfulSubmit?: (vet: VetProp extends ExistingVet ? VetUpdate : VetInsert) => void;
 			vet?: VetProp;
 			defaultValues?: DefaultValues;
@@ -107,6 +104,7 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
+	const [isLoadingRelationships, setIsLoadingRelationships] = React.useState(false);
 
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
@@ -116,7 +114,7 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 		defaultValues: {
 			id: vet?.id || defaultValues?.id || generateId(),
 			dogToVetRelationships: vet?.dogToVetRelationships,
-			vetToVetClinicRelationships: vet?.vetToVetClinicRelationships,
+			vetToVetClinicRelationships: vet?.vetToVetClinicRelationships ?? [],
 			...vet,
 			...defaultValues,
 			actions: {
@@ -127,10 +125,57 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 	});
 
 	React.useEffect(() => {
-		form.reset(vet, {
-			keepDirtyValues: true,
-		});
-	}, [vet, form]);
+		function syncVet(vet: ExistingVet) {
+			const actions = form.getValues("actions");
+			form.reset(
+				{
+					...vet,
+					dogToVetRelationships: mergeRelationships(
+						form.getValues("dogToVetRelationships"),
+						vet?.dogToVetRelationships,
+						actions.dogToVetRelationships,
+					),
+					vetToVetClinicRelationships: mergeRelationships(
+						form.getValues("vetToVetClinicRelationships"),
+						vet.vetToVetClinicRelationships,
+						actions.vetToVetClinicRelationships,
+					),
+					actions,
+				},
+				{
+					keepDirtyValues: true,
+				},
+			);
+		}
+
+		if (vet) {
+			if (!vet.dogToVetRelationships || !vet.vetToVetClinicRelationships) {
+				setIsLoadingRelationships(true);
+				const fetchRelationships = async () => {
+					const response = await api.vets.getRelationships(vet.id);
+					if (response.success) {
+						syncVet({
+							...vet,
+							dogToVetRelationships: response.data.dogToVetRelationships,
+							vetToVetClinicRelationships: response.data.vetToVetClinicRelationships,
+						});
+					} else {
+						toast({
+							title: "Failed to fetch vet relationships",
+							description:
+								"An unknown error occurred whilst trying to get this vet's relationships. Please try again later.",
+						});
+					}
+
+					setIsLoadingRelationships(false);
+				};
+				void fetchRelationships();
+				return;
+			}
+
+			syncVet(vet);
+		}
+	}, [vet, form, toast]);
 
 	async function onSubmit(data: ManageVetSheetFormSchema) {
 		let success = false;
@@ -153,7 +198,9 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 
 			toast({
 				title: `Vet ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} vet "${data.name}"`,
+				description: `Successfully ${isNew ? "created" : "updated"} vet "${data.givenName}${
+					data.familyName ? " " + data.familyName : ""
+				}"`,
 			});
 
 			setInternalOpen(false);
@@ -161,8 +208,8 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 		} else {
 			toast({
 				title: `Vet ${isNew ? "Creation" : "Update"} Failed`,
-				description: `There was an error ${isNew ? "creating" : "updating"} vet "${
-					data.name
+				description: `There was an error ${isNew ? "creating" : "updating"} vet "${data.givenName}${
+					data.familyName ? " " + data.familyName : ""
 				}". Please try again later.`,
 			});
 		}
@@ -236,11 +283,12 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 							<VetToVetClinicRelationships
 								control={form.control}
 								existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
+								isLoading={isLoadingRelationships}
 							/>
 
 							<Separator className="my-4" />
 
-							<VetToDogRelationships control={form.control} isNew={isNew} />
+							<VetToDogRelationships control={form.control} isNew={isNew} isLoading={isLoadingRelationships} />
 
 							<Separator className="my-4" />
 

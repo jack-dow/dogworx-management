@@ -35,32 +35,17 @@ import {
 	generateId,
 	InsertVetClinicSchema,
 	InsertVetToVetClinicRelationshipSchema,
-	SelectDogSchema,
-	SelectDogToVetRelationshipSchema,
-	SelectVetClinicSchema,
 	SelectVetSchema,
-	SelectVetToVetClinicRelationshipSchema,
 	type VetClinicInsert,
+	type VetClinicRelationships,
 	type VetClinicsList,
 	type VetClinicsSearch,
 	type VetClinicUpdate,
 } from "~/api";
+import { mergeRelationships } from "~/lib/utils";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
-
-const VetSchema = SelectVetSchema.extend({
-	vetToVetClinicRelationships: z.array(
-		SelectVetToVetClinicRelationshipSchema.extend({
-			vetClinic: SelectVetClinicSchema,
-		}),
-	),
-	dogToVetRelationships: z.array(
-		SelectDogToVetRelationshipSchema.extend({
-			dog: SelectDogSchema,
-		}),
-	),
-});
 
 const ManageVetClinicSheetFormSchema = InsertVetClinicSchema.extend({
 	name: prettyStringValidationMessage("Name", 2, 50),
@@ -69,18 +54,18 @@ const ManageVetClinicSheetFormSchema = InsertVetClinicSchema.extend({
 	}),
 	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
 	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: VetSchema })),
+	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
 });
 type ManageVetClinicSheetFormSchema = z.infer<typeof ManageVetClinicSheetFormSchema>;
 
 type DefaultValues = Partial<ManageVetClinicSheetFormSchema>;
-type ExistingVetClinic = VetClinicsList[number] | VetClinicsSearch[number];
+type ExistingVetClinic = Omit<VetClinicsList[number] | VetClinicsSearch[number], "vetToVetClinicRelationships"> &
+	Partial<VetClinicRelationships>;
 
 type ManageVetClinicSheetProps<VetClinicProp extends ExistingVetClinic | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-
 			onSuccessfulSubmit?: (
 				vetClinic: VetClinicProp extends ExistingVetClinic ? VetClinicUpdate : VetClinicInsert,
 			) => void;
@@ -91,7 +76,6 @@ type ManageVetClinicSheetProps<VetClinicProp extends ExistingVetClinic | undefin
 	| {
 			open?: undefined;
 			setOpen?: null;
-
 			onSuccessfulSubmit?: (
 				vetClinic: VetClinicProp extends ExistingVetClinic ? VetClinicUpdate : VetClinicInsert,
 			) => void;
@@ -114,6 +98,7 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
+	const [isLoadingRelationships, setIsLoadingRelationships] = React.useState(false);
 
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
@@ -132,9 +117,43 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 	});
 
 	React.useEffect(() => {
-		form.reset(vetClinic, {
-			keepDirtyValues: true,
-		});
+		function syncVetClinic(vetClinic: ExistingVetClinic) {
+			const actions = form.getValues("actions");
+			form.reset(
+				{
+					...vetClinic,
+					vetToVetClinicRelationships: mergeRelationships(
+						form.getValues("vetToVetClinicRelationships"),
+						vetClinic.vetToVetClinicRelationships,
+						actions.vetToVetClinicRelationships,
+					),
+					actions,
+				},
+				{
+					keepDirtyValues: true,
+				},
+			);
+		}
+
+		if (vetClinic) {
+			if (!vetClinic.vetToVetClinicRelationships) {
+				setIsLoadingRelationships(true);
+				const fetchRelationships = async () => {
+					const response = await api.vetClinics.getRelationships(vetClinic.id);
+					if (response.success) {
+						syncVetClinic({
+							...vetClinic,
+							vetToVetClinicRelationships: response.data.vetToVetClinicRelationships,
+						});
+					}
+					setIsLoadingRelationships(false);
+				};
+				void fetchRelationships();
+				return;
+			}
+
+			syncVetClinic(vetClinic);
+		}
 	}, [vetClinic, form]);
 
 	async function onSubmit(data: ManageVetClinicSheetFormSchema) {
@@ -241,6 +260,7 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 							<VetClinicToVetRelationships
 								control={form.control}
 								existingVetToVetClinicRelationships={vetClinic?.vetToVetClinicRelationships}
+								isLoading={isLoadingRelationships}
 							/>
 
 							<Separator className="my-4" />

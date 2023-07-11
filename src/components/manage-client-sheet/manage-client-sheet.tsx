@@ -47,7 +47,7 @@ import { ClientToDogRelationships } from "./client-to-dog-relationships";
 
 const ManageClientSheetFormSchema = InsertClientSchema.extend({
 	givenName: prettyStringValidationMessage("First name", 2, 50),
-	familyName: prettyStringValidationMessage("Last name", 1, 50).optional(),
+	familyName: prettyStringValidationMessage("Last name", 0, 50).optional(),
 	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
 		message: "Email address must be a valid email",
 	}),
@@ -117,9 +117,12 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	});
 
 	React.useEffect(() => {
-		form.reset(client, {
-			keepDirtyValues: true,
-		});
+		form.reset(
+			{ ...client, actions: form.getValues("actions") },
+			{
+				keepDirtyValues: true,
+			},
+		);
 	}, [client, form]);
 
 	async function onSubmit(data: ManageClientSheetFormSchema) {
