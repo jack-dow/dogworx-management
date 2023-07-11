@@ -1,5 +1,11 @@
+import { type Metadata } from "next";
+
 import { ManageVetSheet } from "~/components/manage-vet-sheet";
 import { PageHeader } from "~/components/page-header";
+
+export const metadata: Metadata = {
+	title: "Dashboard | Dogworx Management",
+};
 
 function RootPage() {
 	return (

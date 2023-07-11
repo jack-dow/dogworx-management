@@ -5,13 +5,13 @@ import { isClerkAPIResponseError, useSignIn } from "@clerk/nextjs";
 import type { OAuthStrategy } from "@clerk/types";
 
 import { Button } from "~/components/ui/button";
-import { AppleIcon, GoogleIcon } from "~/components/ui/icons";
+import { GoogleIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 
 const OAuthProviders = [
 	{ name: "Google", strategy: "oauth_google", icon: GoogleIcon },
-	{ name: "Apple", strategy: "oauth_apple", icon: AppleIcon },
+	// { name: "Apple", strategy: "oauth_apple", icon: AppleIcon },
 ] satisfies {
 	name: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,7 +51,7 @@ function OAuthSignIn() {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-1 sm:gap-4">
 			{OAuthProviders.map((provider) => {
 				return (
 					<Button

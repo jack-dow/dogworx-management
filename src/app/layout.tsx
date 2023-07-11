@@ -1,11 +1,16 @@
 import "~/styles/globals.css";
 
+import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 import { auth, ClerkProvider } from "@clerk/nextjs";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
 import { cn } from "~/lib/utils";
+
+export const metadata: Metadata = {
+	title: "Dogworx Management",
+};
 
 // If loading a variable font, you don't need to specify the font weight
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });

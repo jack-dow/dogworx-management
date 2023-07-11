@@ -1,9 +1,14 @@
+import { type Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
 import { api } from "~/api";
 import { DogsTable } from "./_components/dogs-table";
+
+export const metadata: Metadata = {
+	title: "Dogs | Dogworx Management",
+};
 
 async function DogsPage() {
 	const { data: dogs } = await api.dogs.list();
