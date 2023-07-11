@@ -15,6 +15,7 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { InsertDogToClientRelationshipSchema } from "~/api/validations/dog-to-client-relationships";
+import { RelationshipLoadingSkeleton } from "../relationship-loading-skeleton";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -30,9 +31,11 @@ import { type ManageClientSheetFormSchema } from "./manage-client-sheet";
 function ClientToDogRelationships({
 	control,
 	isNew,
+	isLoading,
 }: {
 	control: Control<ManageClientSheetFormSchema>;
 	isNew: boolean;
+	isLoading: boolean;
 }) {
 	const { getValues, setValue } = useFormContext<ManageClientSheetFormSchema>();
 	const dogToClientRelationships = useFieldArray({
@@ -84,102 +87,110 @@ function ClientToDogRelationships({
 				<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-6">
 					<div className="sm:col-span-6">
 						<ul role="list" className="divide-y divide-slate-100">
-							{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
-								<li key={dogToClientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
-									<div className="flex items-center gap-x-4">
-										<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
-											<DogIcon className="h-5 w-5" />
-										</div>
-										{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
-										<div className="min-w-0 flex-auto">
-											<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
-												{dogToClientRelationship.dog.givenName}
-											</p>
-											<p className="truncate text-xs capitalize leading-5 text-slate-500">
-												{dogToClientRelationship.dog.color}
-											</p>
-										</div>
-									</div>
-									<div className="flex space-x-4">
-										<FormField
-											control={control}
-											name={`dogToClientRelationships.${index}.relationship`}
-											rules={{ required: "Please select a relationship" }}
-											defaultValue={dogToClientRelationship.relationship}
-											render={({ field }) => (
-												<FormItem>
-													<Select
-														onValueChange={(value) => {
-															field.onChange(value as typeof field.value);
-															setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
-																type: "UPDATE",
-																payload: {
-																	...dogToClientRelationship,
-																	relationship: value as typeof field.value,
-																},
-															});
-														}}
-														value={field.value}
-													>
-														<FormControl>
-															<SelectTrigger>
-																<SelectValue placeholder="Select a relation">
-																	<span className="capitalize">{field.value?.split("-").join(" ")}</span>
-																</SelectValue>
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent withoutPortal>
-															<SelectGroup>
-																<SelectLabel>Relationships</SelectLabel>
-																{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map(
-																	(relation) => (
-																		<SelectItem key={relation} value={relation} className="capitalize">
-																			{relation.split("-").join(" ")}
-																		</SelectItem>
-																	),
-																)}
-															</SelectGroup>
-														</SelectContent>
-													</Select>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
+							{isLoading
+								? Array(3)
+										.fill(undefined)
+										.map((_, index) => (
+											<li key={`c-t-d-${index}`}>
+												<RelationshipLoadingSkeleton />
+											</li>
+										))
+								: dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
+										<li key={dogToClientRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+											<div className="flex items-center gap-x-4">
+												<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
+													<DogIcon className="h-5 w-5" />
+												</div>
+												{/* <img className="h-12 w-12 flex-none rounded-full bg-slate-50" src={person.imageUrl} alt="" /> */}
+												<div className="min-w-0 flex-auto">
+													<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
+														{dogToClientRelationship.dog.givenName}
+													</p>
+													<p className="truncate text-xs capitalize leading-5 text-slate-500">
+														{dogToClientRelationship.dog.color}
+													</p>
+												</div>
+											</div>
+											<div className="flex space-x-4">
+												<FormField
+													control={control}
+													name={`dogToClientRelationships.${index}.relationship`}
+													rules={{ required: "Please select a relationship" }}
+													defaultValue={dogToClientRelationship.relationship}
+													render={({ field }) => (
+														<FormItem>
+															<Select
+																onValueChange={(value) => {
+																	field.onChange(value as typeof field.value);
+																	setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
+																		type: "UPDATE",
+																		payload: {
+																			...dogToClientRelationship,
+																			relationship: value as typeof field.value,
+																		},
+																	});
+																}}
+																value={field.value}
+															>
+																<FormControl>
+																	<SelectTrigger>
+																		<SelectValue placeholder="Select a relation">
+																			<span className="capitalize">{field.value?.split("-").join(" ")}</span>
+																		</SelectValue>
+																	</SelectTrigger>
+																</FormControl>
+																<SelectContent withoutPortal>
+																	<SelectGroup>
+																		<SelectLabel>Relationships</SelectLabel>
+																		{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map(
+																			(relation) => (
+																				<SelectItem key={relation} value={relation} className="capitalize">
+																					{relation.split("-").join(" ")}
+																				</SelectItem>
+																			),
+																		)}
+																	</SelectGroup>
+																</SelectContent>
+															</Select>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
 
-										<div className="flex items-center">
-											<DropdownMenu>
-												<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-													<span className="sr-only">Open options</span>
-													<EllipsisVerticalIcon className="h-5 w-5" />
-												</DropdownMenuTrigger>
-												<DropdownMenuContent>
-													<DropdownMenuLabel>Actions</DropdownMenuLabel>
-													<DropdownMenuSeparator />
+												<div className="flex items-center">
+													<DropdownMenu>
+														<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+															<span className="sr-only">Open options</span>
+															<EllipsisVerticalIcon className="h-5 w-5" />
+														</DropdownMenuTrigger>
+														<DropdownMenuContent>
+															<DropdownMenuLabel>Actions</DropdownMenuLabel>
+															<DropdownMenuSeparator />
 
-													<DropdownMenuItem asChild>
-														<Link href={`/dogs/${dogToClientRelationship.dogId}`}>
-															<EditIcon className="mr-2 h-4 w-4" />
-															Edit
-														</Link>
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														onSelect={() => {
-															if (isNew) {
-																handleDogToClientRelationshipDelete();
-															} else {
-																setConfirmRelationshipDelete(dogToClientRelationship);
-															}
-														}}
-													>
-														<TrashIcon className="mr-2 h-4 w-4" />
-														<span>Remove</span>
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-										</div>
-									</div>
-								</li>
-							))}
+															<DropdownMenuItem asChild>
+																<Link href={`/dogs/${dogToClientRelationship.dogId}`}>
+																	<EditIcon className="mr-2 h-4 w-4" />
+																	Edit
+																</Link>
+															</DropdownMenuItem>
+															<DropdownMenuItem
+																onSelect={() => {
+																	if (isNew) {
+																		handleDogToClientRelationshipDelete();
+																	} else {
+																		setConfirmRelationshipDelete(dogToClientRelationship);
+																	}
+																}}
+															>
+																<TrashIcon className="mr-2 h-4 w-4" />
+																<span>Remove</span>
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+											</div>
+										</li>
+								  ))}
 						</ul>
 					</div>
 				</div>

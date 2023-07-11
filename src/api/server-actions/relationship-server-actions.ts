@@ -3,8 +3,30 @@
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { dogToVetRelationships, vetToVetClinicRelationships } from "~/db/drizzle-schema";
+import { dogToClientRelationships, dogToVetRelationships, vetToVetClinicRelationships } from "~/db/drizzle-schema";
 import { createServerAction } from "../utils";
+
+const getClientRelationships = createServerAction(async (clientId: string) => {
+	try {
+		const dogToClientRelationshipsData = await drizzle.query.dogToClientRelationships.findMany({
+			limit: 25,
+			where: eq(dogToClientRelationships.clientId, clientId),
+			with: {
+				dog: true,
+			},
+		});
+
+		return {
+			success: true,
+			data: {
+				dogToClientRelationships: dogToClientRelationshipsData,
+			},
+		};
+	} catch (error) {
+		console.log(error);
+		return { success: false, error: `Failed to get client relationships with client id: "${clientId}"` };
+	}
+});
 
 const getVetRelationships = createServerAction(async (vetId: string) => {
 	try {
@@ -59,4 +81,4 @@ const getVetClinicRelationships = createServerAction(async (vetClinicId: string)
 	}
 });
 
-export { getVetRelationships, getVetClinicRelationships };
+export { getClientRelationships, getVetRelationships, getVetClinicRelationships };

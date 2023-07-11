@@ -6,7 +6,11 @@ import {
 	updateClient,
 } from "./server-actions/client-server-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./server-actions/dog-server-actions";
-import { getVetClinicRelationships, getVetRelationships } from "./server-actions/relationship-server-actions";
+import {
+	getClientRelationships,
+	getVetClinicRelationships,
+	getVetRelationships,
+} from "./server-actions/relationship-server-actions";
 import {
 	deleteVetClinic,
 	insertVetClinic,
@@ -32,6 +36,7 @@ const api = {
 		insert: insertClient,
 		update: updateClient,
 		delete: deleteClient,
+		getRelationships: getClientRelationships,
 	},
 	vets: {
 		list: listVets,
@@ -63,6 +68,7 @@ type ClientsSearch = ExtractServerActionData<typeof searchClients>;
 type ClientInsert = ExtractServerActionData<typeof insertClient>;
 type ClientUpdate = ExtractServerActionData<typeof updateClient>;
 type ClientDelete = ExtractServerActionData<typeof deleteClient>;
+type ClientRelationships = ExtractServerActionData<typeof getClientRelationships>;
 
 type VetsList = ExtractServerActionData<typeof listVets>;
 type VetsSearch = ExtractServerActionData<typeof searchVets>;
@@ -103,6 +109,7 @@ export type {
 	ClientInsert,
 	ClientUpdate,
 	ClientDelete,
+	ClientRelationships,
 	VetsList,
 	VetsSearch,
 	VetInsert,

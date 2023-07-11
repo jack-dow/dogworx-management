@@ -179,7 +179,7 @@ function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }
 									<FormItem>
 										<FormLabel>Notes</FormLabel>
 										<FormControl>
-											<Textarea {...field} value={field.value ?? ""} />
+											<Textarea rows={6} {...field} value={field.value ?? ""} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -246,10 +246,6 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 								open={isDatePickerOpen}
 								onOpenChange={(value) => {
 									setIsDatePickerOpen(value);
-									console.log(value);
-									if (value === false) {
-										setInputValue("");
-									}
 								}}
 							>
 								<PopoverTrigger asChild>
@@ -278,6 +274,11 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 												setMonth(date);
 												setAgeInWords(getAgeInWords(date));
 											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setIsDatePickerOpen(false);
+												}
+											}}
 										/>
 									</div>
 									<Calendar
@@ -291,7 +292,6 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 												setAgeInWords(getAgeInWords(value));
 											}
 											setIsDatePickerOpen(false);
-											setInputValue("");
 										}}
 										initialFocus={false}
 									/>

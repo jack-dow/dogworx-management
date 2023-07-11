@@ -37,10 +37,12 @@ import {
 	InsertDogToClientRelationshipSchema,
 	SelectDogSchema,
 	type ClientInsert,
+	type ClientRelationships,
 	type ClientsList,
 	type ClientsSearch,
 	type ClientUpdate,
 } from "~/api";
+import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
@@ -63,7 +65,8 @@ const ManageClientSheetFormSchema = InsertClientSchema.extend({
 type ManageClientSheetFormSchema = z.infer<typeof ManageClientSheetFormSchema>;
 
 type DefaultValues = Partial<ManageClientSheetFormSchema>;
-type ExistingClient = ClientsList[number] | ClientsSearch[number];
+type ExistingClient = Omit<ClientsList[number] | ClientsSearch[number], keyof ClientRelationships> &
+	Partial<ClientRelationships>;
 
 type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
 	| {
@@ -99,6 +102,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
+	const [isLoadingRelationships, setIsLoadingRelationships] = React.useState(false);
 
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
@@ -115,15 +119,47 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 			},
 		},
 	});
+	useConfirmPageNavigation(form.formState.isDirty);
+
+	if (Object.keys(form.formState.errors).length > 0) {
+		console.log(form.formState.errors);
+	}
 
 	React.useEffect(() => {
-		form.reset(
-			{ ...client, actions: form.getValues("actions") },
-			{
-				keepDirtyValues: true,
-			},
-		);
-	}, [client, form]);
+		function syncClient(client: ExistingClient) {
+			form.reset(
+				{ ...client, actions: form.getValues("actions") },
+				{
+					keepDirtyValues: true,
+				},
+			);
+		}
+		if (client) {
+			if (!client.dogToClientRelationships) {
+				setIsLoadingRelationships(true);
+				const fetchRelationships = async () => {
+					const response = await api.clients.getRelationships(client.id);
+					if (response.success) {
+						syncClient({
+							...client,
+							dogToClientRelationships: response.data.dogToClientRelationships,
+						});
+					} else {
+						toast({
+							title: "Failed to fetch client relationships",
+							description:
+								"An unknown error occurred whilst trying to get this vet's relationships. Please try again later.",
+						});
+					}
+					setIsLoadingRelationships(false);
+				};
+				void fetchRelationships();
+				return;
+			}
+
+			syncClient(client);
+		}
+	}, [client, form, toast]);
 
 	async function onSubmit(data: ManageClientSheetFormSchema) {
 		let success = false;
@@ -228,7 +264,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 							<Separator className="my-4" />
 
-							<ClientToDogRelationships control={form.control} isNew={isNew} />
+							<ClientToDogRelationships control={form.control} isNew={isNew} isLoading={isLoadingRelationships} />
 
 							<Separator className="my-4" />
 

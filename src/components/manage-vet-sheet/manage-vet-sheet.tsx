@@ -44,6 +44,7 @@ import {
 	type VetsSearch,
 	type VetUpdate,
 } from "~/api";
+import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { mergeRelationships } from "~/lib/utils";
 import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VetContactInformation } from "./vet-contact-information";
@@ -123,6 +124,11 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 			},
 		},
 	});
+	useConfirmPageNavigation(form.formState.isDirty);
+
+	if (Object.keys(form.formState.errors).length > 0) {
+		console.log(form.formState.errors);
+	}
 
 	React.useEffect(() => {
 		function syncVet(vet: ExistingVet) {

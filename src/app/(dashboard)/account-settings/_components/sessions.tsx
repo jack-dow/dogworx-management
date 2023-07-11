@@ -55,7 +55,7 @@ function Sessions({ control }: { control: Control<AccountSettingsPageFormSchema>
 					and log it out.
 				</p>
 			</div>
-			<div className="flex md:col-span-2">
+			<div className="sm:rounded-xl sm:bg-white sm:p-8 sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 				<Accordion type="single" collapsible className="w-full">
 					{activeSession && (
 						<SessionAccordion
