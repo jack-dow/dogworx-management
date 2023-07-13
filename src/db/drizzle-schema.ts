@@ -55,12 +55,12 @@ const clients = mysqlTable("clients", {
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
-	phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
-	emailAddress: varchar("email_address", { length: 256 }).notNull(),
-	streetAddress: varchar("street_address", { length: 256 }).notNull(),
-	city: varchar("city", { length: 50 }).notNull(),
-	state: varchar("state", { length: 50 }).notNull(),
-	postalCode: varchar("postal_code", { length: 10 }).notNull(),
+	emailAddress: varchar("email_address", { length: 256 }).notNull().default(""),
+	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
+	streetAddress: varchar("street_address", { length: 256 }).notNull().default(""),
+	city: varchar("city", { length: 50 }).notNull().default(""),
+	state: varchar("state", { length: 50 }).notNull().default(""),
+	postalCode: varchar("postal_code", { length: 10 }).notNull().default(""),
 	notes: text("notes"),
 });
 type Client = InferModel<typeof clients>;

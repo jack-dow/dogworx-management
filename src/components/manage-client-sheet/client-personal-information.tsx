@@ -1,4 +1,4 @@
-import { type Control } from "react-hook-form";
+import { useFormContext, type Control } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
@@ -6,6 +6,8 @@ import { Textarea } from "../ui/textarea";
 import { type ManageClientSheetFormSchema } from "./manage-client-sheet";
 
 function ClientPersonalInformation({ control }: { control: Control<ManageClientSheetFormSchema> }) {
+	const form = useFormContext<ManageClientSheetFormSchema>();
+
 	return (
 		<div>
 			<div>
@@ -36,7 +38,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 						control={control}
 						name="familyName"
 						render={({ field }) => (
-							<FormItem optional>
+							<FormItem>
 								<FormLabel>Last Name</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />
@@ -55,7 +57,16 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Email Address</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										onChange={(e) => {
+											field.onChange(e);
+											if (form.formState.errors.phoneNumber?.type === "too_small") {
+												form.clearErrors("phoneNumber");
+											}
+										}}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -71,7 +82,16 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Phone Number</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										onChange={(e) => {
+											field.onChange(e.target.value);
+											if (form.formState.errors.emailAddress?.type === "too_small") {
+												form.clearErrors("emailAddress");
+											}
+										}}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>

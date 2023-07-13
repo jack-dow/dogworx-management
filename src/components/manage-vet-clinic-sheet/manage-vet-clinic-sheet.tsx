@@ -43,19 +43,18 @@ import {
 	type VetClinicUpdate,
 } from "~/api";
 import { mergeRelationships } from "~/lib/utils";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
+import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 
-const ManageVetClinicSheetFormSchema = InsertVetClinicSchema.extend({
-	name: prettyStringValidationMessage("Name", 2, 50),
-	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
-		message: "Email address must be a valid email",
+const ManageVetClinicSheetFormSchema = z.intersection(
+	InsertVetClinicSchema.extend({
+		name: z.string().max(50).nonempty({ message: "Required" }),
+		notes: z.string().max(500).nullish(),
+		vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
 	}),
-	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
-	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
-});
+	EmailOrPhoneNumberSchema,
+);
 type ManageVetClinicSheetFormSchema = z.infer<typeof ManageVetClinicSheetFormSchema>;
 
 type DefaultValues = Partial<ManageVetClinicSheetFormSchema>;

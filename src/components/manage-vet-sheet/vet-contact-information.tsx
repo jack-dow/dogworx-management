@@ -34,7 +34,7 @@ function VetContactInformation({ control }: { control: Control<ManageVetSheetFor
 						control={control}
 						name="familyName"
 						render={({ field }) => (
-							<FormItem optional>
+							<FormItem>
 								<FormLabel>Last Name</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} />

@@ -194,8 +194,6 @@ function VetToVetClinicRelationships({
 									}}
 									defaultValues={{
 										name: searchTerm,
-										emailAddress: "john@exmaple.com",
-										phoneNumber: "0444444444",
 									}}
 									onSuccessfulSubmit={(vetClinic) => {
 										toggleVetToVetClinicRelationship(vetClinic);

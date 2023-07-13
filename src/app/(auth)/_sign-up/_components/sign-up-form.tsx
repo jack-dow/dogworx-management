@@ -12,7 +12,7 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { PasswordInput } from "~/components/ui/password-input";
 import { useToast } from "~/components/ui/use-toast";
-import { AuthSchema } from "~/lib/validations/auth";
+import { AuthSchema } from "~/lib/validation";
 
 function SignUpForm() {
 	const router = useRouter();

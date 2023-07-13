@@ -36,17 +36,16 @@ import { InsertDogSchema } from "~/api/validations/dogs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { mergeRelationships } from "~/lib/utils";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { BasicInformation } from "./basic-information";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
 import { SessionHistory } from "./session-history";
 
 const ManageDogFormSchema = InsertDogSchema.extend({
-	givenName: prettyStringValidationMessage("Name", 2, 50),
-	breed: prettyStringValidationMessage("Breed", 2, 50),
-	color: prettyStringValidationMessage("Color", 2, 25),
-	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
+	givenName: z.string().max(50).nonempty({ message: "Required" }),
+	breed: z.string().max(50).nonempty({ message: "Required" }),
+	color: z.string().max(25).nonempty({ message: "Required" }),
+	notes: z.string().max(500).nullish(),
 	age: InsertDogSchema.shape.age.nullable(),
 	sessions: z.array(
 		InsertDogSessionSchema.extend({

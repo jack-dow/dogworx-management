@@ -200,7 +200,7 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div className="mt-2 text-sm text-slate-700">
+							<div className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
 								<p>{session.details}</p>
 							</div>
 						</div>
@@ -330,7 +330,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										<FormControl>
 											<Textarea
 												{...field}
-												rows={3}
+												rows={6}
 												className="resize-none rounded-b-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
 												placeholder="Add session details..."
 											/>
@@ -341,9 +341,6 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 
 							{/* Spacer element to match the height of the toolbar */}
 							<div aria-hidden="true">
-								<div className="py-2">
-									<div className="h-9" />
-								</div>
 								<div className="h-px" />
 								<div className="py-2">
 									<div className="py-px">

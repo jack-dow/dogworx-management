@@ -20,11 +20,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { VerifyEmailAddressCodeInput } from "./verify-email-address-code-input";
 
 const AddEmailAddressFormSchema = z.object({
-	emailAddress: prettyStringValidationMessage("Email address", 1, 100).email(),
+	emailAddress: z.string().email().max(100),
 });
 type AddEmailAddressFormValues = z.infer<typeof AddEmailAddressFormSchema>;
 

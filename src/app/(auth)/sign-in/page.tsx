@@ -1,9 +1,12 @@
 import { type Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
+import { env } from "~/env.mjs";
 import { OAuthSignIn } from "../_components/oauth-sign-in";
 import { SignInForm } from "./_components/sign-in-form";
 
@@ -11,7 +14,12 @@ export const metadata: Metadata = {
 	title: "Sign In | Dogworx Management",
 };
 
-function SignInPage() {
+async function SignInPage() {
+	const user = await currentUser();
+
+	if (user && env.NODE_ENV === "production") {
+		redirect("/");
+	}
 	return (
 		<>
 			<div className="mb-8 flex w-full items-center justify-center">

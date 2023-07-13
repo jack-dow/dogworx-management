@@ -43,24 +43,23 @@ import {
 	type ClientUpdate,
 } from "~/api";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
+import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 
-const ManageClientSheetFormSchema = InsertClientSchema.extend({
-	givenName: prettyStringValidationMessage("First name", 2, 50),
-	familyName: prettyStringValidationMessage("Last name", 0, 50).optional(),
-	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
-		message: "Email address must be a valid email",
+const ManageClientSheetFormSchema = z.intersection(
+	InsertClientSchema.extend({
+		givenName: z.string().max(50).nonempty({ message: "Required" }),
+		familyName: z.string().max(50).or(z.literal("")).optional(),
+		streetAddress: z.string().max(255).optional(),
+		city: z.string().max(50).optional(),
+		state: z.string().max(50).optional(),
+		postalCode: z.string().max(10).optional(),
+		notes: z.string().max(500).nullish(),
+		dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema.extend({ dog: SelectDogSchema })),
 	}),
-	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
-	streetAddress: prettyStringValidationMessage("Stress address", 5, 75),
-	city: prettyStringValidationMessage("City", 1, 50),
-	state: prettyStringValidationMessage("State", 1, 25),
-	postalCode: prettyStringValidationMessage("Postal code", 1, 15),
-	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema.extend({ dog: SelectDogSchema })),
-});
+	EmailOrPhoneNumberSchema,
+);
 
 type ManageClientSheetFormSchema = z.infer<typeof ManageClientSheetFormSchema>;
 
@@ -72,7 +71,6 @@ type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-
 			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
 			client?: ClientProp;
 			defaultValues?: DefaultValues;
@@ -81,7 +79,6 @@ type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
 	| {
 			open?: undefined;
 			setOpen?: null;
-
 			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
 			client?: ClientProp;
 			defaultValues?: DefaultValues;
@@ -170,7 +167,12 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 			success = response.success && !!response.data;
 			newClient = response.data;
 		} else {
-			const response = await api.clients.insert(data);
+			if (!data.givenName) {
+				throw new Error("givenName must exist but doesn't");
+			}
+
+			// Had to spread because typescript was complaining about the type of data otherwise
+			const response = await api.clients.insert({ ...data, givenName: data.givenName });
 			success = response.success;
 			newClient = response.data;
 		}
@@ -182,6 +184,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 			toast({
 				title: `Client ${isNew ? "Created" : "Updated"}`,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}"`,
@@ -192,6 +195,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		} else {
 			toast({
 				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}". Please try again later.`,

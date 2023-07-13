@@ -39,7 +39,7 @@ function DisplayName({ control }: { control: Control<AccountSettingsPageFormSche
 								control={control}
 								name="familyName"
 								render={({ field }) => (
-									<FormItem optional>
+									<FormItem>
 										<FormLabel>Last name</FormLabel>
 										<FormControl>
 											<Input {...field} value={field.value ?? ""} />

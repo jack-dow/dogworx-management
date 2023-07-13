@@ -46,24 +46,23 @@ import {
 } from "~/api";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { mergeRelationships } from "~/lib/utils";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
+import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-const ManageVetSheetFormSchema = InsertVetSchema.extend({
-	givenName: prettyStringValidationMessage("First name", 2, 50),
-	familyName: prettyStringValidationMessage("Last name", 0, 50).optional(),
-	emailAddress: prettyStringValidationMessage("Email address", 1, 75).email({
-		message: "Email address must be a valid email",
+const ManageVetSheetFormSchema = z.intersection(
+	InsertVetSchema.extend({
+		givenName: z.string().max(50).nonempty({ message: "Required" }),
+		familyName: z.string().max(50).or(z.literal("")).optional(),
+		notes: z.string().max(500).nullish(),
+		dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
+		vetToVetClinicRelationships: z.array(
+			InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: SelectVetClinicSchema }),
+		),
 	}),
-	phoneNumber: prettyStringValidationMessage("Phone number", 9, 16),
-	notes: prettyStringValidationMessage("Notes", 0, 500).nullish(),
-	dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
-	vetToVetClinicRelationships: z.array(
-		InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: SelectVetClinicSchema }),
-	),
-});
+	EmailOrPhoneNumberSchema,
+);
 type ManageVetSheetFormSchema = z.infer<typeof ManageVetSheetFormSchema>;
 
 type DefaultValues = Partial<ManageVetSheetFormSchema>;

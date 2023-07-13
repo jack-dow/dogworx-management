@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { VerifyEmailSchema } from "~/lib/validations/auth";
+import { VerifyEmailSchema } from "~/lib/validation";
 
 function VerifyEmailForm() {
 	const router = useRouter();

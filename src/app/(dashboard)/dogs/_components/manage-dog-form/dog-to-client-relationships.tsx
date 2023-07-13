@@ -188,13 +188,6 @@ function DogToClientRelationships({
 										givenName:
 											searchTerm.split(" ").length === 1 ? searchTerm : searchTerm.split(" ").slice(0, -1).join(" "),
 										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
-										emailAddress: "john@exmaple.com",
-										phoneNumber: "0444444444",
-
-										streetAddress: "123 Main St",
-										state: "San Francisco",
-										city: "CA",
-										postalCode: "94114",
 									}}
 									onSuccessfulSubmit={(client) => {
 										toggleDogToClientRelationship(client);

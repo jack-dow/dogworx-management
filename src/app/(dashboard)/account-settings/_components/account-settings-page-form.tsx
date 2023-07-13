@@ -11,7 +11,6 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { prettyStringValidationMessage } from "~/lib/validations/utils";
 import { ChangePassword } from "./change-password";
 import { ConnectedAccounts } from "./connected-accounts";
 import { DeleteAccount } from "./delete-account";
@@ -20,7 +19,7 @@ import { EmailAddresses } from "./email-addresses";
 import { ProfileImage } from "./profile-image";
 import { Sessions } from "./sessions";
 
-const EmailAddressSchema = z.object({
+const ClerkEmailAddressSchema = z.object({
 	id: z.string(),
 	emailAddress: z.string().email(),
 	verification: z.object({
@@ -29,7 +28,7 @@ const EmailAddressSchema = z.object({
 	destroy: z.function().returns(z.promise(z.void())),
 });
 
-const SessionWithActivitiesSchema = z.object({
+const ClerkSessionWithActivitiesSchema = z.object({
 	id: z.string(),
 	status: z.string(),
 	lastActiveAt: z.date(),
@@ -46,37 +45,69 @@ const SessionWithActivitiesSchema = z.object({
 	revoke: z.function().returns(z.promise(z.any())),
 });
 
-const AccountSettingsPageFormSchema = z.object({
-	givenName: prettyStringValidationMessage("First Name", 2, 50),
-	familyName: prettyStringValidationMessage("Last name", 0, 50).optional(),
-	primaryEmailAddressId: z.string().optional(),
-	primaryEmailAddress: EmailAddressSchema.optional(),
-	emailAddresses: z.array(EmailAddressSchema),
-	profileImageUrl: z.string().url().optional(),
-	currentPassword: prettyStringValidationMessage("Your current password", 8, 100).nullish(),
-	newPassword: prettyStringValidationMessage("Your new password", 8, 100).nullish(),
-	newPasswordConfirm: prettyStringValidationMessage("Your new password", 8, 100).nullish(),
-	signOutOtherSessions: z.boolean().default(true),
-	externalAccounts: z.array(
-		z.object({
-			id: z.string(),
-			provider: z.string(),
-			firstName: z.string(),
-			lastName: z.string(),
-			emailAddress: z.string().email(),
-			avatarUrl: z.string().url(),
-			imageUrl: z.string().url(),
-			verification: z
-				.object({
-					status: z.enum(["unverified", "verified", "transferable", "failed", "expired"]).nullish(),
-				})
-				.nullish(),
-			destroy: z.function().returns(z.promise(z.void())),
-			reauthorize: z.function().returns(z.promise(z.void())),
-		}),
-	),
-	sessions: z.array(SessionWithActivitiesSchema),
-});
+const PasswordChangeSchema = z
+	.object({
+		currentPassword: z.string().min(8).max(100).nullish(),
+		newPassword: z.string().min(8).max(100).nullish(),
+		newPasswordConfirm: z.string().min(8).max(100).nullish(),
+		signOutOtherSessions: z.boolean().default(true),
+	})
+	.superRefine((val, ctx) => {
+		if ((val.newPassword || val.newPasswordConfirm) && !val.currentPassword) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Required",
+				path: ["currentPassword"],
+			});
+		}
+
+		if (val.newPasswordConfirm && !val.newPassword) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Required",
+				path: ["newPassword"],
+			});
+		}
+
+		if (val.newPassword !== val.newPasswordConfirm) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Passwords do not match",
+				path: ["newPasswordConfirm"],
+			});
+		}
+	});
+
+const AccountSettingsPageFormSchema = z.intersection(
+	z.object({
+		givenName: z.string().max(50).nonempty({ message: "Required" }),
+		familyName: z.string().max(50).or(z.literal("")).optional(),
+		primaryEmailAddressId: z.string().optional(),
+		primaryEmailAddress: ClerkEmailAddressSchema.optional(),
+		emailAddresses: z.array(ClerkEmailAddressSchema),
+		profileImageUrl: z.string().url().optional(),
+		externalAccounts: z.array(
+			z.object({
+				id: z.string(),
+				provider: z.string(),
+				firstName: z.string(),
+				lastName: z.string(),
+				emailAddress: z.string().email(),
+				avatarUrl: z.string().url(),
+				imageUrl: z.string().url(),
+				verification: z
+					.object({
+						status: z.enum(["unverified", "verified", "transferable", "failed", "expired"]).nullish(),
+					})
+					.nullish(),
+				destroy: z.function().returns(z.promise(z.void())),
+				reauthorize: z.function().returns(z.promise(z.void())),
+			}),
+		),
+		sessions: z.array(ClerkSessionWithActivitiesSchema),
+	}),
+	PasswordChangeSchema,
+);
 type AccountSettingsPageFormSchema = z.infer<typeof AccountSettingsPageFormSchema>;
 
 function AccountSettingsPageFormRoot({ user }: WithUserProp) {
@@ -109,32 +140,6 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 	}, [user, form]);
 
 	async function onSubmit(data: AccountSettingsPageFormSchema) {
-		console.log(data);
-
-		if (data.newPassword && !data.currentPassword) {
-			form.setError("currentPassword", {
-				type: "manual",
-				message: "Please enter your current password",
-			});
-			toast({
-				title: "Failed to update account",
-				description: "Please enter your current password.",
-			});
-			return;
-		}
-
-		if (data.newPassword && data.newPassword !== data.newPasswordConfirm) {
-			form.setError("newPasswordConfirm", {
-				type: "manual",
-				message: "Passwords do not match",
-			});
-			toast({
-				title: "Failed to update account",
-				description: "Passwords do not match.",
-			});
-			return;
-		}
-
 		try {
 			await user.update({
 				firstName: data.givenName,

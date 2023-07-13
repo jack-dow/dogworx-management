@@ -62,17 +62,16 @@ const useFormField = () => {
 
 type FormItemContextValue = {
 	id: string;
-	optional: boolean;
 };
 
 const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
-const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { optional?: boolean }>(
-	({ className, optional = false, ...props }, ref) => {
+const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+	({ className, ...props }, ref) => {
 		const id = React.useId();
 
 		return (
-			<FormItemContext.Provider value={{ id, optional }}>
+			<FormItemContext.Provider value={{ id }}>
 				<div ref={ref} className={cn("space-y-2", className)} {...props} />
 			</FormItemContext.Provider>
 		);
@@ -91,22 +90,7 @@ const FormLabel = React.forwardRef<
 		throw new Error("<FormLabel /> should be used within <FormItem>");
 	}
 
-	const LabelComponent = (
-		<Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />
-	);
-
-	if (!formItemContext.optional) {
-		return LabelComponent;
-	}
-
-	return (
-		<div className="flex justify-between">
-			{LabelComponent}
-			<span className="text-sm leading-6 text-muted-foreground" id={`${formItemId}-optional`}>
-				Optional
-			</span>
-		</div>
-	);
+	return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
 });
 FormLabel.displayName = "FormLabel";
 
@@ -141,7 +125,28 @@ FormDescription.displayName = "FormDescription";
 const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
 	({ className, children, ...props }, ref) => {
 		const { error, formMessageId } = useFormField();
-		const body = error ? String(error?.message) : children;
+		let body = children;
+
+		console.log(error);
+
+		if (error) {
+			const message = String(error.message);
+			if (message.startsWith("String must contain at least")) {
+				const length = parseInt(message.match(/\d+/)?.[0] ?? "-1");
+				if (length !== -1) {
+					body = `Must be at least ${length} character${length > 1 ? "s" : ""} long`;
+				}
+			} else if (message.startsWith("String must contain at most")) {
+				const length = parseInt(message.match(/\d+/)?.[0] ?? "-1");
+				if (length !== -1) {
+					body = `Cannot be longer than ${length} character${length > 1 ? "s" : ""}`;
+				}
+			} else if (message === "Invalid email") {
+				body = "Must be a valid email address";
+			} else {
+				body = message;
+			}
+		}
 
 		if (!body) {
 			return null;
