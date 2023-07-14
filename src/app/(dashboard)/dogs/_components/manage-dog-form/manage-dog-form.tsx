@@ -225,7 +225,11 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						<Button
 							type="button"
 							onClick={() => {
-								setIsConfirmNavigationDialogOpen(true);
+								if (form.formState.isDirty) {
+									setIsConfirmNavigationDialogOpen(true);
+								} else {
+									router.back();
+								}
 							}}
 							variant="outline"
 						>

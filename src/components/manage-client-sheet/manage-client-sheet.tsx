@@ -151,7 +151,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 					setIsLoadingRelationships(false);
 				};
 				void fetchRelationships();
-				return;
 			}
 
 			syncClient(client);

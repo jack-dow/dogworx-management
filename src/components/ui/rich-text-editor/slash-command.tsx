@@ -3,18 +3,7 @@ import { Extension, type Editor, type Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion from "@tiptap/suggestion";
 // eslint-disable-next-line no-restricted-imports
-import {
-	CheckSquareIcon,
-	CodeIcon,
-	Heading1Icon,
-	Heading2Icon,
-	Heading3Icon,
-	ListIcon,
-	ListOrderedIcon,
-	MessageSquarePlusIcon,
-	TextIcon,
-	TextQuoteIcon,
-} from "lucide-react";
+import { Heading1Icon, Heading2Icon, Heading3Icon, ListIcon, ListOrderedIcon, TextIcon } from "lucide-react";
 import tippy from "tippy.js";
 
 interface CommandItemProps {
@@ -62,15 +51,15 @@ const Command = Extension.create({
 
 const getSuggestionItems = ({ query }: { query: string }) => {
 	return [
-		{
-			title: "Send Feedback",
-			description: "Let us know how we can improve.",
-			icon: <MessageSquarePlusIcon size={18} />,
-			command: ({ editor, range }: CommandProps) => {
-				editor.chain().focus().deleteRange(range).run();
-				window.open("/feedback", "_blank");
-			},
-		},
+		// {
+		// 	title: "Send Feedback",
+		// 	description: "Let us know how we can improve.",
+		// 	icon: <MessageSquarePlusIcon size={18} />,
+		// 	command: ({ editor, range }: CommandProps) => {
+		// 		editor.chain().focus().deleteRange(range).run();
+		// 		window.open("/feedback", "_blank");
+		// 	},
+		// },
 		{
 			title: "Text",
 			description: "Just start typing with plain text.",
@@ -80,15 +69,15 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").run();
 			},
 		},
-		{
-			title: "To-do List",
-			description: "Track tasks with a to-do list.",
-			searchTerms: ["todo", "task", "list", "check", "checkbox"],
-			icon: <CheckSquareIcon size={18} />,
-			command: ({ editor, range }: CommandProps) => {
-				editor.chain().focus().deleteRange(range).toggleTaskList().run();
-			},
-		},
+		// {
+		// 	title: "To-do List",
+		// 	description: "Track tasks with a to-do list.",
+		// 	searchTerms: ["todo", "task", "list", "check", "checkbox"],
+		// 	icon: <CheckSquareIcon size={18} />,
+		// 	command: ({ editor, range }: CommandProps) => {
+		// 		editor.chain().focus().deleteRange(range).toggleTaskList().run();
+		// 	},
+		// },
 		{
 			title: "Heading 1",
 			description: "Big section heading.",
@@ -134,21 +123,21 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 				editor.chain().focus().deleteRange(range).toggleOrderedList().run();
 			},
 		},
-		{
-			title: "Quote",
-			description: "Capture a quote.",
-			searchTerms: ["blockquote"],
-			icon: <TextQuoteIcon size={18} />,
-			command: ({ editor, range }: CommandProps) =>
-				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
-		},
-		{
-			title: "Code",
-			description: "Capture a code snippet.",
-			searchTerms: ["codeblock"],
-			icon: <CodeIcon size={18} />,
-			command: ({ editor, range }: CommandProps) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
-		},
+		// {
+		// 	title: "Quote",
+		// 	description: "Capture a quote.",
+		// 	searchTerms: ["blockquote"],
+		// 	icon: <TextQuoteIcon size={18} />,
+		// 	command: ({ editor, range }: CommandProps) =>
+		// 		editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
+		// },
+		// {
+		// 	title: "Code",
+		// 	description: "Capture a code snippet.",
+		// 	searchTerms: ["codeblock"],
+		// 	icon: <CodeIcon size={18} />,
+		// 	command: ({ editor, range }: CommandProps) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+		// },
 		// {
 		// 	title: "Image",
 		// 	description: "Upload an image from your computer.",

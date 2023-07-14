@@ -14,7 +14,15 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
-import { EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon, UserPlusIcon } from "~/components/ui/icons";
+import {
+	EditIcon,
+	EllipsisVerticalIcon,
+	EnvelopeIcon,
+	PhoneIcon,
+	TrashIcon,
+	UserCircleIcon,
+	UserPlusIcon,
+} from "~/components/ui/icons";
 import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
@@ -242,9 +250,21 @@ function VetClinicToVetRelationships({
 												<p className="text-sm font-semibold leading-6 text-slate-900">
 													{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
 												</p>
-												<p className="truncate text-xs leading-5 text-slate-500">
-													{vetToVetClinicRelationship.vet.emailAddress}
-												</p>
+												<div>
+													{vetToVetClinicRelationship.vet.emailAddress && (
+														<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+															<EnvelopeIcon className="mr-1 h-3 w-3" />
+															{vetToVetClinicRelationship.vet.emailAddress}
+														</p>
+													)}
+
+													{vetToVetClinicRelationship.vet.phoneNumber && (
+														<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+															<PhoneIcon className="mr-1 h-3 w-3" />
+															{vetToVetClinicRelationship.vet.phoneNumber}
+														</p>
+													)}
+												</div>
 											</div>
 										</div>
 

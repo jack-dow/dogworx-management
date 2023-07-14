@@ -14,7 +14,15 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
-import { EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon, UserPlusIcon } from "~/components/ui/icons";
+import {
+	EditIcon,
+	EllipsisVerticalIcon,
+	EnvelopeIcon,
+	PhoneIcon,
+	TrashIcon,
+	UserCircleIcon,
+	UserPlusIcon,
+} from "~/components/ui/icons";
 import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
@@ -223,9 +231,23 @@ function DogToClientRelationships({
 										<p className="text-sm font-semibold leading-6 text-slate-900">
 											{clientRelationship.client.givenName} {clientRelationship.client.familyName}
 										</p>
-										<p className="truncate text-xs leading-5 text-slate-500">
-											{clientRelationship.client.emailAddress}
-										</p>
+										<div className="flex space-x-2 truncate">
+											{clientRelationship.client.emailAddress && (
+												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+													<EnvelopeIcon className="mr-1 h-3 w-3" />
+													{clientRelationship.client.emailAddress}
+												</p>
+											)}
+											{clientRelationship.client.emailAddress && clientRelationship.client.phoneNumber && (
+												<span aria-hidden="true">&middot;</span>
+											)}
+											{clientRelationship.client.phoneNumber && (
+												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+													<PhoneIcon className="mr-1 h-3 w-3" />
+													{clientRelationship.client.phoneNumber}
+												</p>
+											)}
+										</div>
 									</div>
 								</div>
 

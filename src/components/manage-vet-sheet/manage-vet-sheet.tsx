@@ -175,7 +175,6 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 					setIsLoadingRelationships(false);
 				};
 				void fetchRelationships();
-				return;
 			}
 
 			syncVet(vet);

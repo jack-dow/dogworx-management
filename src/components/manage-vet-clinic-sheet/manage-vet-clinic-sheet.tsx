@@ -148,7 +148,6 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 					setIsLoadingRelationships(false);
 				};
 				void fetchRelationships();
-				return;
 			}
 
 			syncVetClinic(vetClinic);

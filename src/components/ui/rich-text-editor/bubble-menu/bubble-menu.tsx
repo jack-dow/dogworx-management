@@ -1,7 +1,7 @@
 import { useState, type FC } from "react";
 import { BubbleMenu as TipTapBubbleMenu, type BubbleMenuProps as TipTapBubbleMenuProps } from "@tiptap/react";
 // eslint-disable-next-line no-restricted-imports
-import { BoldIcon, CodeIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "lucide-react";
+import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 import { ColorSelector } from "./color-selector";
@@ -43,12 +43,12 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 			command: () => props.editor.chain().focus().toggleStrike().run(),
 			icon: StrikethroughIcon,
 		},
-		{
-			name: "code",
-			isActive: () => props.editor.isActive("code"),
-			command: () => props.editor.chain().focus().toggleCode().run(),
-			icon: CodeIcon,
-		},
+		// {
+		// 	name: "code",
+		// 	isActive: () => props.editor.isActive("code"),
+		// 	command: () => props.editor.chain().focus().toggleCode().run(),
+		// 	icon: CodeIcon,
+		// },
 	];
 
 	const bubbleMenuProps: BubbleMenuProps = {

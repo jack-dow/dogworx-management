@@ -223,7 +223,10 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div className="prose prose-sm mt-2 max-w-none" dangerouslySetInnerHTML={{ __html: session.details }} />
+							<div
+								className="prose prose-sm mt-2 max-w-none"
+								dangerouslySetInnerHTML={{ __html: session.details }}
+							/>
 						</div>
 					</div>
 				)}
@@ -351,7 +354,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 				</div>
 				<div className="min-w-0 flex-1 space-y-2">
 					<div className="relative">
-						<div className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
+						<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
 							<Label className="sr-only" htmlFor={sessionHistory?.id ?? "add-session-detail"}>
 								Add session details
 							</Label>
