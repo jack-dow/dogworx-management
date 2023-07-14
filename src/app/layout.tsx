@@ -20,7 +20,9 @@ function RootLayout({ children }: { children: React.ReactNode }) {
 	const { userId } = auth();
 
 	/* cspell:disable-next-line */
-	const prefersDarkMode = userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
+	const prefersDarkMode =
+		/* cspell:disable-next-line */
+		userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ" || userId === "user_2SVCNzIdjgowGAubcZM90D2fFCf";
 	return (
 		<ClerkProvider>
 			<html lang="en" suppressHydrationWarning className="h-full">

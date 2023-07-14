@@ -43,8 +43,9 @@ interface DashboardLayoutProps {
 function DashboardLayout({ children }: DashboardLayoutProps) {
 	const { userId } = auth();
 
-	/* cspell:disable-next-line */
-	const prefersDarkMode = userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ";
+	const prefersDarkMode =
+		/* cspell:disable-next-line */
+		userId === "user_2RlxcHPACDK9F88joWFyMKrMhkJ" || userId === "user_2SVCNzIdjgowGAubcZM90D2fFCf";
 
 	return (
 		<>
