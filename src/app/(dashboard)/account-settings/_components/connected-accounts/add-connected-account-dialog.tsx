@@ -59,6 +59,7 @@ function AddConnectedAccountDialog() {
 								void (async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 									e.preventDefault();
 									e.stopPropagation();
+
 									try {
 										setIsLoading(provider.name);
 										await user.createExternalAccount({

@@ -78,8 +78,8 @@ const vets = mysqlTable("vets", {
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
-	phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
-	emailAddress: varchar("email_address", { length: 256 }).notNull(),
+	emailAddress: varchar("email_address", { length: 256 }).notNull().default(""),
+	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
 	notes: text("notes"),
 });
 type Vet = InferModel<typeof vets>;
@@ -97,8 +97,8 @@ const vetClinics = mysqlTable("vet_clinics", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
-	phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
-	emailAddress: varchar("email_address", { length: 256 }).notNull(),
+	emailAddress: varchar("email_address", { length: 256 }).notNull().default(""),
+	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
 	notes: text("notes"),
 });
 type VetClinic = InferModel<typeof vetClinics>;

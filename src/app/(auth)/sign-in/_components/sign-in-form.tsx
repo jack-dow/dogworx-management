@@ -112,7 +112,7 @@ function SignInForm() {
 						</FormItem>
 					)}
 				/>
-				<Button disabled={isPending}>
+				<Button type="submit" disabled={isPending}>
 					{isPending && <Loader aria-hidden="true" size="sm" />}
 					Continue
 				</Button>
