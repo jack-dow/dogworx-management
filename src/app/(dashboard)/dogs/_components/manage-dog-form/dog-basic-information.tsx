@@ -13,12 +13,12 @@ import { CalendarIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Textarea } from "~/components/ui/textarea";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
-function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
+function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 			<div>
@@ -179,7 +179,7 @@ function BasicInformation({ control }: { control: Control<ManageDogFormSchema> }
 									<FormItem>
 										<FormLabel>Notes</FormLabel>
 										<FormControl>
-											<Textarea rows={6} {...field} value={field.value ?? ""} />
+											<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -306,4 +306,4 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 	);
 }
 
-export { BasicInformation };
+export { DogBasicInformation };

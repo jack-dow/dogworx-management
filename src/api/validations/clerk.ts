@@ -5,6 +5,7 @@ const UserSchema = z.object({
 	id: z.string(),
 	firstName: z.string().nullable(),
 	lastName: z.string().nullable(),
+	profileImageUrl: z.string().nullable(),
 	emailAddresses: z.array(
 		z.object({
 			id: z.string(),

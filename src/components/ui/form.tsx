@@ -127,8 +127,6 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 		const { error, formMessageId } = useFormField();
 		let body = children;
 
-		console.log(error);
-
 		if (error) {
 			const message = String(error.message);
 			if (message.startsWith("String must contain at least")) {

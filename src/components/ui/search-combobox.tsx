@@ -6,42 +6,11 @@ import { Button } from "~/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { CheckIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { cn } from "~/lib/utils";
 import { Label } from "./label";
 import { Loader } from "./loader";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function useDebouncedValue<T = any>(value: T, wait: number, options = { leading: false }) {
-	const [_value, setValue] = React.useState(value);
-	const mountedRef = React.useRef(false);
-	const timeoutRef = React.useRef<number | null>(null);
-	const cooldownRef = React.useRef(false);
-
-	const cancel = () => window.clearTimeout(timeoutRef.current ?? undefined);
-
-	React.useEffect(() => {
-		if (mountedRef.current) {
-			if (!cooldownRef.current && options.leading) {
-				cooldownRef.current = true;
-				setValue(value);
-			} else {
-				cancel();
-				timeoutRef.current = window.setTimeout(() => {
-					cooldownRef.current = false;
-					setValue(value);
-				}, wait);
-			}
-		}
-	}, [value, options.leading, wait]);
-
-	React.useEffect(() => {
-		mountedRef.current = true;
-		return cancel;
-	}, []);
-
-	return [_value, cancel] as const;
-}
 
 type SearchComboboxContextProps = {
 	searchTerm: string;

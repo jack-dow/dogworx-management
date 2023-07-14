@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
+import { RichTextEditor } from "~/components/ui/rich-text-editor";
 
 export const metadata: Metadata = {
 	title: "Dashboard | Dogworx Management",
@@ -11,7 +12,9 @@ function RootPage() {
 		<>
 			<PageHeader title="Dashboard" />
 			<div className="flex flex-col space-y-4 ">
-				<div className="flex shrink-0 items-center pb-3 pt-6"></div>
+				<div className="flex shrink-0 items-center pb-3 pt-6">
+					<RichTextEditor />
+				</div>
 			</div>
 		</>
 	);

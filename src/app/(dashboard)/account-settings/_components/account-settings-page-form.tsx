@@ -92,9 +92,9 @@ const AccountSettingsPageFormSchema = z.intersection(
 				provider: z.string(),
 				firstName: z.string(),
 				lastName: z.string(),
-				emailAddress: z.string().email(),
-				avatarUrl: z.string().url(),
-				imageUrl: z.string().url(),
+				emailAddress: z.string(),
+				avatarUrl: z.string(),
+				imageUrl: z.string().nullish(),
 				verification: z
 					.object({
 						status: z.enum(["unverified", "verified", "transferable", "failed", "expired"]).nullish(),
@@ -125,6 +125,11 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 			externalAccounts: user.externalAccounts ?? [],
 		},
 	});
+
+	if (Object.keys(form.formState.errors).length > 0) {
+		console.log(form.formState.errors);
+	}
+
 	// Have to hold the file here because Clerk only supports uploading a File object not a url and if you use a File in zod it errors when run on the server as File doesn't exist there
 	const [uploadedProfileImage, setUploadedProfileImage] = React.useState<File | null>(null);
 

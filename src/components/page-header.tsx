@@ -22,6 +22,7 @@ function PageHeader({ title, action }: PageHeaderProps) {
 			<div className="mb-2">
 				<nav className="sm:hidden" aria-label="Back">
 					<button
+						type="button"
 						onClick={() => router.back()}
 						className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-700"
 					>

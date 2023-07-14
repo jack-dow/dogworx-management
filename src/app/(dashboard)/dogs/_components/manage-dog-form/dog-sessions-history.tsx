@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type Editor } from "@tiptap/react";
 import * as chrono from "chrono-node";
 import { format } from "date-fns";
 import dayjs from "dayjs";
+import { sanitize } from "isomorphic-dompurify";
 import { useFieldArray, useForm, useFormContext, type Control } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,7 +23,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "~/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 import {
 	CalendarIcon,
 	ChevronUpDownIcon,
@@ -33,7 +36,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { Textarea } from "~/components/ui/textarea";
+import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { InsertDogSessionSchema, UserSchema } from "~/api";
 import { generateId } from "~/api/utils";
 import { cn } from "~/lib/utils";
@@ -41,15 +44,38 @@ import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Session = NonNullable<ManageDogFormSchema["sessions"]>[number];
 
-function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) {
-	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
+function DogSessionsHistory({
+	control,
+	existingDogSessions,
+}: {
+	control: Control<ManageDogFormSchema>;
+	existingDogSessions: Array<Session>;
+}) {
+	const form = useFormContext<ManageDogFormSchema>();
 	const sessionHistory = useFieldArray({
 		control,
 		name: "sessions",
 		keyName: "rhf-id",
 	});
 
-	const [confirmSessionDelete, setConfirmSessionDelete] = React.useState<Session | null>(null);
+	const [confirmSessionDelete, setConfirmSessionDelete] = React.useState<string | null>(null);
+
+	function handleDogSessionDelete(sessionId: string) {
+		const dogSessionActions = form.getValues("actions.sessions");
+
+		sessionHistory.remove(sessionHistory.fields.findIndex((f) => f.id === sessionId));
+
+		if (dogSessionActions[sessionId]?.type === "INSERT") {
+			delete dogSessionActions[sessionId];
+		} else {
+			dogSessionActions[sessionId] = {
+				type: "DELETE",
+				payload: sessionId,
+			};
+		}
+
+		form.setValue("actions.sessions", dogSessionActions);
+	}
 
 	return (
 		<>
@@ -61,14 +87,7 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 				actionText="Delete session"
 				onConfirm={() => {
 					if (confirmSessionDelete) {
-						sessionHistory.remove(sessionHistory.fields.findIndex((f) => f.id === confirmSessionDelete.id));
-						setValue("actions.sessions", {
-							...getValues("actions.sessions"),
-							[confirmSessionDelete.id]: {
-								type: "DELETE",
-								payload: confirmSessionDelete.id,
-							},
-						});
+						handleDogSessionDelete(confirmSessionDelete);
 					}
 				}}
 			/>
@@ -84,12 +103,12 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 				<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 md:col-span-2">
 					<div className="space-y-8 sm:p-8">
 						<EditableSessionDetail
-							dogId={getValues("id")}
+							dogId={form.getValues("id")}
 							onSubmit={(sessionDetail) => {
 								sessionHistory.append(sessionDetail);
 
-								setValue("actions.sessions", {
-									...getValues("actions.sessions"),
+								form.setValue("actions.sessions", {
+									...form.getValues("actions.sessions"),
 									[sessionDetail.id]: {
 										type: "INSERT",
 										payload: sessionDetail,
@@ -100,30 +119,36 @@ function SessionHistory({ control }: { control: Control<ManageDogFormSchema> }) 
 
 						<div>
 							<ul role="list" className="-mb-8">
-								{sessionHistory.fields
+								{[...sessionHistory.fields]
 									.sort((a, b) => b.date.getTime() - a.date.getTime())
 									.map((session, index) => {
 										return (
 											<SessionDetail
 												key={session.id}
-												dogId={getValues("id")}
+												dogId={form.getValues("id")}
 												session={session}
-												index={index}
 												isLast={index === sessionHistory.fields.length - 1}
 												onUpdate={(sessionDetail) => {
-													const sessionHistoryActions = { ...getValues("actions.sessions") };
+													const sessionHistoryActions = { ...form.getValues("actions.sessions") };
 
 													sessionHistoryActions[sessionDetail.id] = {
 														type: "UPDATE",
 														payload: sessionDetail,
 													};
 
-													sessionHistory.update(index, sessionDetail);
+													sessionHistory.update(
+														sessionHistory.fields.findIndex((f) => f.id === sessionDetail.id),
+														sessionDetail,
+													);
 
-													setValue("actions.sessions", sessionHistoryActions);
+													form.setValue("actions.sessions", sessionHistoryActions);
 												}}
 												onDelete={(session) => {
-													setConfirmSessionDelete(session);
+													if (existingDogSessions.some((s) => s.id === session.id)) {
+														setConfirmSessionDelete(session.id);
+													} else {
+														handleDogSessionDelete(session.id);
+													}
 												}}
 											/>
 										);
@@ -144,7 +169,6 @@ function SessionDetail({
 	onUpdate,
 	onDelete,
 }: {
-	index: number;
 	session: Session;
 	isLast: boolean;
 	dogId: string;
@@ -173,21 +197,20 @@ function SessionDetail({
 					/>
 				) : (
 					<div className="relative flex items-start space-x-3">
-						<div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
-							{session.user && session.user.firstName ? (
+						<div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-8 ring-white">
+							{session?.user?.profileImageUrl ? (
+								<Image
+									src={session.user.profileImageUrl}
+									alt={`${session.user.firstName ?? "User"}'s profile image`}
+									width={128}
+									height={128}
+									className="aspect-square rounded-md object-cover"
+								/>
+							) : session?.user?.firstName ? (
 								session.user.firstName[0]
 							) : (
 								<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
 							)}
-							{/* <img
-														className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-400 ring-8 ring-white"
-														src={activityItem.imageUrl}
-														alt=""
-													/> */}
-
-							{/* <span className="absolute -bottom-0.5 -right-1 rounded-tl bg-white px-0.5 py-px">
-														<ChatBubbleLeftEllipsisIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
-													</span> */}
 						</div>
 						<div className="min-w-0 flex-1">
 							<div>
@@ -200,9 +223,10 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
-								<p>{session.details}</p>
-							</div>
+							<div
+								className="prose prose-sm mt-2 max-w-none"
+								dangerouslySetInnerHTML={{ __html: sanitize(session.details) }}
+							/>
 						</div>
 					</div>
 				)}
@@ -284,6 +308,8 @@ type EditableSessionDetailProps =
 function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: EditableSessionDetailProps) {
 	const { user } = useUser();
 
+	const [editor, setEditor] = React.useState<Editor | null>(null);
+
 	const form = useForm<EditableSessionDetailFormSchema>({
 		resolver: zodResolver(EditableSessionDetailFormSchema),
 		defaultValues: {
@@ -312,7 +338,15 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 		<Form {...form}>
 			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
 				<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
-					{user && user.firstName ? (
+					{user?.profileImageUrl ? (
+						<Image
+							src={user.profileImageUrl}
+							alt="Your profile image"
+							width={128}
+							height={128}
+							className="aspect-square rounded-md object-cover"
+						/>
+					) : user?.firstName ? (
 						user.firstName[0]
 					) : (
 						<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
@@ -321,22 +355,14 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 				<div className="min-w-0 flex-1 space-y-2">
 					<div className="relative">
 						<div className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
-							<FormField
-								control={form.control}
-								name="details"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="sr-only">Add session details</FormLabel>
-										<FormControl>
-											<Textarea
-												{...field}
-												rows={6}
-												className="resize-none rounded-b-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-												placeholder="Add session details..."
-											/>
-										</FormControl>
-									</FormItem>
-								)}
+							<Label className="sr-only" htmlFor={sessionHistory?.id ?? "add-session-detail"}>
+								Add session details
+							</Label>
+							<RichTextEditor
+								id={sessionHistory?.id ?? "add-session-detail"}
+								onEditorChange={setEditor}
+								content={sessionHistory?.details ?? ""}
+								className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
 							/>
 
 							{/* Spacer element to match the height of the toolbar */}
@@ -414,6 +440,8 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										e.preventDefault();
 										e.stopPropagation();
 
+										form.setValue("details", editor?.getHTML() ?? "");
+
 										void form.handleSubmit((data) => {
 											onSubmit(data);
 											form.reset({
@@ -428,13 +456,16 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										})(e);
 									}}
 									size="sm"
+									disabled={!user}
 								>
-									{sessionHistory?.id ? (
+									{!user ? (
+										"Loading User..."
+									) : sessionHistory?.id ? (
 										<div>
 											Update <span className="hidden md:inline">Session</span>
 										</div>
 									) : (
-										"Create Session"
+										"Add Session"
 									)}
 								</Button>
 							</div>
@@ -449,4 +480,4 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 	);
 }
 
-export { SessionHistory };
+export { DogSessionsHistory };

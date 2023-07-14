@@ -36,10 +36,10 @@ import { InsertDogSchema } from "~/api/validations/dogs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { mergeRelationships } from "~/lib/utils";
-import { BasicInformation } from "./basic-information";
+import { DogBasicInformation } from "./dog-basic-information";
+import { DogSessionsHistory } from "./dog-sessions-history";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
-import { SessionHistory } from "./session-history";
 
 const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: z.string().max(50).nonempty({ message: "Required" }),
@@ -187,11 +187,11 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			</AlertDialog>
 			<Form {...form}>
 				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10 ">
-					<BasicInformation control={form.control} />
+					<DogBasicInformation control={form.control} />
 
 					<Separator />
 
-					<SessionHistory control={form.control} />
+					<DogSessionsHistory control={form.control} existingDogSessions={dog?.sessions ?? []} />
 
 					<Separator />
 

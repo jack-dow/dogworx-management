@@ -2,7 +2,7 @@ import { type Control } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
+import { RichTextEditor } from "../ui/rich-text-editor";
 import { type ManageVetClinicSheetFormSchema } from "./manage-vet-clinic-sheet";
 
 function VetClinicContactInformation({ control }: { control: Control<ManageVetClinicSheetFormSchema> }) {
@@ -71,7 +71,7 @@ function VetClinicContactInformation({ control }: { control: Control<ManageVetCl
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<Textarea rows={6} {...field} value={field.value ?? ""} />
+									<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
