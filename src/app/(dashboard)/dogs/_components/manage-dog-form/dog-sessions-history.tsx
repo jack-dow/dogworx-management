@@ -8,8 +8,8 @@ import { type Editor } from "@tiptap/react";
 import * as chrono from "chrono-node";
 import { format } from "date-fns";
 import dayjs from "dayjs";
-import { sanitize } from "isomorphic-dompurify";
 import { useFieldArray, useForm, useFormContext, type Control } from "react-hook-form";
+import sanitizeHtml from "sanitize-html";
 import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
@@ -223,10 +223,7 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div
-								className="prose prose-sm mt-2 max-w-none"
-								dangerouslySetInnerHTML={{ __html: sanitize(session.details) }}
-							/>
+							<div className="prose prose-sm mt-2 max-w-none" dangerouslySetInnerHTML={{ __html: session.details }} />
 						</div>
 					</div>
 				)}
@@ -440,7 +437,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										e.preventDefault();
 										e.stopPropagation();
 
-										form.setValue("details", editor?.getHTML() ?? "");
+										form.setValue("details", sanitizeHtml(editor?.getHTML() ?? ""));
 
 										void form.handleSubmit((data) => {
 											onSubmit(data);

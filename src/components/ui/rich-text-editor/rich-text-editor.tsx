@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import sanitizeHtml from "sanitize-html";
 
 import { cn } from "~/lib/utils";
 import { BubbleMenu } from "./bubble-menu";
@@ -40,7 +41,7 @@ function RichTextEditor({
 		},
 		onUpdate: (e) => {
 			if (onValueChange) {
-				onValueChange(e.editor.getHTML());
+				onValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
 			}
 		},
 		content,
