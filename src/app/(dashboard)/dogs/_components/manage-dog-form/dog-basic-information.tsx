@@ -283,7 +283,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 									</div>
 									<Calendar
 										mode="single"
-										selected={field.value ?? new Date()}
+										selected={field.value ?? undefined}
 										month={month}
 										onMonthChange={setMonth}
 										onSelect={(value) => {

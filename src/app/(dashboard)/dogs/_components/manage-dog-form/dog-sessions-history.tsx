@@ -223,10 +223,7 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
-							<div
-								className="prose prose-sm mt-2 max-w-none"
-								dangerouslySetInnerHTML={{ __html: session.details }}
-							/>
+							<div className="prose prose-sm mt-2 max-w-none" dangerouslySetInnerHTML={{ __html: session.details }} />
 						</div>
 					</div>
 				)}
@@ -453,6 +450,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 												userId: user?.id ?? undefined,
 												...sessionHistory,
 											});
+											editor?.commands.clearContent();
 										})(e);
 									}}
 									size="sm"

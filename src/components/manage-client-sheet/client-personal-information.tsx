@@ -25,7 +25,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>First Name</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -41,7 +41,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Last Name</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -66,6 +66,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 												form.clearErrors("phoneNumber");
 											}
 										}}
+										autoComplete="off"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -91,6 +92,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 												form.clearErrors("emailAddress");
 											}
 										}}
+										autoComplete="off"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -107,7 +109,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Street Address</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -123,7 +125,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>City</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -139,7 +141,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>State</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -155,7 +157,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Postal Code</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
