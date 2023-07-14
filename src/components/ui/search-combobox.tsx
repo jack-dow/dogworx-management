@@ -23,16 +23,6 @@ type SearchComboboxContextProps = {
 
 const SearchComboboxContent = React.createContext<SearchComboboxContextProps | null>(null);
 
-function useSearchComboboxContent() {
-	const context = React.useContext(SearchComboboxContent);
-
-	if (!context) {
-		throw new Error("useSearchComboboxContent must be used within a SearchComboboxContextProvider");
-	}
-
-	return context;
-}
-
 type RequiredResultProps = {
 	id: string;
 };
@@ -104,6 +94,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 		React.useEffect(() => {
 			if (searchTerm === "") {
 				setResults(selected);
+				setConfirmedNoResults(false);
 			}
 		}, [selected, searchTerm]);
 
@@ -138,25 +129,14 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent className="max-w-3xl p-0 " align="start" withoutPortal={withinSheet}>
-							<Command
-								loop
-								filter={() => {
-									return 1;
-								}}
-							>
+							<Command loop shouldFilter={false}>
 								<CommandInput
 									ref={inputRef}
 									value={searchTerm}
 									onValueChange={(value) => {
 										setSearchTerm(value);
 
-										if (!value) {
-											setResults(selected);
-											if (selected.length === 0) {
-												setConfirmedNoResults(true);
-											}
-											return;
-										} else {
+										if (value) {
 											setResults([]);
 											setConfirmedNoResults(false);
 										}
@@ -193,22 +173,20 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 									)}
 
 									{confirmedNoResults && searchTerm !== "" && (
-										<>
-											<div className="py-6 pb-[18px] text-center text-sm">No results found...</div>
+										<div className="py-6 pb-[18px] text-center text-sm">No results found...</div>
+									)}
 
-											{renderNoResultActions && (
-												<CommandGroup heading="Actions">
-													{renderNoResultActions({
-														searchTerm,
-														confirmedNoResults,
-														setConfirmedNoResults,
-														inputRef,
-														results,
-														setResults,
-													})}
-												</CommandGroup>
-											)}
-										</>
+									{((results.length === 0 && searchTerm === "") || confirmedNoResults) && renderNoResultActions && (
+										<CommandGroup heading="Actions">
+											{renderNoResultActions({
+												searchTerm,
+												confirmedNoResults,
+												setConfirmedNoResults,
+												inputRef,
+												results,
+												setResults,
+											})}
+										</CommandGroup>
 									)}
 								</CommandList>
 							</Command>
@@ -221,23 +199,4 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 );
 SearchCombobox.displayName = "Search";
 
-type SearchNoResultActionItemProps = {
-	onSelect: (value: string) => void;
-	children: React.ReactNode;
-};
-
-const SearchNoResultActionItem = ({ onSelect, children }: SearchNoResultActionItemProps) => {
-	const { searchTerm, confirmedNoResults } = useSearchComboboxContent();
-
-	const render = searchTerm !== "" && confirmedNoResults;
-
-	if (!render) return null;
-
-	return (
-		<CommandItem key={`${searchTerm}`} value={`${searchTerm}`} onSelect={onSelect}>
-			{children}
-		</CommandItem>
-	);
-};
-
-export { SearchCombobox, SearchNoResultActionItem };
+export { SearchCombobox, CommandItem as SearchComboboxItem };

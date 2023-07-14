@@ -15,7 +15,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon, UserCircleIcon, UserPlusIcon } from "~/components/ui/icons";
-import { SearchCombobox, SearchNoResultActionItem } from "~/components/ui/search-combobox";
+import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
 	SelectContent,
@@ -196,14 +196,14 @@ function DogToVetRelationships({
 									withoutTrigger
 								/>
 
-								<SearchNoResultActionItem
+								<SearchComboboxItem
 									onSelect={() => {
 										setIsCreateVetSheetOpen(true);
 									}}
 								>
 									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new vet &quot;{searchTerm}&quot;</span>
-								</SearchNoResultActionItem>
+									<span>Create new vet {searchTerm && `"${searchTerm}"`} </span>
+								</SearchComboboxItem>
 							</>
 						)}
 					/>
