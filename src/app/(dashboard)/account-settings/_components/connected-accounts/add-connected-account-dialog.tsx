@@ -22,7 +22,9 @@ function AddConnectedAccountDialog() {
 	const [isLoading, setIsLoading] = React.useState<(typeof OAuthProviders)[number]["name"] | null>(null);
 	const { toast } = useToast();
 
-	if (!user) return null;
+	if (user == null) {
+		return null;
+	}
 
 	const remainingOAuthProviders = OAuthProviders.filter(
 		(provider) =>
@@ -55,20 +57,23 @@ function AddConnectedAccountDialog() {
 							variant="outline"
 							className="w-full"
 							key={provider.name}
-							onClick={
-								void (async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-									e.preventDefault();
-									e.stopPropagation();
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
 
-									try {
-										setIsLoading(provider.name);
-										await user.createExternalAccount({
-											strategy: provider.strategy,
-											redirectUrl: "/account-settings",
-										});
-									} catch (error) {
-										setIsLoading(null);
+								setIsLoading(provider.name);
 
+								user
+									?.createExternalAccount({
+										strategy: provider.strategy,
+										redirectUrl: "/account-settings",
+									})
+									.then((res) => {
+										if (res.verification?.externalVerificationRedirectURL) {
+											window.open(res.verification.externalVerificationRedirectURL, "_blank");
+										}
+									})
+									.catch((error) => {
 										const unknownError = "Something went wrong, please try again.";
 
 										isClerkAPIResponseError(error)
@@ -80,12 +85,14 @@ function AddConnectedAccountDialog() {
 													title: `An unknown error occurred`,
 													description: unknownError,
 											  });
-									}
-								})
-							}
+									})
+									.finally(() => {
+										setIsLoading(null);
+									});
+							}}
 						>
 							{isLoading === provider.name ? (
-								<Loader size="sm" />
+								<Loader size="sm" variant="black" />
 							) : (
 								<provider.icon className="mr-2 h-4 w-4" aria-hidden="true" />
 							)}
