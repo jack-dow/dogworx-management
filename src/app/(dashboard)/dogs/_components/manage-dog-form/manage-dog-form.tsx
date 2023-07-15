@@ -45,7 +45,7 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: z.string().max(50).nonempty({ message: "Required" }),
 	breed: z.string().max(50).nonempty({ message: "Required" }),
 	color: z.string().max(25).nonempty({ message: "Required" }),
-	notes: z.string().max(500).nullish(),
+	notes: z.string().max(100000).nullish(),
 	age: InsertDogSchema.shape.age.nullable(),
 	sessions: z.array(
 		InsertDogSessionSchema.extend({

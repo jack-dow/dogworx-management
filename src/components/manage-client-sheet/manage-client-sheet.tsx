@@ -55,7 +55,7 @@ const ManageClientSheetFormSchema = z.intersection(
 		city: z.string().max(50).optional(),
 		state: z.string().max(50).optional(),
 		postalCode: z.string().max(10).optional(),
-		notes: z.string().max(500).nullish(),
+		notes: z.string().max(100000).nullish(),
 		dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema.extend({ dog: SelectDogSchema })),
 	}),
 	EmailOrPhoneNumberSchema,

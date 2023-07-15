@@ -50,7 +50,7 @@ import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 const ManageVetClinicSheetFormSchema = z.intersection(
 	InsertVetClinicSchema.extend({
 		name: z.string().max(50).nonempty({ message: "Required" }),
-		notes: z.string().max(500).nullish(),
+		notes: z.string().max(100000).nullish(),
 		vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
 	}),
 	EmailOrPhoneNumberSchema,
