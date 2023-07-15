@@ -88,7 +88,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			},
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	useConfirmPageNavigation(form.formState.isDirty && !form.formState.isSubmitted);
 
 	if (Object.keys(form.formState.errors).length > 0) {
 		console.log(form.formState.errors);
