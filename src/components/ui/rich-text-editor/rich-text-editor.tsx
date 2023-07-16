@@ -11,13 +11,15 @@ import { TiptapExtensions } from "./extensions";
 function RichTextEditor({
 	className,
 	onEditorChange,
-	onValueChange,
+	onTextValueChange,
+	onHtmlValueChange,
 	id,
 	content,
 }: {
 	className?: string;
 	onEditorChange?: (editor: Editor) => void;
-	onValueChange?: (html: string) => void;
+	onTextValueChange?: (text: string) => void;
+	onHtmlValueChange?: (html: string) => void;
 	id?: string;
 	content?: string;
 }) {
@@ -40,8 +42,11 @@ function RichTextEditor({
 			},
 		},
 		onUpdate: (e) => {
-			if (onValueChange) {
-				onValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
+			if (onTextValueChange) {
+				onTextValueChange(e.editor.getText() ?? "");
+			}
+			if (onHtmlValueChange) {
+				onHtmlValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
 			}
 		},
 		content,

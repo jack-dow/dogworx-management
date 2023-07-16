@@ -173,7 +173,7 @@ function ClientPersonalInformation({ control }: { control: Control<ManageClientS
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
+									<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

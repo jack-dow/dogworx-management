@@ -2,8 +2,8 @@ import { type Control } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
+import { RichTextEditor } from "../ui/rich-text-editor";
 import { type ManageVetSheetFormSchema } from "./manage-vet-sheet";
-import {RichTextEditor} from "../ui/rich-text-editor";
 
 function VetContactInformation({ control }: { control: Control<ManageVetSheetFormSchema> }) {
 	return (
@@ -85,7 +85,7 @@ function VetContactInformation({ control }: { control: Control<ManageVetSheetFor
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-								<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
+									<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

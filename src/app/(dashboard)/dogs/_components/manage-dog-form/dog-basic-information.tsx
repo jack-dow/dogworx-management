@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { cn } from "~/lib/utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
 function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
@@ -117,7 +118,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 												<SelectTrigger>
 													<SelectValue>
 														{/* This is required because field is black for a second on page load otherwise */}
-														<span className="capitalize">{field.value ?? "Select a sex"}</span>
+														<span className={cn(field.value && "capitalize")}>{field.value ?? "Select a sex"}</span>
 													</SelectValue>
 												</SelectTrigger>
 											</FormControl>
@@ -179,7 +180,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 									<FormItem>
 										<FormLabel>Notes</FormLabel>
 										<FormControl>
-											<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
+											<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -252,7 +253,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 									<Button variant="outline" role="combobox" aria-expanded={isDatePickerOpen} className="w-full">
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										<span className="mr-2 truncate">
-											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Pick a date"}
+											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}
 										</span>
 										<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 									</Button>
