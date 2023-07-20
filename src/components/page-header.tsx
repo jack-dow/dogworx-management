@@ -33,29 +33,24 @@ function PageHeader({ title, action }: PageHeaderProps) {
 
 				<nav className="hidden sm:table-cell" aria-label="Breadcrumb">
 					<ol role="list" className="flex items-center space-x-1">
-						<li>
-							<div className="flex">
-								<Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
-									Dashboard
-								</Link>
-							</div>
-						</li>
 						{pathnameArray.map((path, index) => {
 							const pathToThisPoint = `/${pathnameArray.slice(0, index + 1).join("/")}`;
 
 							return (
 								<li key={`${path}-${index}`}>
 									<div className="flex items-center">
-										<ChevronRightIcon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
 										<Link
 											href={pathToThisPoint}
 											className={cn(
-												"ml-1 text-sm font-medium capitalize text-slate-500 hover:text-slate-700",
+												"mr-1 text-sm font-medium capitalize text-slate-500 hover:text-slate-700",
 												pathToThisPoint === pathname && "font-bold",
 											)}
 										>
 											{path.split("-").join(" ")}
 										</Link>
+										{index !== pathnameArray.length - 1 && (
+											<ChevronRightIcon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+										)}
 									</div>
 								</li>
 							);

@@ -1,9 +1,9 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { vetClinics } from "~/db/drizzle-schema";
+import { vetClinics } from "~/db/schemas";
 import { IdSchema } from "./utils";
-import { VetToVetClinicRelationshipActionLogSchema } from "./vet-to-vet-clinic-relationships";
+import { VetToVetClinicRelationshipActionsLogSchema } from "./vet-to-vet-clinic-relationships";
 
 const SelectVetClinicSchema = createSelectSchema(vetClinics);
 
@@ -15,7 +15,7 @@ const InsertVetClinicSchema = createInsertSchema(vetClinics)
 	.extend({
 		id: IdSchema,
 		actions: z.object({
-			vetToVetClinicRelationships: VetToVetClinicRelationshipActionLogSchema,
+			vetToVetClinicRelationships: VetToVetClinicRelationshipActionsLogSchema,
 		}),
 	});
 type InsertVetClinicSchema = z.infer<typeof InsertVetClinicSchema>;

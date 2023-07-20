@@ -36,7 +36,9 @@
 		"**/*.mjs",
 		".next/types/**/*.ts",
 		"src/db/seed/generate-seed-data.ts",
-		"src/db/seed/seed.ts"
+		"src/db/seed/seed.ts",
+		"src/lib/next-auth.d.ts",
+		"src/lib/types.d.ts"
 	],
 
 	"exclude": ["node_modules"]

@@ -51,6 +51,12 @@ const config = {
 					"Icons should be imported from '~/components/ui/icons' instead of '@heroicons/react to ensure consistent styling'",
 			},
 		],
+		"@typescript-eslint/no-misused-promises": [
+			"error",
+			{
+				checksVoidReturn: false,
+			},
+		],
 	},
 	settings: {
 		tailwindcss: {

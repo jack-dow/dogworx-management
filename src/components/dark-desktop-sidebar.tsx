@@ -4,7 +4,8 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { type Session } from "next-auth";
+import { getSession, useSession } from "next-auth/react";
 
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { cn } from "~/lib/utils";
@@ -20,6 +21,7 @@ import {
 } from "./ui/dropdown-menu";
 import {
 	BookingIcon,
+	BuildingOfficeIcon,
 	CalendarDaysIcon,
 	ClientsIcon,
 	DogIcon,
@@ -42,7 +44,7 @@ type Navigation = {
 	disabled: boolean;
 };
 
-const navigation: Array<Navigation> = [
+export const navigation: Array<Navigation> = [
 	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
 	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
@@ -52,10 +54,7 @@ const navigation: Array<Navigation> = [
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
 ];
 
-function DarkDesktopSidebar() {
-	const { user } = useUser();
-	const { signOut } = useClerk();
-
+function DarkDesktopSidebar({ session }: { session: Session }) {
 	const pathname = usePathname();
 	const { toast } = useToast();
 
@@ -65,7 +64,7 @@ function DarkDesktopSidebar() {
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-950 px-6 ">
 				<div className="flex shrink-0 items-center pb-4 pt-6">
-					<Link href="/" shallow>
+					<Link href="/dashboard" shallow>
 						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" width={150} />
 					</Link>
 				</div>
@@ -106,9 +105,34 @@ function DarkDesktopSidebar() {
 										</li>
 									);
 								})}
+								{session.user.email === "jack.dowww@gmail.com" && (
+									<li>
+										<a
+											href="/dashboard/organizations"
+											className={cn(
+												"/dashboard/organizations" === pathname
+													? "bg-slate-900 text-white"
+													: "text-slate-300 hover:text-slate-50 hover:bg-slate-900",
+												"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
+											)}
+										>
+											<BuildingOfficeIcon
+												className={cn(
+													"/dashboard/organizations" === pathname
+														? "text-slate-50"
+														: "text-slate-300 group-hover:text-slate-50",
+
+													"h-5 w-5 shrink-0",
+												)}
+												aria-hidden="true"
+											/>
+											Organizations
+										</a>
+									</li>
+								)}
 							</ul>
 						</li>
-						<li className="-mx-2 mt-auto">
+						{/* <li className="-mx-2 mt-auto">
 							{user ? (
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -204,7 +228,7 @@ function DarkDesktopSidebar() {
 									</div>
 								</div>
 							)}
-						</li>
+						</li> */}
 					</ul>
 				</nav>
 			</div>

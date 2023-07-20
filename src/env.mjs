@@ -13,19 +13,22 @@ const env = createEnv({
 		DATABASE_PASSWORD: z.string().min(1),
 		DATABASE_NAME: z.string().min(1),
 		DATABASE_URL: z.string().url(),
-		CLERK_SECRET_KEY: z.string().min(1),
+		OAUTH_GOOGLE_CLIENT_ID: z.string().min(1),
+		OAUTH_GOOGLE_CLIENT_SECRET: z.string().min(1),
+		NEXTAUTH_SECRET: process.env.NODE_ENV === "production" ? z.string().min(1) : z.string().min(1).optional(),
+		NEXTAUTH_URL: z.preprocess(
+			// This makes Vercel deployments not fail if you don't set NEXTAUTH_URL
+			// Since NextAuth.js automatically uses the VERCEL_URL if present.
+			(str) => process.env.VERCEL_URL ?? str,
+			// VERCEL_URL doesn't include `https` so it cant be validated as a URL
+			process.env.VERCEL ? z.string().min(1) : z.string().url(),
+		),
 	},
 	/**
 	 * Specify your client-side environment variables schema here.
 	 * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
 	 */
-	client: {
-		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-		NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().min(1),
-	},
+	client: {},
 	/**
 	 * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
 	 */
@@ -36,12 +39,10 @@ const env = createEnv({
 		DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
 		DATABASE_NAME: process.env.DATABASE_NAME,
 		DATABASE_URL: process.env.DATABASE_URL,
-		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-		CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-		NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-		NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
+		OAUTH_GOOGLE_CLIENT_ID: process.env.OAUTH_GOOGLE_CLIENT_ID,
+		OAUTH_GOOGLE_CLIENT_SECRET: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
+		NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+		NEXTAUTH_URL: process.env.NEXTAUTH_URL,
 	},
 	skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

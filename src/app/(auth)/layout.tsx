@@ -60,7 +60,7 @@ function AuthLayout({ children }: AuthLayoutProps) {
 			<div className="relative isolate flex h-full flex-1 flex-col  px-4 sm:px-6 lg:px-8">
 				<BackgroundSVGs.GradientTop />
 				<BackgroundSVGs.GridTop />
-				<div className="relative flex flex-1 flex-col items-center justify-center  pt-12">{children}</div>
+				<div className="relative flex flex-1 flex-col items-center justify-center ">{children}</div>
 				<BackgroundSVGs.GradientBottom />
 			</div>
 		</main>

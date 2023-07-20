@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { isClerkAPIResponseError, useSignIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -17,7 +17,6 @@ import { AuthSchema } from "~/lib/validation";
 function SignInForm() {
 	const router = useRouter();
 	const { toast } = useToast();
-	const { isLoaded, signIn, setActive } = useSignIn();
 	const [isPending, startTransition] = React.useTransition();
 
 	// react-hook-form
@@ -30,55 +29,24 @@ function SignInForm() {
 	});
 
 	function onSubmit(data: AuthSchema) {
-		if (!isLoaded) return;
-
 		startTransition(async () => {
 			try {
-				const result = await signIn.create({
-					identifier: data.email,
+				const result = await signIn("credentials", {
+					email: data.email,
 					password: data.password,
 				});
 
-				if (result.status === "complete") {
-					await setActive({ session: result.createdSessionId });
-
+				if (result?.ok) {
 					router.push(`${window.location.origin}/`);
 				} else {
 					/*Investigate why the login hasn't completed */
 					console.log(result);
 				}
 			} catch (error) {
-				const unknownError = "Something went wrong, please try again.";
-
-				if (isClerkAPIResponseError(error)) {
-					console.log(error.errors);
-					if (error.errors[0]?.code === "session_exists") {
-						toast({
-							title: `You are already signed in`,
-							description: "To sign into another account, please sign out of your current account first.",
-						});
-						return;
-					}
-
-					if (
-						error.errors[0]?.code === "form_password_incorrect" ||
-						error.errors[0]?.code === "form_identifier_not_found"
-					) {
-						form.setError("email", { type: "manual", message: "Invalid email or password" });
-						form.setError("password", { type: "manual", message: "Invalid email or password" });
-						return;
-					}
-
-					toast({
-						title: `Failed to sign in`,
-						description: error.errors[0]?.longMessage ?? unknownError,
-					});
-				} else {
-					toast({
-						title: `An unknown error occurred`,
-						description: unknownError,
-					});
-				}
+				toast({
+					title: `An unknown error occurred`,
+					description: "Something went wrong, please try again.",
+				});
 			}
 		});
 	}

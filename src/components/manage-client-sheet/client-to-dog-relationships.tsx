@@ -48,20 +48,18 @@ function ClientToDogRelationships({
 		ManageClientSheetFormSchema["dogToClientRelationships"][number] | null
 	>(null);
 
-	function handleDogToClientRelationshipDelete() {
-		if (confirmRelationshipDelete) {
-			dogToClientRelationships.remove(
-				dogToClientRelationships.fields.findIndex((relationship) => relationship.id === confirmRelationshipDelete.id),
-			);
+	function handleDogToClientRelationshipDelete(relationshipId: string) {
+		dogToClientRelationships.remove(
+			dogToClientRelationships.fields.findIndex((relationship) => relationship.id === relationshipId),
+		);
 
-			setValue("actions.dogToClientRelationships", {
-				...getValues("actions.dogToClientRelationships"),
-				[confirmRelationshipDelete.id]: {
-					type: "DELETE",
-					payload: confirmRelationshipDelete.id,
-				},
-			});
-		}
+		setValue("actions.dogToClientRelationships", {
+			...getValues("actions.dogToClientRelationships"),
+			[relationshipId]: {
+				type: "DELETE",
+				payload: relationshipId,
+			},
+		});
 	}
 
 	return (
@@ -73,7 +71,9 @@ function ClientToDogRelationships({
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
 				actionText="Delete relationship"
 				onConfirm={() => {
-					handleDogToClientRelationshipDelete();
+					if (confirmRelationshipDelete) {
+						handleDogToClientRelationshipDelete(confirmRelationshipDelete.id);
+					}
 				}}
 			/>
 
@@ -176,7 +176,7 @@ function ClientToDogRelationships({
 															<DropdownMenuItem
 																onSelect={() => {
 																	if (isNew) {
-																		handleDogToClientRelationshipDelete();
+																		handleDogToClientRelationshipDelete(dogToClientRelationship.id);
 																	} else {
 																		setConfirmRelationshipDelete(dogToClientRelationship);
 																	}

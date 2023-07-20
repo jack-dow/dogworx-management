@@ -4,10 +4,11 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { getSession } from "next-auth/react";
 
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { cn } from "~/lib/utils";
+import { navigation } from "./dark-desktop-sidebar";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -42,27 +43,11 @@ type Navigation = {
 	disabled: boolean;
 };
 
-const navigation: Array<Navigation> = [
-	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
-	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
-	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
-	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
-	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: false },
-	{ name: "Invoices", href: "/invoices", icon: InvoiceIcon, disabled: true },
-	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
-];
-
 function DesktopSidebar() {
-	const { user } = useUser();
 	const pathname = usePathname();
-	const { signOut } = useClerk();
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
-
-	const primaryEmailAddress = user?.emailAddresses.find(
-		(emailAddress) => emailAddress.id === user.primaryEmailAddressId,
-	);
 
 	return (
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
@@ -113,7 +98,7 @@ function DesktopSidebar() {
 							</ul>
 						</li>
 
-						<li className="-mx-2 mt-auto">
+						{/* <li className="-mx-2 mt-auto">
 							{user ? (
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -208,7 +193,7 @@ function DesktopSidebar() {
 									</div>
 								</div>
 							)}
-						</li>
+						</li> */}
 					</ul>
 				</nav>
 			</div>

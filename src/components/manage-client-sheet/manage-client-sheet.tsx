@@ -166,12 +166,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 			success = response.success && !!response.data;
 			newClient = response.data;
 		} else {
-			if (!data.givenName) {
-				throw new Error("givenName must exist but doesn't");
-			}
-
-			// Had to spread because typescript was complaining about the type of data otherwise
-			const response = await api.clients.insert({ ...data, givenName: data.givenName });
+			const response = await api.clients.insert(data);
 			success = response.success;
 			newClient = response.data;
 		}
@@ -183,7 +178,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 			toast({
 				title: `Client ${isNew ? "Created" : "Updated"}`,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}"`,
@@ -194,7 +188,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		} else {
 			toast({
 				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}". Please try again later.`,

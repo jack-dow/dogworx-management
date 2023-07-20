@@ -1,6 +1,8 @@
 import * as z from "zod";
 
 const AuthSchema = z.object({
+	givenName: z.string().max(50).nonempty({ message: "Required" }),
+	familyName: z.string().max(50).or(z.literal("")).optional(),
 	email: z.string().email(),
 	password: z.string().min(8).max(100),
 });

@@ -4,12 +4,12 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
 
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { cn } from "~/lib/utils";
+import { navigation } from "./dark-desktop-sidebar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -43,27 +43,15 @@ type Navigation = {
 	disabled: boolean;
 };
 
-const navigation: Array<Navigation> = [
-	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
-	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
-	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
-	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: true },
-	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: true },
-	{ name: "Invoices", href: "/invoices", icon: InvoiceIcon, disabled: true },
-	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
-];
-
 function MobileNavigation() {
-	const { user } = useUser();
 	const pathname = usePathname();
-	const { signOut } = useClerk();
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
 
-	const primaryEmailAddress = user?.emailAddresses.find(
-		(emailAddress) => emailAddress.id === user.primaryEmailAddressId,
-	);
+	// const primaryEmailAddress = user?.emailAddresses.find(
+	// 	(emailAddress) => emailAddress.id === user.primaryEmailAddressId,
+	// );
 	return (
 		<Sheet>
 			<SheetTrigger asChild className="fixed bottom-4 left-4 z-50 shadow-md lg:hidden">
@@ -119,7 +107,7 @@ function MobileNavigation() {
 							</ul>
 						</li>
 
-						{user && (
+						{/* {user && (
 							<li className="-mx-2 mt-auto">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -206,7 +194,7 @@ function MobileNavigation() {
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</li>
-						)}
+						)} */}
 					</ul>
 				</nav>
 			</SheetContent>

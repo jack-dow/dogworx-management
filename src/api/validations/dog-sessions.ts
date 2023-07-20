@@ -1,8 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type z } from "zod";
 
-import { dogSessions } from "~/db/drizzle-schema";
-import { createActionLogSchema, IdSchema } from "./utils";
+import { dogSessions } from "~/db/schemas";
+import { createActionsLogSchema, IdSchema } from "./utils";
 
 const SelectDogSessionSchema = createSelectSchema(dogSessions);
 
@@ -24,6 +24,6 @@ const UpdateDogSessionSchema = InsertDogSessionSchema.pick({
 	});
 type UpdateDogSessionSchema = z.infer<typeof UpdateDogSessionSchema>;
 
-const DogSessionActionLogSchema = createActionLogSchema(InsertDogSessionSchema, UpdateDogSessionSchema);
+const DogSessionActionsLogSchema = createActionsLogSchema(InsertDogSessionSchema, UpdateDogSessionSchema);
 
-export { SelectDogSessionSchema, InsertDogSessionSchema, UpdateDogSessionSchema, DogSessionActionLogSchema };
+export { SelectDogSessionSchema, InsertDogSessionSchema, UpdateDogSessionSchema, DogSessionActionsLogSchema };

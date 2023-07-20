@@ -1,8 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type z } from "zod";
 
-import { dogToVetRelationships } from "~/db/drizzle-schema";
-import { createActionLogSchema, IdSchema } from "./utils";
+import { dogToVetRelationships } from "~/db/schemas";
+import { createActionsLogSchema, IdSchema } from "./utils";
 
 const SelectDogToVetRelationshipSchema = createSelectSchema(dogToVetRelationships);
 
@@ -22,7 +22,7 @@ const UpdateDogToVetRelationshipSchema = InsertDogToVetRelationshipSchema.pick({
 
 type UpdateDogToVetRelationshipSchema = z.infer<typeof UpdateDogToVetRelationshipSchema>;
 
-const DogToVetRelationshipActionLogSchema = createActionLogSchema(
+const DogToVetRelationshipActionsLogSchema = createActionsLogSchema(
 	InsertDogToVetRelationshipSchema,
 	UpdateDogToVetRelationshipSchema,
 );
@@ -31,5 +31,5 @@ export {
 	SelectDogToVetRelationshipSchema,
 	InsertDogToVetRelationshipSchema,
 	UpdateDogToVetRelationshipSchema,
-	DogToVetRelationshipActionLogSchema,
+	DogToVetRelationshipActionsLogSchema,
 };

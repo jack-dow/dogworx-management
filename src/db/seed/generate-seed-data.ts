@@ -10,7 +10,7 @@ import type {
 	Vet,
 	VetClinic,
 	VetToVetClinicRelationship,
-} from "../drizzle-schema";
+} from "../schemas";
 
 function generateDogs() {
 	const dogs: Dog[] = [];
