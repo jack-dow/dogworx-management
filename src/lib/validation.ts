@@ -1,12 +1,27 @@
 import * as z from "zod";
 
-const AuthSchema = z.object({
-	givenName: z.string().max(50).nonempty({ message: "Required" }),
-	familyName: z.string().max(50).or(z.literal("")).optional(),
-	email: z.string().email(),
+const GoogleProviderSchema = z.object({
+	sub: z.string(),
+	email: z.string(),
+	email_verified: z.boolean(),
+	name: z.string(),
+	given_name: z.string(),
+	family_name: z.string().optional(),
+	picture: z.string(),
+	locale: z.string(),
+});
+
+const CredentialsSignInSchema = z.object({
+	emailAddress: z.string().email(),
 	password: z.string().min(8).max(100),
 });
-type AuthSchema = z.infer<typeof AuthSchema>;
+type CredentialsSignInSchema = z.infer<typeof CredentialsSignInSchema>;
+
+const CredentialsSignUpSchema = CredentialsSignInSchema.extend({
+	givenName: z.string().max(50).nonempty({ message: "Required" }),
+	familyName: z.string().max(50).or(z.literal("")).optional(),
+});
+type CredentialsSignUpSchema = z.infer<typeof CredentialsSignUpSchema>;
 
 const VerifyEmailSchema = z.object({
 	code: z
@@ -19,14 +34,14 @@ const VerifyEmailSchema = z.object({
 type VerifyEmailSchema = z.infer<typeof VerifyEmailSchema>;
 
 const CheckEmailSchema = z.object({
-	email: AuthSchema.shape.email,
+	emailAddress: CredentialsSignInSchema.shape.emailAddress,
 });
 type CheckEmailSchema = z.infer<typeof CheckEmailSchema>;
 
 const ResetPasswordSchema = z
 	.object({
-		password: AuthSchema.shape.password,
-		confirmPassword: AuthSchema.shape.password,
+		password: CredentialsSignInSchema.shape.password,
+		confirmPassword: CredentialsSignInSchema.shape.password,
 		code: VerifyEmailSchema.shape.code,
 	})
 	.refine((data) => data.password === data.confirmPassword, {
@@ -64,4 +79,11 @@ const EmailOrPhoneNumberSchema = z
 	});
 type EmailOrPhoneNumberSchema = z.infer<typeof EmailOrPhoneNumberSchema>;
 
-export { AuthSchema, VerifyEmailSchema, CheckEmailSchema, ResetPasswordSchema, EmailOrPhoneNumberSchema };
+export {
+	CredentialsSignInSchema,
+	CredentialsSignUpSchema,
+	VerifyEmailSchema,
+	CheckEmailSchema,
+	ResetPasswordSchema,
+	EmailOrPhoneNumberSchema,
+};

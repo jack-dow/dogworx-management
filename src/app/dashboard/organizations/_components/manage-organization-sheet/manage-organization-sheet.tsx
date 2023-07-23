@@ -38,8 +38,8 @@ import {
 	type OrganizationsSearch,
 	type OrganizationUpdate,
 } from "~/api";
-import { InsertOrganizationInviteLinks, InsertOrganizationSchema, SelectUserSchema } from "~/db/zod-validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { InsertOrganizationInviteLinks, InsertOrganizationSchema, SelectUserSchema } from "~/server/db/zod-validation";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 

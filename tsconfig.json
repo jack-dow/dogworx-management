@@ -35,9 +35,8 @@
 		"**/*.cjs",
 		"**/*.mjs",
 		".next/types/**/*.ts",
-		"src/db/seed/generate-seed-data.ts",
-		"src/db/seed/seed.ts",
-		"src/lib/next-auth.d.ts",
+		"src/server/db/seed/generate-seed-data.ts",
+		"src/server/db/seed/seed.ts",
 		"src/lib/types.d.ts"
 	],
 

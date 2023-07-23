@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -12,43 +11,65 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { PasswordInput } from "~/components/ui/password-input";
 import { useToast } from "~/components/ui/use-toast";
-import { AuthSchema } from "~/lib/validation";
+import { signInWithCredentials } from "~/lib/auth";
+import { CredentialsSignInSchema } from "~/lib/validation";
 
 function SignInForm() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const { toast } = useToast();
-	const [isPending, startTransition] = React.useTransition();
 
-	// react-hook-form
-	const form = useForm<AuthSchema>({
-		resolver: zodResolver(AuthSchema),
+	const [isInvalidCredentials, setIsInvalidCredentials] = React.useState(false);
+
+	const form = useForm<CredentialsSignInSchema>({
+		resolver: zodResolver(CredentialsSignInSchema),
 		defaultValues: {
-			email: "",
+			emailAddress: "",
 			password: "",
 		},
 	});
 
-	function onSubmit(data: AuthSchema) {
-		startTransition(async () => {
-			try {
-				const result = await signIn("credentials", {
-					email: data.email,
-					password: data.password,
-				});
+	async function onSubmit(data: CredentialsSignInSchema) {
+		if (isInvalidCredentials) {
+			toast({
+				title: "Invalid credentials",
+				description: "Your credentials do not match our records. Please try again.",
+				variant: "destructive",
+			});
+			return;
+		}
 
-				if (result?.ok) {
-					router.push(`${window.location.origin}/`);
-				} else {
-					/*Investigate why the login hasn't completed */
-					console.log(result);
+		try {
+			const signInResult = await signInWithCredentials({
+				emailAddress: data.emailAddress,
+				password: data.password,
+			});
+
+			if (!signInResult.success) {
+				if (signInResult.error.code === "InvalidCredentials") {
+					setIsInvalidCredentials(true);
+					toast({
+						title: "Invalid credentials",
+						description: "Your credentials do not match our records. Please try again.",
+						variant: "destructive",
+					});
+					return;
 				}
-			} catch (error) {
-				toast({
-					title: `An unknown error occurred`,
-					description: "Something went wrong, please try again.",
+
+				return toast({
+					title: "Something went wrong.",
+					description: "Your sign in request failed. Please try again.",
+					variant: "destructive",
 				});
 			}
-		});
+
+			router.push(searchParams?.get("from") || "/dashboard");
+		} catch (error) {
+			toast({
+				title: `An unknown error occurred`,
+				description: "Something went wrong, please try again.",
+			});
+		}
 	}
 
 	return (
@@ -56,14 +77,20 @@ function SignInForm() {
 			<form className="grid gap-4" onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
 				<FormField
 					control={form.control}
-					name="email"
+					name="emailAddress"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Email</FormLabel>
 							<FormControl>
-								<Input {...field} />
+								<Input
+									{...field}
+									onChange={(e) => {
+										setIsInvalidCredentials(false);
+										field.onChange(e);
+									}}
+								/>
 							</FormControl>
-							<FormMessage />
+							<FormMessage>{isInvalidCredentials && "Invalid Credentials"}</FormMessage>
 						</FormItem>
 					)}
 				/>
@@ -74,14 +101,20 @@ function SignInForm() {
 						<FormItem>
 							<FormLabel>Password</FormLabel>
 							<FormControl>
-								<PasswordInput {...field} />
+								<PasswordInput
+									{...field}
+									onChange={(e) => {
+										setIsInvalidCredentials(false);
+										field.onChange(e);
+									}}
+								/>
 							</FormControl>
-							<FormMessage />
+							<FormMessage>{isInvalidCredentials && "Invalid Credentials"}</FormMessage>
 						</FormItem>
 					)}
 				/>
-				<Button type="submit" disabled={isPending}>
-					{isPending && <Loader aria-hidden="true" size="sm" />}
+				<Button type="submit" disabled={form.formState.isSubmitting}>
+					{form.formState.isSubmitting && <Loader aria-hidden="true" size="sm" />}
 					Continue
 				</Button>
 			</form>

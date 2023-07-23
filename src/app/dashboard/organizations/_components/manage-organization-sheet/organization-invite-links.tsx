@@ -4,7 +4,6 @@ import * as React from "react";
 import { init } from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { getSession } from "next-auth/react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";

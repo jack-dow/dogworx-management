@@ -20,7 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { VerifyEmailAddressCodeInput } from "./verify-email-address-code-input";
+import { VerificationCodeInput } from "../../../../../components/ui/verification-code-input";
 
 const AddEmailAddressFormSchema = z.object({
 	emailAddress: z.string().email().max(100),
@@ -91,7 +91,7 @@ function ManageEmailAddressDialog({
 						</DialogHeader>
 
 						<div>
-							<VerifyEmailAddressCodeInput
+							<VerificationCodeInput
 								onSubmit={async (code) => {
 									try {
 										const result = await emailAddressResource?.attemptVerification({ code });

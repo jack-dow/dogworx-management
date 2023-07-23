@@ -41,13 +41,13 @@ function createOrganizationsTableColumns(
 			sortingFn: "fuzzy",
 		},
 		{
-			accessorKey: "organizationToUserRelationships",
+			accessorKey: "users",
 			header: ({ column }) => <DataTableColumnHeader className="truncate" column={column} title="Users" />,
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center">
 						<span className="truncate">
-							{row.original.organizationToUserRelationships.length}/{row.original.maxUsers}
+							{row.original.users.length}/{row.original.maxUsers}
 						</span>
 					</div>
 				);

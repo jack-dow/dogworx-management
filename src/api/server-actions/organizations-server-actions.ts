@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, organizations, organizationToUserRelationships } from "~/db/schemas";
-import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/db/zod-validation";
+import { drizzle } from "~/server/db/drizzle";
+import { organizationInviteLinks, organizations } from "~/server/db/schemas";
+import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/server/db/zod-validation";
 import { createServerAction, type ExtractServerActionData } from "../utils";
 import { SearchTermSchema, separateActionsLogSchema } from "../validations/utils";
 
@@ -15,7 +15,7 @@ const listOrganizations = createServerAction(async (limit?: number) => {
 		const data = await drizzle.query.organizations.findMany({
 			limit: limit ?? 50,
 			with: {
-				organizationToUserRelationships: true,
+				users: true,
 				organizationInviteLinks: {
 					with: {
 						user: true,
@@ -44,7 +44,7 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 			where: eq(organizations.name, validSearchTerm.data),
 			limit: 50,
 			with: {
-				organizationToUserRelationships: true,
+				users: true,
 				organizationInviteLinks: {
 					with: {
 						user: true,
@@ -109,7 +109,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 		const organization = await drizzle.query.organizations.findFirst({
 			where: eq(organizations.id, data.id),
 			with: {
-				organizationToUserRelationships: true,
+				users: true,
 				organizationInviteLinks: {
 					with: {
 						user: true,
@@ -166,7 +166,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 		const organization = await drizzle.query.organizations.findFirst({
 			where: eq(organizations.id, id),
 			with: {
-				organizationToUserRelationships: true,
+				users: true,
 				organizationInviteLinks: {
 					with: {
 						user: true,
@@ -197,7 +197,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 				id: true,
 			},
 			with: {
-				organizationToUserRelationships: true,
+				users: true,
 				organizationInviteLinks: {
 					with: {
 						user: true,
@@ -209,15 +209,6 @@ const deleteOrganization = createServerAction(async (id: string) => {
 		if (organization) {
 			await drizzle.transaction(async (trx) => {
 				await trx.delete(organizations).where(eq(organizations.id, id));
-
-				if (organization.organizationToUserRelationships.length > 0) {
-					await trx.delete(organizationToUserRelationships).where(
-						inArray(
-							organizationToUserRelationships.id,
-							organization.organizationToUserRelationships.map((c) => c.id),
-						),
-					);
-				}
 
 				if (organization.organizationInviteLinks.length > 0) {
 					await trx.delete(organizationInviteLinks).where(

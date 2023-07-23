@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { redirect, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
 
 import { Button } from "~/components/ui/button";
 import { GoogleIcon } from "~/components/ui/icons";
@@ -29,34 +28,21 @@ function OAuthProviderButtons() {
 	async function oauthSignIn(provider: OAuthStrategy) {
 		setIsLoading(provider);
 
-		const response = await signIn(provider, {
-			callbackUrl: searchParams?.get("from") || "/dashboard",
-		});
+		// const response = await signIn(provider, {
+		// 	callbackUrl: searchParams?.get("from") || "/dashboard",
+		// });
 
-		console.log({ response });
+		// console.log({ response });
 
-		if (response?.ok) {
-			redirect(response.url ?? "/");
-		}
+		// if (response?.ok) {
+		// 	redirect(response.url ?? "/");
+		// }
 
-		if (response?.error) {
-			console.log("error!", response.error);
-			toast({
-				title: `An unknown error occurred`,
-				description: "Something went wrong, please try again.",
-			});
-		}
-
-		// try {
-
-		// } catch (error) {
-		// 	setIsLoading(null);
-
-		// 	const unknownError = "Something went wrong, please try again.";
-
+		// if (response?.error) {
+		// 	console.log("error!", response.error);
 		// 	toast({
 		// 		title: `An unknown error occurred`,
-		// 		description: unknownError,
+		// 		description: "Something went wrong, please try again.",
 		// 	});
 		// }
 	}

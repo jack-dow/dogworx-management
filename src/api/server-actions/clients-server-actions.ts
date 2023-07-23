@@ -2,20 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { eq, inArray, sql } from "drizzle-orm";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { drizzle } from "~/db/drizzle";
-import { clients, dogToClientRelationships } from "~/db/schemas";
-import { authOptions } from "~/lib/auth-options";
+import { drizzle } from "~/server/db/drizzle";
+import { clients, dogToClientRelationships } from "~/server/db/schemas";
 import { createServerAction, type ExtractServerActionData } from "../utils";
 import { InsertClientSchema, UpdateClientSchema } from "../validations/clients";
 import { SearchTermSchema, separateActionsLogSchema } from "../validations/utils";
 
 const listClients = createServerAction(async (limit?: number) => {
-	const session = await getServerSession(authOptions);
-	console.log({ session });
-
 	try {
 		const data = await drizzle.query.clients.findMany({
 			limit: limit ?? 50,

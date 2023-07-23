@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type z } from "zod";
 
-import { dogToClientRelationships } from "~/db/schemas";
+import { dogToClientRelationships } from "~/server/db/schemas";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 const SelectDogToClientRelationshipSchema = createSelectSchema(dogToClientRelationships);

@@ -1,10 +1,13 @@
 import { type Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { sql } from "drizzle-orm";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/api";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
+import { drizzle } from "~/server/db/drizzle";
+import { organizationInviteLinks } from "~/server/db/schemas";
 import { SignUpForm } from "./_components/sign-up-form";
 
 export const metadata: Metadata = {
@@ -12,9 +15,15 @@ export const metadata: Metadata = {
 };
 
 async function SignUpPage({ params }: { params: { id: string } }) {
-	const inviteLink = await api.organizations.getInviteLink(params.id);
+	const response = await api.organizations.getInviteLink(params.id);
 
-	if (!inviteLink.data) {
+	if (!response.data || response.data.uses >= response.data.maxUses || response.data.expiresAt < new Date()) {
+		if (response.data) {
+			if (response.data.uses >= response.data.maxUses || response.data?.expiresAt < new Date()) {
+				await drizzle.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${params.id}`);
+			}
+		}
+
 		return (
 			<>
 				<div className="mb-8 flex w-full items-center justify-center">
@@ -50,6 +59,7 @@ async function SignUpPage({ params }: { params: { id: string } }) {
 			<div className="mb-8 flex w-full items-center justify-center">
 				<Image src={DogworxLogoGradient as string} alt="Dogworx Logo (Gradient Version)" width={237} height={60} />
 			</div>
+
 			<Card className="w-full sm:max-w-lg">
 				<CardHeader className="space-y-1">
 					{/* <div className="mb-6  flex w-full items-center justify-center">
@@ -58,12 +68,12 @@ async function SignUpPage({ params }: { params: { id: string } }) {
 					<CardTitle className="text-2xl">Sign up</CardTitle>
 					<CardDescription>
 						Enter your details below to create your{" "}
-						<span className="font-semibold">{inviteLink.data.organization.name}</span> account
+						<span className="font-semibold">{response.data.organization.name}</span> account
 					</CardDescription>
 				</CardHeader>
 
 				<CardContent className="grid gap-4">
-					<SignUpForm />
+					<SignUpForm inviteLink={response.data} />
 				</CardContent>
 
 				<CardFooter className="grid gap-4">

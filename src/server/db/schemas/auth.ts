@@ -1,6 +1,5 @@
 import { relations, type InferModel } from "drizzle-orm";
-import { int, mysqlEnum, mysqlTable, primaryKey, text, timestamp, varchar } from "drizzle-orm/mysql-core";
-import { type ProviderType } from "next-auth/providers";
+import { boolean, int, mysqlEnum, mysqlTable, primaryKey, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 const users = mysqlTable("auth_users", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
@@ -9,41 +8,46 @@ const users = mysqlTable("auth_users", {
 	name: varchar("name", { length: 255 }).notNull(),
 	givenName: varchar("given_name", { length: 255 }).notNull(),
 	familyName: varchar("family_name", { length: 255 }).notNull().default(""),
-	email: varchar("email", { length: 255 }).notNull().unique(),
+	primaryEmailAddressId: varchar("primary_email_address_id", { length: 255 }).unique(),
+	organizationId: varchar("organization_id", { length: 255 }).notNull(),
+	isBanned: boolean("is_banned").notNull().default(false),
+	bannedAt: timestamp("banned_at"),
+	bannedUntil: timestamp("banned_until"),
 	password: varchar("password", { length: 255 }),
 	emailVerified: timestamp("email_verified"),
-	image: text("image"),
+	profileImageUrl: text("profile_image_url"),
 });
 type User = InferModel<typeof users>;
 
-const usersRelations = relations(users, ({ many }) => ({
-	accounts: many(accounts),
+const usersRelations = relations(users, ({ many, one }) => ({
+	providerAccounts: many(providerAccounts),
 	sessions: many(sessions),
-	organizationToUserRelationships: many(organizationToUserRelationships),
+	organization: one(organizations, {
+		fields: [users.organizationId],
+		references: [organizations.id],
+	}),
 	organizationInviteLinks: many(organizationInviteLinks),
 }));
 
-const accounts = mysqlTable("auth_accounts", {
+const providerAccounts = mysqlTable("auth_provider_accounts", {
 	id: varchar("id", { length: 128 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	provider: varchar("provider", { length: 255 }).notNull(),
+	provider: mysqlEnum("provider", ["google", "email"]).notNull(),
 	providerAccountId: varchar("provider_account_id", { length: 255 }).notNull().unique(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
-	type: varchar("type", { length: 255 }).$type<ProviderType>().notNull(),
-	refresh_token: text("refresh_token"),
-	access_token: text("access_token"),
-	expires_at: int("expires_at"),
-	token_type: varchar("token_type", { length: 255 }),
+	refreshToken: text("refresh_token"),
+	accessToken: text("access_token"),
+	expiresAt: timestamp("expires_at"),
+	tokenType: varchar("token_type", { length: 255 }),
 	scope: varchar("scope", { length: 255 }),
-	id_token: text("id_token"),
-	session_state: varchar("session_state", { length: 255 }),
+	idToken: text("id_token"),
 });
-type Account = InferModel<typeof accounts>;
+type ProviderAccount = InferModel<typeof providerAccounts>;
 
-const accountsRelations = relations(accounts, ({ one }) => ({
+const providerAccountsRelations = relations(providerAccounts, ({ one }) => ({
 	user: one(users, {
-		fields: [accounts.userId],
+		fields: [providerAccounts.userId],
 		references: [users.id],
 	}),
 }));
@@ -52,9 +56,14 @@ const sessions = mysqlTable("auth_sessions", {
 	id: varchar("id", { length: 128 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+	// Max length I could get planetscale to accept
+	sessionToken: varchar("session_token", { length: 750 }).notNull().unique(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
-	expires: timestamp("expires", { mode: "date" }).notNull(),
+	expiresAt: timestamp("expires_at").notNull(),
+	ipAddress: varchar("ip_address", { length: 255 }),
+	userAgent: varchar("user_agent", { length: 255 }),
+	city: varchar("city", { length: 255 }),
+	country: varchar("country", { length: 255 }),
 });
 type Session = InferModel<typeof sessions>;
 
@@ -70,7 +79,7 @@ const verificationTokens = mysqlTable(
 	{
 		identifier: varchar("identifier", { length: 255 }).notNull(),
 		token: varchar("token", { length: 255 }).notNull().unique(),
-		expires: timestamp("expires", { mode: "date" }).notNull(),
+		expiresAt: timestamp("expires_at").notNull(),
 	},
 	(vt) => ({
 		pk: primaryKey(vt.identifier, vt.token),
@@ -89,29 +98,8 @@ const organizations = mysqlTable("auth_organizations", {
 type Organization = InferModel<typeof organizations>;
 
 const organizationsRelations = relations(organizations, ({ many }) => ({
-	organizationToUserRelationships: many(organizationToUserRelationships),
 	organizationInviteLinks: many(organizationInviteLinks),
-}));
-
-const organizationToUserRelationships = mysqlTable("auth_organization_to_user_relationships", {
-	id: varchar("id", { length: 255 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	organizationId: varchar("organization_id", { length: 255 }).notNull(),
-	userId: varchar("user_id", { length: 255 }).notNull(),
-	role: mysqlEnum("role", ["owner", "admin", "member"]).notNull(),
-});
-type OrganizationToUserRelationship = InferModel<typeof organizationToUserRelationships>;
-
-const organizationToUserRelationshipsRelations = relations(organizationToUserRelationships, ({ one }) => ({
-	organization: one(organizations, {
-		fields: [organizationToUserRelationships.organizationId],
-		references: [organizations.id],
-	}),
-	user: one(users, {
-		fields: [organizationToUserRelationships.userId],
-		references: [users.id],
-	}),
+	users: many(users),
 }));
 
 const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
@@ -143,9 +131,9 @@ export {
 	users,
 	type User,
 	usersRelations,
-	accounts,
-	type Account,
-	accountsRelations,
+	providerAccounts,
+	type ProviderAccount,
+	providerAccountsRelations,
 	sessions,
 	type Session,
 	sessionsRelations,
@@ -154,9 +142,6 @@ export {
 	organizations,
 	type Organization,
 	organizationsRelations,
-	organizationToUserRelationships,
-	type OrganizationToUserRelationship,
-	organizationToUserRelationshipsRelations,
 	organizationInviteLinks,
 	type OrganizationInviteLink,
 	organizationInviteLinksRelations,

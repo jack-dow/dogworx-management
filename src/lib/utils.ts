@@ -1,5 +1,9 @@
+import { createId } from "@paralleldrive/cuid2";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { type z } from "zod";
+
+const generateId = createId;
 
 function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -25,10 +29,13 @@ function mergeRelationships<Relationship extends { id: string; relationship: str
 		  }
 	> = {},
 ) {
-	const currentAsObject = current.reduce((acc, curr) => {
-		acc[curr.id] = curr;
-		return acc;
-	}, {} as Record<string, Relationship>);
+	const currentAsObject = current.reduce(
+		(acc, curr) => {
+			acc[curr.id] = curr;
+			return acc;
+		},
+		{} as Record<string, Relationship>,
+	);
 
 	const newRelationships = { ...currentAsObject };
 
@@ -50,4 +57,17 @@ function mergeRelationships<Relationship extends { id: string; relationship: str
 	return Object.values(newRelationships);
 }
 
-export { cn, mergeRelationships };
+type DefaultErrorCodes = "InvalidBody" | "UnknownError";
+
+type APIResponse<Data, ErrorCodes extends string | undefined = undefined> =
+	| (Data extends undefined ? { success: true; error?: never } : { success: true; data: Data; error?: never })
+	| {
+			success: false;
+			error: {
+				code: ErrorCodes extends undefined ? DefaultErrorCodes : DefaultErrorCodes | ErrorCodes;
+				message: string | z.ZodIssue[];
+			};
+			data?: never;
+	  };
+
+export { cn, mergeRelationships, generateId, type APIResponse };

@@ -15,14 +15,8 @@ const env = createEnv({
 		DATABASE_URL: z.string().url(),
 		OAUTH_GOOGLE_CLIENT_ID: z.string().min(1),
 		OAUTH_GOOGLE_CLIENT_SECRET: z.string().min(1),
-		NEXTAUTH_SECRET: process.env.NODE_ENV === "production" ? z.string().min(1) : z.string().min(1).optional(),
-		NEXTAUTH_URL: z.preprocess(
-			// This makes Vercel deployments not fail if you don't set NEXTAUTH_URL
-			// Since NextAuth.js automatically uses the VERCEL_URL if present.
-			(str) => process.env.VERCEL_URL ?? str,
-			// VERCEL_URL doesn't include `https` so it cant be validated as a URL
-			process.env.VERCEL ? z.string().min(1) : z.string().url(),
-		),
+		JWT_SECRET: z.string().min(1),
+		RESEND_API_KEY: z.string().min(1),
 	},
 	/**
 	 * Specify your client-side environment variables schema here.
@@ -41,8 +35,8 @@ const env = createEnv({
 		DATABASE_URL: process.env.DATABASE_URL,
 		OAUTH_GOOGLE_CLIENT_ID: process.env.OAUTH_GOOGLE_CLIENT_ID,
 		OAUTH_GOOGLE_CLIENT_SECRET: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
-		NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-		NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+		JWT_SECRET: process.env.JWT_SECRET,
+		RESEND_API_KEY: process.env.RESEND_API_KEY,
 	},
 	skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

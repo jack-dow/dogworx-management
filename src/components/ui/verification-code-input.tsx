@@ -46,7 +46,7 @@ const segmentVariants = cva(
 
 type CodeState = "input" | "loading" | "error" | "success";
 
-const VerifyEmailAddressCodeInput = ({ onSubmit }: { onSubmit: (code: string) => Promise<void> }) => {
+const VerificationCodeInput = ({ onSubmit }: { onSubmit: (code: string) => Promise<void> }) => {
 	const [state, setState] = React.useState<CodeState>("input");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 	const focused = useIsFocused(inputRef);
@@ -128,4 +128,4 @@ const VerifyEmailAddressCodeInput = ({ onSubmit }: { onSubmit: (code: string) =>
 	);
 };
 
-export { VerifyEmailAddressCodeInput };
+export { VerificationCodeInput };

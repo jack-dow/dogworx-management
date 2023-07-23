@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { dogs } from "~/db/schemas";
+import { dogs } from "~/server/db/schemas";
 import { DogSessionActionsLogSchema } from "./dog-sessions";
 import { DogToClientRelationshipActionsLogSchema } from "./dog-to-client-relationships";
 import { DogToVetRelationshipActionsLogSchema } from "./dog-to-vet-relationships";

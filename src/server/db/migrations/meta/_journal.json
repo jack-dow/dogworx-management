@@ -197,6 +197,48 @@
       "when": 1689816464281,
       "tag": "0027_fine_bloodstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1689852173591,
+      "tag": "0028_sad_payback",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1689991321876,
+      "tag": "0029_real_fat_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1689992957010,
+      "tag": "0030_parallel_grim_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1689999687441,
+      "tag": "0031_sweet_ender_wiggin",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1690000675824,
+      "tag": "0032_naive_the_twelve",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1690080532132,
+      "tag": "0033_clever_bullseye",
+      "breakpoints": true
     }
   ]
 }

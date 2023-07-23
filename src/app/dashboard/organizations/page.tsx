@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { PageHeader } from "~/components/page-header";
 import { api } from "~/api";
-import { getServerUser } from "~/lib/session";
+import { getProtectedServerUser } from "~/lib/session";
 import { ManageOrganizationSheet } from "./_components/manage-organization-sheet";
 import { OrganizationsTable } from "./_components/organizations-table";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 async function OrganizationsPage() {
 	const organizations = await api.organizations.list();
-	const user = await getServerUser();
+	const user = await getProtectedServerUser();
 
 	if (user.email !== "jack.dowww@gmail.com") {
 		redirect("/dashboard");

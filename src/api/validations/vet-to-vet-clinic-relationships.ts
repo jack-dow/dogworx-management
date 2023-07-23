@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type z } from "zod";
 
-import { vetToVetClinicRelationships } from "~/db/schemas";
+import { vetToVetClinicRelationships } from "~/server/db/schemas";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 const SelectVetToVetClinicRelationshipSchema = createSelectSchema(vetToVetClinicRelationships);

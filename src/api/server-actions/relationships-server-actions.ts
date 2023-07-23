@@ -2,8 +2,8 @@
 
 import { eq } from "drizzle-orm";
 
-import { drizzle } from "~/db/drizzle";
-import { dogToClientRelationships, dogToVetRelationships, vetToVetClinicRelationships } from "~/db/schemas";
+import { drizzle } from "~/server/db/drizzle";
+import { dogToClientRelationships, dogToVetRelationships, vetToVetClinicRelationships } from "~/server/db/schemas";
 import { createServerAction, type ExtractServerActionData } from "../utils";
 
 const getClientRelationships = createServerAction(async (clientId: string) => {

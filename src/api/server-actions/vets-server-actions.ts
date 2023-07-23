@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { drizzle } from "~/db/drizzle";
-import { dogToVetRelationships, vets, vetToVetClinicRelationships } from "~/db/schemas";
+import { drizzle } from "~/server/db/drizzle";
+import { dogToVetRelationships, vets, vetToVetClinicRelationships } from "~/server/db/schemas";
 import { createServerAction, type ExtractServerActionData } from "../utils";
 import { SearchTermSchema, separateActionsLogSchema } from "../validations/utils";
 import { InsertVetSchema, UpdateVetSchema } from "../validations/vets";
