@@ -5,9 +5,9 @@ import { type Control } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { type AccountSettingsPageFormSchema } from "./account-settings-page-form";
+import { type ManageAccountFormSchema } from "./manage-account-form";
 
-function DisplayName({ control }: { control: Control<AccountSettingsPageFormSchema> }) {
+function DisplayName({ control }: { control: Control<ManageAccountFormSchema> }) {
 	return (
 		<div className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-8">
 			<div>

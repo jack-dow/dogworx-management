@@ -239,6 +239,27 @@
       "when": 1690080532132,
       "tag": "0033_clever_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1690263382861,
+      "tag": "0034_solid_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1690263677915,
+      "tag": "0035_bright_ghost_rider",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1690288454819,
+      "tag": "0036_unknown_odin",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import argon2 from "argon2";
 import { eq, sql } from "drizzle-orm";
 
 import { generateId, type APIResponse } from "~/lib/utils";
-import { CredentialsSignUpSchema } from "~/lib/validation";
+import { SignUpSchema } from "~/lib/validation";
 import { drizzle } from "~/server/db/drizzle";
-import { organizationInviteLinks, providerAccounts, users, type User } from "~/server/db/schemas";
-import { type InsertProviderAccountSchema, type InsertUserSchema } from "~/server/db/zod-validation";
+import { organizationInviteLinks, users, type User } from "~/server/db/schemas";
+import { type InsertUserSchema } from "~/server/db/zod-validation";
 
 export const fetchCache = "force-no-store";
 
@@ -14,18 +13,12 @@ type CreateUserFromInvitePOSTResponse = APIResponse<
 	User | { message: string; user: InsertUserSchema },
 	"InviteLinkInvalid" | "AlreadyExists"
 >;
-
-async function hashPassword(password: string) {
-	return argon2.hash(password);
-}
-
-async function POST(
-	request: NextRequest,
-	{ params }: { params: { id: string } },
-): Promise<NextResponse<CreateUserFromInvitePOSTResponse>> {
+async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromInvitePOSTResponse>> {
 	const body = (await request.json()) as unknown;
 
-	const credentials = CredentialsSignUpSchema.safeParse(body);
+	const { searchParams } = new URL(request.url);
+
+	const credentials = SignUpSchema.safeParse(body);
 
 	if (!credentials.success) {
 		return NextResponse.json(
@@ -36,7 +29,7 @@ async function POST(
 
 	try {
 		const inviteLink = await drizzle.query.organizationInviteLinks.findFirst({
-			where: sql`BINARY ${organizationInviteLinks.id} = ${params.id}`,
+			where: sql`BINARY ${organizationInviteLinks.id} = ${searchParams.get("id")}`,
 
 			columns: {
 				id: true,
@@ -54,29 +47,17 @@ async function POST(
 			);
 		}
 
-		const newUserId = generateId();
-
-		const primaryEmailAddressAccount = {
-			id: generateId(),
-			provider: "email",
-			providerAccountId: credentials.data.emailAddress,
-			userId: newUserId,
-		} satisfies InsertProviderAccountSchema;
-
 		const newUser = {
-			id: newUserId,
+			id: generateId(),
 			name: credentials.data.givenName + (credentials.data.familyName ? " " + credentials.data.familyName : ""),
 			givenName: credentials.data.givenName,
 			familyName: credentials.data.familyName,
-			password: credentials.data.password ? await hashPassword(credentials.data.password) : null,
+			emailAddress: credentials.data.emailAddress,
 			organizationId: inviteLink.organizationId,
-			primaryEmailAddressId: primaryEmailAddressAccount.id,
 		} satisfies InsertUserSchema;
 
 		await drizzle.transaction(async (db) => {
 			await db.insert(users).values(newUser);
-
-			await db.insert(providerAccounts).values(primaryEmailAddressAccount);
 
 			if (inviteLink.uses + 1 >= inviteLink.maxUses) {
 				await db.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${inviteLink.id}`);
@@ -92,14 +73,9 @@ async function POST(
 
 		const user = await drizzle.query.users.findFirst({
 			where: eq(users.id, newUser.id),
-			with: {
-				providerAccounts: true,
-				sessions: true,
-			},
 		});
 
 		if (user) {
-			user.password = null;
 			return NextResponse.json({ success: true, data: user }, { status: 201 });
 		}
 

@@ -23,10 +23,10 @@ import { FormField } from "~/components/ui/form";
 import { PlusIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type AccountSettingsPageFormSchema } from "../account-settings-page-form";
+import { type ManageAccountFormSchema } from "../manage-account-form";
 import { ManageEmailAddressDialog } from "./manage-email-address-dialog";
 
-function EmailAddresses({ control }: { control: Control<AccountSettingsPageFormSchema> }) {
+function EmailAddresses({ control }: { control: Control<ManageAccountFormSchema> }) {
 	const { user } = useUser();
 
 	const [isManageEmailAddressDialogOpen, setIsManageEmailAddressDialogOpen] = React.useState<
@@ -188,9 +188,9 @@ function EmailAddressField({
 	onDelete,
 }: {
 	index: number;
-	field: AccountSettingsPageFormSchema["emailAddresses"][number];
+	field: ManageAccountFormSchema["emailAddresses"][number];
 	isPrimary: boolean;
-	updatePrimaryEmailAddress: (emailAddress: AccountSettingsPageFormSchema["emailAddresses"][number]) => Promise<void>;
+	updatePrimaryEmailAddress: (emailAddress: ManageAccountFormSchema["emailAddresses"][number]) => Promise<void>;
 	onVerify: () => void;
 	onDelete: (index: number) => void;
 }) {

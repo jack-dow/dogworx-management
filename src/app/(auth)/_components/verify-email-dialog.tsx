@@ -3,29 +3,32 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { RefreshOnFocus } from "~/components/refresh-on-focus";
 import {
 	AlertDialog,
 	AlertDialogContent,
 	AlertDialogDescription,
-	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
-import { attemptEmailVerification } from "./attempt-email-verification-server-action";
+import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 
 function VerifyEmailAlertDialog({
-	email,
+	emailAddress,
 	open,
 	setOpen,
+	type,
 }: {
-	email: string | null;
+	emailAddress: string | null;
 	open: boolean;
 	setOpen: (open: boolean) => void;
+	type: "sign-in" | "sign-up";
 }) {
 	const router = useRouter();
+	const isSignUp = type === "sign-up";
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = React.useState(true);
 	const [sentFirstEmail, setSentFirstEmail] = React.useState(false);
@@ -48,18 +51,18 @@ function VerifyEmailAlertDialog({
 	const handleSendEmail = React.useCallback(() => {
 		setIsLoading(true);
 		async function sendEmail() {
-			await fetch("/api/auth/send-verify-email", {
+			const response = await fetch("/api/auth/sign-in/magic-link/send", {
 				method: "POST",
-				body: JSON.stringify({ email }),
+				body: JSON.stringify({ emailAddress }),
 			});
+
+			const body = (await response.json()) as SendMagicLinkPOSTResponse;
+
+			return body;
 		}
 
 		sendEmail()
 			.then(() => {
-				toast({
-					title: "Verification code sent",
-					description: "We've sent a new verification code to your email address.",
-				});
 				setSentFirstEmail(true);
 				setResendCodeCountdown(60);
 			})
@@ -73,7 +76,7 @@ function VerifyEmailAlertDialog({
 			.finally(() => {
 				setIsLoading(false);
 			});
-	}, [email, toast, setSentFirstEmail, setResendCodeCountdown]);
+	}, [emailAddress, toast, setSentFirstEmail, setResendCodeCountdown]);
 
 	React.useEffect(() => {
 		if (open && !sentFirstEmail) {
@@ -82,65 +85,65 @@ function VerifyEmailAlertDialog({
 	}, [open, sentFirstEmail, handleSendEmail]);
 
 	return (
-		<AlertDialog open={open} onOpenChange={setOpen}>
-			<AlertDialogContent className="sm:max-w-[425px]">
-				<AlertDialogHeader className="space-y-1">
-					<AlertDialogTitle>Verify email address</AlertDialogTitle>
-					<AlertDialogDescription>
-						We&apos;ve sent a verification code to <span className="font-medium">{email}</span>
-					</AlertDialogDescription>
-				</AlertDialogHeader>
+		<>
+			{open && <RefreshOnFocus />}
 
-				<div className="flex justify-center">
-					<VerificationCodeInput
-						onSubmit={async (verificationCode) => {
-							try {
-								if (email) {
-									const result = await attemptEmailVerification({ email, verificationCode });
+			<AlertDialog open={open} onOpenChange={setOpen}>
+				<AlertDialogContent className="sm:max-w-[425px]">
+					<AlertDialogHeader className="space-y-1">
+						<AlertDialogTitle>{isSignUp ? "Verify Email Address" : "Sign in with code"}</AlertDialogTitle>
+						<AlertDialogDescription>
+							We&apos;ve sent a verification code to <span className="font-medium">{emailAddress}</span>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
 
-									if (result.success) {
-										setOpen(false);
-										router.push("/dashboard");
-									} else {
-										// Throw error on incorrect code to have input show error state
+					<div className="flex justify-center">
+						<VerificationCodeInput
+							onSubmit={async (verificationCode) => {
+								if (emailAddress) {
+									const response = await fetch(`/api/auth/sign-in/magic-link?code=${verificationCode}`);
+
+									if (response.status !== 200) {
 										throw new Error("Failed to verify email address");
 									}
 
-									toast({
-										title: result.title,
-										description: result.description,
-										variant: result.success ? "default" : "destructive",
-									});
+									if (!response.ok) {
+										toast({
+											title: `Failed to ${isSignUp ? "verify email address" : "sign in"}`,
+											description: `An unknown error occurred while trying to ${
+												isSignUp ? "verify your email address" : "sign in"
+											}. Please try again later.`,
+										});
+										throw new Error("Failed to verify email address");
+									}
+
+									router.push("/dashboard");
 								}
-							} catch (error) {
-								throw new Error("Failed to verify email address");
-							}
-						}}
-					/>
-				</div>
+							}}
+						/>
+					</div>
 
-				<div>
-					<Button
-						type="button"
-						variant="link"
-						className="-ml-4"
-						disabled={resendCodeCountdown > 0 || isLoading}
-						onClick={() => {
-							handleSendEmail();
-						}}
-					>
-						{"Didn't receive an email? Click here to resend. "}
-						{resendCodeCountdown > 0 ? `(${resendCodeCountdown})` : ""}
-					</Button>
-				</div>
-
-				<AlertDialogFooter>
-					<Button type="button" variant="outline" onClick={() => setOpen(false)}>
-						Cancel
-					</Button>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
+					<div>
+						<Button
+							type="button"
+							variant="link"
+							className="-ml-4"
+							disabled={resendCodeCountdown > 0 || isLoading}
+							onClick={() => {
+								handleSendEmail();
+								toast({
+									title: "Verification code sent",
+									description: "We've sent a new verification code to your email address.",
+								});
+							}}
+						>
+							{"Didn't receive an email? Click here to resend. "}
+							{resendCodeCountdown > 0 ? `(${resendCodeCountdown})` : ""}
+						</Button>
+					</div>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	);
 }
 

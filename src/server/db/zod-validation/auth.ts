@@ -1,13 +1,12 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { organizationInviteLinks, organizations, providerAccounts, sessions, users } from "../schemas";
+import { organizationInviteLinks, organizations, sessions, users } from "../schemas";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 // -----------------------------------------------------------------------------
 // Users
 // -----------------------------------------------------------------------------
-
 const InsertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true }).extend({
 	id: IdSchema,
 });
@@ -17,24 +16,6 @@ const UpdateUserSchema = InsertUserSchema.partial().extend({
 	id: IdSchema,
 });
 type UpdateUserSchema = z.infer<typeof UpdateUserSchema>;
-
-// -----------------------------------------------------------------------------
-// Provider Accounts
-// -----------------------------------------------------------------------------
-const InsertProviderAccountSchema = createInsertSchema(providerAccounts)
-	.omit({
-		createdAt: true,
-		updatedAt: true,
-	})
-	.extend({
-		id: IdSchema,
-	});
-type InsertProviderAccountSchema = z.infer<typeof InsertProviderAccountSchema>;
-
-const UpdateProviderAccountSchema = InsertProviderAccountSchema.partial().extend({
-	id: IdSchema,
-});
-type UpdateProviderAccountSchema = z.infer<typeof UpdateProviderAccountSchema>;
 
 // -----------------------------------------------------------------------------
 // Sessions
@@ -103,8 +84,6 @@ type UpdateOrganizationSchema = z.infer<typeof UpdateOrganizationSchema>;
 export {
 	InsertUserSchema,
 	UpdateUserSchema,
-	InsertProviderAccountSchema,
-	UpdateProviderAccountSchema,
 	InsertSessionSchema,
 	UpdateSessionSchema,
 	InsertOrganizationInviteLinkSchema,

@@ -7,9 +7,9 @@ import { type Control } from "react-hook-form";
 import { Checkbox } from "~/components/ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { PasswordInput } from "~/components/ui/password-input";
-import { type AccountSettingsPageFormSchema } from "./account-settings-page-form";
+import { type ManageAccountFormSchema } from "./manage-account-form";
 
-function ChangePassword({ control }: { control: Control<AccountSettingsPageFormSchema> }) {
+function ChangePassword({ control }: { control: Control<ManageAccountFormSchema> }) {
 	const { user } = useUser();
 
 	if (!user) return null;

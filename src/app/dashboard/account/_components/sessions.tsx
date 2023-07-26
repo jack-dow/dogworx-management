@@ -19,7 +19,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type AccountSettingsPageFormSchema } from "./account-settings-page-form";
+import { type ManageAccountFormSchema } from "./manage-account-form";
 
 function formatDate(date: Date) {
 	const distanceFromNow = differenceInDays(new Date(), date);
@@ -35,7 +35,7 @@ function formatDate(date: Date) {
 	}
 }
 
-function Sessions({ control }: { control: Control<AccountSettingsPageFormSchema> }) {
+function Sessions({ control }: { control: Control<ManageAccountFormSchema> }) {
 	const { session: currentSession } = useSession();
 
 	const sessions = useFieldArray({
@@ -97,9 +97,9 @@ function SessionAccordion({
 	isCurrentSession = false,
 	onDelete,
 }: {
-	session: AccountSettingsPageFormSchema["sessions"][number];
+	session: ManageAccountFormSchema["sessions"][number];
 	isCurrentSession?: boolean;
-	onDelete: (session: AccountSettingsPageFormSchema["sessions"][number]) => void;
+	onDelete: (session: ManageAccountFormSchema["sessions"][number]) => void;
 }) {
 	const [isSignOutConfirmDialogOpen, setIsSignOutConfirmDialogOpen] = React.useState(false);
 	const [isSigningOut, setIsSigningOut] = React.useState(false);

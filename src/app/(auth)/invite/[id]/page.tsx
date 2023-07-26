@@ -8,13 +8,13 @@ import { api } from "~/api";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
 import { drizzle } from "~/server/db/drizzle";
 import { organizationInviteLinks } from "~/server/db/schemas";
-import { SignUpForm } from "./_components/sign-up-form";
+import { InviteForm } from "./_components/invite-form";
 
 export const metadata: Metadata = {
 	title: "Sign Up | Dogworx Management",
 };
 
-async function SignUpPage({ params }: { params: { id: string } }) {
+async function InvitePage({ params }: { params: { id: string } }) {
 	const response = await api.organizations.getInviteLink(params.id);
 
 	if (!response.data || response.data.uses >= response.data.maxUses || response.data.expiresAt < new Date()) {
@@ -72,8 +72,8 @@ async function SignUpPage({ params }: { params: { id: string } }) {
 					</CardDescription>
 				</CardHeader>
 
-				<CardContent className="grid gap-4">
-					<SignUpForm inviteLink={response.data} />
+				<CardContent className="grid gap-4 px-6 pb-4">
+					<InviteForm inviteLink={response.data} />
 				</CardContent>
 
 				<CardFooter className="grid gap-4">
@@ -93,4 +93,4 @@ async function SignUpPage({ params }: { params: { id: string } }) {
 	);
 }
 
-export default SignUpPage;
+export default InvitePage;

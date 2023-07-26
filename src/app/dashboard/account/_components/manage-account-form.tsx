@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { isClerkAPIResponseError, withUser, type WithUserProp } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,31 +18,31 @@ import { EmailAddresses } from "./email-addresses";
 import { ProfileImage } from "./profile-image";
 import { Sessions } from "./sessions";
 
-const ClerkEmailAddressSchema = z.object({
-	id: z.string(),
-	emailAddress: z.string().email(),
-	verification: z.object({
-		status: z.enum(["unverified", "verified", "transferable", "failed", "expired"]).nullish(),
-	}),
-	destroy: z.function().returns(z.promise(z.void())),
-});
+// const ClerkEmailAddressSchema = z.object({
+// 	id: z.string(),
+// 	emailAddress: z.string().email(),
+// 	verification: z.object({
+// 		status: z.enum(["unverified", "verified", "transferable", "failed", "expired"]).nullish(),
+// 	}),
+// 	destroy: z.function().returns(z.promise(z.void())),
+// });
 
-const ClerkSessionWithActivitiesSchema = z.object({
-	id: z.string(),
-	status: z.string(),
-	lastActiveAt: z.date(),
-	latestActivity: z.object({
-		id: z.string(),
-		browserName: z.string().optional(),
-		browserVersion: z.string().optional(),
-		deviceType: z.string().optional(),
-		ipAddress: z.string().optional(),
-		city: z.string().optional(),
-		country: z.string().optional(),
-		isMobile: z.boolean().optional(),
-	}),
-	revoke: z.function().returns(z.promise(z.any())),
-});
+// const ClerkSessionWithActivitiesSchema = z.object({
+// 	id: z.string(),
+// 	status: z.string(),
+// 	lastActiveAt: z.date(),
+// 	latestActivity: z.object({
+// 		id: z.string(),
+// 		browserName: z.string().optional(),
+// 		browserVersion: z.string().optional(),
+// 		deviceType: z.string().optional(),
+// 		ipAddress: z.string().optional(),
+// 		city: z.string().optional(),
+// 		country: z.string().optional(),
+// 		isMobile: z.boolean().optional(),
+// 	}),
+// 	revoke: z.function().returns(z.promise(z.any())),
+// });
 
 const PasswordChangeSchema = z
 	.object({
@@ -108,11 +107,11 @@ const AccountSettingsPageFormSchema = z.intersection(
 	}),
 	PasswordChangeSchema,
 );
-type AccountSettingsPageFormSchema = z.infer<typeof AccountSettingsPageFormSchema>;
+type ManageAccountFormSchema = z.infer<typeof AccountSettingsPageFormSchema>;
 
-function AccountSettingsPageFormRoot({ user }: WithUserProp) {
+function ManageAccountForm() {
 	const { toast } = useToast();
-	const form = useForm<AccountSettingsPageFormSchema>({
+	const form = useForm<ManageAccountFormSchema>({
 		resolver: zodResolver(AccountSettingsPageFormSchema),
 		defaultValues: {
 			givenName: user.firstName ?? "",
@@ -144,7 +143,7 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 			});
 	}, [user, form]);
 
-	async function onSubmit(data: AccountSettingsPageFormSchema) {
+	async function onSubmit(data: ManageAccountFormSchema) {
 		try {
 			await user.update({
 				firstName: data.givenName,
@@ -257,6 +256,6 @@ function AccountSettingsPageFormRoot({ user }: WithUserProp) {
 	);
 }
 
-const AccountSettingsPageForm = withUser(AccountSettingsPageFormRoot);
+const AccountSettingsPageForm = withUser(ManageAccountForm);
 
-export { AccountSettingsPageForm, AccountSettingsPageFormSchema };
+export { AccountSettingsPageForm, ManageAccountFormSchema };

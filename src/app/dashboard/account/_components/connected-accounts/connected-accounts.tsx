@@ -20,10 +20,10 @@ import { Button } from "~/components/ui/button";
 import { AppleIcon, GoogleIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type AccountSettingsPageFormSchema } from "../account-settings-page-form";
+import { type ManageAccountFormSchema } from "../manage-account-form";
 import { AddConnectedAccountDialog } from "./add-connected-account-dialog";
 
-function ConnectedAccounts({ control }: { control: Control<AccountSettingsPageFormSchema> }) {
+function ConnectedAccounts({ control }: { control: Control<ManageAccountFormSchema> }) {
 	const externalAccounts = useFieldArray({
 		control: control,
 		name: "externalAccounts",
@@ -68,7 +68,7 @@ function ConnectedAccountField({
 	onDelete,
 }: {
 	index: number;
-	field: AccountSettingsPageFormSchema["externalAccounts"][number];
+	field: ManageAccountFormSchema["externalAccounts"][number];
 	onDelete: (index: number) => void;
 }) {
 	const { toast } = useToast();

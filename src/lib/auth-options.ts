@@ -13,7 +13,6 @@ const sessionCookieOptions = {
 } as const;
 
 type SessionCookiePayload = {
-	signedInAs: string;
 	user: User;
 };
 

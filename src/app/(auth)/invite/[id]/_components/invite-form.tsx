@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -9,29 +8,26 @@ import { Button } from "~/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
-import { PasswordInput } from "~/components/ui/password-input";
 import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationInviteLinkById } from "~/api";
 import { VerifyEmailAlertDialog } from "~/app/(auth)/_components/verify-email-dialog";
 import { signUp } from "~/lib/auth";
-import { CredentialsSignUpSchema } from "~/lib/validation";
+import { SignUpSchema } from "~/lib/validation";
 
-function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) {
-	const router = useRouter();
+function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) {
 	const { toast } = useToast();
 	const [verifyEmail, setVerifyEmail] = React.useState<string | null>(null);
 
-	const form = useForm<CredentialsSignUpSchema>({
-		resolver: zodResolver(CredentialsSignUpSchema),
+	const form = useForm<SignUpSchema>({
+		resolver: zodResolver(SignUpSchema),
 		defaultValues: {
 			givenName: "Jack",
 			familyName: "",
 			emailAddress: "jdooow@gmail.com",
-			password: "12345678",
 		},
 	});
 
-	async function onSubmit(data: CredentialsSignUpSchema) {
+	async function onSubmit(data: SignUpSchema) {
 		if (form.formState.errors.emailAddress) {
 			form.setError("emailAddress", {
 				type: "manual",
@@ -44,8 +40,8 @@ function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 		try {
 			const signUpResponse = await signUp(data, inviteLink);
 
-			if (!signUpResponse.signUp.success) {
-				if (signUpResponse.signUp.error.code === "AlreadyExists") {
+			if (!signUpResponse.success) {
+				if (signUpResponse.error.code === "AlreadyExists") {
 					form.setError("emailAddress", {
 						type: "manual",
 						message: "Email already in use",
@@ -64,21 +60,9 @@ function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 					variant: "destructive",
 				});
 				return;
-			} else {
-				if (!signUpResponse.signIn?.success) {
-					toast({
-						title: "Something went wrong.",
-						description: "We failed to sign you in after your account was created. Please try again.",
-						variant: "destructive",
-					});
-					router.push("/sign-in");
-					return;
-				}
 			}
 
-			router.push("/dashboard");
-
-			// setVerifyEmail(data.emailAddress);
+			setVerifyEmail(data.emailAddress);
 		} catch (error) {
 			toast({
 				title: `An unknown error occurred`,
@@ -90,13 +74,14 @@ function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 	return (
 		<>
 			<VerifyEmailAlertDialog
-				email={verifyEmail}
+				emailAddress={verifyEmail}
 				open={!!verifyEmail}
 				setOpen={(open) => {
 					if (!open) {
 						setVerifyEmail(null);
 					}
 				}}
+				type="sign-up"
 			/>
 
 			<Form {...form}>
@@ -151,19 +136,7 @@ function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="password"
-						render={({ field }) => (
-							<FormItem className="col-span-2">
-								<FormLabel>Password</FormLabel>
-								<FormControl>
-									<PasswordInput {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+
 					<Button type="submit" disabled={form.formState.isSubmitting} className="col-span-2">
 						{form.formState.isSubmitting && <Loader size="sm" aria-hidden="true" />}
 						Continue
@@ -175,4 +148,4 @@ function SignUpForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 	);
 }
 
-export { SignUpForm };
+export { InviteForm };

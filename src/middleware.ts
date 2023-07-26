@@ -81,7 +81,6 @@ export async function middleware(request: NextRequest) {
 		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > 900) {
 			const newSessionToken = await createSessionJWT({
 				user: sessionTokenData.user,
-				signedInAs: sessionTokenData.signedInAs,
 			});
 
 			await drizzle

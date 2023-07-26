@@ -1,5 +1,5 @@
 import { relations, type InferModel } from "drizzle-orm";
-import { boolean, int, mysqlEnum, mysqlTable, primaryKey, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 const users = mysqlTable("auth_users", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
@@ -8,48 +8,21 @@ const users = mysqlTable("auth_users", {
 	name: varchar("name", { length: 255 }).notNull(),
 	givenName: varchar("given_name", { length: 255 }).notNull(),
 	familyName: varchar("family_name", { length: 255 }).notNull().default(""),
-	primaryEmailAddressId: varchar("primary_email_address_id", { length: 255 }).unique(),
+	emailAddress: varchar("email_address", { length: 255 }).unique(),
 	organizationId: varchar("organization_id", { length: 255 }).notNull(),
-	isBanned: boolean("is_banned").notNull().default(false),
 	bannedAt: timestamp("banned_at"),
 	bannedUntil: timestamp("banned_until"),
-	password: varchar("password", { length: 255 }),
-	emailVerified: timestamp("email_verified"),
 	profileImageUrl: text("profile_image_url"),
 });
 type User = InferModel<typeof users>;
 
 const usersRelations = relations(users, ({ many, one }) => ({
-	providerAccounts: many(providerAccounts),
 	sessions: many(sessions),
 	organization: one(organizations, {
 		fields: [users.organizationId],
 		references: [organizations.id],
 	}),
 	organizationInviteLinks: many(organizationInviteLinks),
-}));
-
-const providerAccounts = mysqlTable("auth_provider_accounts", {
-	id: varchar("id", { length: 128 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	provider: mysqlEnum("provider", ["google", "email"]).notNull(),
-	providerAccountId: varchar("provider_account_id", { length: 255 }).notNull().unique(),
-	userId: varchar("user_id", { length: 255 }).notNull(),
-	refreshToken: text("refresh_token"),
-	accessToken: text("access_token"),
-	expiresAt: timestamp("expires_at"),
-	tokenType: varchar("token_type", { length: 255 }),
-	scope: varchar("scope", { length: 255 }),
-	idToken: text("id_token"),
-});
-type ProviderAccount = InferModel<typeof providerAccounts>;
-
-const providerAccountsRelations = relations(providerAccounts, ({ one }) => ({
-	user: one(users, {
-		fields: [providerAccounts.userId],
-		references: [users.id],
-	}),
 }));
 
 const sessions = mysqlTable("auth_sessions", {
@@ -74,18 +47,21 @@ const sessionsRelations = relations(sessions, ({ one }) => ({
 	}),
 }));
 
-const verificationTokens = mysqlTable(
-	"auth_verification_tokens",
-	{
-		identifier: varchar("identifier", { length: 255 }).notNull(),
-		token: varchar("token", { length: 255 }).notNull().unique(),
-		expiresAt: timestamp("expires_at").notNull(),
-	},
-	(vt) => ({
-		pk: primaryKey(vt.identifier, vt.token),
+const magicLinks = mysqlTable("auth_magic_links", {
+	id: varchar("id", { length: 255 }).notNull().primaryKey(),
+	userId: varchar("user_email_address_id", { length: 255 }).notNull(),
+	code: varchar("code", { length: 25 }).notNull().unique(),
+	token: varchar("token", { length: 255 }).notNull().unique(),
+	expiresAt: timestamp("expires_at").notNull(),
+});
+type MagicLink = InferModel<typeof magicLinks>;
+
+const magicLinksRelations = relations(magicLinks, ({ one }) => ({
+	user: one(users, {
+		fields: [magicLinks.userId],
+		references: [users.id],
 	}),
-);
-type VerificationToken = InferModel<typeof verificationTokens>;
+}));
 
 const organizations = mysqlTable("auth_organizations", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
@@ -131,14 +107,12 @@ export {
 	users,
 	type User,
 	usersRelations,
-	providerAccounts,
-	type ProviderAccount,
-	providerAccountsRelations,
 	sessions,
 	type Session,
 	sessionsRelations,
-	verificationTokens,
-	type VerificationToken,
+	magicLinks,
+	type MagicLink,
+	magicLinksRelations,
 	organizations,
 	type Organization,
 	organizationsRelations,

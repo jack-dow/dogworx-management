@@ -9,11 +9,11 @@ import { Button } from "~/components/ui/button";
 import { TrashIcon } from "~/components/ui/icons";
 import { useToast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
-import { type AccountSettingsPageFormSchema } from "./account-settings-page-form";
+import { type ManageAccountFormSchema } from "./manage-account-form";
 
 function ProfileImage({ setUploadedProfileImage }: { setUploadedProfileImage: (file: File | null) => void }) {
 	const { toast } = useToast();
-	const { setValue, watch } = useFormContext<AccountSettingsPageFormSchema>();
+	const { setValue, watch } = useFormContext<ManageAccountFormSchema>();
 
 	const onDrop = React.useCallback(
 		(acceptedFiles: File[], rejectedFiles: FileRejection[]) => {

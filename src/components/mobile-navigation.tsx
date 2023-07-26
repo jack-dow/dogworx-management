@@ -121,7 +121,7 @@ function MobileNavigation() {
 								<DropdownMenuContent className="w-[256px]">
 									<p className="truncate px-2 py-1.5">
 										<span className="block text-xs text-muted-foreground">Signed in as</span>
-										<span className="mt-0.5 text-sm font-semibold">{session.signedInAs}</span>
+										<span className="mt-0.5 text-sm font-semibold">{session.user.emailAddress}</span>
 									</p>
 
 									<DropdownMenuSeparator />

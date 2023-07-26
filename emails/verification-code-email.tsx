@@ -23,7 +23,7 @@ interface VercelInviteUserEmailProps {
 
 const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
-const VerifyEmailEmail = ({ validationCode, requestedFromIp, requestedFromLocation }: VercelInviteUserEmailProps) => {
+const VerificationCodeEmail = ({ validationCode, requestedFromIp, requestedFromLocation }: VercelInviteUserEmailProps) => {
 	const previewText = `${validationCode} is your Dogworx Hydrotherapy verification code`;
 
 	return (
@@ -77,5 +77,5 @@ const VerifyEmailEmail = ({ validationCode, requestedFromIp, requestedFromLocati
 		</Html>
 	);
 };
-export { VerifyEmailEmail };
-export default VerifyEmailEmail;
+export { VerificationCodeEmail };
+export default VerificationCodeEmail;
