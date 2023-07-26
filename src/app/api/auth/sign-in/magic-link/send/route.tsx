@@ -4,10 +4,10 @@ import MagicLinkEmail from "emails/magic-link-email";
 import ms from "ms";
 import { z } from "zod";
 
+import { drizzle } from "~/db/drizzle";
+import { magicLinks } from "~/db/schemas";
 import { resend } from "~/lib/resend";
 import { generateId, type APIResponse } from "~/lib/utils";
-import { drizzle } from "~/server/db/drizzle";
-import { magicLinks } from "~/server/db/schemas";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),

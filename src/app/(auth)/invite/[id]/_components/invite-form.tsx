@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type OrganizationInviteLinkById } from "~/api";
+import { type OrganizationInviteLinkById } from "~/actions";
 import { VerifyEmailAlertDialog } from "~/app/(auth)/_components/verify-email-dialog";
 import { signUp } from "~/lib/auth";
 import { SignUpSchema } from "~/lib/validation";

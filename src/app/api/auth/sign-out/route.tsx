@@ -2,10 +2,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
+import { drizzle } from "~/db/drizzle";
+import { sessions } from "~/db/schemas";
 import { sessionCookieOptions } from "~/lib/auth-options";
 import { type APIResponse } from "~/lib/utils";
-import { drizzle } from "~/server/db/drizzle";
-import { sessions } from "~/server/db/schemas";
 
 type SignOutPOSTResponse = APIResponse<undefined>;
 

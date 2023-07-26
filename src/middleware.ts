@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { jwt } from "~/lib/jwt";
+import { drizzle } from "./db/drizzle";
+import { sessions } from "./db/schemas";
 import { createSessionJWT, sessionCookieOptions, type SessionCookie } from "./lib/auth-options";
-import { drizzle } from "./server/db/drizzle";
-import { sessions } from "./server/db/schemas";
 
 export async function middleware(request: NextRequest) {
 	const sessionCookie = request.cookies.get(sessionCookieOptions.name);

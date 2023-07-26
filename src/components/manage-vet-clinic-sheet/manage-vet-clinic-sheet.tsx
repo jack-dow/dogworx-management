@@ -31,18 +31,15 @@ import {
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
 import {
-	api,
-	generateId,
-	InsertVetClinicSchema,
-	InsertVetToVetClinicRelationshipSchema,
-	SelectVetSchema,
+	actions,
 	type VetClinicInsert,
 	type VetClinicRelationships,
 	type VetClinicsList,
 	type VetClinicsSearch,
 	type VetClinicUpdate,
-} from "~/api";
-import { mergeRelationships } from "~/lib/utils";
+} from "~/actions";
+import { InsertVetClinicSchema, InsertVetToVetClinicRelationshipSchema, SelectVetSchema } from "~/db/validation";
+import { generateId, mergeRelationships } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
@@ -138,7 +135,7 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 			if (!vetClinic.vetToVetClinicRelationships) {
 				setIsLoadingRelationships(true);
 				const fetchRelationships = async () => {
-					const response = await api.vetClinics.getRelationships(vetClinic.id);
+					const response = await actions.app.vetClinics.getRelationships(vetClinic.id);
 					if (response.success) {
 						syncVetClinic({
 							...vetClinic,
@@ -159,11 +156,11 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 		let newVetClinic: VetClinicUpdate | VetClinicInsert | undefined;
 
 		if (vetClinic) {
-			const response = await api.vetClinics.update(data);
+			const response = await actions.app.vetClinics.update(data);
 			success = response.success && !!response.data;
 			newVetClinic = response.data;
 		} else {
-			const response = await api.vetClinics.insert(data);
+			const response = await actions.app.vetClinics.insert(data);
 			success = response.success;
 			newVetClinic = response.data;
 		}

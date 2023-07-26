@@ -20,7 +20,7 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type OrganizationsList } from "~/api";
+import { type OrganizationsList } from "~/actions";
 import { cn } from "~/lib/utils";
 
 function createOrganizationsTableColumns(

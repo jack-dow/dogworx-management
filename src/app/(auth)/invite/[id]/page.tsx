@@ -4,10 +4,10 @@ import Link from "next/link";
 import { sql } from "drizzle-orm";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { api } from "~/api";
+import { actions } from "~/actions";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
-import { drizzle } from "~/server/db/drizzle";
-import { organizationInviteLinks } from "~/server/db/schemas";
+import { drizzle } from "~/db/drizzle";
+import { organizationInviteLinks } from "~/db/schemas";
 import { InviteForm } from "./_components/invite-form";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 async function InvitePage({ params }: { params: { id: string } }) {
-	const response = await api.organizations.getInviteLink(params.id);
+	const response = await actions.auth.organizations.getInviteLink(params.id);
 
 	if (!response.data || response.data.uses >= response.data.maxUses || response.data.expiresAt < new Date()) {
 		if (response.data) {

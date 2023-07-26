@@ -2,8 +2,8 @@ import { type Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "~/components/page-header";
-import { api } from "~/api";
-import { getProtectedServerUser } from "~/lib/session";
+import { actions } from "~/actions";
+import { getServerSession } from "~/lib/auth";
 import { ManageOrganizationSheet } from "./_components/manage-organization-sheet";
 import { OrganizationsTable } from "./_components/organizations-table";
 
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 };
 
 async function OrganizationsPage() {
-	const organizations = await api.organizations.list();
-	const user = await getProtectedServerUser();
+	const organizations = await actions.auth.organizations.list();
+	const session = await getServerSession();
 
-	if (user.email !== "jack.dowww@gmail.com") {
+	if (session.user.emailAddress !== "jack.dowww@gmail.com") {
 		redirect("/dashboard");
 	}
 

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Editor } from "@tiptap/react";
 import * as chrono from "chrono-node";
@@ -30,16 +29,15 @@ import {
 	EditIcon,
 	EllipsisVerticalIcon,
 	TrashIcon,
-	UserCircleIcon,
 	XIcon,
 } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
-import { InsertDogSessionSchema, UserSchema } from "~/api";
-import { generateId } from "~/api/utils";
-import { cn } from "~/lib/utils";
+import { useUser } from "~/app/dashboard/providers";
+import { InsertDogSessionSchema, SelectUserSchema } from "~/db/validation";
+import { cn, generateId } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Session = NonNullable<ManageDogFormSchema["sessions"]>[number];
@@ -198,28 +196,25 @@ function SessionDetail({
 				) : (
 					<div className="relative flex items-start space-x-3">
 						<div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-8 ring-white">
-							{session?.user?.profileImageUrl ? (
+							{session.user.profileImageUrl ? (
 								<Image
 									src={session.user.profileImageUrl}
-									alt={`${session.user.firstName ?? "User"}'s profile image`}
+									alt="User's profile image"
 									width={128}
 									height={128}
-									className="aspect-square rounded-md object-cover"
+									className="aspect-square rounded-full object-cover"
 								/>
-							) : session?.user?.firstName ? (
-								session.user.firstName[0]
 							) : (
-								<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
+								<>
+									{session.user.givenName[0]}
+									{session.user.familyName?.[0]}
+								</>
 							)}
 						</div>
 						<div className="min-w-0 flex-1">
 							<div>
 								<div className="text-sm">
-									<p className="font-medium text-slate-900">
-										{!session.user ? "Unknown" : ""}
-										{session.user?.firstName}
-										{session.user?.lastName ? ` ${session.user.lastName}` : ""}
-									</p>
+									<p className="font-medium text-slate-900">{session.user.name}</p>
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
 							</div>
@@ -284,7 +279,7 @@ const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
 		.string()
 		.nonempty({ message: "Please enter some details about the session." })
 		.max(500, { message: "Details must be less than 500 characters long." }),
-	user: UserSchema,
+	user: SelectUserSchema,
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
@@ -303,7 +298,7 @@ type EditableSessionDetailProps =
 	  };
 
 function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: EditableSessionDetailProps) {
-	const { user } = useUser();
+	const user = useUser();
 
 	const [editor, setEditor] = React.useState<Editor | null>(null);
 
@@ -335,18 +330,19 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 		<Form {...form}>
 			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
 				<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
-					{user?.profileImageUrl ? (
+					{user.profileImageUrl ? (
 						<Image
 							src={user.profileImageUrl}
-							alt="Your profile image"
+							alt="User's profile image"
 							width={128}
 							height={128}
-							className="aspect-square rounded-md object-cover"
+							className="aspect-square rounded-full object-cover"
 						/>
-					) : user?.firstName ? (
-						user.firstName[0]
 					) : (
-						<UserCircleIcon className="h-6 w-6 text-slate-500" aria-hidden="true" />
+						<>
+							{user.givenName[0]}
+							{user.familyName?.[0]}
+						</>
 					)}
 				</div>
 				<div className="min-w-0 flex-1 space-y-2">
@@ -454,11 +450,8 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										})(e);
 									}}
 									size="sm"
-									disabled={!user}
 								>
-									{!user ? (
-										"Loading User..."
-									) : sessionHistory?.id ? (
+									{sessionHistory?.id ? (
 										<div>
 											Update <span className="hidden md:inline">Session</span>
 										</div>

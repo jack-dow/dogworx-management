@@ -14,7 +14,15 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
-import { EditIcon, EllipsisVerticalIcon, EnvelopeIcon, PhoneIcon, TrashIcon, UserCircleIcon, UserPlusIcon } from "~/components/ui/icons";
+import {
+	EditIcon,
+	EllipsisVerticalIcon,
+	EnvelopeIcon,
+	PhoneIcon,
+	TrashIcon,
+	UserCircleIcon,
+	UserPlusIcon,
+} from "~/components/ui/icons";
 import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
@@ -25,7 +33,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { api, generateId, InsertDogToVetRelationshipSchema, type DogById } from "~/api";
+import { actions, type DogById } from "~/actions";
+import { InsertDogToVetRelationshipSchema } from "~/db/validation";
+import { generateId } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Vet = ManageDogFormSchema["dogToVetRelationships"][number]["vet"];
@@ -155,7 +165,7 @@ function DogToVetRelationships({
 						}
 						onSearch={async (searchTerm) => {
 							try {
-								const res = await api.vets.search(searchTerm);
+								const res = await actions.app.vets.search(searchTerm);
 
 								return res.data ?? [];
 							} catch (error) {

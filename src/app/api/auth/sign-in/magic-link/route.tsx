@@ -2,10 +2,10 @@ import { cookies, headers } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
+import { drizzle } from "~/db/drizzle";
+import { magicLinks, sessions } from "~/db/schemas";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { generateId } from "~/lib/utils";
-import { drizzle } from "~/server/db/drizzle";
-import { magicLinks, sessions } from "~/server/db/schemas";
 
 export const fetchCache = "force-no-store";
 

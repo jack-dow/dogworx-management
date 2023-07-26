@@ -31,22 +31,22 @@ import {
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
 import {
-	api,
-	generateId,
+	actions,
 	type OrganizationInsert,
 	type OrganizationsList,
 	type OrganizationsSearch,
 	type OrganizationUpdate,
-} from "~/api";
+} from "~/actions";
+import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { InsertOrganizationInviteLinks, InsertOrganizationSchema, SelectUserSchema } from "~/server/db/zod-validation";
+import { generateId } from "~/lib/utils";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 
 const ManageOrganizationSheetFormSchema = InsertOrganizationSchema.extend({
 	name: z.string().max(50).nonempty({ message: "Required" }),
 	organizationInviteLinks: z.array(
-		InsertOrganizationInviteLinks.extend({
+		InsertOrganizationInviteLinkSchema.extend({
 			user: SelectUserSchema.extend({
 				// User from session has dates as strings since you can't store dates in JWT
 				createdAt: z.union([z.string(), z.date()]),
@@ -134,11 +134,11 @@ function ManageOrganizationSheet<OrganizationProp extends ExistingOrganization |
 		let newOrganization: OrganizationUpdate | OrganizationInsert | undefined;
 
 		if (organization) {
-			const response = await api.organizations.update(data);
+			const response = await actions.auth.organizations.update(data);
 			success = response.success && !!response.data;
 			newOrganization = response.data;
 		} else {
-			const response = await api.organizations.insert(data);
+			const response = await actions.auth.organizations.insert(data);
 			success = response.success;
 			newOrganization = response.data;
 		}

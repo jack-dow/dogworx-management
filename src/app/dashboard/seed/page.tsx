@@ -6,7 +6,7 @@ import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { seed } from "~/server/db/seed/seed";
+import { seed } from "~/db/seed/seed";
 
 function SeedPage() {
 	const [seeded, setSeeded] = React.useState(false);

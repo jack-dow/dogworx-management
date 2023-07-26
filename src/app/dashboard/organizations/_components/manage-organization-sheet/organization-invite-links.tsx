@@ -17,7 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { useToast } from "~/components/ui/use-toast";
+import { useUser } from "~/app/dashboard/providers";
 import { type ManageOrganizationSheetFormSchema } from "./manage-organization-sheet";
 
 dayjs.extend(relativeTime);
@@ -33,7 +33,7 @@ function OrganizationInviteLinks({
 	control: Control<ManageOrganizationSheetFormSchema>;
 	existingInviteLinks: ManageOrganizationSheetFormSchema["organizationInviteLinks"];
 }) {
-	const { toast } = useToast();
+	const user = useUser();
 	const form = useFormContext<ManageOrganizationSheetFormSchema>();
 	const organizationInviteLinks = useFieldArray({
 		control,
@@ -85,26 +85,14 @@ function OrganizationInviteLinks({
 							type="button"
 							size="sm"
 							disabled={organizationInviteLinks.fields.length >= 10}
-							onClick={async () => {
-								const session = await getSession();
-
-								if (!session) {
-									toast({
-										title: "Failed to generate invite link",
-										description: "Could not fetch current user session.",
-									});
-									return;
-								}
-
-								console.log(session.user);
-
+							onClick={() => {
 								const inviteLink = {
 									id: createInviteLinkCode(),
 									uses: 0,
 									expiresAt: dayjs().add(1, "week").toDate(),
-									userId: session.user.id,
+									userId: user.id,
 									organizationId: form.getValues("id"),
-									user: session.user,
+									user,
 									role: "member",
 									maxUses: 5,
 								} as const;

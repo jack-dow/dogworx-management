@@ -5,7 +5,6 @@
 // -----------------------------------------------------------------------------
 import * as React from "react";
 
-import { createSafeContext } from "~/utils/create-safe-context";
 import { type SessionCookie } from "~/lib/auth-options";
 
 type ProviderProps<Props> = {
@@ -19,7 +18,17 @@ type SessionContextProps = {
 	session: SessionCookie;
 };
 
-const [SessionContextProvider, useSessionContext] = createSafeContext<SessionContextProps>("SessionContext");
+const SessionContext = React.createContext<SessionContextProps | null>(null);
+
+function useSessionContext() {
+	const context = React.useContext(SessionContext);
+
+	if (!context) {
+		throw new Error("useSessionContext must be used within a SessionProvider");
+	}
+
+	return context;
+}
 
 function useSession() {
 	const context = useSessionContext();
@@ -43,7 +52,7 @@ const SessionProvider = ({ children, session }: ProviderProps<{ session: Session
 		setSession(session);
 	}, [session]);
 
-	return <SessionContextProvider value={{ session: _session }}>{children}</SessionContextProvider>;
+	return <SessionContext.Provider value={{ session: _session }}>{children}</SessionContext.Provider>;
 };
 
 export { SessionProvider, useSession, useUser };

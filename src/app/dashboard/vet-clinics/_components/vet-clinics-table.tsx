@@ -6,7 +6,7 @@ import { ManageVetClinicSheet } from "~/components/manage-vet-clinic-sheet";
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
-import { api, type VetClinicsList } from "~/api";
+import { actions, type VetClinicsList } from "~/actions";
 import { createVetClinicsTableColumns } from "./vet-clinics-table-columns";
 
 function VetClinicsTable({ vetClinics }: { vetClinics: VetClinicsList }) {
@@ -36,7 +36,7 @@ function VetClinicsTable({ vetClinics }: { vetClinics: VetClinicsList }) {
 				onConfirm={async () => {
 					if (confirmVetClinicDelete == null) return;
 
-					const result = await api.vetClinics.delete(confirmVetClinicDelete.id);
+					const result = await actions.app.vetClinics.delete(confirmVetClinicDelete.id);
 
 					if (result.success) {
 						toast({

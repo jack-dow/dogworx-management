@@ -5,7 +5,7 @@ import * as React from "react";
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
-import { api, type OrganizationsList } from "~/api";
+import { actions, type OrganizationsList } from "~/actions";
 import { ManageOrganizationSheet } from "./manage-organization-sheet";
 import { createOrganizationsTableColumns } from "./organizations-table-columns";
 
@@ -39,7 +39,7 @@ function OrganizationsTable({ organizations }: { organizations: OrganizationsLis
 				onConfirm={async () => {
 					if (confirmOrganizationDelete == null) return;
 
-					const result = await api.organizations.delete(confirmOrganizationDelete.id);
+					const result = await actions.auth.organizations.delete(confirmOrganizationDelete.id);
 
 					if (result.success) {
 						toast({

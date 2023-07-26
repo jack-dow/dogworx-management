@@ -21,21 +21,19 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
+import { actions, type DogById } from "~/actions";
 import {
-	api,
+	InsertDogSchema,
+	InsertDogSessionSchema,
+	InsertDogToClientRelationshipSchema,
 	InsertDogToVetRelationshipSchema,
 	SelectClientSchema,
+	SelectUserSchema,
 	SelectVetSchema,
-	UserSchema,
-	type DogById,
-} from "~/api";
-import { generateId } from "~/api/utils";
-import { InsertDogSessionSchema } from "~/api/validations/dog-sessions";
-import { InsertDogToClientRelationshipSchema } from "~/api/validations/dog-to-client-relationships";
-import { InsertDogSchema } from "~/api/validations/dogs";
+} from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { mergeRelationships } from "~/lib/utils";
+import { generateId, mergeRelationships } from "~/lib/utils";
 import { DogBasicInformation } from "./dog-basic-information";
 import { DogSessionsHistory } from "./dog-sessions-history";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
@@ -49,7 +47,7 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	age: InsertDogSchema.shape.age.nullable(),
 	sessions: z.array(
 		InsertDogSessionSchema.extend({
-			user: UserSchema.optional(),
+			user: SelectUserSchema,
 		}),
 	),
 	dogToClientRelationships: z.array(
@@ -134,11 +132,11 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 		if (dog) {
 			// Have to spread in the age as typescript is being dumb and not inferring it properly
-			const response = await api.dogs.update({ ...data, age: data.age });
+			const response = await actions.app.dogs.update({ ...data, age: data.age });
 			success = response.success;
 		} else {
 			// Have to spread in the age as typescript is being dumb and not inferring it properly
-			const response = await api.dogs.insert({ ...data, age: data.age });
+			const response = await actions.app.dogs.insert({ ...data, age: data.age });
 			success = response.success;
 		}
 

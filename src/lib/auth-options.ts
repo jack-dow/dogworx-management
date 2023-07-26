@@ -1,6 +1,6 @@
 import ms from "ms";
 
-import { type User } from "~/server/db/schemas";
+import { type User } from "~/db/schemas";
 import { jwt } from "./jwt";
 
 const sessionCookieOptions = {

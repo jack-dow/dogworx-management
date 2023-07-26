@@ -14,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { InsertDogToClientRelationshipSchema } from "~/api/validations/dog-to-client-relationships";
+import { InsertDogToClientRelationshipSchema } from "~/db/validation";
 import { RelationshipLoadingSkeleton } from "../relationship-loading-skeleton";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {

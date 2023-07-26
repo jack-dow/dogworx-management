@@ -3,8 +3,8 @@ import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
 import { MobileNavigation } from "~/components/mobile-navigation";
 import { cn } from "~/lib/utils";
-import { getServerSession } from "~/server/actions/auth-server-actions";
 import { SessionProvider } from "./providers";
+import {getServerSession} from "~/lib/auth";
 
 const BackgroundGradients = {
 	GradientTop() {

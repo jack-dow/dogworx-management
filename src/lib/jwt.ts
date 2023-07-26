@@ -2,7 +2,7 @@ import { jwtVerify, SignJWT } from "jose";
 
 import { env } from "~/env.mjs";
 
-export async function sign<Token extends Record<string, unknown>>(payload: Token) {
+async function sign<Token extends Record<string, unknown>>(payload: Token) {
 	const iat = Math.floor(Date.now() / 1000);
 
 	// Didn't include exp here because jose throws error if exp is passed and we want to be able to access the payload of expired jwt's in middleware
@@ -14,7 +14,7 @@ export async function sign<Token extends Record<string, unknown>>(payload: Token
 		.sign(new TextEncoder().encode(env.JWT_SECRET));
 }
 
-export async function verify(token: string) {
+async function verify(token: string) {
 	return jwtVerify(token, new TextEncoder().encode(env.JWT_SECRET))
 		.then((result) => {
 			return result.payload;
@@ -25,4 +25,7 @@ export async function verify(token: string) {
 		});
 }
 
-export * as jwt from "./jwt";
+export const jwt = {
+	sign,
+	verify,
+};

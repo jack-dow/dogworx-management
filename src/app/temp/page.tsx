@@ -7,9 +7,9 @@ import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { api } from "~/api";
+import { actions } from "~/actions";
+import { type InsertOrganizationSchema } from "~/db/validation";
 import { generateId } from "~/lib/utils";
-import { type InsertOrganizationSchema } from "~/server/db/zod-validation";
 
 // export const metadata: Metadata = {
 // 	title: "Dashboard | Dogworx Management",
@@ -57,7 +57,7 @@ function TempPage() {
 								},
 							} satisfies InsertOrganizationSchema;
 
-							api.organizations
+							actions.auth.organizations
 								.insert(organization)
 								.then((result) => {
 									console.log({ result });

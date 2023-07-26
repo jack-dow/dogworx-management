@@ -6,7 +6,7 @@ import { ManageClientSheet } from "~/components/manage-client-sheet/manage-clien
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
-import { api, type ClientsList } from "~/api";
+import { actions, type ClientsList } from "~/actions";
 import { createClientsTableColumns } from "./clients-table-columns";
 
 function ClientsTable({ clients }: { clients: ClientsList }) {
@@ -37,7 +37,7 @@ function ClientsTable({ clients }: { clients: ClientsList }) {
 				onConfirm={async () => {
 					if (confirmClientDelete == null) return;
 
-					const result = await api.clients.delete(confirmClientDelete.id);
+					const result = await actions.app.clients.delete(confirmClientDelete.id);
 
 					if (result.success) {
 						toast({

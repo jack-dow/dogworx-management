@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq, sql } from "drizzle-orm";
 
+import { drizzle } from "~/db/drizzle";
+import { organizationInviteLinks, users, type User } from "~/db/schemas";
+import { type InsertUserSchema } from "~/db/validation";
 import { generateId, type APIResponse } from "~/lib/utils";
 import { SignUpSchema } from "~/lib/validation";
-import { drizzle } from "~/server/db/drizzle";
-import { organizationInviteLinks, users, type User } from "~/server/db/schemas";
-import { type InsertUserSchema } from "~/server/db/zod-validation";
 
 export const fetchCache = "force-no-store";
 
