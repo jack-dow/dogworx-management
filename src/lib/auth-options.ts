@@ -1,6 +1,6 @@
 import ms from "ms";
 
-import { type User } from "~/db/schemas";
+import { type SelectUserSchema } from "~/db/validation";
 import { jwt } from "./jwt";
 
 const sessionCookieOptions = {
@@ -16,7 +16,7 @@ type SessionCookiePayload = {
 	id: string;
 	createdAt: Date;
 	updatedAt: Date;
-	user: User;
+	user: SelectUserSchema;
 };
 
 type SessionCookie = SessionCookiePayload & {

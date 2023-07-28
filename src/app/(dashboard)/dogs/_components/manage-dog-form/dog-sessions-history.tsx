@@ -5,7 +5,6 @@ import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Editor } from "@tiptap/react";
 import * as chrono from "chrono-node";
-import { format } from "date-fns";
 import dayjs from "dayjs";
 import { useFieldArray, useForm, useFormContext, type Control } from "react-hook-form";
 import sanitizeHtml from "sanitize-html";
@@ -265,7 +264,7 @@ function SessionDetail({
 								<div className="text-sm">
 									<p className="font-medium text-slate-900">{session.user?.name ?? "Deleted User"}</p>
 								</div>
-								<p className="mt-0.5 text-sm text-slate-500">{format(session?.date, "MMMM do, yyyy")}</p>
+								<p className="mt-0.5 text-sm text-slate-500">{dayjs(session.date).format("MMMM D, YYYY")}</p>
 							</div>
 							<div className="prose prose-sm mt-2 max-w-none" dangerouslySetInnerHTML={{ __html: session.details }} />
 						</div>
@@ -334,7 +333,7 @@ const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
 	date: z.date({
 		required_error: "Must select a date for this session",
 	}),
-	user: UserSchema,
+	user: SelectUserSchema.nullable(),
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
@@ -361,7 +360,7 @@ function EditableSessionDetail({
 	dogId,
 	onDetailsTextChange,
 }: EditableSessionDetailProps) {
-	const { user } = useUser();
+	const user = useUser();
 
 	const [editor, setEditor] = React.useState<Editor | null>(null);
 

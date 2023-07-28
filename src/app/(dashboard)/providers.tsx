@@ -33,6 +33,9 @@ function useSessionContext() {
 function useSession() {
 	const context = useSessionContext();
 
+	context.session.user.createdAt = new Date(context.session.user.createdAt);
+	context.session.user.updatedAt = new Date(context.session.user.updatedAt);
+
 	return context.session;
 }
 
@@ -41,6 +44,9 @@ function useSession() {
  */
 function useUser() {
 	const session = useSession();
+
+	session.user.createdAt = new Date(session.user.createdAt);
+	session.user.updatedAt = new Date(session.user.updatedAt);
 
 	return session.user;
 }

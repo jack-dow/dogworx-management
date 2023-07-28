@@ -271,7 +271,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 
 												const date = chrono.parseDate(val) ?? new Date();
 
-												form.setValue("age", date);
+												field.onChange(date);
 												setMonth(date);
 												setAgeInWords(getAgeInWords(date));
 											}}

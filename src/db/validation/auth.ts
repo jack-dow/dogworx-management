@@ -51,16 +51,11 @@ export type UpdateSessionSchema = z.infer<typeof UpdateSessionSchema>;
 // -----------------------------------------------------------------------------
 // Organization Invite Links
 // -----------------------------------------------------------------------------
-export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks)
-	.omit({
-		createdAt: true,
-		updatedAt: true,
-	})
-	.extend({
-		id: IdSchema,
-		organizationId: IdSchema,
-		userId: IdSchema,
-	});
+export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks).extend({
+	id: IdSchema,
+	organizationId: IdSchema,
+	userId: IdSchema,
+});
 export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;
 
 export const UpdateOrganizationInviteLinkSchema = InsertOrganizationInviteLinkSchema.partial().extend({

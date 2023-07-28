@@ -1,5 +1,5 @@
 {
 	"next": {
-		"entry": ["next.config.{js,ts}", "src/app/**/*.{js,jsx,ts,tsx}"]
+		"entry": ["next.config.{js,ts}", "**/*.{js,jsx,ts,tsx}"]
 	}
 }
