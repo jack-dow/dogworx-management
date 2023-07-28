@@ -56,7 +56,7 @@ const ManageVetSheetFormSchema = z.intersection(
 	InsertVetSchema.extend({
 		givenName: z.string().max(50).nonempty({ message: "Required" }),
 		familyName: z.string().max(50).or(z.literal("")).optional(),
-		notes: z.string().max(500).nullish(),
+		notes: z.string().max(100000).nullish(),
 		dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema.extend({ dog: SelectDogSchema })),
 		vetToVetClinicRelationships: z.array(
 			InsertVetToVetClinicRelationshipSchema.extend({ vetClinic: SelectVetClinicSchema }),

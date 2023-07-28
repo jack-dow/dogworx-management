@@ -75,6 +75,16 @@ function DogSessionsHistory({
 		form.setValue("actions.sessions", dogSessionActions);
 	}
 
+	function removeSessionFromUnsavedSessions(sessionId: string) {
+		const unsavedSessionIds = form.getValues("unsavedSessionIds");
+		if (unsavedSessionIds.includes(sessionId)) {
+			form.setValue(
+				"unsavedSessionIds",
+				unsavedSessionIds.filter((i) => i !== sessionId),
+			);
+		}
+	}
+
 	return (
 		<>
 			<DestructiveActionDialog
@@ -102,16 +112,28 @@ function DogSessionsHistory({
 					<div className="space-y-8 sm:p-8">
 						<EditableSessionDetail
 							dogId={form.getValues("id")}
-							onSubmit={(sessionDetail) => {
-								sessionHistory.append(sessionDetail);
+							onSubmit={(session) => {
+								removeSessionFromUnsavedSessions(session.id);
+
+								sessionHistory.append(session);
 
 								form.setValue("actions.sessions", {
 									...form.getValues("actions.sessions"),
-									[sessionDetail.id]: {
+									[session.id]: {
 										type: "INSERT",
-										payload: sessionDetail,
+										payload: session,
 									},
 								});
+							}}
+							onDetailsTextChange={(text, id) => {
+								const unsavedSessionIds = form.getValues("unsavedSessionIds");
+								if (text && !unsavedSessionIds.includes(id)) {
+									form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
+								}
+
+								if (!text) {
+									removeSessionFromUnsavedSessions(id);
+								}
 							}}
 						/>
 
@@ -126,27 +148,44 @@ function DogSessionsHistory({
 												dogId={form.getValues("id")}
 												session={session}
 												isLast={index === sessionHistory.fields.length - 1}
-												onUpdate={(sessionDetail) => {
+												onUpdate={(updatedSession) => {
+													removeSessionFromUnsavedSessions(updatedSession.id);
+
 													const sessionHistoryActions = { ...form.getValues("actions.sessions") };
 
-													sessionHistoryActions[sessionDetail.id] = {
+													sessionHistoryActions[updatedSession.id] = {
 														type: "UPDATE",
-														payload: sessionDetail,
+														payload: updatedSession,
 													};
 
 													sessionHistory.update(
-														sessionHistory.fields.findIndex((f) => f.id === sessionDetail.id),
-														sessionDetail,
+														sessionHistory.fields.findIndex((f) => f.id === updatedSession.id),
+														updatedSession,
 													);
 
 													form.setValue("actions.sessions", sessionHistoryActions);
 												}}
-												onDelete={(session) => {
+												onDelete={() => {
+													removeSessionFromUnsavedSessions(session.id);
+
 													if (existingDogSessions.some((s) => s.id === session.id)) {
 														setConfirmSessionDelete(session.id);
 													} else {
 														handleDogSessionDelete(session.id);
 													}
+												}}
+												onDetailsTextChange={(text, id) => {
+													const unsavedSessionIds = form.getValues("unsavedSessionIds");
+													if (text && !unsavedSessionIds.includes(id)) {
+														form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
+													}
+
+													if (!text) {
+														removeSessionFromUnsavedSessions(id);
+													}
+												}}
+												onCancel={() => {
+													removeSessionFromUnsavedSessions(session.id);
 												}}
 											/>
 										);
@@ -164,14 +203,18 @@ function SessionDetail({
 	session,
 	dogId,
 	isLast,
+	onDetailsTextChange,
 	onUpdate,
 	onDelete,
+	onCancel,
 }: {
 	session: Session;
 	isLast: boolean;
 	dogId: string;
+	onDetailsTextChange: (text: string, id: string) => void;
 	onUpdate: (session: Session) => void;
-	onDelete: (session: Session) => void;
+	onDelete: () => void;
+	onCancel: () => void;
 }) {
 	const [isEditing, setIsEditing] = React.useState(false);
 
@@ -186,12 +229,14 @@ function SessionDetail({
 						dogId={dogId}
 						sessionHistory={session}
 						onCancel={() => {
+							onCancel();
 							setIsEditing(false);
 						}}
 						onSubmit={(session) => {
 							setIsEditing(false);
 							onUpdate(session);
 						}}
+						onDetailsTextChange={onDetailsTextChange}
 					/>
 				) : (
 					<div className="relative flex items-start space-x-3">
@@ -241,6 +286,9 @@ function SessionDetail({
 							<DropdownMenuItem
 								className="cursor-pointer"
 								onClick={() => {
+									if (isEditing) {
+										onCancel();
+									}
 									setIsEditing(!isEditing);
 								}}
 							>
@@ -260,7 +308,7 @@ function SessionDetail({
 								className="cursor-pointer"
 								onClick={(e) => {
 									e.stopPropagation();
-									onDelete(session);
+									onDelete();
 								}}
 							>
 								<TrashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
@@ -281,9 +329,12 @@ function SessionDetail({
 const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
 	details: z
 		.string()
-		.nonempty({ message: "Please enter some details about the session." })
-		.max(500, { message: "Details must be less than 500 characters long." }),
-	user: SelectUserSchema.nullable(),
+		.min(1, { message: "Must include some details about this session" })
+		.max(100000, { message: "Details must be less than 100,000 characters long." }),
+	date: z.date({
+		required_error: "Must select a date for this session",
+	}),
+	user: UserSchema,
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
@@ -291,18 +342,26 @@ type EditableSessionDetailProps =
 	| {
 			sessionHistory: Session;
 			onCancel: () => void;
+			onDetailsTextChange: (text: string, id: string) => void;
 			onSubmit: (sessionHistory: Session) => void;
 			dogId: string;
 	  }
 	| {
 			sessionHistory?: never;
 			onCancel?: never;
+			onDetailsTextChange: (text: string, id: string) => void;
 			onSubmit: (sessionHistory: Session) => void;
 			dogId: string;
 	  };
 
-function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: EditableSessionDetailProps) {
-	const user = useUser();
+function EditableSessionDetail({
+	sessionHistory,
+	onCancel,
+	onSubmit,
+	dogId,
+	onDetailsTextChange,
+}: EditableSessionDetailProps) {
+	const { user } = useUser();
 
 	const [editor, setEditor] = React.useState<Editor | null>(null);
 
@@ -312,7 +371,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 			id: generateId(),
 			dogId,
 			details: "",
-			date: new Date(),
+			date: undefined,
 			user: user ?? null,
 			userId: user?.id ?? undefined,
 			...sessionHistory,
@@ -360,6 +419,9 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 								onEditorChange={setEditor}
 								content={sessionHistory?.details ?? ""}
 								className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+								onTextValueChange={(text) => {
+									onDetailsTextChange(text, form.getValues("id"));
+								}}
 							/>
 
 							{/* Spacer element to match the height of the toolbar */}
@@ -384,7 +446,9 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 												<PopoverTrigger asChild>
 													<Button className="w-full" variant="outline">
 														<CalendarIcon className="mr-2 h-4 w-4" />
-														<span className="mr-2 truncate">{dayjs(field.value).format("MMMM D, YYYY")}</span>
+														<span className="mr-2 truncate">
+															{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}
+														</span>
 														<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 													</Button>
 												</PopoverTrigger>
@@ -404,11 +468,16 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 																form.setValue("date", date);
 																setMonth(date);
 															}}
+															onKeyDown={(e) => {
+																if (e.key === "Enter") {
+																	setIsDatePickerOpen(false);
+																}
+															}}
 														/>
 													</div>
 													<Calendar
 														mode="single"
-														selected={field.value ?? new Date()}
+														selected={field.value ?? undefined}
 														month={month}
 														onMonthChange={setMonth}
 														onSelect={(value) => {
@@ -437,7 +506,13 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 										e.preventDefault();
 										e.stopPropagation();
 
-										form.setValue("details", sanitizeHtml(editor?.getHTML() ?? ""));
+										const text = editor?.getText();
+
+										if (text === "") {
+											form.setValue("details", text);
+										} else {
+											form.setValue("details", sanitizeHtml(editor?.getHTML() ?? ""));
+										}
 
 										void form.handleSubmit((data) => {
 											onSubmit(data);
@@ -445,7 +520,7 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 												id: generateId(),
 												dogId,
 												details: "",
-												date: new Date(),
+												date: undefined,
 												user: user ?? undefined,
 												userId: user?.id ?? undefined,
 												...sessionHistory,
@@ -468,6 +543,9 @@ function EditableSessionDetail({ sessionHistory, onCancel, onSubmit, dogId }: Ed
 					</div>
 					{form.formState.errors?.details && (
 						<p className="text-sm font-medium text-destructive">{form.formState.errors?.details?.message}</p>
+					)}
+					{form.formState.errors?.date && (
+						<p className="text-sm font-medium text-destructive">{form.formState.errors?.date?.message}</p>
 					)}
 				</div>
 			</div>

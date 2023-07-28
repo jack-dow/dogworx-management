@@ -71,7 +71,7 @@ function VetClinicContactInformation({ control }: { control: Control<ManageVetCl
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<RichTextEditor content={field.value ?? ""} onValueChange={field.onChange} />
+									<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

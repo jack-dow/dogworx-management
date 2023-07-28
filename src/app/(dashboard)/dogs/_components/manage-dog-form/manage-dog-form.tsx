@@ -43,8 +43,8 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	givenName: z.string().max(50).nonempty({ message: "Required" }),
 	breed: z.string().max(50).nonempty({ message: "Required" }),
 	color: z.string().max(25).nonempty({ message: "Required" }),
-	notes: z.string().max(500).nullish(),
-	age: InsertDogSchema.shape.age.nullable(),
+	notes: z.string().max(100000).nullish(),
+	age: InsertDogSchema.shape.age,
 	sessions: z.array(
 		InsertDogSessionSchema.extend({
 			user: SelectUserSchema.nullable(),
@@ -60,6 +60,7 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 			vet: SelectVetSchema,
 		}),
 	),
+	unsavedSessionIds: z.array(z.string()),
 });
 
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
@@ -71,6 +72,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 	const { toast } = useToast();
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
+	const [isConfirmSubmittingDialogOpen, setIsConfirmSubmittingDialogOpen] = React.useState(false);
 
 	const form = useForm<ManageDogFormSchema>({
 		resolver: zodResolver(ManageDogFormSchema),
@@ -84,9 +86,10 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 				dogToClientRelationships: {},
 				dogToVetRelationships: {},
 			},
+			unsavedSessionIds: [],
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	useConfirmPageNavigation(form.formState.isDirty && !form.formState.isSubmitted);
 
 	if (Object.keys(form.formState.errors).length > 0) {
 		console.log(form.formState.errors);
@@ -95,6 +98,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 	useDidUpdate(() => {
 		if (dog) {
 			const actions = form.getValues("actions");
+
 			form.reset(
 				{
 					...dog,
@@ -110,6 +114,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						actions.dogToVetRelationships,
 					),
 					actions,
+					unsavedSessionIds: form.getValues("unsavedSessionIds"),
 				},
 				{
 					keepDirty: true,
@@ -122,11 +127,10 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 	async function onSubmit(data: ManageDogFormSchema) {
 		let success = false;
 
-		if (data.age == null) {
-			form.setError("age", {
-				type: "manual",
-				message: "Age is required",
-			});
+		console.log(data.unsavedSessionIds);
+
+		if (data.unsavedSessionIds.length > 0) {
+			setIsConfirmSubmittingDialogOpen(true);
 			return;
 		}
 
@@ -183,6 +187,29 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<AlertDialog open={isConfirmSubmittingDialogOpen} onOpenChange={setIsConfirmSubmittingDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Uncommitted changes</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to submit this form? If you do, any uncommitted changes will be lost.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								form.setValue("unsavedSessionIds", []);
+								void form.handleSubmit(onSubmit)();
+							}}
+						>
+							Continue
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
 			<Form {...form}>
 				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10 ">
 					<DogBasicInformation control={form.control} />
