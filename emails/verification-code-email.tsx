@@ -15,16 +15,16 @@ import {
 	Text,
 } from "@react-email/components";
 
-interface VercelInviteUserEmailProps {
-	validationCode: string;
+interface VerificationCodeEmailProps {
+	code: string;
 	requestedFromIp: string | undefined;
 	requestedFromLocation: string | undefined;
 }
 
 const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
-const VerificationCodeEmail = ({ validationCode, requestedFromIp, requestedFromLocation }: VercelInviteUserEmailProps) => {
-	const previewText = `${validationCode} is your Dogworx Hydrotherapy verification code`;
+const VerificationCodeEmail = ({ code, requestedFromIp, requestedFromLocation }: VerificationCodeEmailProps) => {
+	const previewText = `${code} is your Dogworx Hydrotherapy verification code`;
 
 	return (
 		<Html>
@@ -50,7 +50,7 @@ const VerificationCodeEmail = ({ validationCode, requestedFromIp, requestedFromL
 							<Row>
 								<Column align="center">
 									<code className="rounded-md border-4 bg-[#dfe1e4] px-2 py-1 font-mono text-4xl font-semibold tracking-wide text-[#3c4149]">
-										{validationCode}
+										{code}
 									</code>
 								</Column>
 							</Row>

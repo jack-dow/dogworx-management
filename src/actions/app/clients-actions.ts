@@ -9,7 +9,7 @@ import { clients, dogToClientRelationships } from "~/db/schemas";
 import { InsertClientSchema, UpdateClientSchema } from "~/db/validation";
 import {
 	createServerAction,
-	getUser,
+	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
 	type ExtractServerActionData,
@@ -17,11 +17,12 @@ import {
 
 const listClients = createServerAction(async (limit?: number) => {
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.clients.findMany({
 			limit: limit ?? 50,
 			where: eq(clients.organizationId, user.organizationId),
+			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName)],
 			with: {
 				dogToClientRelationships: {
 					with: {
@@ -47,14 +48,15 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.clients.findMany({
+			limit: 50,
 			where: and(
 				eq(clients.organizationId, user.organizationId),
 				sql`concat(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			),
-			limit: 50,
+			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName)],
 			with: {
 				dogToClientRelationships: {
 					with: {
@@ -80,7 +82,7 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { actions, ...data } = validValues.data;
 
@@ -129,7 +131,7 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { id, actions, ...data } = validValues.data;
 
@@ -204,7 +206,7 @@ const deleteClient = createServerAction(async (id: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const client = await drizzle.query.clients.findFirst({
 			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
@@ -245,7 +247,7 @@ type ClientDelete = ExtractServerActionData<typeof deleteClient>;
 
 const getClientRelationships = createServerAction(async (clientId: string) => {
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const dogToClientRelationshipsData = await drizzle.query.dogToClientRelationships.findMany({
 			limit: 25,

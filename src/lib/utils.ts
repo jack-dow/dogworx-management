@@ -3,7 +3,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { type z } from "zod";
 
-type DefaultErrorCodes = "InvalidBody" | "UnknownError";
+type DefaultErrorCodes = "InvalidBody" | "UnknownError" | "NotAuthorized";
 
 type APIResponse<Data, ErrorCodes extends string | undefined = undefined> =
 	| (Data extends undefined ? { success: true; error?: never } : { success: true; data: Data; error?: never })

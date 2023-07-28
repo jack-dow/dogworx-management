@@ -13,6 +13,9 @@ const sessionCookieOptions = {
 } as const;
 
 type SessionCookiePayload = {
+	id: string;
+	createdAt: Date;
+	updatedAt: Date;
 	user: User;
 };
 
@@ -21,10 +24,12 @@ type SessionCookie = SessionCookiePayload & {
 	nbf: number;
 };
 
+const sessionJWTExpiry = 900; // 15 minutes
+
 async function createSessionJWT(payload: SessionCookiePayload) {
 	const accessToken = await jwt.sign(payload);
 
 	return accessToken;
 }
 
-export { type SessionCookiePayload, type SessionCookie, sessionCookieOptions, createSessionJWT };
+export { type SessionCookiePayload, type SessionCookie, sessionCookieOptions, createSessionJWT, sessionJWTExpiry };

@@ -7,22 +7,33 @@ import { createActionsLogSchema, IdSchema } from "./utils";
 // -----------------------------------------------------------------------------
 // Users
 // -----------------------------------------------------------------------------
-const SelectUserSchema = createSelectSchema(users);
+export const SelectUserSchema = createSelectSchema(users);
+export type SelectUserSchema = z.infer<typeof SelectUserSchema>;
 
-const InsertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true }).extend({
+export const InsertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true }).extend({
 	id: IdSchema,
 });
-type InsertUserSchema = z.infer<typeof InsertUserSchema>;
+export type InsertUserSchema = z.infer<typeof InsertUserSchema>;
 
-const UpdateUserSchema = InsertUserSchema.partial().extend({
-	id: IdSchema,
+export const UpdateUserSchema = InsertUserSchema.pick({
+	name: true,
+	givenName: true,
+	familyName: true,
+	emailAddress: true,
+	profileImageUrl: true,
+	organizationRole: true,
+	bannedAt: true,
+	bannedUntil: true,
 });
-type UpdateUserSchema = z.infer<typeof UpdateUserSchema>;
+export type UpdateUserSchema = z.infer<typeof UpdateUserSchema>;
 
 // -----------------------------------------------------------------------------
 // Sessions
 // -----------------------------------------------------------------------------
-const InsertSessionSchema = createInsertSchema(sessions)
+export const SelectSessionSchema = createSelectSchema(sessions);
+export type SelectSessionSchema = z.infer<typeof SelectSessionSchema>;
+
+export const InsertSessionSchema = createInsertSchema(sessions)
 	.omit({
 		createdAt: true,
 		updatedAt: true,
@@ -30,17 +41,17 @@ const InsertSessionSchema = createInsertSchema(sessions)
 	.extend({
 		id: IdSchema,
 	});
-type InsertSessionSchema = z.infer<typeof InsertSessionSchema>;
+export type InsertSessionSchema = z.infer<typeof InsertSessionSchema>;
 
-const UpdateSessionSchema = InsertSessionSchema.partial().extend({
+export const UpdateSessionSchema = InsertSessionSchema.partial().extend({
 	id: IdSchema,
 });
-type UpdateSessionSchema = z.infer<typeof UpdateSessionSchema>;
+export type UpdateSessionSchema = z.infer<typeof UpdateSessionSchema>;
 
 // -----------------------------------------------------------------------------
 // Organization Invite Links
 // -----------------------------------------------------------------------------
-const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks)
+export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks)
 	.omit({
 		createdAt: true,
 		updatedAt: true,
@@ -50,14 +61,14 @@ const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInvite
 		organizationId: IdSchema,
 		userId: IdSchema,
 	});
-type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;
+export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;
 
-const UpdateOrganizationInviteLinkSchema = InsertOrganizationInviteLinkSchema.partial().extend({
+export const UpdateOrganizationInviteLinkSchema = InsertOrganizationInviteLinkSchema.partial().extend({
 	id: IdSchema,
 });
-type UpdateOrganizationInviteLinkSchema = z.infer<typeof UpdateOrganizationInviteLinkSchema>;
+export type UpdateOrganizationInviteLinkSchema = z.infer<typeof UpdateOrganizationInviteLinkSchema>;
 
-const OrganizationInviteLinksActionsLogSchema = createActionsLogSchema(
+export const OrganizationInviteLinksActionsLogSchema = createActionsLogSchema(
 	InsertOrganizationInviteLinkSchema,
 	UpdateOrganizationInviteLinkSchema,
 );
@@ -65,7 +76,7 @@ const OrganizationInviteLinksActionsLogSchema = createActionsLogSchema(
 // -----------------------------------------------------------------------------
 // Organizations
 // -----------------------------------------------------------------------------
-const InsertOrganizationSchema = createInsertSchema(organizations)
+export const InsertOrganizationSchema = createInsertSchema(organizations)
 	.omit({
 		createdAt: true,
 		updatedAt: true,
@@ -76,22 +87,9 @@ const InsertOrganizationSchema = createInsertSchema(organizations)
 			organizationInviteLinks: OrganizationInviteLinksActionsLogSchema,
 		}),
 	});
-type InsertOrganizationSchema = z.infer<typeof InsertOrganizationSchema>;
+export type InsertOrganizationSchema = z.infer<typeof InsertOrganizationSchema>;
 
-const UpdateOrganizationSchema = InsertOrganizationSchema.partial().extend({
+export const UpdateOrganizationSchema = InsertOrganizationSchema.partial().extend({
 	id: IdSchema,
 });
-type UpdateOrganizationSchema = z.infer<typeof UpdateOrganizationSchema>;
-
-export {
-	SelectUserSchema,
-	InsertUserSchema,
-	UpdateUserSchema,
-	InsertSessionSchema,
-	UpdateSessionSchema,
-	InsertOrganizationInviteLinkSchema,
-	UpdateOrganizationInviteLinkSchema,
-	OrganizationInviteLinksActionsLogSchema,
-	InsertOrganizationSchema,
-	UpdateOrganizationSchema,
-};
+export type UpdateOrganizationSchema = z.infer<typeof UpdateOrganizationSchema>;

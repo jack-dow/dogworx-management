@@ -123,7 +123,7 @@ const VerificationCodeInput = ({ onSubmit }: { onSubmit: (code: string) => Promi
 					);
 				}}
 			/>
-			{state === "error" && <p className="text-[0.8rem] font-medium text-destructive">Incorrect code</p>}
+			{state === "error" && <p className="text-[0.8rem] font-medium text-destructive">Incorrect or expired code</p>}
 		</div>
 	);
 };

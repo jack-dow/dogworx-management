@@ -24,6 +24,8 @@ import {
 	searchOrganizations,
 	updateOrganization,
 } from "./auth/organizations-actions";
+import { getCurrentSession, invalidateSession } from "./auth/sessions-actions";
+import { deleteUser, updateUser } from "./auth/user-actions";
 
 const actions = {
 	app: {
@@ -69,6 +71,14 @@ const actions = {
 			delete: deleteOrganization,
 			getInviteLink: getOrganizationInviteLinkById,
 		},
+		sessions: {
+			current: getCurrentSession,
+			invalidate: invalidateSession,
+		},
+		user: {
+			update: updateUser,
+			delete: deleteUser,
+		},
 	},
 };
 
@@ -80,3 +90,5 @@ export type * from "./app/vet-clinics-actions";
 export type * from "./app/vets-actions";
 
 export type * from "./auth/organizations-actions";
+export type * from "./auth/sessions-actions";
+export type * from "./auth/user-actions";

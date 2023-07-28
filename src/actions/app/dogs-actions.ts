@@ -9,7 +9,7 @@ import { dogs, dogSessions, dogToClientRelationships, dogToVetRelationships } fr
 import { InsertDogSchema, UpdateDogSchema } from "~/db/validation";
 import {
 	createServerAction,
-	getUser,
+	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
 	type ExtractServerActionData,
@@ -17,11 +17,12 @@ import {
 
 const listDogs = createServerAction(async (limit?: number) => {
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.dogs.findMany({
 			limit: limit ?? 50,
 			where: eq(dogs.organizationId, user.organizationId),
+			orderBy: (dogs, { asc }) => [asc(dogs.givenName)],
 		});
 
 		return { success: true, data };
@@ -40,11 +41,12 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.dogs.findMany({
 			where: and(eq(dogs.organizationId, user.organizationId), like(dogs.givenName, `%${validSearchTerm.data ?? ""}%`)),
 			limit: 50,
+			orderBy: (dogs, { asc }) => [asc(dogs.givenName)],
 		});
 
 		return { success: true, data };
@@ -63,7 +65,7 @@ const getDogById = createServerAction(async (id: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.dogs.findFirst({
 			where: and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, validId.data)),
@@ -102,7 +104,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { actions, ...data } = validValues.data;
 
@@ -154,7 +156,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { id, actions, ...data } = validValues.data;
 
@@ -287,7 +289,7 @@ const deleteDog = createServerAction(async (id: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const dog = await drizzle.query.dogs.findFirst({
 			where: and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, validId.data)),

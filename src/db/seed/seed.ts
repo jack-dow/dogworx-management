@@ -9,6 +9,12 @@ const data = generateSeedData();
 const seed = async () => {
 	try {
 		await drizzle.transaction(async (db) => {
+			await db.delete(Schemas.users);
+			await db.delete(Schemas.sessions);
+			await db.delete(Schemas.verificationCodes);
+			await db.delete(Schemas.organizations);
+			await db.delete(Schemas.organizationInviteLinks);
+
 			await db.delete(Schemas.dogs);
 			await db.delete(Schemas.dogSessions);
 			await db.delete(Schemas.clients);
@@ -21,6 +27,10 @@ const seed = async () => {
 		console.log("[Success] Deleted all existing data");
 
 		await drizzle.transaction(async (db) => {
+			await db.insert(Schemas.organizations).values(data.organization);
+			await db.insert(Schemas.users).values(data.user);
+			await db.insert(Schemas.verificationCodes).values(data.verificationCode);
+
 			await db.insert(Schemas.dogs).values(data.dogs);
 			await db.insert(Schemas.dogSessions).values(data.dogSessions);
 			await db.insert(Schemas.clients).values(data.clients);

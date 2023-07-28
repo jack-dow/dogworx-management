@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { useSession } from "~/app/dashboard/providers";
+import { useSession } from "~/app/(dashboard)/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { signOut } from "~/lib/auth";
 import { cn } from "~/lib/utils";
@@ -119,7 +119,7 @@ function DesktopSidebar() {
 									<DropdownMenuSeparator />
 									<DropdownMenuGroup>
 										<DropdownMenuItem asChild>
-											<a href="/account-settings">
+											<a href="/account">
 												<UserIcon className="mr-2 h-4 w-4" />
 												<span>Account Settings</span>
 											</a>

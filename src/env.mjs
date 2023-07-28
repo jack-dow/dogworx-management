@@ -17,6 +17,10 @@ const env = createEnv({
 		OAUTH_GOOGLE_CLIENT_SECRET: z.string().min(1),
 		JWT_SECRET: z.string().min(1),
 		RESEND_API_KEY: z.string().min(1),
+		AWS_S3_ACCESS_KEY: z.string().min(1),
+		AWS_S3_SECRET_KEY: z.string().min(1),
+		AWS_S3_BUCKET_NAME: z.string().min(1),
+		AWS_S3_REGION: z.string().min(1),
 	},
 	/**
 	 * Specify your client-side environment variables schema here.
@@ -37,6 +41,10 @@ const env = createEnv({
 		OAUTH_GOOGLE_CLIENT_SECRET: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
 		JWT_SECRET: process.env.JWT_SECRET,
 		RESEND_API_KEY: process.env.RESEND_API_KEY,
+		AWS_S3_ACCESS_KEY: process.env.AWS_S3_ACCESS_KEY,
+		AWS_S3_SECRET_KEY: process.env.AWS_S3_SECRET_KEY,
+		AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
+		AWS_S3_REGION: process.env.AWS_S3_REGION,
 	},
 	skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

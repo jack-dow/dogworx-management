@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { magicLinks, sessions } from "~/db/schemas";
+import { sessions, verificationCodes } from "~/db/schemas";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { generateId } from "~/lib/utils";
 
@@ -17,40 +17,45 @@ async function GET(request: NextRequest) {
 	const code = searchParams.get("code") ?? undefined;
 
 	if (!token && !code) {
-		return NextResponse.redirect(new URL("/sign-in", request.url), {
-			status: 400,
+		return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
+			status: 303,
 		});
 	}
 
 	try {
-		const magicLink = await drizzle.query.magicLinks.findFirst({
-			where: (magicLinks, { eq, sql }) =>
-				token ? sql`BINARY ${magicLinks.token} = ${token}` : eq(magicLinks.code, code!),
+		const magicLink = await drizzle.query.verificationCodes.findFirst({
+			where: (verificationCodes, { eq, sql }) =>
+				token ? sql`BINARY ${verificationCodes.token} = ${token}` : eq(verificationCodes.code, code!),
 			with: {
 				user: true,
 			},
 		});
 
 		if (!magicLink) {
-			return NextResponse.redirect(new URL("/sign-in", request.url), {
-				status: 400,
+			return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
+				status: 303,
 			});
 		}
 
-		await drizzle.delete(magicLinks).where(eq(magicLinks.id, magicLink.id));
+		await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, magicLink.id));
 
 		if (magicLink.expiresAt < new Date()) {
-			return NextResponse.redirect(new URL("/sign-in", request.url), {
-				status: 400,
+			return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
+				status: 303,
 			});
 		}
 
+		const sessionId = generateId();
+
 		const sessionToken = await createSessionJWT({
+			id: sessionId,
+			createdAt: new Date(),
+			updatedAt: new Date(),
 			user: magicLink.user,
 		});
 
 		await drizzle.insert(sessions).values({
-			id: generateId(),
+			id: sessionId,
 			sessionToken,
 			userId: magicLink.user.id,
 			expiresAt: new Date(Date.now() + sessionCookieOptions.maxAge),
@@ -65,7 +70,7 @@ async function GET(request: NextRequest) {
 			value: sessionToken,
 		});
 
-		return NextResponse.redirect(new URL("/dashboard", request.url));
+		return NextResponse.redirect(new URL("/", request.url));
 	} catch (error) {
 		console.log({ error });
 		return NextResponse.redirect(new URL("/sign-in", request.url), {

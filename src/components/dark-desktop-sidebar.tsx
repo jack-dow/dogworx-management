@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { useSession } from "~/app/dashboard/providers";
+import { useSession } from "~/app/(dashboard)/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { signOut } from "~/lib/auth";
 import { cn } from "~/lib/utils";
@@ -63,7 +63,7 @@ function DarkDesktopSidebar() {
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-950 px-6 ">
 				<div className="flex shrink-0 items-center pb-4 pt-6">
-					<Link href="/dashboard" shallow>
+					<Link href="/" shallow>
 						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" width={150} />
 					</Link>
 				</div>
@@ -107,9 +107,9 @@ function DarkDesktopSidebar() {
 								{session.user.emailAddress === "jack.dowww@gmail.com" && (
 									<li>
 										<a
-											href="/dashboard/organizations"
+											href="/organizations"
 											className={cn(
-												"/dashboard/organizations" === pathname
+												"/organizations" === pathname
 													? "bg-slate-900 text-white"
 													: "text-slate-300 hover:text-slate-50 hover:bg-slate-900",
 												"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
@@ -117,9 +117,7 @@ function DarkDesktopSidebar() {
 										>
 											<BuildingOfficeIcon
 												className={cn(
-													"/dashboard/organizations" === pathname
-														? "text-slate-50"
-														: "text-slate-300 group-hover:text-slate-50",
+													"/organizations" === pathname ? "text-slate-50" : "text-slate-300 group-hover:text-slate-50",
 
 													"h-5 w-5 shrink-0",
 												)}
@@ -174,7 +172,7 @@ function DarkDesktopSidebar() {
 									<DropdownMenuSeparator />
 									<DropdownMenuGroup>
 										<DropdownMenuItem asChild>
-											<a href="/account-settings">
+											<a href="/account">
 												<UserIcon className="mr-2 h-4 w-4" />
 												<span>Account Settings</span>
 											</a>

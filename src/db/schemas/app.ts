@@ -16,7 +16,7 @@ const dogs = mysqlTable("dogs", {
 	isAgeExact: boolean("is_age_exact").notNull(),
 	sex: mysqlEnum("sex", ["male", "female", "unknown"]).notNull(),
 	desexed: boolean("desexed").notNull(),
-	color: varchar("city", { length: 64 }).notNull(),
+	color: varchar("color", { length: 64 }).notNull(),
 	organizationId: varchar("organization_id", { length: 128 }).notNull(),
 	notes: text("notes"),
 });
@@ -40,7 +40,7 @@ const dogSessions = mysqlTable("dog_sessions", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	dogId: varchar("dogId", { length: 128 }).notNull(),
-	userId: varchar("userId", { length: 128 }).notNull(),
+	userId: varchar("userId", { length: 128 }),
 	date: timestamp("date").notNull(),
 	details: text("details").notNull(),
 	organizationId: varchar("organization_id", { length: 128 }).notNull(),

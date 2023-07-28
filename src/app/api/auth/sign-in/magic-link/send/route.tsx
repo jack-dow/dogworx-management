@@ -5,7 +5,7 @@ import ms from "ms";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { magicLinks } from "~/db/schemas";
+import { verificationCodes } from "~/db/schemas";
 import { resend } from "~/lib/resend";
 import { generateId, type APIResponse } from "~/lib/utils";
 
@@ -39,7 +39,7 @@ async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOS
 		const user = await drizzle.query.users.findFirst({
 			where: (users, { eq }) => eq(users.emailAddress, emailAddress),
 			columns: {
-				id: true,
+				emailAddress: true,
 			},
 		});
 
@@ -59,9 +59,9 @@ async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOS
 		const code = cryptoRandomString({ length: 6, type: "numeric" });
 		const token = cryptoRandomString({ length: 64, type: "url-safe" });
 
-		await drizzle.insert(magicLinks).values({
+		await drizzle.insert(verificationCodes).values({
 			id: generateId(),
-			userId: user.id,
+			emailAddress: user.emailAddress,
 			code,
 			token,
 			expiresAt: new Date(Date.now() + ms("5m")),

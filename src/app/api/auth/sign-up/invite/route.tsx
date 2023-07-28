@@ -18,11 +18,11 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 
 	const { searchParams } = new URL(request.url);
 
-	const credentials = SignUpSchema.safeParse(body);
+	const validation = SignUpSchema.safeParse(body);
 
-	if (!credentials.success) {
+	if (!validation.success) {
 		return NextResponse.json(
-			{ success: false, error: { code: "InvalidBody", message: credentials.error.issues } },
+			{ success: false, error: { code: "InvalidBody", message: validation.error.issues } },
 			{ status: 400 },
 		);
 	}
@@ -37,6 +37,7 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 				maxUses: true,
 				uses: true,
 				organizationId: true,
+				role: true,
 			},
 		});
 
@@ -49,11 +50,12 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 
 		const newUser = {
 			id: generateId(),
-			name: credentials.data.givenName + (credentials.data.familyName ? " " + credentials.data.familyName : ""),
-			givenName: credentials.data.givenName,
-			familyName: credentials.data.familyName,
-			emailAddress: credentials.data.emailAddress,
+			name: validation.data.givenName + (validation.data.familyName ? " " + validation.data.familyName : ""),
+			givenName: validation.data.givenName,
+			familyName: validation.data.familyName,
+			emailAddress: validation.data.emailAddress,
 			organizationId: inviteLink.organizationId,
+			organizationRole: inviteLink.role,
 		} satisfies InsertUserSchema;
 
 		await drizzle.transaction(async (db) => {

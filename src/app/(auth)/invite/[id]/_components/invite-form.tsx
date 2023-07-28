@@ -10,7 +10,7 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationInviteLinkById } from "~/actions";
-import { VerifyEmailAlertDialog } from "~/app/(auth)/_components/verify-email-dialog";
+import { VerifyEmailAddressAlertDialog } from "~/app/(auth)/_components/verify-email-address-dialog";
 import { signUp } from "~/lib/auth";
 import { SignUpSchema } from "~/lib/validation";
 
@@ -73,7 +73,7 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 
 	return (
 		<>
-			<VerifyEmailAlertDialog
+			<VerifyEmailAddressAlertDialog
 				emailAddress={verifyEmail}
 				open={!!verifyEmail}
 				setOpen={(open) => {

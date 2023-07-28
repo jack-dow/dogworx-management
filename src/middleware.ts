@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { jwt } from "~/lib/jwt";
 import { drizzle } from "./db/drizzle";
 import { sessions } from "./db/schemas";
-import { createSessionJWT, sessionCookieOptions, type SessionCookie } from "./lib/auth-options";
+import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {
 	const sessionCookie = request.cookies.get(sessionCookieOptions.name);
@@ -74,12 +74,15 @@ export async function middleware(request: NextRequest) {
 			return response;
 		}
 
-		const response = isAuthPage ? NextResponse.redirect(new URL("/dashboard", request.url)) : NextResponse.next();
+		const response = isAuthPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
+		const requestHeaders = new Headers(request.headers);
 
 		// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
-		// Check if the token is older than 900  seconds (15mins) and if so, create a new one and update the session in the database.
-		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > 900) {
+		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry) {
 			const newSessionToken = await createSessionJWT({
+				id: sessionTokenData.id,
+				createdAt: sessionTokenData.createdAt,
+				updatedAt: new Date(),
 				user: sessionTokenData.user,
 			});
 
@@ -87,6 +90,10 @@ export async function middleware(request: NextRequest) {
 				.update(sessions)
 				.set({
 					sessionToken: newSessionToken,
+					ipAddress: request.ip,
+					userAgent: requestHeaders.get("user-agent"),
+					city: request.geo?.city,
+					country: request.geo?.country,
 				})
 				.where(eq(sessions.id, session.id));
 
@@ -96,6 +103,23 @@ export async function middleware(request: NextRequest) {
 			});
 		}
 
+		if (
+			session.ipAddress != request.ip ||
+			session.userAgent !== requestHeaders.get("user-agent") ||
+			session.city != request.geo?.city ||
+			session.country != request.geo?.country
+		) {
+			await drizzle
+				.update(sessions)
+				.set({
+					ipAddress: request.ip ?? session.ipAddress,
+					userAgent: requestHeaders.get("user-agent") || session.userAgent,
+					city: request.geo?.city || session.city,
+					country: request.geo?.country || session.country,
+				})
+				.where(eq(sessions.id, session.id));
+		}
+
 		return response;
 	}
 
@@ -103,5 +127,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-	matcher: ["/dashboard/:path*", "/sign-in", "/invite/:path*"],
+	matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -13,6 +13,7 @@ const listOrganizations = createServerAction(async (limit?: number) => {
 	try {
 		const data = await drizzle.query.organizations.findMany({
 			limit: limit ?? 50,
+			orderBy: (organizations, { asc }) => [asc(organizations.name)],
 			with: {
 				users: true,
 				organizationInviteLinks: {
@@ -93,7 +94,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 	try {
 		const { actions, ...data } = validValues.data;
 
-		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions.organizationInviteLinks);
+		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions.organizationInviteLinks, data.id);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(organizations).values(data);
@@ -135,7 +136,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 	try {
 		const { id, actions, ...data } = validValues.data;
 
-		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions?.organizationInviteLinks ?? {});
+		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions?.organizationInviteLinks ?? {}, id);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(organizations).set(data).where(eq(organizations.id, id));

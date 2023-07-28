@@ -43,3 +43,6 @@ yarn-error.log*
 
 # resend / react-email
 .react-email
+
+# seed data
+/src/db/seed/

@@ -57,7 +57,7 @@ function separateActionsLogSchema<
 	return { inserts, updates, deletes };
 }
 
-async function getUser() {
+async function getServerSession() {
 	const cookieStore = cookies();
 	const sessionCookie = cookieStore.get(sessionCookieOptions.name);
 
@@ -73,7 +73,20 @@ async function getUser() {
 		throw new Error("Invalid session token");
 	}
 
+	return sessionTokenData;
+}
+
+async function getServerUser() {
+	const sessionTokenData = await getServerSession();
+
 	return sessionTokenData.user;
 }
 
-export { type ExtractServerActionData, createServerAction, SearchTermSchema, separateActionsLogSchema, getUser };
+export {
+	type ExtractServerActionData,
+	createServerAction,
+	SearchTermSchema,
+	separateActionsLogSchema,
+	getServerSession,
+	getServerUser,
+};

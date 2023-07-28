@@ -9,7 +9,7 @@ import { dogToVetRelationships, vets, vetToVetClinicRelationships } from "~/db/s
 import { InsertVetSchema, UpdateVetSchema } from "~/db/validation";
 import {
 	createServerAction,
-	getUser,
+	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
 	type ExtractServerActionData,
@@ -17,11 +17,12 @@ import {
 
 const listVets = createServerAction(async (limit?: number) => {
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.vets.findMany({
 			limit: limit ?? 50,
 			where: eq(vets.organizationId, user.organizationId),
+			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName)],
 			with: {
 				dogToVetRelationships: {
 					with: {
@@ -52,14 +53,15 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const data = await drizzle.query.vets.findMany({
+			limit: 50,
 			where: and(
 				eq(vets.organizationId, user.organizationId),
 				sql`concat(${vets.givenName},' ', ${vets.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			),
-			limit: 50,
+			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName)],
 			with: {
 				dogToVetRelationships: {
 					with: {
@@ -90,7 +92,7 @@ const insertVet = createServerAction(async (values: InsertVetSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { actions, ...data } = validValues.data;
 
@@ -152,7 +154,7 @@ const updateVet = createServerAction(async (values: UpdateVetSchema) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const { id, actions, ...data } = validValues.data;
 
@@ -271,7 +273,7 @@ const deleteVet = createServerAction(async (id: string) => {
 	}
 
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const vet = await drizzle.query.vets.findFirst({
 			where: and(eq(vets.organizationId, user.organizationId), eq(vets.id, validId.data)),
@@ -320,7 +322,7 @@ type VetDelete = ExtractServerActionData<typeof deleteVet>;
 
 const getVetRelationships = createServerAction(async (vetId: string) => {
 	try {
-		const user = await getUser();
+		const user = await getServerUser();
 
 		const dogToVetRelationshipsData = await drizzle.query.dogToVetRelationships.findMany({
 			limit: 25,

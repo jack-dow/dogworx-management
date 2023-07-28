@@ -10,7 +10,7 @@ const users = mysqlTable("auth_users", {
 	name: varchar("name", { length: 255 }).notNull(),
 	givenName: varchar("given_name", { length: 255 }).notNull(),
 	familyName: varchar("family_name", { length: 255 }).notNull().default(""),
-	emailAddress: varchar("email_address", { length: 255 }).unique(),
+	emailAddress: varchar("email_address", { length: 255 }).notNull().unique(),
 	organizationId: varchar("organization_id", { length: 255 }).notNull(),
 	organizationRole: mysqlEnum("organization_role", organizationRoleOptions).notNull(),
 	bannedAt: timestamp("banned_at"),
@@ -32,8 +32,7 @@ const sessions = mysqlTable("auth_sessions", {
 	id: varchar("id", { length: 128 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	// Max length I could get planetscale to accept
-	sessionToken: varchar("session_token", { length: 750 }).notNull().unique(),
+	sessionToken: text("session_token").notNull(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	ipAddress: varchar("ip_address", { length: 255 }),
@@ -50,19 +49,19 @@ const sessionsRelations = relations(sessions, ({ one }) => ({
 	}),
 }));
 
-const magicLinks = mysqlTable("auth_magic_links", {
+const verificationCodes = mysqlTable("auth_verification_codes", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
-	userId: varchar("user_email_address_id", { length: 255 }).notNull(),
+	emailAddress: varchar("email_address", { length: 255 }).notNull(),
 	code: varchar("code", { length: 25 }).notNull().unique(),
-	token: varchar("token", { length: 255 }).notNull().unique(),
+	token: varchar("token", { length: 255 }).unique(),
 	expiresAt: timestamp("expires_at").notNull(),
 });
-type MagicLink = InferModel<typeof magicLinks>;
+type VerificationCode = InferModel<typeof verificationCodes>;
 
-const magicLinksRelations = relations(magicLinks, ({ one }) => ({
+const verificationCodesRelations = relations(verificationCodes, ({ one }) => ({
 	user: one(users, {
-		fields: [magicLinks.userId],
-		references: [users.id],
+		fields: [verificationCodes.emailAddress],
+		references: [users.emailAddress],
 	}),
 }));
 
@@ -89,7 +88,6 @@ const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
 	organizationId: varchar("organization_id", { length: 255 }).notNull(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
 	role: mysqlEnum("role", organizationRoleOptions).notNull(),
-	email: varchar("email", { length: 255 }),
 	uses: int("uses").notNull().default(0),
 	maxUses: int("max_uses").notNull().default(1),
 });
@@ -113,9 +111,9 @@ export {
 	sessions,
 	type Session,
 	sessionsRelations,
-	magicLinks,
-	type MagicLink,
-	magicLinksRelations,
+	verificationCodes,
+	type VerificationCode,
+	verificationCodesRelations,
 	organizations,
 	type Organization,
 	organizationsRelations,
