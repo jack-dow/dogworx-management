@@ -33,7 +33,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { api, generateId, InsertDogToClientRelationshipSchema, type DogById } from "~/api";
+import { actions, type DogById } from "~/actions";
+import { InsertDogToClientRelationshipSchema } from "~/db/validation";
+import { generateId } from "~/lib/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Client = ManageDogFormSchema["dogToClientRelationships"][number]["client"];
@@ -165,7 +167,7 @@ function DogToClientRelationships({
 						}
 						onSearch={async (searchTerm) => {
 							try {
-								const res = await api.clients.search(searchTerm);
+								const res = await actions.app.clients.search(searchTerm);
 
 								return res.data ?? [];
 							} catch (error) {

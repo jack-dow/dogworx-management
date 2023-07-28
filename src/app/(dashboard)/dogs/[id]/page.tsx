@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { api } from "~/api";
+import { actions } from "~/actions";
 import { ManageDogForm } from "../_components/manage-dog-form";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 async function Page({ params }: { params: { id: string } }) {
-	const dog = await api.dogs.byId(params.id);
+	const dog = await actions.app.dogs.byId(params.id);
 
 	return (
 		<>

@@ -2,7 +2,7 @@ import { type Metadata } from "next";
 
 import { ManageVetClinicSheet } from "~/components/manage-vet-clinic-sheet";
 import { PageHeader } from "~/components/page-header";
-import { api } from "~/api";
+import { actions } from "~/actions";
 import { VetClinicsTable } from "./_components/vet-clinics-table";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 async function VetsPage() {
-	const { data: vetClinics } = await api.vetClinics.list();
+	const { data: vetClinics } = await actions.app.vetClinics.list();
 	return (
 		<>
 			<PageHeader title="Manage Vets Clinics" action={<ManageVetClinicSheet />} />

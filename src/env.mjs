@@ -13,19 +13,18 @@ const env = createEnv({
 		DATABASE_PASSWORD: z.string().min(1),
 		DATABASE_NAME: z.string().min(1),
 		DATABASE_URL: z.string().url(),
-		CLERK_SECRET_KEY: z.string().min(1),
+		JWT_SECRET: z.string().min(1),
+		RESEND_API_KEY: z.string().min(1),
+		AWS_S3_ACCESS_KEY: z.string().min(1),
+		AWS_S3_SECRET_KEY: z.string().min(1),
+		AWS_S3_BUCKET_NAME: z.string().min(1),
+		AWS_S3_REGION: z.string().min(1),
 	},
 	/**
 	 * Specify your client-side environment variables schema here.
 	 * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
 	 */
-	client: {
-		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-		NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().min(1),
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().min(1),
-	},
+	client: {},
 	/**
 	 * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
 	 */
@@ -36,12 +35,12 @@ const env = createEnv({
 		DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
 		DATABASE_NAME: process.env.DATABASE_NAME,
 		DATABASE_URL: process.env.DATABASE_URL,
-		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-		CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-		NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-		NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
-		NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
+		JWT_SECRET: process.env.JWT_SECRET,
+		RESEND_API_KEY: process.env.RESEND_API_KEY,
+		AWS_S3_ACCESS_KEY: process.env.AWS_S3_ACCESS_KEY,
+		AWS_S3_SECRET_KEY: process.env.AWS_S3_SECRET_KEY,
+		AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
+		AWS_S3_REGION: process.env.AWS_S3_REGION,
 	},
 	skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

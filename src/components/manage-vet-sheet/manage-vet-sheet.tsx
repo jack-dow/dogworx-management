@@ -31,21 +31,22 @@ import {
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
 import {
-	api,
-	generateId,
-	InsertDogToVetRelationshipSchema,
-	InsertVetSchema,
-	InsertVetToVetClinicRelationshipSchema,
-	SelectDogSchema,
-	SelectVetClinicSchema,
+	actions,
 	type VetInsert,
 	type VetRelationships,
 	type VetsList,
 	type VetsSearch,
 	type VetUpdate,
-} from "~/api";
+} from "~/actions";
+import {
+	InsertDogToVetRelationshipSchema,
+	InsertVetSchema,
+	InsertVetToVetClinicRelationshipSchema,
+	SelectDogSchema,
+	SelectVetClinicSchema,
+} from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { mergeRelationships } from "~/lib/utils";
+import { generateId, mergeRelationships } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
@@ -157,7 +158,7 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 			if (!vet.dogToVetRelationships || !vet.vetToVetClinicRelationships) {
 				setIsLoadingRelationships(true);
 				const fetchRelationships = async () => {
-					const response = await api.vets.getRelationships(vet.id);
+					const response = await actions.app.vets.getRelationships(vet.id);
 					if (response.success) {
 						syncVet({
 							...vet,
@@ -186,11 +187,11 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 		let newVet: VetUpdate | VetInsert | undefined;
 
 		if (vet) {
-			const response = await api.vets.update(data);
+			const response = await actions.app.vets.update(data);
 			success = response.success && !!response.data;
 			newVet = response.data;
 		} else {
-			const response = await api.vets.insert(data);
+			const response = await actions.app.vets.insert(data);
 			success = response.success;
 			newVet = response.data;
 		}

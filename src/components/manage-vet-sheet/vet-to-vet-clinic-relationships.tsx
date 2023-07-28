@@ -33,7 +33,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { api, generateId, InsertVetToVetClinicRelationshipSchema } from "~/api";
+import { actions } from "~/actions";
+import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
+import { generateId } from "~/lib/utils";
 import { RelationshipLoadingSkeleton } from "../relationship-loading-skeleton";
 import { type ExistingVet, type ManageVetSheetFormSchema } from "./manage-vet-sheet";
 
@@ -171,7 +173,7 @@ function VetToVetClinicRelationships({
 						}
 						onSearch={async (searchTerm) => {
 							try {
-								const res = await api.vetClinics.search(searchTerm);
+								const res = await actions.app.vetClinics.search(searchTerm);
 
 								return res.data ?? [];
 							} catch (error) {

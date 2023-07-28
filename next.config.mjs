@@ -12,7 +12,7 @@ const config = {
 		serverActions: true,
 	},
 	images: {
-		domains: ["images.clerk.dev", "www.gravatar.com"],
+		domains: ["dogworx-management-dev.s3.ap-southeast-2.amazonaws.com"],
 		remotePatterns: [
 			{
 				protocol: "https",

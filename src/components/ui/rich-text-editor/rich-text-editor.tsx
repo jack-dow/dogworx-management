@@ -66,7 +66,7 @@ function RichTextEditor({
 					editor?.chain().focus().run();
 				}}
 				className={cn(
-					"relative min-h-[150px] w-full max-w-screen-lg border rounded-md border-input  px-3 py-2 text-sm shadow-sm",
+					"relative min-h-[150px] w-full border rounded-md border-input  px-3 py-2 text-sm shadow-sm",
 					className,
 				)}
 			>

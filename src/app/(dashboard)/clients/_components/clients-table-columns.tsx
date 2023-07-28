@@ -20,7 +20,7 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type ClientsList } from "~/api";
+import { type ClientsList } from "~/actions";
 import { cn } from "~/lib/utils";
 
 function createClientsTableColumns(

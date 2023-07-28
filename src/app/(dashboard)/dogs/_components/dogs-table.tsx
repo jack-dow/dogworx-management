@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
-import { api, type DogsList } from "~/api";
+import { actions, type DogsList } from "~/actions";
 import { createDogsTableColumns } from "./dogs-table-columns";
 
 function DogsTable({ dogs }: { dogs: DogsList }) {
@@ -28,7 +28,7 @@ function DogsTable({ dogs }: { dogs: DogsList }) {
 				onConfirm={async () => {
 					if (confirmDogDelete == null) return;
 
-					const result = await api.dogs.delete(confirmDogDelete.id);
+					const result = await actions.app.dogs.delete(confirmDogDelete.id);
 
 					if (result.success) {
 						toast({

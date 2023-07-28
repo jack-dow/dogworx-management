@@ -40,3 +40,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# resend / react-email
+.react-email
+
+# seed data
+/src/db/seed/

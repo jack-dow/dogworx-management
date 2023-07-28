@@ -1,7 +1,7 @@
 "use server";
 
 import { drizzle } from "../drizzle";
-import * as schema from "../drizzle-schema";
+import { Schemas } from "../schemas";
 import generateSeedData from "./generate-seed-data";
 
 const data = generateSeedData();
@@ -9,26 +9,36 @@ const data = generateSeedData();
 const seed = async () => {
 	try {
 		await drizzle.transaction(async (db) => {
-			await db.delete(schema.dogs);
-			await db.delete(schema.dogSessions);
-			await db.delete(schema.clients);
-			await db.delete(schema.vets);
-			await db.delete(schema.vetClinics);
-			await db.delete(schema.dogToClientRelationships);
-			await db.delete(schema.dogToVetRelationships);
-			await db.delete(schema.vetToVetClinicRelationships);
+			await db.delete(Schemas.users);
+			await db.delete(Schemas.sessions);
+			await db.delete(Schemas.verificationCodes);
+			await db.delete(Schemas.organizations);
+			await db.delete(Schemas.organizationInviteLinks);
+
+			await db.delete(Schemas.dogs);
+			await db.delete(Schemas.dogSessions);
+			await db.delete(Schemas.clients);
+			await db.delete(Schemas.vets);
+			await db.delete(Schemas.vetClinics);
+			await db.delete(Schemas.dogToClientRelationships);
+			await db.delete(Schemas.dogToVetRelationships);
+			await db.delete(Schemas.vetToVetClinicRelationships);
 		});
 		console.log("[Success] Deleted all existing data");
 
 		await drizzle.transaction(async (db) => {
-			await db.insert(schema.dogs).values(data.dogs);
-			await db.insert(schema.dogSessions).values(data.dogSessions);
-			await db.insert(schema.clients).values(data.clients);
-			await db.insert(schema.vets).values(data.vets);
-			await db.insert(schema.vetClinics).values(data.vetClinics);
-			await db.insert(schema.dogToClientRelationships).values(data.dogToClientRelationships);
-			await db.insert(schema.dogToVetRelationships).values(data.dogToVetRelationships);
-			await db.insert(schema.vetToVetClinicRelationships).values(data.vetToVetClinicRelationships);
+			await db.insert(Schemas.organizations).values(data.organization);
+			await db.insert(Schemas.users).values(data.user);
+			await db.insert(Schemas.verificationCodes).values(data.verificationCode);
+
+			await db.insert(Schemas.dogs).values(data.dogs);
+			await db.insert(Schemas.dogSessions).values(data.dogSessions);
+			await db.insert(Schemas.clients).values(data.clients);
+			await db.insert(Schemas.vets).values(data.vets);
+			await db.insert(Schemas.vetClinics).values(data.vetClinics);
+			await db.insert(Schemas.dogToClientRelationships).values(data.dogToClientRelationships);
+			await db.insert(Schemas.dogToVetRelationships).values(data.dogToVetRelationships);
+			await db.insert(Schemas.vetToVetClinicRelationships).values(data.vetToVetClinicRelationships);
 		});
 		console.log("[Success] Inserted seed data");
 	} catch (error) {

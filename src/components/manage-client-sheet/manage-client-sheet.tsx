@@ -31,18 +31,16 @@ import {
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
 import {
-	api,
-	generateId,
-	InsertClientSchema,
-	InsertDogToClientRelationshipSchema,
-	SelectDogSchema,
+	actions,
 	type ClientInsert,
 	type ClientRelationships,
 	type ClientsList,
 	type ClientsSearch,
 	type ClientUpdate,
-} from "~/api";
+} from "~/actions";
+import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { generateId } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
@@ -109,6 +107,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		defaultValues: {
 			id: client?.id || defaultValues?.id || generateId(),
 			dogToClientRelationships: client?.dogToClientRelationships,
+
 			...client,
 			...defaultValues,
 			actions: {
@@ -135,7 +134,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 			if (!client.dogToClientRelationships) {
 				setIsLoadingRelationships(true);
 				const fetchRelationships = async () => {
-					const response = await api.clients.getRelationships(client.id);
+					const response = await actions.app.clients.getRelationships(client.id);
 					if (response.success) {
 						syncClient({
 							...client,
@@ -162,16 +161,11 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		let newClient: ClientUpdate | ClientInsert | undefined;
 
 		if (client) {
-			const response = await api.clients.update(data);
+			const response = await actions.app.clients.update(data);
 			success = response.success && !!response.data;
 			newClient = response.data;
 		} else {
-			if (!data.givenName) {
-				throw new Error("givenName must exist but doesn't");
-			}
-
-			// Had to spread because typescript was complaining about the type of data otherwise
-			const response = await api.clients.insert({ ...data, givenName: data.givenName });
+			const response = await actions.app.clients.insert(data);
 			success = response.success;
 			newClient = response.data;
 		}
@@ -183,7 +177,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 			toast({
 				title: `Client ${isNew ? "Created" : "Updated"}`,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}"`,
@@ -194,7 +187,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		} else {
 			toast({
 				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
 				}". Please try again later.`,

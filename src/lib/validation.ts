@@ -1,37 +1,15 @@
 import * as z from "zod";
 
-const AuthSchema = z.object({
-	email: z.string().email(),
-	password: z.string().min(8).max(100),
+const SignInSchema = z.object({
+	emailAddress: z.string().email(),
 });
-type AuthSchema = z.infer<typeof AuthSchema>;
+type SignInSchema = z.infer<typeof SignInSchema>;
 
-const VerifyEmailSchema = z.object({
-	code: z
-		.string()
-		.min(6, {
-			message: "Verification code must be 6 characters long",
-		})
-		.max(6),
+const SignUpSchema = SignInSchema.extend({
+	givenName: z.string().max(50).nonempty({ message: "Required" }),
+	familyName: z.string().max(50).or(z.literal("")).optional(),
 });
-type VerifyEmailSchema = z.infer<typeof VerifyEmailSchema>;
-
-const CheckEmailSchema = z.object({
-	email: AuthSchema.shape.email,
-});
-type CheckEmailSchema = z.infer<typeof CheckEmailSchema>;
-
-const ResetPasswordSchema = z
-	.object({
-		password: AuthSchema.shape.password,
-		confirmPassword: AuthSchema.shape.password,
-		code: VerifyEmailSchema.shape.code,
-	})
-	.refine((data) => data.password === data.confirmPassword, {
-		message: "Passwords do not match",
-		path: ["confirmPassword"],
-	});
-type ResetPasswordSchema = z.infer<typeof ResetPasswordSchema>;
+type SignUpSchema = z.infer<typeof SignUpSchema>;
 
 /** Combine with the rest of the form schema using z.intersection to ensure the super refine is validated at the same time as the rest of the fields */
 const EmailOrPhoneNumberSchema = z
@@ -62,4 +40,4 @@ const EmailOrPhoneNumberSchema = z
 	});
 type EmailOrPhoneNumberSchema = z.infer<typeof EmailOrPhoneNumberSchema>;
 
-export { AuthSchema, VerifyEmailSchema, CheckEmailSchema, ResetPasswordSchema, EmailOrPhoneNumberSchema };
+export { SignInSchema, SignUpSchema, EmailOrPhoneNumberSchema };

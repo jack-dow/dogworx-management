@@ -22,7 +22,7 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type DogsList } from "~/api";
+import { type DogsList } from "~/actions";
 import { cn } from "~/lib/utils";
 
 function createDogsTableColumns(onDeleteClick: (dog: DogsList[number]) => void): ColumnDef<DogsList[number]>[] {

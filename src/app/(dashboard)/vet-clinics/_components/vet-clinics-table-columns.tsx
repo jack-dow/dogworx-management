@@ -20,7 +20,7 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type VetClinicsList } from "~/api";
+import { type VetClinicsList } from "~/actions";
 import { cn } from "~/lib/utils";
 
 function createVetClinicsTableColumns(

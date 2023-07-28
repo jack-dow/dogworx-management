@@ -20,7 +20,7 @@ import {
 	SortDescIcon,
 	TrashIcon,
 } from "~/components/ui/icons";
-import { type VetsList } from "~/api";
+import { type VetsList } from "~/actions";
 import { cn } from "~/lib/utils";
 
 function createVetsTableColumns(onDeleteClick: (vet: VetsList[number]) => void): ColumnDef<VetsList[number]>[] {

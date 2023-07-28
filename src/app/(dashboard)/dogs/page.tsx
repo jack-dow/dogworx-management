@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
-import { api } from "~/api";
+import { actions } from "~/actions";
 import { DogsTable } from "./_components/dogs-table";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 async function DogsPage() {
-	const { data: dogs } = await api.dogs.list();
+	const { data: dogs } = await actions.app.dogs.list();
 
 	return (
 		<>
