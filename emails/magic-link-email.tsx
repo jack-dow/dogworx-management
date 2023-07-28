@@ -37,7 +37,7 @@ const MagicLinkEmail = ({ code = "123456", token, requestedFromIp, requestedFrom
 					<Container className="mx-auto my-[40px] w-[465px] rounded p-[20px]">
 						<Section className="mt-[32px]">
 							<Img
-								src={`${baseUrl}/dogworx-logo-gradient.png`}
+								src={`${baseUrl}/static/dogworx-logo-gradient.png`}
 								width="60"
 								height="50"
 								alt="Dogworx Hydrotherapy"
