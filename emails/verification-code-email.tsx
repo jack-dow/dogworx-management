@@ -24,7 +24,7 @@ interface VerificationCodeEmailProps {
 const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
 const VerificationCodeEmail = ({ code, requestedFromIp, requestedFromLocation }: VerificationCodeEmailProps) => {
-	const previewText = `${code} is your Dogworx Hydrotherapy verification code`;
+	const previewText = `This code will only be valid for the next 5 minutes. Do not share it with anyone.`;
 
 	return (
 		<Html>

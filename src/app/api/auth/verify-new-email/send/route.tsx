@@ -63,7 +63,7 @@ async function POST(request: NextRequest): Promise<NextResponse<VerifyNewEmailSe
 		await resend.sendEmail({
 			from: "Dogworx Management <accounts@dogworx.com.au>",
 			to: emailAddress,
-			subject: `Your Dogworx verification code is ${code}`,
+			subject: `${code} is your verification code`,
 			react: (
 				<VerificationCodeEmail
 					code={code}

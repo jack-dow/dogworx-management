@@ -26,7 +26,7 @@ interface MagicLinkEmailProps {
 const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
 const MagicLinkEmail = ({ code = "123456", token, requestedFromIp, requestedFromLocation }: MagicLinkEmailProps) => {
-	const previewText = `Your Dogworx Management Login`;
+	const previewText = `This link and code will only be valid for the next 5 minutes. Do not share it with anyone.`;
 
 	return (
 		<Html>
