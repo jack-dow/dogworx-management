@@ -7,7 +7,7 @@ import { z } from "zod";
 import { drizzle } from "~/db/drizzle";
 import { verificationCodes } from "~/db/schemas";
 import { resend } from "~/lib/resend";
-import { generateId, type APIResponse } from "~/lib/utils";
+import { generateId, type APIResponse } from "~/utils";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),

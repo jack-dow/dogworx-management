@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { sessions } from "~/db/schemas";
 import { sessionCookieOptions } from "~/lib/auth-options";
-import { type APIResponse } from "~/lib/utils";
+import { type APIResponse } from "~/utils";
 
 type SignOutPOSTResponse = APIResponse<undefined>;
 

@@ -35,7 +35,7 @@ import {
 } from "~/components/ui/select";
 import { actions, type DogById } from "~/actions";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Vet = ManageDogFormSchema["dogToVetRelationships"][number]["vet"];
@@ -168,8 +168,7 @@ function DogToVetRelationships({
 								const res = await actions.app.vets.search(searchTerm);
 
 								return res.data ?? [];
-							} catch (error) {
-								console.log("Error fetching data:", error);
+							} catch {
 								return [];
 							}
 						}}

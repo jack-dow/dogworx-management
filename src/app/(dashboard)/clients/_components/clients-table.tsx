@@ -7,13 +7,14 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type ClientsList } from "~/actions";
+import { CLIENTS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { createClientsTableColumns } from "./clients-table-columns";
 
-function ClientsTable({ clients }: { clients: ClientsList }) {
+function ClientsTable({ result }: { result: ClientsList }) {
 	const { toast } = useToast();
 
-	const [editingClient, setEditingClient] = React.useState<ClientsList[number] | null>();
-	const [confirmClientDelete, setConfirmClientDelete] = React.useState<ClientsList[number] | null>(null);
+	const [editingClient, setEditingClient] = React.useState<ClientsList["data"][number] | null>();
+	const [confirmClientDelete, setConfirmClientDelete] = React.useState<ClientsList["data"][number] | null>(null);
 
 	return (
 		<>
@@ -58,16 +59,16 @@ function ClientsTable({ clients }: { clients: ClientsList }) {
 			/>
 
 			<DataTable
-				data={clients}
+				{...result}
 				columns={createClientsTableColumns((client) => {
 					setConfirmClientDelete(client);
 				})}
+				sortableColumns={CLIENTS_SORTABLE_COLUMNS}
 				onTableRowClick={(client) => {
 					if (client.id) {
 						setEditingClient(client);
 					}
 				}}
-				filterInputPlaceholder="Filter clients..."
 			/>
 		</>
 	);

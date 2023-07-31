@@ -133,7 +133,9 @@ function OrganizationInviteLinks({
 							{organizationInviteLinks.fields.map((inviteLink) => (
 								<li key={inviteLink.id} className="grid grid-cols-8 py-4">
 									<div className="col-span-2">
-										<p className="truncate text-sm">{inviteLink.user.name}</p>
+										<p className="truncate text-sm">
+											{inviteLink.user.givenName} {inviteLink.user.familyName}
+										</p>
 									</div>
 
 									<div className="col-span-2 flex items-center justify-center">

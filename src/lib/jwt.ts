@@ -19,8 +19,7 @@ async function verify(token: string) {
 		.then((result) => {
 			return result.payload;
 		})
-		.catch((error) => {
-			console.log(error);
+		.catch(() => {
 			return null;
 		});
 }

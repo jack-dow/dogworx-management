@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { sessions, users, verificationCodes } from "~/db/schemas";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { type APIResponse } from "~/lib/utils";
+import { type APIResponse } from "~/utils";
 import { verifyAPISession } from "../../utils";
 
 export const fetchCache = "force-no-store";
@@ -115,8 +115,7 @@ async function GET(request: NextRequest): Promise<NextResponse<VerifyNewEmailGET
 		});
 
 		return NextResponse.json({ success: true });
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return NextResponse.json(
 			{
 				success: false,

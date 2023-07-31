@@ -47,8 +47,7 @@ const invalidateSession = createServerAction(async (id: string) => {
 			.where(and(eq(sessions.userId, user.id), eq(sessions.id, validId.data)));
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete organization" };
 	}
 });

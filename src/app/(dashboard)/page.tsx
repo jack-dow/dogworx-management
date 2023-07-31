@@ -31,6 +31,7 @@ function RootPage() {
 								.then((result) => {
 									if (result.success) {
 										router.push("/sign-in");
+										router.refresh();
 									}
 								})
 								.catch(() => {

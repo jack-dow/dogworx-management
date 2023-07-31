@@ -22,7 +22,7 @@ const listVets = createServerAction(async (limit?: number) => {
 		const data = await drizzle.query.vets.findMany({
 			limit: limit ?? 50,
 			where: eq(vets.organizationId, user.organizationId),
-			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName)],
+			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName), asc(vets.id)],
 			with: {
 				dogToVetRelationships: {
 					with: {
@@ -38,8 +38,7 @@ const listVets = createServerAction(async (limit?: number) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to list vets" };
 	}
 });
@@ -61,7 +60,7 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 				eq(vets.organizationId, user.organizationId),
 				sql`concat(${vets.givenName},' ', ${vets.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			),
-			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName)],
+			orderBy: (vets, { asc }) => [asc(vets.givenName), asc(vets.familyName), asc(vets.id)],
 			with: {
 				dogToVetRelationships: {
 					with: {
@@ -77,8 +76,7 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to search vets" };
 	}
 });
@@ -139,8 +137,7 @@ const insertVet = createServerAction(async (values: InsertVetSchema) => {
 		});
 
 		return { success: true, data: vet };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to insert vet" };
 	}
 });
@@ -258,8 +255,7 @@ const updateVet = createServerAction(async (values: UpdateVetSchema) => {
 		});
 
 		return { success: true, data: vet };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to update vet" };
 	}
 });
@@ -313,8 +309,7 @@ const deleteVet = createServerAction(async (id: string) => {
 		revalidatePath("/vets");
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete vet" };
 	}
 });
@@ -347,8 +342,7 @@ const getVetRelationships = createServerAction(async (vetId: string) => {
 				vetToVetClinicRelationships: vetToVetClinicRelationshipsData,
 			},
 		};
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to get vet relationships with vet id: "${vetId}"` };
 	}
 });

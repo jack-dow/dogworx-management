@@ -7,6 +7,10 @@ import { sessions } from "./db/schemas";
 import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {
+	if (process.env.NODE_ENV === "development") {
+		return NextResponse.next();
+	}
+
 	const sessionCookie = request.cookies.get(sessionCookieOptions.name);
 
 	const sessionToken = sessionCookie?.value;
@@ -41,8 +45,6 @@ export async function middleware(request: NextRequest) {
 		const session = await drizzle.query.sessions.findFirst({
 			where: (sessions, { eq }) => eq(sessions.sessionToken, sessionToken),
 		});
-
-		console.log(session);
 
 		// If no session can be found with this session token, that means that this is a stolen token or the user has had their token stolen.
 		// In either case, we should delete all sessions for this user and redirect them to the sign-in page.

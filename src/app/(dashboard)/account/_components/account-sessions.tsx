@@ -180,8 +180,7 @@ function SessionAccordion({
 														onDelete(session);
 														setIsSignOutConfirmDialogOpen(false);
 													})
-													.catch((error) => {
-														console.log(error);
+													.catch(() => {
 														toast({
 															title: "Failed to sign session out",
 															description:

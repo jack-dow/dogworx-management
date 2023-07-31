@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { env } from "~/env.mjs";
 import { s3 } from "~/lib/s3";
-import { type APIResponse } from "~/lib/utils";
+import { type APIResponse } from "~/utils";
 import { verifyAPISession } from "../../utils";
 
 type ProfileImageUrlGETResponse = APIResponse<string, "InvalidFileType" | "NotAuthorized">;
@@ -85,10 +85,7 @@ async function GET(request: NextRequest): Promise<NextResponse<ProfileImageUrlGE
 			success: true,
 			data: uploadUrl,
 		});
-	} catch (error) {
-		console.log({
-			error,
-		});
+	} catch {
 		return NextResponse.json(
 			{
 				success: false,

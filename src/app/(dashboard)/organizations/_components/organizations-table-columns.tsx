@@ -21,7 +21,7 @@ import {
 	TrashIcon,
 } from "~/components/ui/icons";
 import { type OrganizationsList } from "~/actions";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 
 function createOrganizationsTableColumns(
 	onDeleteClick: (organization: OrganizationsList[number]) => void,

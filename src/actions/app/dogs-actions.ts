@@ -22,12 +22,11 @@ const listDogs = createServerAction(async (limit?: number) => {
 		const data = await drizzle.query.dogs.findMany({
 			limit: limit ?? 50,
 			where: eq(dogs.organizationId, user.organizationId),
-			orderBy: (dogs, { asc }) => [asc(dogs.givenName)],
+			orderBy: (dogs, { asc }) => [asc(dogs.givenName), asc(dogs.id)],
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to list dogs" };
 	}
 });
@@ -46,12 +45,11 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 		const data = await drizzle.query.dogs.findMany({
 			where: and(eq(dogs.organizationId, user.organizationId), like(dogs.givenName, `%${validSearchTerm.data ?? ""}%`)),
 			limit: 50,
-			orderBy: (dogs, { asc }) => [asc(dogs.givenName)],
+			orderBy: (dogs, { asc }) => [asc(dogs.givenName), asc(dogs.id)],
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to search dogs" };
 	}
 });
@@ -89,8 +87,7 @@ const getDogById = createServerAction(async (id: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to fetch dog with id: ${id}` };
 	}
 });
@@ -141,8 +138,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 		revalidatePath("/dogs/[id]");
 
 		return { success: true };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to insert dog with id: ${validValues.data.id}` };
 	}
 });
@@ -274,8 +270,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 		revalidatePath("/dogs/[id]");
 
 		return { success: true };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to update dog with id: ${validValues.data.id}` };
 	}
 });
@@ -339,8 +334,7 @@ const deleteDog = createServerAction(async (id: string) => {
 		revalidatePath("/dogs");
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to fetch dog with id: ${id}` };
 	}
 });

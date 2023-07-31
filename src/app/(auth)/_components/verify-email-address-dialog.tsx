@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { RefreshOnFocus } from "~/components/refresh-on-focus";
 import {
@@ -15,6 +15,7 @@ import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
+import { getBaseUrl } from "~/utils";
 
 function VerifyEmailAddressAlertDialog({
 	emailAddress,
@@ -28,6 +29,7 @@ function VerifyEmailAddressAlertDialog({
 	type: "sign-in" | "sign-up";
 }) {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const isSignUp = type === "sign-up";
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = React.useState(true);
@@ -117,7 +119,19 @@ function VerifyEmailAddressAlertDialog({
 										throw new Error("Failed to verify email address");
 									}
 
-									router.push("/");
+									const callbackUrl = searchParams?.get("from") || "/";
+									const baseUrl = getBaseUrl();
+
+									// Allows relative callback URLs
+									if (callbackUrl.startsWith("/")) {
+										return router.push(callbackUrl);
+									}
+									// Allows callback URLs on the same origin
+									if (new URL(callbackUrl).origin === baseUrl) {
+										return router.push(callbackUrl);
+									}
+
+									router.push(baseUrl);
 								}
 							}}
 						/>

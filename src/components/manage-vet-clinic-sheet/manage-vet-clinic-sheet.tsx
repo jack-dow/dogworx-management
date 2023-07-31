@@ -39,8 +39,8 @@ import {
 	type VetClinicUpdate,
 } from "~/actions";
 import { InsertVetClinicSchema, InsertVetToVetClinicRelationshipSchema, SelectVetSchema } from "~/db/validation";
-import { generateId, mergeRelationships } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
+import { generateId, mergeRelationships } from "~/utils";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 

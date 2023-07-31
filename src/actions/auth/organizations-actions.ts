@@ -13,7 +13,7 @@ const listOrganizations = createServerAction(async (limit?: number) => {
 	try {
 		const data = await drizzle.query.organizations.findMany({
 			limit: limit ?? 50,
-			orderBy: (organizations, { asc }) => [asc(organizations.name)],
+			orderBy: (organizations, { asc }) => [asc(organizations.name), asc(organizations.id)],
 			with: {
 				users: true,
 				organizationInviteLinks: {
@@ -25,8 +25,7 @@ const listOrganizations = createServerAction(async (limit?: number) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to list organizations" };
 	}
 });
@@ -54,8 +53,7 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to search organizations" };
 	}
 });
@@ -77,8 +75,7 @@ const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to get organization by invite link" };
 	}
 });
@@ -119,8 +116,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 		});
 
 		return { success: true, data: organization };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to insert organization" };
 	}
 });
@@ -176,8 +172,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 		});
 
 		return { success: true, data: organization };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to update organization" };
 	}
 });
@@ -224,8 +219,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 		revalidatePath("/organizations");
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete organization" };
 	}
 });

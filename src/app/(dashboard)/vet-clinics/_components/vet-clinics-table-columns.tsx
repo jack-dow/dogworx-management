@@ -21,7 +21,7 @@ import {
 	TrashIcon,
 } from "~/components/ui/icons";
 import { type VetClinicsList } from "~/actions";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 
 function createVetClinicsTableColumns(
 	onDeleteClick: (vet: VetClinicsList[number]) => void,

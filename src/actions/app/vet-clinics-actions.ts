@@ -22,7 +22,7 @@ const listVetClinics = createServerAction(async (limit?: number) => {
 		const data = await drizzle.query.vetClinics.findMany({
 			limit: limit ?? 50,
 			where: eq(vetClinics.organizationId, user.organizationId),
-			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name)],
+			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name), asc(vetClinics.id)],
 			with: {
 				vetToVetClinicRelationships: {
 					with: {
@@ -33,8 +33,7 @@ const listVetClinics = createServerAction(async (limit?: number) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to list vetClinics" };
 	}
 });
@@ -56,7 +55,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 				eq(vetClinics.organizationId, user.organizationId),
 				like(vetClinics.name, `%${validSearchTerm.data ?? ""}%`),
 			),
-			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name)],
+			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name), asc(vetClinics.id)],
 			with: {
 				vetToVetClinicRelationships: {
 					with: {
@@ -67,8 +66,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to search vetClinics" };
 	}
 });
@@ -115,8 +113,7 @@ const insertVetClinic = createServerAction(async (values: InsertVetClinicSchema)
 		});
 
 		return { success: true, data: vetClinic };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to insert vetClinic" };
 	}
 });
@@ -189,8 +186,7 @@ const updateVetClinic = createServerAction(async (values: UpdateVetClinicSchema)
 		});
 
 		return { success: true, data: vetClinic };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to update vetClinic" };
 	}
 });
@@ -234,8 +230,7 @@ const deleteVetClinic = createServerAction(async (id: string) => {
 		revalidatePath("/vetClinics");
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete vetClinic" };
 	}
 });
@@ -262,8 +257,7 @@ const getVetClinicRelationships = createServerAction(async (vetClinicId: string)
 				vetToVetClinicRelationships: vetToVetClinicRelationshipsData,
 			},
 		};
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to get vet clinic relationships with vet clinic id: "${vetClinicId}"` };
 	}
 });

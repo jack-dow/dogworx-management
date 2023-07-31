@@ -35,7 +35,7 @@ import {
 } from "~/components/ui/select";
 import { actions } from "~/actions";
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/utils";
 import { ManageVetSheet } from "../manage-vet-sheet";
 import { RelationshipLoadingSkeleton } from "../relationship-loading-skeleton";
 
@@ -178,8 +178,7 @@ function VetClinicToVetRelationships({
 								const res = await actions.app.vets.search(searchTerm);
 
 								return res.data ?? [];
-							} catch (error) {
-								console.log("Error fetching data:", error);
+							} catch {
 								return [];
 							}
 						}}

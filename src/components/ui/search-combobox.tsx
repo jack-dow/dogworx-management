@@ -8,7 +8,7 @@ import { CheckIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { Label } from "./label";
 import { Loader } from "./loader";
 

@@ -6,7 +6,7 @@ import { Inter } from "next/font/google";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 
 export const metadata: Metadata = {
 	title: "Dogworx Management",

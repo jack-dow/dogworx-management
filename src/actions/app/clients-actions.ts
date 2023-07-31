@@ -7,22 +7,39 @@ import { z } from "zod";
 import { drizzle } from "~/db/drizzle";
 import { clients, dogToClientRelationships } from "~/db/schemas";
 import { InsertClientSchema, UpdateClientSchema } from "~/db/validation";
+import { CLIENTS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
 	createServerAction,
 	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
+	validatePaginationSearchParams,
 	type ExtractServerActionData,
+	type PaginationSearchParams,
 } from "../utils";
 
-const listClients = createServerAction(async (limit?: number) => {
+const listClients = createServerAction(async (options: PaginationSearchParams) => {
 	try {
 		const user = await getServerUser();
 
+		const countQuery = await drizzle
+			.select({
+				count: sql<number>`count(*)`.mapWith(Number),
+			})
+			.from(clients)
+			.where(eq(clients.organizationId, user.organizationId));
+
+		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
+			...options,
+			count: countQuery?.[0]?.count ?? 0,
+			sortableColumns: CLIENTS_SORTABLE_COLUMNS,
+		});
+
 		const data = await drizzle.query.clients.findMany({
-			limit: limit ?? 50,
+			limit: limit,
+			offset: (page - 1) * limit,
 			where: eq(clients.organizationId, user.organizationId),
-			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName)],
+			orderBy: (clients, { asc }) => (orderBy ? [...orderBy, asc(clients.id)] : [asc(clients.id)]),
 			with: {
 				dogToClientRelationships: {
 					with: {
@@ -32,9 +49,19 @@ const listClients = createServerAction(async (limit?: number) => {
 			},
 		});
 
-		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+		return {
+			success: true,
+			data: {
+				count,
+				page,
+				maxPage,
+				limit,
+				sortBy,
+				sortDirection,
+				data,
+			},
+		};
+	} catch {
 		return { success: false, error: "Failed to list clients" };
 	}
 });
@@ -54,9 +81,9 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 			limit: 50,
 			where: and(
 				eq(clients.organizationId, user.organizationId),
-				sql`concat(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
+				sql`CONCAT(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
 			),
-			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName)],
+			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName), asc(clients.id)],
 			with: {
 				dogToClientRelationships: {
 					with: {
@@ -67,8 +94,7 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 		});
 
 		return { success: true, data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to search clients" };
 	}
 });
@@ -116,8 +142,7 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 		});
 
 		return { success: true, data: client };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to insert client" };
 	}
 });
@@ -191,8 +216,7 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 		});
 
 		return { success: true, data: client };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to update client" };
 	}
 });
@@ -238,8 +262,7 @@ const deleteClient = createServerAction(async (id: string) => {
 		revalidatePath("/clients");
 
 		return { success: true, data: validId.data };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete client" };
 	}
 });
@@ -266,8 +289,7 @@ const getClientRelationships = createServerAction(async (clientId: string) => {
 				dogToClientRelationships: dogToClientRelationshipsData,
 			},
 		};
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: `Failed to get client relationships with client id: "${clientId}"` };
 	}
 });

@@ -39,7 +39,7 @@ import {
 } from "~/actions";
 import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/utils";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 
@@ -112,10 +112,6 @@ function ManageOrganizationSheet<OrganizationProp extends ExistingOrganization |
 		},
 	});
 	useConfirmPageNavigation(form.formState.isDirty);
-
-	if (Object.keys(form.formState.errors).length > 0) {
-		console.log(form.formState.errors);
-	}
 
 	React.useEffect(() => {
 		function syncOrganization(organization: ExistingOrganization) {

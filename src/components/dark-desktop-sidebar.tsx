@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "~/app/(dashboard)/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { signOut } from "~/lib/auth";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -158,7 +158,7 @@ function DarkDesktopSidebar() {
 												Administrator
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left text-white">
-												{session.user.name}
+												{session.user.givenName} {session.user.familyName}
 											</span>
 										</div>
 									</Button>
@@ -186,13 +186,13 @@ function DarkDesktopSidebar() {
 											signOut()
 												.then(() => {
 													router.push("/sign-in");
+													router.refresh();
 													toast({
 														title: "Signed out",
 														description: "You have successfully been signed out of your account.",
 													});
 												})
-												.catch((error) => {
-													console.log(error);
+												.catch(() => {
 													toast({
 														title: "Sign out failed",
 														description: "We had an issue signing you out of your account. Please try again later.",

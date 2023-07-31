@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/co
 import { useSession } from "~/app/(dashboard)/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { signOut } from "~/lib/auth";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { navigation } from "./dark-desktop-sidebar";
 import {
 	DropdownMenu,
@@ -113,7 +113,7 @@ function MobileNavigation() {
 												Administrator
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left">
-												{session.user.name}
+												{session.user.givenName} {session.user.familyName}
 											</span>
 										</div>
 									</Button>
@@ -141,13 +141,13 @@ function MobileNavigation() {
 											signOut()
 												.then(() => {
 													router.push("/sign-in");
+													router.refresh();
 													toast({
 														title: "Signed out",
 														description: "You have successfully been signed out of your account.",
 													});
 												})
-												.catch((error) => {
-													console.log(error);
+												.catch(() => {
 													toast({
 														title: "Sign out failed",
 														description: "We had an issue signing you out of your account. Please try again later.",

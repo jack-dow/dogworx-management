@@ -7,7 +7,6 @@ const users = mysqlTable("auth_users", {
 	id: varchar("id", { length: 255 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	name: varchar("name", { length: 255 }).notNull(),
 	givenName: varchar("given_name", { length: 255 }).notNull(),
 	familyName: varchar("family_name", { length: 255 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 255 }).notNull().unique(),

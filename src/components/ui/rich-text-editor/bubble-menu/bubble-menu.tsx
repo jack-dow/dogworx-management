@@ -3,7 +3,7 @@ import { BubbleMenu as TipTapBubbleMenu, type BubbleMenuProps as TipTapBubbleMen
 // eslint-disable-next-line no-restricted-imports
 import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "lucide-react";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { ColorSelector } from "./color-selector";
 import { LinkSelector } from "./link-selector";
 import { NodeSelector } from "./node-selector";

@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
 function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {

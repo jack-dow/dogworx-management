@@ -33,7 +33,7 @@ import {
 } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { generateId, mergeRelationships } from "~/lib/utils";
+import { generateId, mergeRelationships } from "~/utils";
 import { DogBasicInformation } from "./dog-basic-information";
 import { DogSessionsHistory } from "./dog-sessions-history";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
@@ -91,10 +91,6 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 	});
 	useConfirmPageNavigation(form.formState.isDirty && !form.formState.isSubmitted);
 
-	if (Object.keys(form.formState.errors).length > 0) {
-		console.log(form.formState.errors);
-	}
-
 	useDidUpdate(() => {
 		if (dog) {
 			const actions = form.getValues("actions");
@@ -126,8 +122,6 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 	async function onSubmit(data: ManageDogFormSchema) {
 		let success = false;
-
-		console.log(data.unsavedSessionIds);
 
 		if (data.unsavedSessionIds.length > 0) {
 			setIsConfirmSubmittingDialogOpen(true);

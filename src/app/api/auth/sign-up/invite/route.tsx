@@ -4,8 +4,8 @@ import { eq, sql } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { organizationInviteLinks, users, type User } from "~/db/schemas";
 import { type InsertUserSchema } from "~/db/validation";
-import { generateId, type APIResponse } from "~/lib/utils";
 import { SignUpSchema } from "~/lib/validation";
+import { generateId, type APIResponse } from "~/utils";
 
 export const fetchCache = "force-no-store";
 
@@ -50,7 +50,6 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 
 		const newUser = {
 			id: generateId(),
-			name: validation.data.givenName + (validation.data.familyName ? " " + validation.data.familyName : ""),
 			givenName: validation.data.givenName,
 			familyName: validation.data.familyName,
 			emailAddress: validation.data.emailAddress,

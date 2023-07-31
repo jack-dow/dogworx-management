@@ -61,9 +61,7 @@ function DestructiveActionDialog({
 										_setOpen(false);
 									}
 								})
-								.catch(() => {
-									console.log("Failed destructive action");
-								})
+								.catch(() => {})
 								.finally(() => {
 									setIsSubmitting(false);
 								});

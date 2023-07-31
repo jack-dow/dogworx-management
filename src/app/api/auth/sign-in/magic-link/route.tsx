@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { sessions, verificationCodes } from "~/db/schemas";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/utils";
 
 export const fetchCache = "force-no-store";
 
@@ -70,9 +70,8 @@ async function GET(request: NextRequest) {
 			value: sessionToken,
 		});
 
-		return NextResponse.redirect(new URL("/", request.url));
-	} catch (error) {
-		console.log({ error });
+		return NextResponse.json({});
+	} catch {
 		return NextResponse.redirect(new URL("/sign-in", request.url), {
 			status: 500,
 		});

@@ -3,10 +3,35 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { CheckIcon, ChevronUpDownIcon } from "./icons";
 
-const Select = SelectPrimitive.Root;
+// HACK: Fixes select closing too quickly when clicking on an option causing the option to not be selected (or item behind select to be clicked instead)
+// SEE: https://github.com/radix-ui/primitives/pull/2085 - Hopefully will be fixed by this PR
+const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
+	const [_open, setOpen] = React.useState(false);
+
+	const open = props.open ?? _open;
+
+	return (
+		<SelectPrimitive.Root
+			open={open}
+			onOpenChange={(value) => {
+				setTimeout(() => {
+					if (props.onOpenChange) {
+						return props.onOpenChange(value);
+					}
+					setOpen(value);
+				}, 0);
+			}}
+			{...props}
+		>
+			{props.children}
+		</SelectPrimitive.Root>
+	);
+};
+
+Select.displayName = SelectPrimitive.Root.displayName;
 
 const SelectGroup = SelectPrimitive.Group;
 

@@ -40,8 +40,8 @@ import {
 } from "~/actions";
 import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
+import { generateId } from "~/utils";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 
@@ -116,10 +116,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		},
 	});
 	useConfirmPageNavigation(form.formState.isDirty);
-
-	if (Object.keys(form.formState.errors).length > 0) {
-		console.log(form.formState.errors);
-	}
 
 	React.useEffect(() => {
 		function syncClient(client: ExistingClient) {

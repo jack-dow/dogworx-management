@@ -1,7 +1,10 @@
+import { type ReadonlyURLSearchParams } from "next/navigation";
 import { createId } from "@paralleldrive/cuid2";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { type z } from "zod";
+
+import { type PaginationSearchParams } from "./actions/utils";
 
 type DefaultErrorCodes = "InvalidBody" | "UnknownError" | "NotAuthorized";
 
@@ -70,11 +73,35 @@ function mergeRelationships<Relationship extends { id: string; relationship: str
 	return Object.values(newRelationships);
 }
 
-const getBaseUrl = () => {
+function getBaseUrl() {
 	if (typeof window !== "undefined") return ""; // browser should use relative url
 	if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
 
 	return `http://localhost:3000`; // dev SSR should use localhost
-};
+}
 
-export { type APIResponse, cn, mergeRelationships, generateId, getBaseUrl };
+function constructPaginationSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
+	const searchParams = new URLSearchParams();
+
+	const page = newParams.page ?? currentParams.get("page") ?? undefined;
+	const limit = newParams.limit ?? currentParams.get("limit") ?? undefined;
+	const sortBy = newParams.sortBy ?? currentParams.get("orderBy") ?? undefined;
+	const sortDirection = newParams.sortDirection ?? currentParams.get("orderDirection") ?? undefined;
+
+	if (page) {
+		searchParams.append("page", page.toString());
+	}
+	if (limit) {
+		searchParams.append("limit", limit.toString());
+	}
+	if (sortBy) {
+		searchParams.append("sortBy", sortBy);
+	}
+	if (sortDirection) {
+		searchParams.append("sortDirection", sortDirection);
+	}
+
+	return searchParams;
+}
+
+export { type APIResponse, cn, mergeRelationships, generateId, getBaseUrl, constructPaginationSearchParams };

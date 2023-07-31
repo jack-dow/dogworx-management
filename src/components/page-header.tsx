@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "./ui/icons";
 
 type PageHeaderProps = {
 	title: string;
-	action?: React.ReactNode;
 };
 
-function PageHeader({ title, action }: PageHeaderProps) {
+function PageHeader({ title }: PageHeaderProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -32,13 +31,21 @@ function PageHeader({ title, action }: PageHeaderProps) {
 				</nav>
 
 				<nav className="hidden sm:table-cell" aria-label="Breadcrumb">
-					<ol role="list" className="flex items-center space-x-1">
+					<ol role="list" className="flex items-center">
+						<li>
+							<div className="flex">
+								<Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
+									Dashboard
+								</Link>
+							</div>
+						</li>
 						{pathnameArray.map((path, index) => {
 							const pathToThisPoint = `/${pathnameArray.slice(0, index + 1).join("/")}`;
 
 							return (
 								<li key={`${path}-${index}`}>
 									<div className="flex items-center">
+										<ChevronRightIcon className="mx-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
 										<Link
 											href={pathToThisPoint}
 											className={cn(
@@ -48,9 +55,6 @@ function PageHeader({ title, action }: PageHeaderProps) {
 										>
 											{path.split("-").join(" ")}
 										</Link>
-										{index !== pathnameArray.length - 1 && (
-											<ChevronRightIcon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-										)}
 									</div>
 								</li>
 							);
@@ -63,7 +67,6 @@ function PageHeader({ title, action }: PageHeaderProps) {
 				<h1 className="text-2xl font-bold leading-7 text-slate-900 sm:truncate sm:text-3xl sm:tracking-tight">
 					{title}
 				</h1>
-				{action}
 			</div>
 		</div>
 	);

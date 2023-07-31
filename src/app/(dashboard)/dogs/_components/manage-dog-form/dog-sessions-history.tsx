@@ -36,7 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { useUser } from "~/app/(dashboard)/providers";
 import { InsertDogSessionSchema, SelectUserSchema } from "~/db/validation";
-import { cn, generateId } from "~/lib/utils";
+import { cn, generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Session = NonNullable<ManageDogFormSchema["sessions"]>[number];

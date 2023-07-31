@@ -45,8 +45,7 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 		});
 
 		return { success: true };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to update user" };
 	}
 });
@@ -75,8 +74,7 @@ const deleteUser = createServerAction(async (id: string) => {
 			.where(and(eq(dogSessions.organizationId, user.organizationId), eq(dogSessions.userId, validation.data)));
 
 		return { success: true };
-	} catch (error) {
-		console.log(error);
+	} catch {
 		return { success: false, error: "Failed to delete user" };
 	}
 });

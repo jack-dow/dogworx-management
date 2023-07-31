@@ -35,7 +35,7 @@ import {
 } from "~/components/ui/select";
 import { actions, type DogById } from "~/actions";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type Client = ManageDogFormSchema["dogToClientRelationships"][number]["client"];
@@ -170,8 +170,7 @@ function DogToClientRelationships({
 								const res = await actions.app.clients.search(searchTerm);
 
 								return res.data ?? [];
-							} catch (error) {
-								console.log("Error fetching data:", error);
+							} catch {
 								return [];
 							}
 						}}

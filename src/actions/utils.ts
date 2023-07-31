@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cookies } from "next/headers";
+import { asc, desc } from "drizzle-orm";
 import { z } from "zod";
 
 import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
 import { jwt } from "~/lib/jwt";
+import { type SortableColumns } from "./sortable-columns";
 
 const SearchTermSchema = z.string();
 
@@ -82,6 +84,62 @@ async function getServerUser() {
 	return sessionTokenData.user;
 }
 
+type PaginationSearchParams = {
+	page?: number;
+	limit?: number;
+	sortBy?: string;
+	sortDirection?: string;
+};
+
+interface ValidatePaginationSearchParamsProps extends PaginationSearchParams {
+	count?: number;
+	sortableColumns: SortableColumns;
+}
+
+function validatePaginationSearchParams({
+	sortableColumns,
+	count = 0,
+	page = 1,
+	limit = 5,
+	sortBy,
+	sortDirection = "asc",
+}: ValidatePaginationSearchParamsProps) {
+	const validPage = z.number().int().min(1).safeParse(page);
+	const validLimit = z.number().int().min(1).max(100).safeParse(limit);
+
+	if (!validPage.success || !page) {
+		page = 1;
+	}
+
+	if (!validLimit.success || !limit) {
+		limit = 5;
+	}
+
+	const maxPage = Math.ceil(count / limit);
+
+	if (page > maxPage) {
+		page = maxPage;
+	}
+
+	if (sortDirection !== "desc") {
+		sortDirection = "asc";
+	}
+
+	if (!sortBy || !(sortBy in sortableColumns)) {
+		sortBy = Object.keys(sortableColumns)[0] ?? "id";
+	}
+
+	let orderBy = Object.values(sortableColumns)[0]?.columns.map((column) =>
+		sortDirection === "desc" ? desc(column) : asc(column),
+	);
+
+	if (sortBy && sortBy in sortableColumns) {
+		orderBy = sortableColumns[sortBy]!.columns.map((column) => (sortDirection === "desc" ? desc(column) : asc(column)));
+	}
+
+	return { count, page, limit, maxPage, sortBy, sortDirection, orderBy };
+}
+
 export {
 	type ExtractServerActionData,
 	createServerAction,
@@ -89,4 +147,6 @@ export {
 	separateActionsLogSchema,
 	getServerSession,
 	getServerUser,
+	type PaginationSearchParams,
+	validatePaginationSearchParams,
 };

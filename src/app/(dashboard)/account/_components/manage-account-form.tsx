@@ -38,10 +38,6 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 		},
 	});
 
-	if (Object.keys(form.formState.errors).length > 0) {
-		console.log(form.formState.errors);
-	}
-
 	// Have to hold the file here because we need to upload as a File not a url and if you use a File in zod it errors when run on the server as File doesn't exist there
 	const [uploadedProfileImage, setUploadedProfileImage] = React.useState<File | null>(null);
 
@@ -66,7 +62,6 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 					const body = (await response.json()) as ProfileImageUrlGETResponse;
 
 					if (!body.success || !response.ok) {
-						console.log({ error: body.error });
 						toast(errorResponse);
 					} else {
 						try {
@@ -90,8 +85,7 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 								data.profileImageUrl = removeQueryParametersFromUrl(url);
 								successfullyUploadedImage = true;
 							}
-						} catch (error) {
-							console.log({ error });
+						} catch {
 							toast(errorResponse);
 						}
 					}
@@ -104,7 +98,6 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 
 			await actions.auth.user.update({
 				...data,
-				name: data.givenName + (data.familyName ? " " + data.familyName : ""),
 				emailAddress: user.emailAddress,
 				profileImageUrl:
 					data.profileImageUrl != null

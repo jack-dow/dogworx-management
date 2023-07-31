@@ -46,8 +46,8 @@ import {
 	SelectVetClinicSchema,
 } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId, mergeRelationships } from "~/lib/utils";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
+import { generateId, mergeRelationships } from "~/utils";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
@@ -125,10 +125,6 @@ function ManageVetSheet<VetProp extends ExistingVet | undefined>({
 		},
 	});
 	useConfirmPageNavigation(form.formState.isDirty);
-
-	if (Object.keys(form.formState.errors).length > 0) {
-		console.log(form.formState.errors);
-	}
 
 	React.useEffect(() => {
 		function syncVet(vet: ExistingVet) {
