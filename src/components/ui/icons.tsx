@@ -2,6 +2,7 @@
 import {
 	AdjustmentsHorizontalIcon,
 	ArrowLeftOnRectangleIcon,
+	ArrowsUpDownIcon,
 	Bars3BottomLeftIcon,
 	BarsArrowDownIcon,
 	BarsArrowUpIcon,
@@ -38,6 +39,7 @@ import {
 	UserGroupIcon as VetsIcon,
 } from "@heroicons/react/24/solid";
 import { DotFilledIcon } from "@radix-ui/react-icons";
+import { ArrowDownAZIcon, ArrowUpAZIcon } from "lucide-react";
 
 import { cn } from "~/utils";
 
@@ -89,8 +91,10 @@ const DogIcon = ({ className, ...props }: IconProps) => (
 
 export {
 	AppleIcon,
+	ArrowDownAZIcon as AscendingIcon,
 	AdjustmentsHorizontalIcon,
 	ArrowLeftOnRectangleIcon as LogOutIcon,
+	ArrowsUpDownIcon as SortIcon,
 	BarsArrowDownIcon as SortDescIcon,
 	BarsArrowUpIcon as SortAscIcon,
 	Bars3BottomLeftIcon as MobileMenuIcon,
@@ -108,6 +112,7 @@ export {
 	ClientsIcon,
 	DotFilledIcon,
 	DogIcon,
+	ArrowUpAZIcon as DescendingIcon,
 	GoogleIcon,
 	MagnifyingGlassIcon,
 	ClipboardDocumentIcon as CopyIcon,

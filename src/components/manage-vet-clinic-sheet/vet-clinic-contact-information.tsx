@@ -1,4 +1,4 @@
-import { type Control } from "react-hook-form";
+import { useFormContext, type Control } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
@@ -6,6 +6,7 @@ import { RichTextEditor } from "../ui/rich-text-editor";
 import { type ManageVetClinicSheetFormSchema } from "./manage-vet-clinic-sheet";
 
 function VetClinicContactInformation({ control }: { control: Control<ManageVetClinicSheetFormSchema> }) {
+	const form = useFormContext<ManageVetClinicSheetFormSchema>();
 	return (
 		<div>
 			<div>
@@ -39,7 +40,17 @@ function VetClinicContactInformation({ control }: { control: Control<ManageVetCl
 							<FormItem>
 								<FormLabel>Email Address</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										onChange={(e) => {
+											field.onChange(e);
+											if (form.formState.errors.phoneNumber?.type === "too_small") {
+												form.clearErrors("phoneNumber");
+											}
+										}}
+										autoComplete="off"
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -55,7 +66,17 @@ function VetClinicContactInformation({ control }: { control: Control<ManageVetCl
 							<FormItem>
 								<FormLabel>Phone Number</FormLabel>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										onChange={(e) => {
+											field.onChange(e.target.value);
+											if (form.formState.errors.emailAddress?.type === "too_small") {
+												form.clearErrors("emailAddress");
+											}
+										}}
+										autoComplete="off"
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>

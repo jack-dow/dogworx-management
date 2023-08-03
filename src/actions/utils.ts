@@ -12,15 +12,16 @@ const SearchTermSchema = z.string();
 type ServerActionResponse<Data, Error> =
 	| {
 			success: true;
-			data?: Data;
+			data: Data;
 	  }
 	| {
 			success: false;
 			error: Error;
+			data: Data;
 	  };
 
 type ExtractServerActionData<T extends (...params: any) => Promise<ServerActionResponse<any, any>>> =
-	ReturnType<T> extends Promise<ServerActionResponse<infer Data, any>> ? Data : never;
+	ReturnType<T> extends Promise<ServerActionResponse<infer Data, any>> ? NonNullable<Data> : never;
 
 function createServerAction<Fn extends (...params: any) => Promise<ServerActionResponse<any, z.ZodIssue[] | string>>>(
 	fn: Fn,

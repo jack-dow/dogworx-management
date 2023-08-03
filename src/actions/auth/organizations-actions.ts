@@ -1,32 +1,90 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { organizationInviteLinks, organizations } from "~/db/schemas";
 import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/db/validation";
-import { createServerAction, SearchTermSchema, separateActionsLogSchema, type ExtractServerActionData } from "../utils";
+import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
+import {
+	createServerAction,
+	getServerUser,
+	SearchTermSchema,
+	separateActionsLogSchema,
+	validatePaginationSearchParams,
+	type ExtractServerActionData,
+	type PaginationSearchParams,
+} from "../utils";
 
-const listOrganizations = createServerAction(async (limit?: number) => {
+const defaultPaginationResponse = {
+	data: {
+		pagination: {
+			count: 0,
+			page: 1,
+			maxPage: 1,
+			limit: 5,
+			sortBy: "id",
+			sortDirection: "asc",
+		},
+		data: [],
+	},
+};
+
+const listOrganizations = createServerAction(async (options: PaginationSearchParams) => {
 	try {
+		const user = await getServerUser();
+
+		if (user.emailAddress !== "jack.dowww@gmail.com") {
+			return { success: false, error: "You are not authorized to view this page", data: defaultPaginationResponse };
+		}
+
+		const countQuery = await drizzle
+			.select({
+				count: sql<number>`count(*)`.mapWith(Number),
+			})
+			.from(organizations);
+
+		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
+			...options,
+			count: countQuery?.[0]?.count ?? 0,
+			sortableColumns: ORGANIZATIONS_SORTABLE_COLUMNS,
+		});
+
 		const data = await drizzle.query.organizations.findMany({
+			columns: {
+				id: true,
+				name: true,
+				maxUsers: true,
+			},
 			limit: limit ?? 50,
-			orderBy: (organizations, { asc }) => [asc(organizations.name), asc(organizations.id)],
+			orderBy: (organizations, { asc }) => (orderBy ? [...orderBy, asc(organizations.id)] : [asc(organizations.id)]),
 			with: {
-				users: true,
-				organizationInviteLinks: {
-					with: {
-						user: true,
+				users: {
+					columns: {
+						id: true,
 					},
 				},
 			},
 		});
 
-		return { success: true, data };
+		return {
+			success: true,
+			data: {
+				pagination: {
+					count,
+					page,
+					maxPage,
+					limit,
+					sortBy,
+					sortDirection,
+				},
+				data,
+			},
+		};
 	} catch {
-		return { success: false, error: "Failed to list organizations" };
+		return { success: false, error: "Failed to list organizations", data: defaultPaginationResponse };
 	}
 });
 type OrganizationsList = ExtractServerActionData<typeof listOrganizations>;
@@ -35,26 +93,25 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues };
+		return { success: false, error: validSearchTerm.error.issues, data: [] };
 	}
 
 	try {
+		const user = await getServerUser();
+
+		if (user.emailAddress !== "jack.dowww@gmail.com") {
+			return { success: false, error: "You are not authorized to view this page", data: [] };
+		}
+
 		const data = await drizzle.query.organizations.findMany({
-			where: eq(organizations.name, validSearchTerm.data),
+			where: like(organizations.name, `%${validSearchTerm.data}%`),
 			limit: 50,
-			with: {
-				users: true,
-				organizationInviteLinks: {
-					with: {
-						user: true,
-					},
-				},
-			},
+			orderBy: (organizations, { asc }) => [asc(organizations.name), asc(organizations.id)],
 		});
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search organizations" };
+		return { success: false, error: "Failed to search organizations", data: null };
 	}
 });
 type OrganizationsSearch = ExtractServerActionData<typeof searchOrganizations>;
@@ -63,7 +120,7 @@ const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 	const validInviteLink = z.string().safeParse(id);
 
 	if (!validInviteLink.success) {
-		return { success: false, error: validInviteLink.error.issues };
+		return { success: false, error: validInviteLink.error.issues, data: null };
 	}
 
 	try {
@@ -76,7 +133,7 @@ const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to get organization by invite link" };
+		return { success: false, error: "Failed to get organization by invite link", data: null };
 	}
 });
 type OrganizationInviteLinkById = ExtractServerActionData<typeof getOrganizationInviteLinkById>;
@@ -85,10 +142,16 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 	const validValues = InsertOrganizationSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
+		const user = await getServerUser();
+
+		if (user.emailAddress !== "jack.dowww@gmail.com") {
+			return { success: false, error: "You are not authorized to view this page", data: [] };
+		}
+
 		const { actions, ...data } = validValues.data;
 
 		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions.organizationInviteLinks, data.id);
@@ -117,7 +180,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 
 		return { success: true, data: organization };
 	} catch {
-		return { success: false, error: "Failed to insert organization" };
+		return { success: false, error: "Failed to insert organization", data: null };
 	}
 });
 type OrganizationInsert = ExtractServerActionData<typeof insertOrganization>;
@@ -126,10 +189,16 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 	const validValues = UpdateOrganizationSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
+		const user = await getServerUser();
+
+		if (user.emailAddress !== "jack.dowww@gmail.com") {
+			return { success: false, error: "You are not authorized to view this page", data: [] };
+		}
+
 		const { id, actions, ...data } = validValues.data;
 
 		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions?.organizationInviteLinks ?? {}, id);
@@ -173,7 +242,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 
 		return { success: true, data: organization };
 	} catch {
-		return { success: false, error: "Failed to update organization" };
+		return { success: false, error: "Failed to update organization", data: null };
 	}
 });
 type OrganizationUpdate = ExtractServerActionData<typeof updateOrganization>;
@@ -182,7 +251,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 
 	try {
@@ -220,7 +289,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: "Failed to delete organization" };
+		return { success: false, error: "Failed to delete organization", data: null };
 	}
 });
 type OrganizationDelete = ExtractServerActionData<typeof deleteOrganization>;

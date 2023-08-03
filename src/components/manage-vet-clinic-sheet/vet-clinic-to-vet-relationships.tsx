@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { type ExistingVetClinic, type ManageVetClinicSheetFormSchema } from "~/components/manage-vet-clinic-sheet";
+import { type ManageVetClinicSheetFormSchema } from "~/components/manage-vet-clinic-sheet";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -33,22 +33,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { actions } from "~/actions";
+import { actions, type VetClinicById, type VetsSearch } from "~/actions";
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
 import { generateId } from "~/utils";
 import { ManageVetSheet } from "../manage-vet-sheet";
-import { RelationshipLoadingSkeleton } from "../relationship-loading-skeleton";
 
 type Vet = ManageVetClinicSheetFormSchema["vetToVetClinicRelationships"][number]["vet"];
 
 function VetClinicToVetRelationships({
 	control,
 	existingVetToVetClinicRelationships,
-	isLoading,
 }: {
 	control: Control<ManageVetClinicSheetFormSchema>;
-	existingVetToVetClinicRelationships: ExistingVetClinic["vetToVetClinicRelationships"] | undefined;
-	isLoading: boolean;
+	existingVetToVetClinicRelationships: VetClinicById["vetToVetClinicRelationships"] | undefined;
 }) {
 	const { setValue, getValues } = useFormContext<ManageVetClinicSheetFormSchema>();
 
@@ -88,7 +85,7 @@ function VetClinicToVetRelationships({
 		}, 0);
 	}
 
-	function toggleVetToVetClinicRelationship(vet: Vet) {
+	function toggleVetToVetClinicRelationship(vet: VetsSearch[number]) {
 		const relationshipId = vetToVetClinicRelationships.fields.find(
 			(vetClinicRelationship) => vetClinicRelationship.vetId === vet.id,
 		)?.id;
@@ -163,7 +160,6 @@ function VetClinicToVetRelationships({
 				<div className="sm:col-span-6">
 					<SearchCombobox
 						withinSheet
-						disabled={isLoading}
 						ref={searchVetsComboboxTriggerRef}
 						labelText="Search Vets"
 						triggerText={
@@ -229,124 +225,116 @@ function VetClinicToVetRelationships({
 				</div>
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
-						{isLoading
-							? Array(3)
-									.fill(undefined)
-									.map((_, index) => (
-										<li key={`$vc-t-v-${index}`}>
-											<RelationshipLoadingSkeleton />
-										</li>
-									))
-							: vetToVetClinicRelationships.fields.map((vetToVetClinicRelationship, index) => (
-									<li
-										key={vetToVetClinicRelationship.id}
-										className="flex max-w-full items-center justify-between gap-x-6 py-4"
-									>
-										<div className="flex items-center gap-x-4">
-											<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
-												<UserCircleIcon className="h-5 w-5" />
-											</div>
+						{vetToVetClinicRelationships.fields.map((vetToVetClinicRelationship, index) => (
+							<li
+								key={vetToVetClinicRelationship.id}
+								className="flex max-w-full items-center justify-between gap-x-6 py-4"
+							>
+								<div className="flex items-center gap-x-4">
+									<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
+										<UserCircleIcon className="h-5 w-5" />
+									</div>
 
-											<div className="min-w-0 flex-auto truncate">
-												<p className="text-sm font-semibold leading-6 text-slate-900">
-													{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
+									<div className="min-w-0 flex-auto truncate">
+										<p className="text-sm font-semibold leading-6 text-slate-900">
+											{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
+										</p>
+										<div>
+											{vetToVetClinicRelationship.vet.emailAddress && (
+												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+													<EnvelopeIcon className="mr-1 h-3 w-3" />
+													{vetToVetClinicRelationship.vet.emailAddress}
 												</p>
-												<div>
-													{vetToVetClinicRelationship.vet.emailAddress && (
-														<p className="flex items-center truncate text-xs leading-5 text-slate-500">
-															<EnvelopeIcon className="mr-1 h-3 w-3" />
-															{vetToVetClinicRelationship.vet.emailAddress}
-														</p>
-													)}
+											)}
 
-													{vetToVetClinicRelationship.vet.phoneNumber && (
-														<p className="flex items-center truncate text-xs leading-5 text-slate-500">
-															<PhoneIcon className="mr-1 h-3 w-3" />
-															{vetToVetClinicRelationship.vet.phoneNumber}
-														</p>
-													)}
-												</div>
-											</div>
+											{vetToVetClinicRelationship.vet.phoneNumber && (
+												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+													<PhoneIcon className="mr-1 h-3 w-3" />
+													{vetToVetClinicRelationship.vet.phoneNumber}
+												</p>
+											)}
 										</div>
+									</div>
+								</div>
 
-										<div className="flex space-x-4">
-											<FormField
-												control={control}
-												name={`vetToVetClinicRelationships.${index}.relationship`}
-												rules={{ required: "Please select a relationship" }}
-												defaultValue={vetToVetClinicRelationship.relationship}
-												render={({ field }) => (
-													<FormItem>
-														<Select
-															onValueChange={(value) => {
-																field.onChange(value as typeof field.value);
-																setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
-																	type: "UPDATE",
-																	payload: {
-																		...vetToVetClinicRelationship,
-																		relationship: value as typeof field.value,
-																	},
-																});
-															}}
-															value={field.value}
-														>
-															<FormControl>
-																<SelectTrigger>
-																	<SelectValue placeholder="Select a relation">
-																		<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
-																	</SelectValue>
-																</SelectTrigger>
-															</FormControl>
-															<SelectContent withoutPortal>
-																<SelectGroup>
-																	<SelectLabel>Relationships</SelectLabel>
-																	{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map(
-																		(relation) => (
-																			<SelectItem key={relation} value={relation} className="capitalize">
-																				{relation.split("-").join(" ")}
-																			</SelectItem>
-																		),
-																	)}
-																</SelectGroup>
-															</SelectContent>
-														</Select>
-														<FormMessage />
-													</FormItem>
-												)}
-											/>
+								<div className="flex space-x-4">
+									<FormField
+										control={control}
+										name={`vetToVetClinicRelationships.${index}.relationship`}
+										rules={{ required: "Please select a relationship" }}
+										defaultValue={vetToVetClinicRelationship.relationship}
+										render={({ field }) => (
+											<FormItem>
+												<Select
+													onValueChange={(value) => {
+														field.onChange(value as typeof field.value);
+														setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
+															type: "UPDATE",
+															payload: {
+																...vetToVetClinicRelationship,
+																relationship: value as typeof field.value,
+															},
+														});
+													}}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger>
+															<SelectValue placeholder="Select a relation">
+																<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
+															</SelectValue>
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent withoutPortal>
+														<SelectGroup>
+															<SelectLabel>Relationships</SelectLabel>
+															{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map(
+																(relation) => (
+																	<SelectItem key={relation} value={relation} className="capitalize">
+																		{relation.split("-").join(" ")}
+																	</SelectItem>
+																),
+															)}
+														</SelectGroup>
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 
-											<div className="flex items-center">
-												<DropdownMenu>
-													<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-														<span className="sr-only">Open options</span>
-														<EllipsisVerticalIcon className="h-5 w-5" />
-													</DropdownMenuTrigger>
-													<DropdownMenuContent withoutPortal>
-														<DropdownMenuLabel>Actions</DropdownMenuLabel>
-														<DropdownMenuSeparator />
-														<DropdownMenuItem
-															onSelect={(e) => {
-																e.preventDefault();
-																setEditingVet(vetToVetClinicRelationship.vet);
-															}}
-														>
-															<EditIcon className="mr-2 h-4 w-4" />
-															<span>Edit Vet Clinic</span>
-														</DropdownMenuItem>
-														<DropdownMenuItem
-															onSelect={() => {
-																toggleVetToVetClinicRelationship(vetToVetClinicRelationship.vet);
-															}}
-														>
-															<TrashIcon className="mr-2 h-4 w-4" />
-															<span>Remove</span>
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
-											</div>
-										</div>
-									</li>
-							  ))}
+									<div className="flex items-center">
+										<DropdownMenu>
+											<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+												<span className="sr-only">Open options</span>
+												<EllipsisVerticalIcon className="h-5 w-5" />
+											</DropdownMenuTrigger>
+											<DropdownMenuContent withoutPortal>
+												<DropdownMenuLabel>Actions</DropdownMenuLabel>
+												<DropdownMenuSeparator />
+												<DropdownMenuItem
+													onSelect={(e) => {
+														e.preventDefault();
+														setEditingVet(vetToVetClinicRelationship.vet);
+													}}
+												>
+													<EditIcon className="mr-2 h-4 w-4" />
+													<span>Edit Vet Clinic</span>
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onSelect={() => {
+														toggleVetToVetClinicRelationship(vetToVetClinicRelationship.vet);
+													}}
+												>
+													<TrashIcon className="mr-2 h-4 w-4" />
+													<span>Remove</span>
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
+								</div>
+							</li>
+						))}
 					</ul>
 				</div>
 			</div>

@@ -55,6 +55,8 @@ export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizatio
 	id: IdSchema,
 	organizationId: IdSchema,
 	userId: IdSchema,
+	uses: z.number().int().positive().default(0),
+	maxUses: z.number().int().positive().optional(),
 });
 export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;
 
@@ -78,6 +80,7 @@ export const InsertOrganizationSchema = createInsertSchema(organizations)
 	})
 	.extend({
 		id: IdSchema,
+		maxUsers: z.number().int().positive(),
 		actions: z.object({
 			organizationInviteLinks: OrganizationInviteLinksActionsLogSchema,
 		}),

@@ -1,40 +1,83 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { vetClinics, vetToVetClinicRelationships } from "~/db/schemas";
 import { InsertVetClinicSchema, UpdateVetClinicSchema } from "~/db/validation";
+import { VET_CLINICS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
 	createServerAction,
 	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
+	validatePaginationSearchParams,
 	type ExtractServerActionData,
+	type PaginationSearchParams,
 } from "../utils";
 
-const listVetClinics = createServerAction(async (limit?: number) => {
+const listVetClinics = createServerAction(async (options: PaginationSearchParams) => {
 	try {
 		const user = await getServerUser();
 
-		const data = await drizzle.query.vetClinics.findMany({
-			limit: limit ?? 50,
-			where: eq(vetClinics.organizationId, user.organizationId),
-			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name), asc(vetClinics.id)],
-			with: {
-				vetToVetClinicRelationships: {
-					with: {
-						vet: true,
-					},
-				},
-			},
+		const countQuery = await drizzle
+			.select({
+				count: sql<number>`count(*)`.mapWith(Number),
+			})
+			.from(vetClinics)
+			.where(eq(vetClinics.organizationId, user.organizationId));
+
+		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
+			...options,
+			count: countQuery?.[0]?.count ?? 0,
+			sortableColumns: VET_CLINICS_SORTABLE_COLUMNS,
 		});
 
-		return { success: true, data };
+		const data = await drizzle.query.vetClinics.findMany({
+			columns: {
+				id: true,
+				name: true,
+				emailAddress: true,
+				phoneNumber: true,
+			},
+			limit: limit,
+			offset: (page - 1) * limit,
+			where: eq(vetClinics.organizationId, user.organizationId),
+			orderBy: (vetClinics, { asc }) => (orderBy ? [...orderBy, asc(vetClinics.id)] : [asc(vetClinics.id)]),
+		});
+
+		return {
+			success: true,
+			data: {
+				pagination: {
+					count,
+					page,
+					maxPage,
+					limit,
+					sortBy,
+					sortDirection,
+				},
+				data,
+			},
+		};
 	} catch {
-		return { success: false, error: "Failed to list vetClinics" };
+		return {
+			success: false,
+			error: "Failed to list vetClinics",
+			data: {
+				pagination: {
+					count: 0,
+					page: 1,
+					maxPage: 1,
+					limit: 5,
+					sortBy: "id",
+					sortDirection: "asc",
+				},
+				data: [],
+			},
+		};
 	}
 });
 type VetClinicsList = ExtractServerActionData<typeof listVetClinics>;
@@ -43,23 +86,54 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues };
+		return { success: false, error: validSearchTerm.error.issues, data: [] };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.vetClinics.findMany({
+			columns: {
+				id: true,
+				name: true,
+			},
 			limit: 50,
 			where: and(
 				eq(vetClinics.organizationId, user.organizationId),
-				like(vetClinics.name, `%${validSearchTerm.data ?? ""}%`),
+				or(
+					like(vetClinics.name, `%${validSearchTerm.data ?? ""}%`),
+					like(vetClinics.emailAddress, `%${validSearchTerm.data ?? ""}%`),
+					like(vetClinics.phoneNumber, `%${validSearchTerm.data ?? ""}%`),
+				),
 			),
 			orderBy: (vetClinics, { asc }) => [asc(vetClinics.name), asc(vetClinics.id)],
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: "Failed to search vetClinics", data: [] };
+	}
+});
+type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
+
+const getVetClinicById = createServerAction(async (id: string) => {
+	try {
+		const user = await getServerUser();
+
+		const data = await drizzle.query.vetClinics.findFirst({
+			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, id)),
 			with: {
 				vetToVetClinicRelationships: {
 					with: {
-						vet: true,
+						vet: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								phoneNumber: true,
+							},
+						},
 					},
 				},
 			},
@@ -67,16 +141,16 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search vetClinics" };
+		return { success: false, error: `Failed to get vet clinic with id ${id}`, data: null };
 	}
 });
-type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
+type VetClinicById = ExtractServerActionData<typeof getVetClinicById>;
 
 const insertVetClinic = createServerAction(async (values: InsertVetClinicSchema) => {
 	const validValues = InsertVetClinicSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -103,18 +177,17 @@ const insertVetClinic = createServerAction(async (values: InsertVetClinicSchema)
 
 		const vetClinic = await drizzle.query.vetClinics.findFirst({
 			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, data.id)),
-			with: {
-				vetToVetClinicRelationships: {
-					with: {
-						vet: true,
-					},
-				},
+			columns: {
+				id: true,
+				name: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
 		});
 
 		return { success: true, data: vetClinic };
 	} catch {
-		return { success: false, error: "Failed to insert vetClinic" };
+		return { success: false, error: "Failed to insert vetClinic", data: null };
 	}
 });
 type VetClinicInsert = ExtractServerActionData<typeof insertVetClinic>;
@@ -123,7 +196,7 @@ const updateVetClinic = createServerAction(async (values: UpdateVetClinicSchema)
 	const validValues = UpdateVetClinicSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -175,19 +248,18 @@ const updateVetClinic = createServerAction(async (values: UpdateVetClinicSchema)
 		revalidatePath("/vetClinics");
 
 		const vetClinic = await drizzle.query.vetClinics.findFirst({
-			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, id)),
-			with: {
-				vetToVetClinicRelationships: {
-					with: {
-						vet: true,
-					},
-				},
+			columns: {
+				id: true,
+				name: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
+			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, id)),
 		});
 
 		return { success: true, data: vetClinic };
 	} catch {
-		return { success: false, error: "Failed to update vetClinic" };
+		return { success: false, error: "Failed to update vetClinic", data: null };
 	}
 });
 type VetClinicUpdate = ExtractServerActionData<typeof updateVetClinic>;
@@ -196,7 +268,7 @@ const deleteVetClinic = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 
 	try {
@@ -231,49 +303,22 @@ const deleteVetClinic = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: "Failed to delete vetClinic" };
+		return { success: false, error: "Failed to delete vetClinic", data: null };
 	}
 });
 type VetClinicDelete = ExtractServerActionData<typeof deleteVetClinic>;
-
-const getVetClinicRelationships = createServerAction(async (vetClinicId: string) => {
-	try {
-		const user = await getServerUser();
-
-		const vetToVetClinicRelationshipsData = await drizzle.query.vetToVetClinicRelationships.findMany({
-			limit: 25,
-			where: and(
-				eq(vetToVetClinicRelationships.organizationId, user.organizationId),
-				eq(vetToVetClinicRelationships.vetId, vetClinicId),
-			),
-			with: {
-				vet: true,
-			},
-		});
-
-		return {
-			success: true,
-			data: {
-				vetToVetClinicRelationships: vetToVetClinicRelationshipsData,
-			},
-		};
-	} catch {
-		return { success: false, error: `Failed to get vet clinic relationships with vet clinic id: "${vetClinicId}"` };
-	}
-});
-type VetClinicRelationships = ExtractServerActionData<typeof getVetClinicRelationships>;
 
 export {
 	listVetClinics,
 	type VetClinicsList,
 	searchVetClinics,
 	type VetClinicsSearch,
+	getVetClinicById,
+	type VetClinicById,
 	insertVetClinic,
 	type VetClinicInsert,
 	updateVetClinic,
 	type VetClinicUpdate,
 	deleteVetClinic,
 	type VetClinicDelete,
-	getVetClinicRelationships,
-	type VetClinicRelationships,
 };

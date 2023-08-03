@@ -1,6 +1,6 @@
 import {
 	deleteClient,
-	getClientRelationships,
+	getClientById,
 	insertClient,
 	listClients,
 	searchClients,
@@ -9,13 +9,13 @@ import {
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./app/dogs-actions";
 import {
 	deleteVetClinic,
-	getVetClinicRelationships,
+	getVetClinicById,
 	insertVetClinic,
 	listVetClinics,
 	searchVetClinics,
 	updateVetClinic,
 } from "./app/vet-clinics-actions";
-import { deleteVet, getVetRelationships, insertVet, listVets, searchVets, updateVet } from "./app/vets-actions";
+import { deleteVet, getVetById, insertVet, listVets, searchVets, updateVet } from "./app/vets-actions";
 import {
 	deleteOrganization,
 	getOrganizationInviteLinkById,
@@ -32,10 +32,10 @@ const actions = {
 		clients: {
 			list: listClients,
 			search: searchClients,
+			byId: getClientById,
 			insert: insertClient,
 			update: updateClient,
 			delete: deleteClient,
-			getRelationships: getClientRelationships,
 		},
 		dogs: {
 			list: listDogs,
@@ -48,18 +48,18 @@ const actions = {
 		vetClinics: {
 			list: listVetClinics,
 			search: searchVetClinics,
+			byId: getVetClinicById,
 			insert: insertVetClinic,
 			update: updateVetClinic,
 			delete: deleteVetClinic,
-			getRelationships: getVetClinicRelationships,
 		},
 		vets: {
 			list: listVets,
 			search: searchVets,
+			byId: getVetById,
 			insert: insertVet,
 			update: updateVet,
 			delete: deleteVet,
-			getRelationships: getVetRelationships,
 		},
 	},
 	auth: {

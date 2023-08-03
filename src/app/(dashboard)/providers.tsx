@@ -7,9 +7,11 @@ import * as React from "react";
 
 import { type SessionCookie } from "~/lib/auth-options";
 
-type ProviderProps<Props> = {
-	children: React.ReactNode;
-} & Props;
+type ProviderProps<Props = undefined> = Props extends undefined
+	? {
+			children: React.ReactNode;
+	  }
+	: { children: React.ReactNode } & Props;
 
 // -----------------------------------------------------------------------------
 // Session Context

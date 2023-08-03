@@ -84,7 +84,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 							<BirthdayInputCalendar control={control} />
 							<FormField
 								control={control}
-								name="isAgeExact"
+								name="isAgeEstimate"
 								render={({ field }) => (
 									<FormItem className="flex items-center space-x-2 space-y-0">
 										<FormControl>

@@ -14,7 +14,7 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 	const validation = UpdateUserSchema.safeParse(data);
 
 	if (!validation.success) {
-		return { success: false, error: validation.error.issues };
+		return { success: false, error: validation.error.issues, data: null };
 	}
 
 	try {
@@ -44,9 +44,9 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 			value: newSessionToken,
 		});
 
-		return { success: true };
+		return { success: true, data: undefined };
 	} catch {
-		return { success: false, error: "Failed to update user" };
+		return { success: false, error: "Failed to update user", data: null };
 	}
 });
 
@@ -54,14 +54,14 @@ const deleteUser = createServerAction(async (id: string) => {
 	const validation = z.string().safeParse(id);
 
 	if (!validation.success) {
-		return { success: false, error: validation.error.issues };
+		return { success: false, error: validation.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		if (user.organizationRole === "member" && user.id !== validation.data) {
-			return { success: false, error: "You can only delete your own account" };
+			return { success: false, error: "You can only delete your own account", data: null };
 		}
 
 		await drizzle
@@ -73,9 +73,9 @@ const deleteUser = createServerAction(async (id: string) => {
 			.set({ userId: null })
 			.where(and(eq(dogSessions.organizationId, user.organizationId), eq(dogSessions.userId, validation.data)));
 
-		return { success: true };
+		return { success: true, data: undefined };
 	} catch {
-		return { success: false, error: "Failed to delete user" };
+		return { success: false, error: "Failed to delete user", data: null };
 	}
 });
 

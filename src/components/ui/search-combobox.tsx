@@ -128,7 +128,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 								<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="max-w-3xl p-0 " align="start" withoutPortal={withinSheet}>
+						<PopoverContent className="max-w-3xl p-0" align="start" withoutPortal={withinSheet}>
 							<Command loop shouldFilter={false}>
 								<CommandInput
 									ref={inputRef}

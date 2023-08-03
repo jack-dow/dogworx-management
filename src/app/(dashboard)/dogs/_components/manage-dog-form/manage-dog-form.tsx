@@ -79,7 +79,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 		defaultValues: {
 			id: dog?.id || generateId(),
 			desexed: false,
-			isAgeExact: false,
+			isAgeEstimate: false,
 			...dog,
 			actions: {
 				sessions: {},
@@ -205,7 +205,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			</AlertDialog>
 
 			<Form {...form}>
-				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10 ">
+				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10">
 					<DogBasicInformation control={form.control} />
 
 					<Separator />

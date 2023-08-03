@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
@@ -36,33 +36,49 @@ const listClients = createServerAction(async (options: PaginationSearchParams) =
 		});
 
 		const data = await drizzle.query.clients.findMany({
+			columns: {
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
+			},
 			limit: limit,
 			offset: (page - 1) * limit,
 			where: eq(clients.organizationId, user.organizationId),
 			orderBy: (clients, { asc }) => (orderBy ? [...orderBy, asc(clients.id)] : [asc(clients.id)]),
-			with: {
-				dogToClientRelationships: {
-					with: {
-						dog: true,
-					},
-				},
-			},
 		});
 
 		return {
 			success: true,
 			data: {
-				count,
-				page,
-				maxPage,
-				limit,
-				sortBy,
-				sortDirection,
+				pagination: {
+					count,
+					page,
+					maxPage,
+					limit,
+					sortBy,
+					sortDirection,
+				},
 				data,
 			},
 		};
 	} catch {
-		return { success: false, error: "Failed to list clients" };
+		return {
+			success: false,
+			error: "Failed to list clients",
+			data: {
+				pagination: {
+					count: 0,
+					page: 1,
+					maxPage: 1,
+					limit: 5,
+					sortBy: "id",
+					sortDirection: "asc",
+				},
+				data: [],
+			},
+		};
 	}
 });
 type ClientsList = ExtractServerActionData<typeof listClients>;
@@ -71,23 +87,53 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues };
+		return { success: false, error: validSearchTerm.error.issues, data: [] };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.clients.findMany({
+			columns: {
+				id: true,
+				givenName: true,
+				familyName: true,
+			},
 			limit: 50,
 			where: and(
 				eq(clients.organizationId, user.organizationId),
-				sql`CONCAT(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
+				or(
+					sql`CONCAT(${clients.givenName},' ', ${clients.familyName}) LIKE CONCAT('%', ${validSearchTerm.data}, '%')`,
+					like(clients.emailAddress, `%${validSearchTerm.data}%`),
+					like(clients.phoneNumber, `%${validSearchTerm.data}%`),
+				),
 			),
 			orderBy: (clients, { asc }) => [asc(clients.givenName), asc(clients.familyName), asc(clients.id)],
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: "Failed to search clients", data: [] };
+	}
+});
+type ClientsSearch = ExtractServerActionData<typeof searchClients>;
+
+const getClientById = createServerAction(async (id: string) => {
+	try {
+		const user = await getServerUser();
+
+		const data = await drizzle.query.clients.findFirst({
+			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
 			with: {
 				dogToClientRelationships: {
 					with: {
-						dog: true,
+						dog: {
+							columns: {
+								id: true,
+								givenName: true,
+								color: true,
+							},
+						},
 					},
 				},
 			},
@@ -95,16 +141,16 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search clients" };
+		return { success: false, error: `Failed to get client with id ${id}`, data: null };
 	}
 });
-type ClientsSearch = ExtractServerActionData<typeof searchClients>;
+type ClientById = ExtractServerActionData<typeof getClientById>;
 
 const insertClient = createServerAction(async (values: InsertClientSchema) => {
 	const validValues = InsertClientSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -131,19 +177,19 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 		revalidatePath("/clients");
 
 		const client = await drizzle.query.clients.findFirst({
-			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, data.id)),
-			with: {
-				dogToClientRelationships: {
-					with: {
-						dog: true,
-					},
-				},
+			columns: {
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
+			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, data.id)),
 		});
 
 		return { success: true, data: client };
 	} catch {
-		return { success: false, error: "Failed to insert client" };
+		return { success: false, error: "Failed to insert client", data: null };
 	}
 });
 type ClientInsert = ExtractServerActionData<typeof insertClient>;
@@ -152,7 +198,7 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 	const validValues = UpdateClientSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -205,19 +251,19 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 		revalidatePath("/dogs/[id]");
 
 		const client = await drizzle.query.clients.findFirst({
-			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
-			with: {
-				dogToClientRelationships: {
-					with: {
-						dog: true,
-					},
-				},
+			columns: {
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
+			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
 		});
 
 		return { success: true, data: client };
 	} catch {
-		return { success: false, error: "Failed to update client" };
+		return { success: false, error: "Failed to update client", data: null };
 	}
 });
 type ClientUpdate = ExtractServerActionData<typeof updateClient>;
@@ -226,7 +272,7 @@ const deleteClient = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 
 	try {
@@ -243,7 +289,7 @@ const deleteClient = createServerAction(async (id: string) => {
 		});
 
 		if (!client) {
-			return { success: false, error: `Client with id "${id}" not found` };
+			return { success: false, error: `Client with id "${id}" not found`, data: null };
 		}
 
 		await drizzle.transaction(async (trx) => {
@@ -263,49 +309,22 @@ const deleteClient = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: "Failed to delete client" };
+		return { success: false, error: "Failed to delete client", data: null };
 	}
 });
 type ClientDelete = ExtractServerActionData<typeof deleteClient>;
-
-const getClientRelationships = createServerAction(async (clientId: string) => {
-	try {
-		const user = await getServerUser();
-
-		const dogToClientRelationshipsData = await drizzle.query.dogToClientRelationships.findMany({
-			limit: 25,
-			where: and(
-				eq(dogToClientRelationships.organizationId, user.organizationId),
-				eq(dogToClientRelationships.clientId, clientId),
-			),
-			with: {
-				dog: true,
-			},
-		});
-
-		return {
-			success: true,
-			data: {
-				dogToClientRelationships: dogToClientRelationshipsData,
-			},
-		};
-	} catch {
-		return { success: false, error: `Failed to get client relationships with client id: "${clientId}"` };
-	}
-});
-type ClientRelationships = ExtractServerActionData<typeof getClientRelationships>;
 
 export {
 	listClients,
 	type ClientsList,
 	searchClients,
 	type ClientsSearch,
+	getClientById,
+	type ClientById,
 	insertClient,
 	type ClientInsert,
 	updateClient,
 	type ClientUpdate,
 	deleteClient,
 	type ClientDelete,
-	getClientRelationships,
-	type ClientRelationships,
 };

@@ -288,6 +288,13 @@
       "when": 1690513730085,
       "tag": "0040_dry_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1690950341123,
+      "tag": "0041_material_vector",
+      "breakpoints": true
     }
   ]
 }

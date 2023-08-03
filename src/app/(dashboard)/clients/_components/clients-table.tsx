@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { ManageClientSheet } from "~/components/manage-client-sheet/manage-client-sheet";
+import { ManageClientSheet } from "~/components/manage-client-sheet";
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
@@ -13,20 +13,11 @@ import { createClientsTableColumns } from "./clients-table-columns";
 function ClientsTable({ result }: { result: ClientsList }) {
 	const { toast } = useToast();
 
-	const [editingClient, setEditingClient] = React.useState<ClientsList["data"][number] | null>();
 	const [confirmClientDelete, setConfirmClientDelete] = React.useState<ClientsList["data"][number] | null>(null);
+	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<string | null>(null);
 
 	return (
 		<>
-			<ManageClientSheet
-				withoutTrigger
-				open={!!editingClient}
-				setOpen={() => {
-					setEditingClient(null);
-				}}
-				client={editingClient ?? undefined}
-			/>
-
 			<DestructiveActionDialog
 				open={!!confirmClientDelete}
 				onOpenChange={() => {
@@ -58,17 +49,46 @@ function ClientsTable({ result }: { result: ClientsList }) {
 				}}
 			/>
 
+			{isCreateClientSheetOpen && (
+				<ManageClientSheet
+					open={!!isCreateClientSheetOpen}
+					setOpen={() => {
+						setIsCreateClientSheetOpen(null);
+					}}
+					defaultValues={{
+						givenName:
+							isCreateClientSheetOpen.split(" ").length === 1
+								? isCreateClientSheetOpen
+								: isCreateClientSheetOpen?.split(" ").slice(0, -1).join(" "),
+
+						familyName:
+							isCreateClientSheetOpen.split(" ").length > 1 ? isCreateClientSheetOpen?.split(" ").pop() : undefined,
+					}}
+					withoutTrigger
+				/>
+			)}
+
 			<DataTable
-				{...result}
+				search={{
+					onSearch: async (searchTerm) => {
+						const result = await actions.app.clients.search(searchTerm);
+
+						if (!result.success) {
+							throw new Error("Failed to search clients");
+						}
+
+						return result.data;
+					},
+					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
+					onNoResultsActionSelect: (searchTerm) => {
+						setIsCreateClientSheetOpen(searchTerm);
+					},
+				}}
 				columns={createClientsTableColumns((client) => {
 					setConfirmClientDelete(client);
 				})}
 				sortableColumns={CLIENTS_SORTABLE_COLUMNS}
-				onTableRowClick={(client) => {
-					if (client.id) {
-						setEditingClient(client);
-					}
-				}}
+				{...result}
 			/>
 		</>
 	);

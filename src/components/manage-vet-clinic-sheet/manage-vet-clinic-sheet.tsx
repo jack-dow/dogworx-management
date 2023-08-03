@@ -30,14 +30,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
-import {
-	actions,
-	type VetClinicInsert,
-	type VetClinicRelationships,
-	type VetClinicsList,
-	type VetClinicsSearch,
-	type VetClinicUpdate,
-} from "~/actions";
+import { actions, type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
 import { InsertVetClinicSchema, InsertVetToVetClinicRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, mergeRelationships } from "~/utils";
@@ -48,23 +41,29 @@ const ManageVetClinicSheetFormSchema = z.intersection(
 	InsertVetClinicSchema.extend({
 		name: z.string().max(50).nonempty({ message: "Required" }),
 		notes: z.string().max(100000).nullish(),
-		vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema.extend({ vet: SelectVetSchema })),
+		vetToVetClinicRelationships: z.array(
+			InsertVetToVetClinicRelationshipSchema.extend({
+				vet: SelectVetSchema.pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					emailAddress: true,
+					phoneNumber: true,
+				}),
+			}),
+		),
 	}),
 	EmailOrPhoneNumberSchema,
 );
 type ManageVetClinicSheetFormSchema = z.infer<typeof ManageVetClinicSheetFormSchema>;
 
 type DefaultValues = Partial<ManageVetClinicSheetFormSchema>;
-type ExistingVetClinic = Omit<VetClinicsList[number] | VetClinicsSearch[number], "vetToVetClinicRelationships"> &
-	Partial<VetClinicRelationships>;
 
-type ManageVetClinicSheetProps<VetClinicProp extends ExistingVetClinic | undefined> =
+type ManageVetClinicSheetProps<VetClinicProp extends VetClinicById | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-			onSuccessfulSubmit?: (
-				vetClinic: VetClinicProp extends ExistingVetClinic ? VetClinicUpdate : VetClinicInsert,
-			) => void;
+			onSuccessfulSubmit?: (vetClinic: VetClinicProp extends VetClinicById ? VetClinicUpdate : VetClinicInsert) => void;
 			vetClinic?: VetClinicProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
@@ -72,15 +71,13 @@ type ManageVetClinicSheetProps<VetClinicProp extends ExistingVetClinic | undefin
 	| {
 			open?: undefined;
 			setOpen?: null;
-			onSuccessfulSubmit?: (
-				vetClinic: VetClinicProp extends ExistingVetClinic ? VetClinicUpdate : VetClinicInsert,
-			) => void;
+			onSuccessfulSubmit?: (vetClinic: VetClinicProp extends VetClinicById ? VetClinicUpdate : VetClinicInsert) => void;
 			vetClinic?: VetClinicProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
 	  };
 
-function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefined>({
+function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 	open,
 	setOpen,
 	onSuccessfulSubmit,
@@ -94,7 +91,6 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
-	const [isLoadingRelationships, setIsLoadingRelationships] = React.useState(false);
 
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
@@ -103,7 +99,6 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 		resolver: zodResolver(ManageVetClinicSheetFormSchema),
 		defaultValues: {
 			id: vetClinic?.id || defaultValues?.id || generateId(),
-			vetToVetClinicRelationships: vetClinic?.vetToVetClinicRelationships,
 			...vetClinic,
 			...defaultValues,
 			actions: {
@@ -113,7 +108,7 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 	});
 
 	React.useEffect(() => {
-		function syncVetClinic(vetClinic: ExistingVetClinic) {
+		function syncVetClinic(vetClinic: VetClinicById) {
 			const actions = form.getValues("actions");
 			form.reset(
 				{
@@ -132,28 +127,13 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 		}
 
 		if (vetClinic) {
-			if (!vetClinic.vetToVetClinicRelationships) {
-				setIsLoadingRelationships(true);
-				const fetchRelationships = async () => {
-					const response = await actions.app.vetClinics.getRelationships(vetClinic.id);
-					if (response.success) {
-						syncVetClinic({
-							...vetClinic,
-							vetToVetClinicRelationships: response.data.vetToVetClinicRelationships,
-						});
-					}
-					setIsLoadingRelationships(false);
-				};
-				void fetchRelationships();
-			}
-
 			syncVetClinic(vetClinic);
 		}
 	}, [vetClinic, form]);
 
 	async function onSubmit(data: ManageVetClinicSheetFormSchema) {
 		let success = false;
-		let newVetClinic: VetClinicUpdate | VetClinicInsert | undefined;
+		let newVetClinic: VetClinicUpdate | VetClinicInsert | null | undefined;
 
 		if (vetClinic) {
 			const response = await actions.app.vetClinics.update(data);
@@ -255,7 +235,6 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 							<VetClinicToVetRelationships
 								control={form.control}
 								existingVetToVetClinicRelationships={vetClinic?.vetToVetClinicRelationships}
-								isLoading={isLoadingRelationships}
 							/>
 
 							<Separator className="my-4" />
@@ -277,4 +256,4 @@ function ManageVetClinicSheet<VetClinicProp extends ExistingVetClinic | undefine
 	);
 }
 
-export { type ManageVetClinicSheetFormSchema, type ExistingVetClinic, ManageVetClinicSheet };
+export { ManageVetClinicSheetFormSchema, type VetClinicById, ManageVetClinicSheet };

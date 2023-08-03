@@ -1,33 +1,83 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { dogs, dogSessions, dogToClientRelationships, dogToVetRelationships } from "~/db/schemas";
 import { InsertDogSchema, UpdateDogSchema } from "~/db/validation";
+import { DOGS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
 	createServerAction,
 	getServerUser,
 	SearchTermSchema,
 	separateActionsLogSchema,
+	validatePaginationSearchParams,
 	type ExtractServerActionData,
+	type PaginationSearchParams,
 } from "../utils";
 
-const listDogs = createServerAction(async (limit?: number) => {
+const listDogs = createServerAction(async (options: PaginationSearchParams) => {
 	try {
 		const user = await getServerUser();
 
-		const data = await drizzle.query.dogs.findMany({
-			limit: limit ?? 50,
-			where: eq(dogs.organizationId, user.organizationId),
-			orderBy: (dogs, { asc }) => [asc(dogs.givenName), asc(dogs.id)],
+		const countQuery = await drizzle
+			.select({
+				count: sql<number>`count(*)`.mapWith(Number),
+			})
+			.from(dogs)
+			.where(eq(dogs.organizationId, user.organizationId));
+
+		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
+			...options,
+			count: countQuery?.[0]?.count ?? 0,
+			sortableColumns: DOGS_SORTABLE_COLUMNS,
 		});
 
-		return { success: true, data };
+		const data = await drizzle.query.dogs.findMany({
+			columns: {
+				id: true,
+				givenName: true,
+				breed: true,
+				color: true,
+			},
+			limit: limit,
+			offset: (page - 1) * limit,
+			where: eq(dogs.organizationId, user.organizationId),
+			orderBy: (dogs, { asc }) => (orderBy ? [...orderBy, asc(dogs.id)] : [asc(dogs.id)]),
+		});
+
+		return {
+			success: true,
+			data: {
+				pagination: {
+					count,
+					page,
+					maxPage,
+					limit,
+					sortBy,
+					sortDirection,
+				},
+				data,
+			},
+		};
 	} catch {
-		return { success: false, error: "Failed to list dogs" };
+		return {
+			success: false,
+			error: "Failed to list dogs",
+			data: {
+				pagination: {
+					count: 0,
+					page: 1,
+					maxPage: 1,
+					limit: 5,
+					sortBy: "id",
+					sortDirection: "asc",
+				},
+				data: [],
+			},
+		};
 	}
 });
 type DogsList = ExtractServerActionData<typeof listDogs>;
@@ -36,21 +86,25 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues };
+		return { success: false, error: validSearchTerm.error.issues, data: [] };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.dogs.findMany({
-			where: and(eq(dogs.organizationId, user.organizationId), like(dogs.givenName, `%${validSearchTerm.data ?? ""}%`)),
+			columns: {
+				id: true,
+				givenName: true,
+			},
 			limit: 50,
+			where: and(eq(dogs.organizationId, user.organizationId), like(dogs.givenName, `%${validSearchTerm.data ?? ""}%`)),
 			orderBy: (dogs, { asc }) => [asc(dogs.givenName), asc(dogs.id)],
 		});
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search dogs" };
+		return { success: false, error: "Failed to search dogs", data: [] };
 	}
 });
 type DogsSearch = ExtractServerActionData<typeof searchDogs>;
@@ -59,7 +113,7 @@ const getDogById = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 
 	try {
@@ -70,17 +124,43 @@ const getDogById = createServerAction(async (id: string) => {
 			with: {
 				sessions: {
 					with: {
-						user: true,
+						user: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								organizationId: true,
+								organizationRole: true,
+								profileImageUrl: true,
+							},
+						},
 					},
 				},
 				dogToClientRelationships: {
 					with: {
-						client: true,
+						client: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								phoneNumber: true,
+							},
+						},
 					},
 				},
 				dogToVetRelationships: {
 					with: {
-						vet: true,
+						vet: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								phoneNumber: true,
+							},
+						},
 					},
 				},
 			},
@@ -88,7 +168,7 @@ const getDogById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to fetch dog with id: ${id}` };
+		return { success: false, error: `Failed to fetch dog with id: ${id}`, data: null };
 	}
 });
 type DogById = ExtractServerActionData<typeof getDogById>;
@@ -97,7 +177,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 	const validValues = InsertDogSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -137,9 +217,9 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 		revalidatePath("/dogs");
 		revalidatePath("/dogs/[id]");
 
-		return { success: true };
+		return { success: true, data: undefined };
 	} catch {
-		return { success: false, error: `Failed to insert dog with id: ${validValues.data.id}` };
+		return { success: false, error: `Failed to insert dog with id: ${validValues.data.id}`, data: null };
 	}
 });
 type DogInsert = ExtractServerActionData<typeof insertDog>;
@@ -148,7 +228,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 	const validValues = UpdateDogSchema.safeParse(values);
 
 	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues };
+		return { success: false, error: validValues.error.issues, data: null };
 	}
 
 	try {
@@ -269,9 +349,9 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 		revalidatePath("/dogs");
 		revalidatePath("/dogs/[id]");
 
-		return { success: true };
+		return { success: true, data: undefined };
 	} catch {
-		return { success: false, error: `Failed to update dog with id: ${validValues.data.id}` };
+		return { success: false, error: `Failed to update dog with id: ${validValues.data.id}`, data: null };
 	}
 });
 type DogUpdate = ExtractServerActionData<typeof updateDog>;
@@ -280,7 +360,7 @@ const deleteDog = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 
 	try {
@@ -335,7 +415,7 @@ const deleteDog = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: `Failed to fetch dog with id: ${id}` };
+		return { success: false, error: `Failed to fetch dog with id: ${id}`, data: null };
 	}
 });
 type DogDelete = ExtractServerActionData<typeof deleteDog>;

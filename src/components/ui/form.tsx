@@ -164,4 +164,77 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 );
 FormMessage.displayName = "FormMessage";
 
-export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };
+const formTitleClasses = cn("text-base font-semibold leading-7 text-foreground");
+const formDescriptionClasses = cn("text-sm leading-6 text-muted-foreground");
+
+type FormSectionProps = {
+	title: string;
+	description: string;
+	children: React.ReactNode;
+};
+
+function FormSection({ title, description, children }: FormSectionProps) {
+	return (
+		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+			<div>
+				<h2 className={formTitleClasses}>{title}</h2>
+				<p className={formDescriptionClasses}>{description}</p>
+			</div>
+			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
+				<div className="sm:p-8">{children}</div>
+			</div>
+		</div>
+	);
+}
+
+type FormGroupProps = {
+	title?: string;
+	description?: string;
+	children: React.ReactNode;
+};
+
+function FormGroup({ title, description, children }: FormGroupProps) {
+	return (
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-y-6">
+			{title && description && (
+				<div className="col-span-full">
+					<h3 className={formTitleClasses}>{title}</h3>
+					<p className={formDescriptionClasses}>{description}</p>
+				</div>
+			)}
+			{children}
+		</div>
+	);
+}
+
+type FormSheetGroupProps = {
+	title: string;
+	description: string;
+	children: React.ReactNode;
+};
+
+function FormSheetGroup({ title, description, children }: FormSheetGroupProps) {
+	return (
+		<div>
+			<div>
+				<h2 className={formTitleClasses}>{title}</h2>
+				<p className={formDescriptionClasses}>{description}</p>
+			</div>
+			<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-6">{children}</div>
+		</div>
+	);
+}
+
+export {
+	useFormField,
+	Form,
+	FormItem,
+	FormLabel,
+	FormControl,
+	FormDescription,
+	FormMessage,
+	FormField,
+	FormSection,
+	FormGroup,
+	FormSheetGroup,
+};

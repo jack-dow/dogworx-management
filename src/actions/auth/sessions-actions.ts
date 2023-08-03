@@ -34,7 +34,7 @@ const invalidateSession = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
 	if (!validId.success) {
-		return { success: false, error: validId.error.issues };
+		return { success: false, error: validId.error.issues, data: null };
 	}
 	try {
 		const user = await getServerUser();
@@ -48,7 +48,7 @@ const invalidateSession = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: "Failed to delete organization" };
+		return { success: false, error: "Failed to delete session", data: null };
 	}
 });
 

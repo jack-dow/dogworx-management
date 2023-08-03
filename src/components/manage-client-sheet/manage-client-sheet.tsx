@@ -30,18 +30,11 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
-import {
-	actions,
-	type ClientInsert,
-	type ClientRelationships,
-	type ClientsList,
-	type ClientsSearch,
-	type ClientUpdate,
-} from "~/actions";
+import { actions, type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
 import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
-import { generateId } from "~/utils";
+import { generateId, mergeRelationships } from "~/utils";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 
@@ -54,7 +47,15 @@ const ManageClientSheetFormSchema = z.intersection(
 		state: z.string().max(50).optional(),
 		postalCode: z.string().max(10).optional(),
 		notes: z.string().max(100000).nullish(),
-		dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema.extend({ dog: SelectDogSchema })),
+		dogToClientRelationships: z.array(
+			InsertDogToClientRelationshipSchema.extend({
+				dog: SelectDogSchema.pick({
+					id: true,
+					givenName: true,
+					color: true,
+				}),
+			}),
+		),
 	}),
 	EmailOrPhoneNumberSchema,
 );
@@ -62,14 +63,12 @@ const ManageClientSheetFormSchema = z.intersection(
 type ManageClientSheetFormSchema = z.infer<typeof ManageClientSheetFormSchema>;
 
 type DefaultValues = Partial<ManageClientSheetFormSchema>;
-type ExistingClient = Omit<ClientsList[number] | ClientsSearch[number], keyof ClientRelationships> &
-	Partial<ClientRelationships>;
 
-type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
+type ManageClientSheetProps<ClientProp extends ClientById | undefined> =
 	| {
 			open: boolean;
 			setOpen: (open: boolean) => void;
-			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
+			onSuccessfulSubmit?: (client: ClientProp extends ClientById ? ClientUpdate : ClientInsert) => void;
 			client?: ClientProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
@@ -77,13 +76,13 @@ type ManageClientSheetProps<ClientProp extends ExistingClient | undefined> =
 	| {
 			open?: undefined;
 			setOpen?: null;
-			onSuccessfulSubmit?: (client: ClientProp extends ExistingClient ? ClientUpdate : ClientInsert) => void;
+			onSuccessfulSubmit?: (client: ClientProp extends ClientById ? ClientUpdate : ClientInsert) => void;
 			client?: ClientProp;
 			defaultValues?: DefaultValues;
 			withoutTrigger?: boolean;
 	  };
 
-function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
+function ManageClientSheet<ClientProp extends ClientById | undefined>({
 	open,
 	setOpen,
 	onSuccessfulSubmit,
@@ -97,7 +96,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
-	const [isLoadingRelationships, setIsLoadingRelationships] = React.useState(false);
 
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
@@ -106,8 +104,6 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 		resolver: zodResolver(ManageClientSheetFormSchema),
 		defaultValues: {
 			id: client?.id || defaultValues?.id || generateId(),
-			dogToClientRelationships: client?.dogToClientRelationships,
-
 			...client,
 			...defaultValues,
 			actions: {
@@ -118,43 +114,32 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	useConfirmPageNavigation(form.formState.isDirty);
 
 	React.useEffect(() => {
-		function syncClient(client: ExistingClient) {
+		function syncClient(client: ClientById) {
+			const actions = form.getValues("actions");
 			form.reset(
-				{ ...client, actions: form.getValues("actions") },
+				{
+					...client,
+					dogToClientRelationships: mergeRelationships(
+						form.getValues("dogToClientRelationships"),
+						client.dogToClientRelationships,
+						actions.dogToClientRelationships,
+					),
+					actions,
+				},
 				{
 					keepDirtyValues: true,
 				},
 			);
 		}
-		if (client) {
-			if (!client.dogToClientRelationships) {
-				setIsLoadingRelationships(true);
-				const fetchRelationships = async () => {
-					const response = await actions.app.clients.getRelationships(client.id);
-					if (response.success) {
-						syncClient({
-							...client,
-							dogToClientRelationships: response.data.dogToClientRelationships,
-						});
-					} else {
-						toast({
-							title: "Failed to fetch client relationships",
-							description:
-								"An unknown error occurred whilst trying to get this vet's relationships. Please try again later.",
-						});
-					}
-					setIsLoadingRelationships(false);
-				};
-				void fetchRelationships();
-			}
 
+		if (client) {
 			syncClient(client);
 		}
 	}, [client, form, toast]);
 
 	async function onSubmit(data: ManageClientSheetFormSchema) {
 		let success = false;
-		let newClient: ClientUpdate | ClientInsert | undefined;
+		let newClient: ClientUpdate | ClientInsert | null | undefined;
 
 		if (client) {
 			const response = await actions.app.clients.update(data);
@@ -255,7 +240,7 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 
 							<Separator className="my-4" />
 
-							<ClientToDogRelationships control={form.control} isNew={isNew} isLoading={isLoadingRelationships} />
+							<ClientToDogRelationships control={form.control} isNew={isNew} />
 
 							<Separator className="my-4" />
 
@@ -276,4 +261,4 @@ function ManageClientSheet<ClientProp extends ExistingClient | undefined>({
 	);
 }
 
-export { type ManageClientSheetFormSchema, ManageClientSheet };
+export { ManageClientSheetFormSchema, ManageClientSheet };

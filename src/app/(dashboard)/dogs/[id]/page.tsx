@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 	title: "Update Dog | Dogworx Management",
 };
 
-async function Page({ params }: { params: { id: string } }) {
+async function UpdateDogPage({ params }: { params: { id: string } }) {
 	const dog = await actions.app.dogs.byId(params.id);
 
 	return (
@@ -19,4 +19,4 @@ async function Page({ params }: { params: { id: string } }) {
 		</>
 	);
 }
-export default Page;
+export default UpdateDogPage;
