@@ -21,7 +21,7 @@ import { AccountDisplayName } from "./account-display-name";
 import { AccountEmailAddress } from "./account-email-address";
 import { AccountProfileImage } from "./account-profile-image";
 import { AccountSessions } from "./account-sessions";
-import { AccountVerifyNewEmailAddressDialog } from "./acount-verify-new-email-address-dialog";
+import { AccountVerifyNewEmailAddressDialog } from "./account-verify-new-email-address-dialog";
 
 type Session = InferModel<typeof sessions>;
 

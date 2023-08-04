@@ -43,6 +43,12 @@ async function GET(request: NextRequest) {
 			});
 		}
 
+		if (!magicLink.user) {
+			return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
+				status: 303,
+			});
+		}
+
 		const sessionId = generateId();
 
 		const sessionToken = await createSessionJWT({
@@ -68,7 +74,7 @@ async function GET(request: NextRequest) {
 			value: sessionToken,
 		});
 
-		return NextResponse.json({});
+		return NextResponse.redirect(new URL("/", request.url));
 	} catch {
 		return NextResponse.redirect(new URL("/sign-in", request.url), {
 			status: 500,

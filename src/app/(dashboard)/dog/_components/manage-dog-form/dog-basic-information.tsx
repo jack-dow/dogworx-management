@@ -85,7 +85,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 									<Checkbox
 										checked={field.value}
 										onCheckedChange={(checked) => {
-											field.onChange(!checked);
+											field.onChange(checked);
 										}}
 									/>
 								</FormControl>

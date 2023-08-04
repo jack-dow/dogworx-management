@@ -71,7 +71,7 @@ const listVetClinics = createServerAction(async (options: PaginationSearchParams
 					count: 0,
 					page: 1,
 					maxPage: 1,
-					limit: 5,
+					limit: 20,
 					sortBy: "id",
 					sortDirection: "asc",
 				},

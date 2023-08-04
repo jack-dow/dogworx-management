@@ -290,6 +290,20 @@ function DogToVetRelationship({
 							<Select
 								onValueChange={(value) => {
 									field.onChange(value as typeof field.value);
+
+									const existingAction = form.getValues(`actions.dogToVetRelationships.${dogToVetRelationship.id}`);
+
+									if (existingAction.type === "INSERT") {
+										form.setValue(`actions.dogToVetRelationships.${dogToVetRelationship.id}`, {
+											type: "INSERT",
+											payload: {
+												...existingAction.payload,
+												relationship: value as typeof field.value,
+											},
+										});
+										return;
+									}
+
 									form.setValue(`actions.dogToVetRelationships.${dogToVetRelationship.id}`, {
 										type: "UPDATE",
 										payload: {

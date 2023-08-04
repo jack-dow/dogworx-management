@@ -42,7 +42,7 @@ interface DashboardLayoutProps {
 
 async function DashboardLayout({ children }: DashboardLayoutProps) {
 	const session = await actions.auth.sessions.current();
-	const prefersDarkMode = true;
+	const prefersDarkMode = session.user?.organizationId !== "mslu0ytyi8i2g7u1rdvooe55";
 
 	return (
 		<SessionProvider session={session}>

@@ -7,9 +7,9 @@ import { sessions } from "./db/schemas";
 import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {
-	if (process.env.NODE_ENV === "development") {
-		return NextResponse.next();
-	}
+	// if (process.env.NODE_ENV === "development") {
+	// 	return NextResponse.next();
+	// }
 
 	const sessionCookie = request.cookies.get(sessionCookieOptions.name);
 

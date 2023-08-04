@@ -101,7 +101,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			id: dog?.id || generateId(),
 			givenName: searchParams.get("searchTerm") ?? undefined,
 			desexed: false,
-			isAgeEstimate: false,
+			isAgeEstimate: true,
 			...dog,
 			actions: {
 				sessions: {},

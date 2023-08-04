@@ -113,7 +113,7 @@ function validatePaginationSearchParams({
 	}
 
 	if (!validLimit.success || !limit) {
-		limit = 5;
+		limit = 20;
 	}
 
 	const maxPage = Math.ceil(count / limit);

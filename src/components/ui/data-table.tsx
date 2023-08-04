@@ -234,7 +234,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 						<SelectValue>{limit}</SelectValue>
 					</SelectTrigger>
 					<SelectContent className="pointer-events-none">
-						{[5, 20, 30, 40, 50].map((pageSize) => {
+						{[20, 30, 40, 50].map((pageSize) => {
 							const currentOffset = (page - 1) * limit;
 							const newPage = Math.floor(currentOffset / Number(pageSize)) + 1;
 
