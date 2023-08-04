@@ -15,6 +15,7 @@ import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
+import { type SignInWithVerificationCodeGETResponse } from "~/app/api/auth/sign-in/verification-code/route";
 import { getBaseUrl } from "~/utils";
 
 function VerifyEmailAddressAlertDialog({
@@ -103,10 +104,21 @@ function VerifyEmailAddressAlertDialog({
 						<VerificationCodeInput
 							onSubmit={async (verificationCode) => {
 								if (emailAddress) {
-									const response = await fetch(`/api/auth/sign-in/magic-link?code=${verificationCode}`);
+									const response = await fetch(`/api/auth/sign-in/verification-code?code=${verificationCode}`);
 
-									if (response.status !== 200) {
-										throw new Error("Failed to verify email address");
+									const body = (await response.json()) as SignInWithVerificationCodeGETResponse;
+
+									if (!body.success && body.error.code === "InvalidCode") {
+										toast({
+											title: "Invalid verification code",
+											description:
+												typeof body.error.message === "string"
+													? body.error.message
+													: "The verification code you provided is invalid or expired. Please request a new one and try again",
+											variant: "destructive",
+										});
+										throw new Error("Invalid verification code");
+										return;
 									}
 
 									if (!response.ok) {

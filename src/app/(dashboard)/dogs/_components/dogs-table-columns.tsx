@@ -76,7 +76,7 @@ function createDogsTableColumns(
 						<DropdownMenuContent align="end" className="w-[160px]">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<Link href={`/dogs/${row.original.id}`}>
+							<Link href={`/dog/${row.original.id}`}>
 								<DropdownMenuItem>
 									<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 									Edit

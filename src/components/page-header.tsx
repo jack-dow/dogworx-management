@@ -1,67 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 
-import { cn } from "~/utils";
-import { ChevronLeftIcon, ChevronRightIcon } from "./ui/icons";
+import { ChevronLeftIcon } from "./ui/icons";
 
 type PageHeaderProps = {
 	title: string;
+	back?: {
+		href: string;
+		label?: string;
+	};
 };
 
-function PageHeader({ title }: PageHeaderProps) {
-	const router = useRouter();
-	const pathname = usePathname();
-
-	const pathnameArray = pathname.split("/").filter((path) => path !== "");
-
+function PageHeader({ title, back }: PageHeaderProps) {
 	return (
 		<div className="flex shrink-0 flex-col pb-4 lg:pb-6">
-			<div className="mb-2">
-				<nav className="sm:hidden" aria-label="Back">
-					<button
-						type="button"
-						onClick={() => router.back()}
-						className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-700"
-					>
-						<ChevronLeftIcon className="-ml-1 mr-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-						<span>Back</span>
-					</button>
-				</nav>
-
-				<nav className="hidden sm:table-cell" aria-label="Breadcrumb">
-					<ol role="list" className="flex items-center">
-						<li>
-							<div className="flex">
-								<Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
-									Dashboard
-								</Link>
-							</div>
-						</li>
-						{pathnameArray.map((path, index) => {
-							const pathToThisPoint = `/${pathnameArray.slice(0, index + 1).join("/")}`;
-
-							return (
-								<li key={`${path}-${index}`}>
-									<div className="flex items-center">
-										<ChevronRightIcon className="mx-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-										<Link
-											href={pathToThisPoint}
-											className={cn(
-												"mr-1 text-sm font-medium capitalize text-slate-500 hover:text-slate-700",
-												pathToThisPoint === pathname && "font-bold",
-											)}
-										>
-											{path.split("-").join(" ")}
-										</Link>
-									</div>
-								</li>
-							);
-						})}
-					</ol>
-				</nav>
-			</div>
+			{back && (
+				<div className="mb-2">
+					<nav aria-label="Back">
+						<Link
+							href={back.href}
+							className="flex items-center text-sm font-medium capitalize text-slate-500 hover:text-slate-700"
+						>
+							<ChevronLeftIcon className="-ml-1 mr-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+							<span>
+								{back.label ?? back.href === "/" ? "Dashboard" : back.href.split("/")[1]?.split("-").join(" ")}
+							</span>
+						</Link>
+					</nav>
+				</div>
+			)}
 
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-bold leading-7 text-slate-900 sm:truncate sm:text-3xl sm:tracking-tight">

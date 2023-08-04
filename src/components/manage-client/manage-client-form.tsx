@@ -38,11 +38,8 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 		const result = await onSubmit(data);
 
 		if (result.success) {
-			if (isNew) {
-				router.replace(`/clients/${data.id}`);
-			} else {
-				router.push("/clients");
-			}
+			router.push("/clients");
+
 			form.setValue("id", generateId());
 		}
 	}

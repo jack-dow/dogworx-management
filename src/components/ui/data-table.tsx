@@ -107,6 +107,10 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 		}
 	}, [pathname, searchParams]);
 
+	let name = pathname.split("/")[1];
+	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
+	name = name?.split("-").join(" ");
+
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center gap-4">
@@ -152,8 +156,8 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 						</DropdownMenuContent>
 					</DropdownMenu>
 					<Separator orientation="vertical" className="h-4" />
-					<Link href={`${pathname}/new`} onClick={() => setIsLoading(true)}>
-						<Button size="sm">Create {pathname.split("/")[1]?.slice(0, -1).split("-").join(" ")}</Button>
+					<Link href={`${pathname.slice(0, -1)}/new`} onClick={() => setIsLoading(true)}>
+						<Button size="sm">Create {name}</Button>
 					</Link>
 				</div>
 			</div>
@@ -179,9 +183,9 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									onClick={(event) => {
 										setIsLoading(true);
 										if (event.metaKey || event.ctrlKey) {
-											window.open(`${pathname}/${row.original.id}`, "_blank");
+											window.open(`${pathname.slice(0, -1)}/${row.original.id}`, "_blank");
 										} else {
-											router.push(`${pathname}/${row.original.id}`);
+											router.push(`${pathname.slice(0, -1)}/${row.original.id}`);
 										}
 									}}
 									key={row.id}
@@ -361,17 +365,21 @@ function DataTableSearchCombobox<ResultType extends { id: string }>({
 		}
 	}, [pathname, searchParams]);
 
+	let name = pathname.split("/")[1];
+	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
+	name = name?.split("-").join(" ");
+
 	return (
 		<Combobox
 			nullable
 			onChange={(result: ResultType | null) => {
 				if (result) {
 					if (result.id === "new") {
-						router.push(`${pathname}/new?searchTerm=${encodeURIComponent(searchTerm)}`);
+						router.push(`${pathname.slice(0, -1)}/new?searchTerm=${encodeURIComponent(searchTerm)}`);
 						return;
 					}
 					setIsNavigatingToResult(result.id);
-					router.push(`${pathname}/${result.id}`);
+					router.push(`${pathname.slice(0, -1)}/${result.id}`);
 				}
 			}}
 		>
@@ -379,7 +387,7 @@ function DataTableSearchCombobox<ResultType extends { id: string }>({
 				<ComboboxInput
 					ref={inputRef}
 					className="h-8"
-					placeholder={`Search ${count} ${pathname.split("/")[1]?.split("-").join(" ")}...`}
+					placeholder={`Search ${count} ${name}s...`}
 					defaultValue={searchTerm}
 					onChange={(event) => {
 						setSearchTerm(event.currentTarget.value);
@@ -415,7 +423,7 @@ function DataTableSearchCombobox<ResultType extends { id: string }>({
 										if (event.metaKey || event.ctrlKey) {
 											event.preventDefault();
 											event.stopPropagation();
-											window.open(`${pathname}/${result.id}`, "_blank");
+											window.open(`${pathname.slice(0, -1)}/${result.id}`, "_blank");
 										}
 									}}
 									className="justify-between"
@@ -437,8 +445,7 @@ function DataTableSearchCombobox<ResultType extends { id: string }>({
 							<ComboboxItem value={{ id: "new" }}>
 								<UserPlusIcon className="mr-2 h-4 w-4" />
 								<span>
-									Create new {pathname.split("/")[1]?.slice(0, -1).split("-").join(" ")}{" "}
-									{searchTerm && `"${searchTerm}"`}
+									Create new {name} {searchTerm && `"${searchTerm}"`}
 								</span>
 							</ComboboxItem>
 						</div>

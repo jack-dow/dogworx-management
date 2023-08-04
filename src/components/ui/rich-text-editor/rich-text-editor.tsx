@@ -1,80 +1,79 @@
 "use client";
 
 import * as React from "react";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor, type PureEditorContent } from "@tiptap/react";
 import sanitizeHtml from "sanitize-html";
 
 import { cn } from "~/utils";
 import { BubbleMenu } from "./bubble-menu";
 import { TiptapExtensions } from "./extensions";
 
-function RichTextEditor({
-	className,
-	onEditorChange,
-	onTextValueChange,
-	onHtmlValueChange,
-	id,
-	content,
-}: {
+type RichEditorProps = {
 	className?: string;
 	onEditorChange?: (editor: Editor) => void;
 	onTextValueChange?: (text: string) => void;
 	onHtmlValueChange?: (html: string) => void;
 	id?: string;
 	content?: string;
-}) {
-	const editor = useEditor({
-		extensions: TiptapExtensions,
-		editorProps: {
-			attributes: {
-				class: `prose dark:prose-invert prose-headings:font-display prose-h1:text-3xl font-default focus:outline-none max-w-full`,
-			},
-			handleDOMEvents: {
-				keydown: (_view, event) => {
-					// prevent default event listeners from firing when slash command is active
-					if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
-						const slashCommand = document.querySelector("#slash-command");
-						if (slashCommand) {
-							return true;
+	autofocus?: boolean;
+};
+
+const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
+	({ className, onEditorChange, onTextValueChange, onHtmlValueChange, id, content, autofocus = false }, ref) => {
+		const editor = useEditor({
+			extensions: TiptapExtensions,
+			editorProps: {
+				attributes: {
+					class: `prose dark:prose-invert prose-headings:font-display prose-h1:text-3xl font-default focus:outline-none max-w-full`,
+				},
+				handleDOMEvents: {
+					keydown: (_view, event) => {
+						// prevent default event listeners from firing when slash command is active
+						if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
+							const slashCommand = document.querySelector("#slash-command");
+							if (slashCommand) {
+								return true;
+							}
 						}
-					}
+					},
 				},
 			},
-		},
-		onUpdate: (e) => {
-			if (onTextValueChange) {
-				onTextValueChange(e.editor.getText() ?? "");
-			}
-			if (onHtmlValueChange) {
-				onHtmlValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
-			}
-		},
-		content,
-		autofocus: false,
-	});
+			onUpdate: (e) => {
+				if (onTextValueChange) {
+					onTextValueChange(e.editor.getText() ?? "");
+				}
+				if (onHtmlValueChange) {
+					onHtmlValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
+				}
+			},
+			content,
+			autofocus: autofocus ? "end" : false,
+		});
 
-	React.useEffect(() => {
-		if (editor && onEditorChange) {
-			onEditorChange(editor);
-		}
-	}, [editor, onEditorChange]);
+		React.useEffect(() => {
+			if (editor && onEditorChange) {
+				onEditorChange(editor);
+			}
+		}, [editor, onEditorChange]);
 
-	return (
-		<div className="flex flex-1 flex-col space-y-4">
-			<div
-				onClick={() => {
-					editor?.chain().focus().run();
-				}}
-				className={cn(
-					"relative min-h-[150px] w-full border rounded-md border-input  px-3 py-2 text-sm shadow-sm",
-					className,
-				)}
-			>
-				{editor && <BubbleMenu editor={editor} />}
-				<EditorContent id={id} editor={editor} />
+		return (
+			<div className="flex flex-1 flex-col space-y-4">
+				<div
+					onClick={() => {
+						editor?.chain().focus().run();
+					}}
+					className={cn(
+						"relative min-h-[150px] w-full border rounded-md border-input  px-3 py-2 text-sm shadow-sm",
+						className,
+					)}
+				>
+					{editor && <BubbleMenu editor={editor} />}
+					<EditorContent id={id} editor={editor} ref={ref} />
+				</div>
 			</div>
-		</div>
-	);
-}
+		);
+	},
+);
+RichTextEditor.displayName = "RichTextEditor";
 
 export { RichTextEditor };

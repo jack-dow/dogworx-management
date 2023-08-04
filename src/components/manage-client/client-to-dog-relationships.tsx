@@ -112,6 +112,22 @@ function ClientToDogRelationships({
 												<Select
 													onValueChange={(value) => {
 														field.onChange(value as typeof field.value);
+
+														const existingAction = form.getValues(
+															`actions.dogToClientRelationships.${dogToClientRelationship.id}`,
+														);
+
+														if (existingAction.type === "INSERT") {
+															form.setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
+																type: "INSERT",
+																payload: {
+																	...existingAction.payload,
+																	relationship: value as typeof field.value,
+																},
+															});
+															return;
+														}
+
 														form.setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
 															type: "UPDATE",
 															payload: {
@@ -158,7 +174,7 @@ function ClientToDogRelationships({
 												<DropdownMenuSeparator />
 
 												<DropdownMenuItem asChild>
-													<Link href={`/dogs/${dogToClientRelationship.dogId}`}>
+													<Link href={`/dog/${dogToClientRelationship.dogId}`}>
 														<EditIcon className="mr-2 h-4 w-4" />
 														Edit
 													</Link>

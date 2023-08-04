@@ -315,7 +315,7 @@ const updateVet = createServerAction(async (values: UpdateVetSchema) => {
 		});
 
 		revalidatePath("/vets");
-		revalidatePath("/dogs/[id]");
+		revalidatePath("/dog/[id]");
 
 		const vet = await drizzle.query.vets.findFirst({
 			columns: {

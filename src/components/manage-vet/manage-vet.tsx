@@ -50,7 +50,8 @@ const ManageVetFormSchema = z.intersection(
 	}),
 	EmailOrPhoneNumberSchema,
 );
-type ManageVetFormSchema = z.infer<typeof ManageVetFormSchema>;
+// Had to add `Type` suffix because was getting "Cannot access before initialization" error
+type ManageVetFormSchemaType = z.infer<typeof ManageVetFormSchema>;
 
 type ManageVetProps<
 	VariantType extends "sheet" | "form",
@@ -70,7 +71,7 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
-	const form = useForm<ManageVetFormSchema>({
+	const form = useForm<ManageVetFormSchemaType>({
 		resolver: zodResolver(ManageVetFormSchema),
 		defaultValues: {
 			id: props.vet?.id || props.defaultValues?.id || generateId(),
@@ -90,7 +91,7 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/vets/new");
+			router.replace("/vet/new");
 		}
 	}, [searchParams, router]);
 
@@ -123,7 +124,7 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 		}
 	}, [props.vet, form]);
 
-	async function onSubmit(data: ManageVetFormSchema) {
+	async function onSubmit(data: ManageVetFormSchemaType) {
 		let success = false;
 		let newVet: VetUpdate | VetInsert | null | undefined;
 
@@ -167,4 +168,4 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 	);
 }
 
-export { ManageVetFormSchema, ManageVet };
+export { type ManageVetFormSchemaType, ManageVet };

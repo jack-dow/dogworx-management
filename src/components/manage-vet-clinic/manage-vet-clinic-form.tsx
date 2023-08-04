@@ -11,7 +11,7 @@ import { Separator } from "~/components/ui/separator";
 import { type VetClinicById } from "~/actions";
 import { generateId } from "~/utils";
 import { FormSection } from "../ui/form";
-import { type ManageVetClinicFormSchema } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 
@@ -22,7 +22,7 @@ type ManageVetClinicFormProps = {
 	defaultValues?: never;
 	withoutTrigger?: never;
 	vetClinic?: VetClinicById;
-	onSubmit: (data: ManageVetClinicFormSchema) => Promise<{ success: boolean }>;
+	onSubmit: (data: ManageVetClinicFormSchemaType) => Promise<{ success: boolean }>;
 };
 
 function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) {
@@ -30,19 +30,15 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 
 	const router = useRouter();
 
-	const form = useFormContext<ManageVetClinicFormSchema>();
+	const form = useFormContext<ManageVetClinicFormSchemaType>();
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
-	async function handleSubmit(data: ManageVetClinicFormSchema) {
+	async function handleSubmit(data: ManageVetClinicFormSchemaType) {
 		const result = await onSubmit(data);
 
 		if (result.success) {
-			if (isNew) {
-				router.replace(`/vet-clinics/${data.id}`);
-			} else {
-				router.push("/vet-clinics");
-			}
+			router.push("/vet-clinics");
 
 			form.setValue("id", generateId());
 		}

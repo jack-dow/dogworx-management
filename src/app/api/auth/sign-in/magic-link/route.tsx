@@ -14,9 +14,8 @@ async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url);
 
 	const token = searchParams.get("token");
-	const code = searchParams.get("code") ?? undefined;
 
-	if (!token && !code) {
+	if (!token) {
 		return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
 			status: 303,
 		});
@@ -24,8 +23,7 @@ async function GET(request: NextRequest) {
 
 	try {
 		const magicLink = await drizzle.query.verificationCodes.findFirst({
-			where: (verificationCodes, { eq, sql }) =>
-				token ? sql`BINARY ${verificationCodes.token} = ${token}` : eq(verificationCodes.code, code!),
+			where: (verificationCodes, { sql }) => sql`BINARY ${verificationCodes.token} = ${token}`,
 			with: {
 				user: true,
 			},

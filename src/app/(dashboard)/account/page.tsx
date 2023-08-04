@@ -19,7 +19,7 @@ async function AccountSettingsPage() {
 
 	return (
 		<>
-			<PageHeader title="Account settings" />
+			<PageHeader title="Account settings" back={{ href: "/" }} />
 
 			<ManageAccountForm sessions={userSessions} />
 		</>

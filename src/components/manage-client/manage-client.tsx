@@ -75,7 +75,7 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/clients/new");
+			router.replace("/client/new");
 		}
 	}, [searchParams, router]);
 

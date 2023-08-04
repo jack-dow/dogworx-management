@@ -15,10 +15,10 @@ async function VetsPage({ searchParams }: { searchParams?: { [key: string]: stri
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
 		sortDirection: typeof searchParams?.sortDirection === "string" ? searchParams?.sortDirection : undefined,
 	});
-	
+
 	return (
 		<>
-			<PageHeader title="Manage Vets" />
+			<PageHeader title="Manage Vets" back={{ href: "/vets" }} />
 
 			<VetsTable result={response.data} />
 		</>

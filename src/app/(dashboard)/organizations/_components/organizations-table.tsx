@@ -34,7 +34,7 @@ function OrganizationsTable({ result }: { result: OrganizationsList }) {
 					if (result.success) {
 						toast({
 							title: `Organization deleted`,
-							description: `Successfully deleted organization "${confirmOrganizationDelete.name}}"`,
+							description: `Successfully deleted organization "${confirmOrganizationDelete.name}"`,
 						});
 					} else {
 						toast({

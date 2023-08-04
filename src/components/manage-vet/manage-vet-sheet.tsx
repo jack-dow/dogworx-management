@@ -27,19 +27,19 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
-import { type ManageVetFormSchema } from "./manage-vet";
+import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-type DefaultValues = Partial<ManageVetFormSchema>;
+type DefaultValues = Partial<ManageVetFormSchemaType>;
 
 type ManageVetSheetProps<VetProp extends VetById | undefined> = {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	onSubmit: (
-		data: ManageVetFormSchema,
+		data: ManageVetFormSchemaType,
 	) => Promise<{ success: boolean; data: VetUpdate | VetInsert | null | undefined }>;
 	onSuccessfulSubmit?: (vet: VetProp extends VetById ? VetUpdate : VetInsert) => void;
 	vet?: VetProp;
@@ -62,9 +62,9 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
 
-	const form = useFormContext<ManageVetFormSchema>();
+	const form = useFormContext<ManageVetFormSchemaType>();
 
-	async function handleSubmit(data: ManageVetFormSchema) {
+	async function handleSubmit(data: ManageVetFormSchemaType) {
 		const result = await onSubmit(data);
 
 		if (result.success) {

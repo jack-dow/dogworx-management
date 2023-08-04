@@ -18,7 +18,7 @@ async function ClientsPage({ searchParams }: { searchParams?: { [key: string]: s
 
 	return (
 		<>
-			<PageHeader title="Manage Clients" />
+			<PageHeader title="Manage Clients" back={{ href: "/" }} />
 
 			<ClientsTable result={response.data} />
 		</>

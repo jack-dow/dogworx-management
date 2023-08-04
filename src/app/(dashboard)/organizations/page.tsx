@@ -28,7 +28,7 @@ async function OrganizationsPage({
 
 	return (
 		<>
-			<PageHeader title="Organizations" />
+			<PageHeader title="Organizations" back={{ href: "/" }} />
 
 			<OrganizationsTable result={response.data} />
 		</>

@@ -15,16 +15,16 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
-import { type ManageVetClinicFormSchema } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 
 function VetClinicContactInformation({
 	control,
 	variant,
 }: {
-	control: Control<ManageVetClinicFormSchema>;
+	control: Control<ManageVetClinicFormSchemaType>;
 	variant: "sheet" | "form";
 }) {
-	const form = useFormContext<ManageVetClinicFormSchema>();
+	const form = useFormContext<ManageVetClinicFormSchemaType>();
 
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;

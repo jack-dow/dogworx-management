@@ -27,18 +27,18 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
-import { type ManageVetClinicFormSchema } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 
-type DefaultValues = Partial<ManageVetClinicFormSchema>;
+type DefaultValues = Partial<ManageVetClinicFormSchemaType>;
 
 type ManageVetClinicSheetProps<VetClinicProp extends VetClinicById | undefined> = {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	onSubmit: (
-		data: ManageVetClinicFormSchema,
+		data: ManageVetClinicFormSchemaType,
 	) => Promise<{ success: boolean; data: VetClinicUpdate | VetClinicInsert | null | undefined }>;
 	onSuccessfulSubmit?: (vetClinic: VetClinicProp extends VetClinicById ? VetClinicUpdate : VetClinicInsert) => void;
 	vetClinic?: VetClinicProp;
@@ -61,9 +61,9 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
 
-	const form = useFormContext<ManageVetClinicFormSchema>();
+	const form = useFormContext<ManageVetClinicFormSchemaType>();
 
-	async function handleSubmit(data: ManageVetClinicFormSchema) {
+	async function handleSubmit(data: ManageVetClinicFormSchemaType) {
 		const result = await onSubmit(data);
 
 		if (result.success) {

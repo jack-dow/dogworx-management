@@ -34,7 +34,8 @@ const ManageVetClinicFormSchema = z.intersection(
 	}),
 	EmailOrPhoneNumberSchema,
 );
-type ManageVetClinicFormSchema = z.infer<typeof ManageVetClinicFormSchema>;
+// Had to add `Type` suffix because was getting "Cannot access before initialization" error
+type ManageVetClinicFormSchemaType = z.infer<typeof ManageVetClinicFormSchema>;
 
 type ManageVetClinicProps<
 	VariantType extends "sheet" | "form",
@@ -54,7 +55,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
-	const form = useForm<ManageVetClinicFormSchema>({
+	const form = useForm<ManageVetClinicFormSchemaType>({
 		resolver: zodResolver(ManageVetClinicFormSchema),
 		defaultValues: {
 			id: props.vetClinic?.id || props.defaultValues?.id || generateId(),
@@ -70,7 +71,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/vet-clinics/new");
+			router.replace("/vet-clinic/new");
 		}
 	}, [searchParams, router]);
 
@@ -98,7 +99,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 		}
 	}, [props.vetClinic, form]);
 
-	async function onSubmit(data: ManageVetClinicFormSchema) {
+	async function onSubmit(data: ManageVetClinicFormSchemaType) {
 		let success = false;
 		let newVetClinic: VetClinicUpdate | VetClinicInsert | null | undefined;
 
@@ -140,4 +141,4 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 	);
 }
 
-export { ManageVetClinicFormSchema, ManageVetClinic };
+export { type ManageVetClinicFormSchemaType, ManageVetClinicFormSchema, ManageVetClinic };

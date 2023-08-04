@@ -11,7 +11,7 @@ import { type VetById } from "~/actions";
 import { generateId } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { FormSection } from "../ui/form";
-import { type ManageVetFormSchema } from "./manage-vet";
+import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
@@ -23,7 +23,7 @@ type ManageVetFormProps = {
 	defaultValues?: never;
 	withoutTrigger?: never;
 	vet?: VetById;
-	onSubmit: (data: ManageVetFormSchema) => Promise<{ success: boolean }>;
+	onSubmit: (data: ManageVetFormSchemaType) => Promise<{ success: boolean }>;
 };
 
 function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
@@ -31,16 +31,16 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 
 	const router = useRouter();
 
-	const form = useFormContext<ManageVetFormSchema>();
+	const form = useFormContext<ManageVetFormSchemaType>();
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
-	async function handleSubmit(data: ManageVetFormSchema) {
+	async function handleSubmit(data: ManageVetFormSchemaType) {
 		const result = await onSubmit(data);
 
 		if (result.success) {
 			if (isNew) {
-				router.replace(`/vets/${data.id}`);
+				router.replace(`/vet/${data.id}`);
 			} else {
 				router.push("/vets");
 			}

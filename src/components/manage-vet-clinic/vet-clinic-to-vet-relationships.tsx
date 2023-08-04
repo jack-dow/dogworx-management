@@ -38,18 +38,18 @@ import { generateId } from "~/utils";
 import { ManageVet } from "../manage-vet";
 import { Loader } from "../ui/loader";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetClinicFormSchema } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 
 function VetClinicToVetRelationships({
 	control,
 	existingVetToVetClinicRelationships,
 	variant,
 }: {
-	control: Control<ManageVetClinicFormSchema>;
+	control: Control<ManageVetClinicFormSchemaType>;
 	existingVetToVetClinicRelationships: VetClinicById["vetToVetClinicRelationships"] | undefined;
 	variant: "sheet" | "form";
 }) {
-	const form = useFormContext<ManageVetClinicFormSchema>();
+	const form = useFormContext<ManageVetClinicFormSchemaType>();
 
 	const vetToVetClinicRelationships = useFieldArray({
 		control,
@@ -249,13 +249,13 @@ function VetClinicToVetRelationship({
 	onEdit,
 	onDelete,
 }: {
-	vetToVetClinicRelationship: ManageVetClinicFormSchema["vetToVetClinicRelationships"][number];
+	vetToVetClinicRelationship: ManageVetClinicFormSchemaType["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vet: VetById) => void;
 	onDelete: (vet: VetsSearch[number]) => void;
 }) {
 	const { toast } = useToast();
-	const form = useFormContext<ManageVetClinicFormSchema>();
+	const form = useFormContext<ManageVetClinicFormSchemaType>();
 
 	const [isFetchingVet, setIsFetchingVet] = React.useState(false);
 	return (
@@ -298,6 +298,22 @@ function VetClinicToVetRelationship({
 							<Select
 								onValueChange={(value) => {
 									field.onChange(value as typeof field.value);
+
+									const existingAction = form.getValues(
+										`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`,
+									);
+
+									if (existingAction.type === "INSERT") {
+										form.setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
+											type: "INSERT",
+											payload: {
+												...existingAction.payload,
+												relationship: value as typeof field.value,
+											},
+										});
+										return;
+									}
+
 									form.setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
 										type: "UPDATE",
 										payload: {
