@@ -168,7 +168,7 @@ const getDogById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to fetch dog with id: ${id}`, data: null };
+		return { success: false, error: `Failed to fetch dog with id: ${validId.data}`, data: null };
 	}
 });
 type DogById = ExtractServerActionData<typeof getDogById>;

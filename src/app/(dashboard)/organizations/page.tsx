@@ -3,15 +3,23 @@ import { redirect } from "next/navigation";
 
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
-import { ManageOrganizationSheet } from "./_components/manage-organization-sheet";
 import { OrganizationsTable } from "./_components/organizations-table";
 
 export const metadata: Metadata = {
 	title: "Organizations | Dogworx Management",
 };
 
-async function OrganizationsPage() {
-	const organizations = await actions.auth.organizations.list();
+async function OrganizationsPage({
+	searchParams,
+}: {
+	searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+	const response = await actions.auth.organizations.list({
+		page: Number(searchParams?.page) ?? undefined,
+		limit: Number(searchParams?.limit) ?? undefined,
+		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
+		sortDirection: typeof searchParams?.sortDirection === "string" ? searchParams?.sortDirection : undefined,
+	});
 	const session = await actions.auth.sessions.current();
 
 	if (session.user.emailAddress !== "jack.dowww@gmail.com") {
@@ -20,9 +28,9 @@ async function OrganizationsPage() {
 
 	return (
 		<>
-			<PageHeader title="Organizations" action={<ManageOrganizationSheet />} />
+			<PageHeader title="Organizations" />
 
-			<OrganizationsTable organizations={organizations?.data ?? []} />
+			<OrganizationsTable result={response.data} />
 		</>
 	);
 }

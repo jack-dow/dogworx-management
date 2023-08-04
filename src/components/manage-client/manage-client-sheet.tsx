@@ -66,11 +66,11 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 	async function handleSubmit(data: ManageClientFormSchema) {
 		const result = await onSubmit(data);
 
-		if (result.data && onSuccessfulSubmit) {
-			onSuccessfulSubmit(result.data);
-		}
-
 		if (result.success) {
+			if (result.data && onSuccessfulSubmit) {
+				onSuccessfulSubmit(result.data);
+			}
+
 			setInternalOpen(false);
 			form.reset();
 		}
@@ -136,11 +136,11 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 							void form.handleSubmit(handleSubmit)(e);
 						}}
 					>
-						<ClientPersonalInformation control={form.control} type="sheet" />
+						<ClientPersonalInformation control={form.control} variant="sheet" />
 
 						<Separator className="my-4" />
 
-						<ClientToDogRelationships control={form.control} isNew={isNew} type="sheet" />
+						<ClientToDogRelationships control={form.control} isNew={isNew} variant="sheet" />
 
 						<Separator className="my-4" />
 

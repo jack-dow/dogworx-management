@@ -21,7 +21,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormSection } from "~/components/ui/form";
 import {
 	CalendarIcon,
 	ChevronUpDownIcon,
@@ -99,101 +99,92 @@ function DogSessionsHistory({
 				}}
 			/>
 
-			<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
-				<div>
-					<h2 className="text-base font-semibold leading-7 text-foreground">Session history</h2>
-					<p className="text-sm leading-6 text-muted-foreground">
-						Keep track of details about this dog&apos;s sessions.
-					</p>
-				</div>
+			<FormSection title="Session History" description="Keep track of details about this dog's sessions.">
+				<div className="space-y-8">
+					<EditableSessionDetail
+						dogId={form.getValues("id")}
+						onSubmit={(session) => {
+							removeSessionFromUnsavedSessions(session.id);
 
-				<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
-					<div className="space-y-8 sm:p-8">
-						<EditableSessionDetail
-							dogId={form.getValues("id")}
-							onSubmit={(session) => {
-								removeSessionFromUnsavedSessions(session.id);
+							sessionHistory.append(session);
 
-								sessionHistory.append(session);
+							form.setValue("actions.sessions", {
+								...form.getValues("actions.sessions"),
+								[session.id]: {
+									type: "INSERT",
+									payload: session,
+								},
+							});
+						}}
+						onDetailsTextChange={(text, id) => {
+							const unsavedSessionIds = form.getValues("unsavedSessionIds");
+							if (text && !unsavedSessionIds.includes(id)) {
+								form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
+							}
 
-								form.setValue("actions.sessions", {
-									...form.getValues("actions.sessions"),
-									[session.id]: {
-										type: "INSERT",
-										payload: session,
-									},
-								});
-							}}
-							onDetailsTextChange={(text, id) => {
-								const unsavedSessionIds = form.getValues("unsavedSessionIds");
-								if (text && !unsavedSessionIds.includes(id)) {
-									form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
-								}
+							if (!text) {
+								removeSessionFromUnsavedSessions(id);
+							}
+						}}
+					/>
 
-								if (!text) {
-									removeSessionFromUnsavedSessions(id);
-								}
-							}}
-						/>
+					<div>
+						<ul role="list" className="-mb-8">
+							{[...sessionHistory.fields]
+								.sort((a, b) => b.date.getTime() - a.date.getTime())
+								.map((session, index) => {
+									return (
+										<SessionDetail
+											key={session.id}
+											dogId={form.getValues("id")}
+											session={session}
+											isLast={index === sessionHistory.fields.length - 1}
+											onUpdate={(updatedSession) => {
+												removeSessionFromUnsavedSessions(updatedSession.id);
 
-						<div>
-							<ul role="list" className="-mb-8">
-								{[...sessionHistory.fields]
-									.sort((a, b) => b.date.getTime() - a.date.getTime())
-									.map((session, index) => {
-										return (
-											<SessionDetail
-												key={session.id}
-												dogId={form.getValues("id")}
-												session={session}
-												isLast={index === sessionHistory.fields.length - 1}
-												onUpdate={(updatedSession) => {
-													removeSessionFromUnsavedSessions(updatedSession.id);
+												const sessionHistoryActions = { ...form.getValues("actions.sessions") };
 
-													const sessionHistoryActions = { ...form.getValues("actions.sessions") };
+												sessionHistoryActions[updatedSession.id] = {
+													type: "UPDATE",
+													payload: updatedSession,
+												};
 
-													sessionHistoryActions[updatedSession.id] = {
-														type: "UPDATE",
-														payload: updatedSession,
-													};
+												sessionHistory.update(
+													sessionHistory.fields.findIndex((f) => f.id === updatedSession.id),
+													updatedSession,
+												);
 
-													sessionHistory.update(
-														sessionHistory.fields.findIndex((f) => f.id === updatedSession.id),
-														updatedSession,
-													);
+												form.setValue("actions.sessions", sessionHistoryActions);
+											}}
+											onDelete={() => {
+												removeSessionFromUnsavedSessions(session.id);
 
-													form.setValue("actions.sessions", sessionHistoryActions);
-												}}
-												onDelete={() => {
-													removeSessionFromUnsavedSessions(session.id);
+												if (existingDogSessions.some((s) => s.id === session.id)) {
+													setConfirmSessionDelete(session.id);
+												} else {
+													handleDogSessionDelete(session.id);
+												}
+											}}
+											onDetailsTextChange={(text, id) => {
+												const unsavedSessionIds = form.getValues("unsavedSessionIds");
+												if (text && !unsavedSessionIds.includes(id)) {
+													form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
+												}
 
-													if (existingDogSessions.some((s) => s.id === session.id)) {
-														setConfirmSessionDelete(session.id);
-													} else {
-														handleDogSessionDelete(session.id);
-													}
-												}}
-												onDetailsTextChange={(text, id) => {
-													const unsavedSessionIds = form.getValues("unsavedSessionIds");
-													if (text && !unsavedSessionIds.includes(id)) {
-														form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
-													}
-
-													if (!text) {
-														removeSessionFromUnsavedSessions(id);
-													}
-												}}
-												onCancel={() => {
-													removeSessionFromUnsavedSessions(session.id);
-												}}
-											/>
-										);
-									})}
-							</ul>
-						</div>
+												if (!text) {
+													removeSessionFromUnsavedSessions(id);
+												}
+											}}
+											onCancel={() => {
+												removeSessionFromUnsavedSessions(session.id);
+											}}
+										/>
+									);
+								})}
+						</ul>
 					</div>
 				</div>
-			</div>
+			</FormSection>
 		</>
 	);
 }
@@ -262,7 +253,9 @@ function SessionDetail({
 						<div className="min-w-0 flex-1">
 							<div>
 								<div className="text-sm">
-									<p className="font-medium text-slate-900">{session.user?.name ?? "Deleted User"}</p>
+									<p className="font-medium text-slate-900">
+										{session.user ? `${session.user.givenName} ${session.user.familyName}` : "Deleted User"}
+									</p>
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{dayjs(session.date).format("MMMM D, YYYY")}</p>
 							</div>

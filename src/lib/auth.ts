@@ -2,10 +2,10 @@
 
 import { type SignOutPOSTResponse } from "~/app/api/auth/sign-out/route";
 import { type CreateUserFromInvitePOSTResponse } from "~/app/api/auth/sign-up/invite/route";
-import { type OrganizationInviteLink } from "~/db/schemas";
+import { type SelectOrganizationInviteLinkSchema } from "~/db/validation";
 import { type SignUpSchema } from "../lib/validation";
 
-async function signUp(data: SignUpSchema, inviteLink: OrganizationInviteLink) {
+async function signUp(data: SignUpSchema, inviteLink: SelectOrganizationInviteLinkSchema) {
 	const signUpResponse = await fetch(`/api/auth/sign-up/invite?id=${inviteLink.id}`, {
 		method: "POST",
 		headers: {

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type InferModel } from "drizzle-orm";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -13,7 +14,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
-import { type Session } from "~/db/schemas";
+import { type sessions } from "~/db/schemas";
 import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
 import { AccountDelete } from "./account-delete";
 import { AccountDisplayName } from "./account-display-name";
@@ -21,6 +22,8 @@ import { AccountEmailAddress } from "./account-email-address";
 import { AccountProfileImage } from "./account-profile-image";
 import { AccountSessions } from "./account-sessions";
 import { AccountVerifyNewEmailAddressDialog } from "./acount-verify-new-email-address-dialog";
+
+type Session = InferModel<typeof sessions>;
 
 const ManageAccountFormSchema = InsertUserSchema.extend({
 	sessions: z.array(SelectSessionSchema),

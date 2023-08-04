@@ -1,4 +1,4 @@
-function Layout(props: { children: React.ReactNode; sheets: React.ReactNode }) {
+function VetsLayout(props: { children: React.ReactNode; sheets: React.ReactNode }) {
 	return (
 		<>
 			{props.children}
@@ -7,4 +7,4 @@ function Layout(props: { children: React.ReactNode; sheets: React.ReactNode }) {
 	);
 }
 
-export default Layout;
+export default VetsLayout;

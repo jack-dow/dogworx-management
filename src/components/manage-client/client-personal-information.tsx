@@ -20,15 +20,15 @@ import { type ManageClientFormSchema } from "./manage-client";
 
 function ClientPersonalInformation({
 	control,
-	type,
+	variant,
 }: {
 	control: Control<ManageClientFormSchema>;
-	type: "sheet" | "form";
+	variant: "sheet" | "form";
 }) {
 	const form = useFormContext<ManageClientFormSchema>();
 
-	const SectionWrapper = type === "sheet" ? FormSheetGroup : FormSection;
-	const FieldsWrapper = type === "sheet" ? React.Fragment : FormGroup;
+	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
+	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
 
 	return (
 		<SectionWrapper title="Personal Information" description="The name and basic contact information for this client">
@@ -117,7 +117,7 @@ function ClientPersonalInformation({
 					/>
 				</div>
 
-				<div className={cn(type === "sheet" ? "col-span-full" : "col-span-3")}>
+				<div className={cn(variant === "sheet" ? "col-span-full" : "col-span-3")}>
 					<FormField
 						control={control}
 						name="streetAddress"
@@ -133,7 +133,7 @@ function ClientPersonalInformation({
 					/>
 				</div>
 
-				<div className={cn(type === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
 						control={control}
 						name="city"
@@ -149,7 +149,7 @@ function ClientPersonalInformation({
 					/>
 				</div>
 
-				<div className={cn(type === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
 						control={control}
 						name="state"
@@ -165,7 +165,7 @@ function ClientPersonalInformation({
 					/>
 				</div>
 
-				<div className={cn(type === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
 						control={control}
 						name="postalCode"

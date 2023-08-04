@@ -8,7 +8,7 @@ import { useFormContext, type Control } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { Checkbox } from "~/components/ui/checkbox";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
+import { FormControl, FormField, FormGroup, FormItem, FormLabel, FormMessage, FormSection } from "~/components/ui/form";
 import { CalendarIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -21,176 +21,168 @@ import { ManageDogFormSchema } from "./manage-dog-form";
 
 function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
-			<div>
-				<h2 className="text-base font-semibold leading-7 text-foreground">Basic Information</h2>
-				<p className="text-sm leading-6 text-muted-foreground">
-					The information you provide here will be used to create your dog&apos;s profile.
-				</p>
-			</div>
+		<FormSection
+			title="Basic Information"
+			description="The information you provide here will be used to create your dog's profile."
+		>
+			<FormGroup>
+				<div className="sm:col-span-2">
+					<FormField
+						control={control}
+						name="givenName"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Name</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 
-			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
-				<div className="sm:p-8">
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-y-6">
-						<div className="sm:col-span-2">
-							<FormField
-								control={control}
-								name="givenName"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name</FormLabel>
-										<FormControl>
-											<Input {...field} value={field.value ?? ""} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+				<div className="sm:col-span-2">
+					<FormField
+						control={control}
+						name="breed"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Breed</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 
-						<div className="sm:col-span-2">
-							<FormField
-								control={control}
-								name="breed"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Breed</FormLabel>
-										<FormControl>
-											<Input {...field} value={field.value ?? ""} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+				<div className="sm:col-span-2">
+					<FormField
+						control={control}
+						name="color"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Color</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 
-						<div className="sm:col-span-2">
-							<FormField
-								control={control}
-								name="color"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Color</FormLabel>
-										<FormControl>
-											<Input {...field} value={field.value ?? ""} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+				<div className="mt-2 space-y-2 sm:col-span-2">
+					<BirthdayInputCalendar control={control} />
+					<FormField
+						control={control}
+						name="isAgeEstimate"
+						render={({ field }) => (
+							<FormItem className="flex items-center space-x-2 space-y-0">
+								<FormControl>
+									<Checkbox
+										checked={!field.value}
+										onCheckedChange={(checked) => {
+											field.onChange(!checked);
+										}}
+									/>
+								</FormControl>
+								<FormLabel>Birthday is estimate</FormLabel>
+							</FormItem>
+						)}
+					/>
+				</div>
 
-						<div className="mt-2 space-y-2 sm:col-span-2">
-							<BirthdayInputCalendar control={control} />
-							<FormField
-								control={control}
-								name="isAgeEstimate"
-								render={({ field }) => (
-									<FormItem className="flex items-center space-x-2 space-y-0">
-										<FormControl>
-											<Checkbox
-												checked={!field.value}
-												onCheckedChange={(checked) => {
-													field.onChange(!checked);
-												}}
-											/>
-										</FormControl>
-										<FormLabel>Birthday is estimate</FormLabel>
-									</FormItem>
-								)}
-							/>
-						</div>
+				<div className="sm:col-span-2">
+					<FormField
+						control={control}
+						name="sex"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Sex</FormLabel>
+								<Select
+									onValueChange={(value) => {
+										field.onChange(value as typeof field.value);
+									}}
+									value={field.value ?? ""}
+								>
+									<FormControl>
+										<SelectTrigger>
+											<SelectValue>
+												{/* This is required because field is black for a second on page load otherwise */}
+												<span className={cn(field.value && "capitalize")}>{field.value ?? "Select a sex"}</span>
+											</SelectValue>
+										</SelectTrigger>
+									</FormControl>
+									<SelectContent>
+										{Object.values(ManageDogFormSchema.shape.sex.Values).map((relation) => (
+											<SelectItem key={relation} value={relation} className="capitalize">
+												{relation}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 
-						<div className="sm:col-span-2">
-							<FormField
-								control={control}
-								name="sex"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Sex</FormLabel>
-										<Select
-											onValueChange={(value) => {
-												field.onChange(value as typeof field.value);
-											}}
-											value={field.value ?? ""}
-										>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue>
-														{/* This is required because field is black for a second on page load otherwise */}
-														<span className={cn(field.value && "capitalize")}>{field.value ?? "Select a sex"}</span>
-													</SelectValue>
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												{Object.values(ManageDogFormSchema.shape.sex.Values).map((relation) => (
-													<SelectItem key={relation} value={relation} className="capitalize">
-														{relation}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						<div className="sm:col-span-2">
-							<FormField
-								control={control}
-								name="desexed"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Desexed</FormLabel>
-										<FormControl>
-											{/* <SegmentedControl
+				<div className="sm:col-span-2">
+					<FormField
+						control={control}
+						name="desexed"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Desexed</FormLabel>
+								<FormControl>
+									{/* <SegmentedControl
 												data={["Yes", "No"]}
 												value={field.value ? "Yes" : "No"}
 												onChange={(value) => {
 													field.onChange(value === "Yes");
 												}}
 											/> */}
-											<Tabs
-												value={field.value ? "yes" : "no"}
-												onValueChange={(value) => {
-													field.onChange(value === "yes");
-												}}
-												className="w-full"
-											>
-												<TabsList className="grid w-full grid-cols-2">
-													<TabsTrigger value="yes">Yes</TabsTrigger>
-													<TabsTrigger value="no">No</TabsTrigger>
-												</TabsList>
-											</Tabs>
-										</FormControl>
+									<Tabs
+										value={field.value ? "yes" : "no"}
+										onValueChange={(value) => {
+											field.onChange(value === "yes");
+										}}
+										className="w-full"
+									>
+										<TabsList className="grid w-full grid-cols-2">
+											<TabsTrigger value="yes">Yes</TabsTrigger>
+											<TabsTrigger value="no">No</TabsTrigger>
+										</TabsList>
+									</Tabs>
+								</FormControl>
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						<div className="sm:col-span-6">
-							<FormField
-								control={control}
-								name="notes"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Notes</FormLabel>
-										<FormControl>
-											<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-					</div>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 				</div>
-			</div>
-		</div>
+
+				<div className="sm:col-span-6">
+					<FormField
+						control={control}
+						name="notes"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Notes</FormLabel>
+								<FormControl>
+									<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+			</FormGroup>
+		</FormSection>
 	);
 }
 

@@ -17,7 +17,7 @@ async function UpdateClientPage({ params }: { params: { id: string } }) {
 				title={`Update Client${client.data?.givenName ? ` "${client.data.givenName} ${client.data.familyName}" ` : ""}`}
 			/>
 
-			{client.data ? <ManageClient type="form" client={client.data} /> : <div>Client not found D:</div>}
+			{client.data ? <ManageClient variant="form" client={client.data} /> : <div>Client not found D:</div>}
 		</>
 	);
 }

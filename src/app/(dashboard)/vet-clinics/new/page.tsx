@@ -1,10 +1,10 @@
 import { type Metadata } from "next";
 
+import { ManageVetClinic } from "~/components/manage-vet-clinic";
 import { PageHeader } from "~/components/page-header";
-import { ManageVetClinicForm } from "../_components/manage-vet-clinic-form";
 
 export const metadata: Metadata = {
-	title: "Create New Client | Dogworx Management",
+	title: "Create New Vet Clinic | Dogworx Management",
 };
 
 function NewVetClinicPage() {
@@ -12,7 +12,7 @@ function NewVetClinicPage() {
 		<>
 			<PageHeader title="Create New Vet Clinic" />
 
-			<ManageVetClinicForm />
+			<ManageVetClinic variant="form" />
 		</>
 	);
 }

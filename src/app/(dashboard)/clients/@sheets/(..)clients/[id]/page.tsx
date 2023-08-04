@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 async function UpdateClientPageInterceptSheet({ params }: { params: { id: string } }) {
 	const response = await actions.app.clients.byId(params.id);
 
-	return <ManageClientFormInterceptSheet client={response.data} />;
+	return <ManageClientFormInterceptSheet client={response.data ?? undefined} />;
 }
 
 export default UpdateClientPageInterceptSheet;

@@ -23,7 +23,9 @@ import {
 import { type VetsList } from "~/actions";
 import { cn } from "~/utils";
 
-function createVetsTableColumns(onDeleteClick: (vet: VetsList[number]) => void): ColumnDef<VetsList[number]>[] {
+function createVetsTableColumns(
+	onDeleteClick: (vet: VetsList["data"][number]) => void,
+): ColumnDef<VetsList["data"][number]>[] {
 	return [
 		{
 			accessorKey: "fullName",
@@ -37,8 +39,6 @@ function createVetsTableColumns(onDeleteClick: (vet: VetsList[number]) => void):
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "emailAddress",
@@ -55,8 +55,6 @@ function createVetsTableColumns(onDeleteClick: (vet: VetsList[number]) => void):
 			meta: {
 				className: "hidden sm:table-cell",
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "phoneNumber",
@@ -68,8 +66,6 @@ function createVetsTableColumns(onDeleteClick: (vet: VetsList[number]) => void):
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			id: "actions",

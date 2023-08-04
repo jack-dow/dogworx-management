@@ -51,12 +51,15 @@ export type UpdateSessionSchema = z.infer<typeof UpdateSessionSchema>;
 // -----------------------------------------------------------------------------
 // Organization Invite Links
 // -----------------------------------------------------------------------------
+export const SelectOrganizationInviteLinkSchema = createSelectSchema(organizationInviteLinks);
+export type SelectOrganizationInviteLinkSchema = z.infer<typeof SelectOrganizationInviteLinkSchema>;
+
 export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks).extend({
 	id: IdSchema,
 	organizationId: IdSchema,
 	userId: IdSchema,
 	uses: z.number().int().positive().default(0),
-	maxUses: z.number().int().positive().optional(),
+	maxUses: z.number().int().positive().nullable(),
 });
 export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;
 

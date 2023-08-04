@@ -96,6 +96,8 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 			columns: {
 				id: true,
 				name: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
 			limit: 50,
 			where: and(
@@ -117,11 +119,17 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
 
 const getVetClinicById = createServerAction(async (id: string) => {
+	const validId = z.string().safeParse(id);
+
+	if (!validId.success) {
+		return { success: false, error: validId.error.issues, data: null };
+	}
+
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.vetClinics.findFirst({
-			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, id)),
+			where: and(eq(vetClinics.organizationId, user.organizationId), eq(vetClinics.id, validId.data)),
 			with: {
 				vetToVetClinicRelationships: {
 					with: {
@@ -141,7 +149,7 @@ const getVetClinicById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to get vet clinic with id ${id}`, data: null };
+		return { success: false, error: `Failed to get vet clinic with id ${validId.data}`, data: null };
 	}
 });
 type VetClinicById = ExtractServerActionData<typeof getVetClinicById>;
@@ -187,7 +195,7 @@ const insertVetClinic = createServerAction(async (values: InsertVetClinicSchema)
 
 		return { success: true, data: vetClinic };
 	} catch {
-		return { success: false, error: "Failed to insert vetClinic", data: null };
+		return { success: false, error: "Failed to insert vet clinic", data: null };
 	}
 });
 type VetClinicInsert = ExtractServerActionData<typeof insertVetClinic>;
@@ -259,7 +267,7 @@ const updateVetClinic = createServerAction(async (values: UpdateVetClinicSchema)
 
 		return { success: true, data: vetClinic };
 	} catch {
-		return { success: false, error: "Failed to update vetClinic", data: null };
+		return { success: false, error: "Failed to update vet clinic", data: null };
 	}
 });
 type VetClinicUpdate = ExtractServerActionData<typeof updateVetClinic>;
@@ -303,7 +311,7 @@ const deleteVetClinic = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: "Failed to delete vetClinic", data: null };
+		return { success: false, error: "Failed to delete vet clinic", data: null };
 	}
 });
 type VetClinicDelete = ExtractServerActionData<typeof deleteVetClinic>;

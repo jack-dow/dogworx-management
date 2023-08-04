@@ -17,9 +17,16 @@ export const metadata: Metadata = {
 async function InvitePage({ params }: { params: { id: string } }) {
 	const response = await actions.auth.organizations.getInviteLink(params.id);
 
-	if (!response.data || response.data.uses >= response.data.maxUses || response.data.expiresAt < new Date()) {
+	if (
+		!response.data ||
+		(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
+		response.data.expiresAt < new Date()
+	) {
 		if (response.data) {
-			if (response.data.uses >= response.data.maxUses || response.data?.expiresAt < new Date()) {
+			if (
+				(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
+				response.data?.expiresAt < new Date()
+			) {
 				await drizzle.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${params.id}`);
 			}
 		}

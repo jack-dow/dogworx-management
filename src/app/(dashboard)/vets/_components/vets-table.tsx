@@ -2,30 +2,20 @@
 
 import * as React from "react";
 
-import { ManageVetSheet } from "~/components/manage-vet-sheet";
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type VetsList } from "~/actions";
+import { VETS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { createVetsTableColumns } from "./vets-table-columns";
 
-function VetsTable({ vets }: { vets: VetsList }) {
+function VetsTable({ result }: { result: VetsList }) {
 	const { toast } = useToast();
 
-	const [editingVet, setEditingVet] = React.useState<VetsList[number] | null>();
-	const [confirmVetDelete, setConfirmVetDelete] = React.useState<VetsList[number] | null>(null);
+	const [confirmVetDelete, setConfirmVetDelete] = React.useState<VetsList["data"][number] | null>(null);
 
 	return (
 		<>
-			<ManageVetSheet
-				withoutTrigger
-				open={!!editingVet}
-				setOpen={() => {
-					setEditingVet(null);
-				}}
-				vet={editingVet ?? undefined}
-			/>
-
 			<DestructiveActionDialog
 				open={!!confirmVetDelete}
 				onOpenChange={() => {
@@ -58,14 +48,23 @@ function VetsTable({ vets }: { vets: VetsList }) {
 			/>
 
 			<DataTable
-				data={vets}
+				search={{
+					onSearch: async (searchTerm) => {
+						const result = await actions.app.vets.search(searchTerm);
+
+						if (!result.success) {
+							throw new Error("Failed to search vets");
+						}
+
+						return result.data;
+					},
+					renderSearchResultItemText: (vet) => `${vet.givenName} ${vet.familyName}`,
+				}}
 				columns={createVetsTableColumns((vet) => {
 					setConfirmVetDelete(vet);
 				})}
-				onTableRowClick={(vet) => {
-					setEditingVet(vet);
-				}}
-				filterInputPlaceholder="Filter vets..."
+				sortableColumns={VETS_SORTABLE_COLUMNS}
+				{...result}
 			/>
 		</>
 	);

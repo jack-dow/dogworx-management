@@ -309,14 +309,12 @@ type DataTableSearchComboboxProps<ResultType extends { id: string }> = {
 	count: number;
 	onSearch: (searchTerm: string) => Promise<ResultType[]>;
 	renderSearchResultItemText: (item: ResultType) => string;
-	onNoResultsActionSelect: (searchTerm: string) => void;
 };
 
 function DataTableSearchCombobox<ResultType extends { id: string }>({
 	count,
 	onSearch,
 	renderSearchResultItemText,
-	onNoResultsActionSelect,
 }: DataTableSearchComboboxProps<ResultType>) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -369,7 +367,7 @@ function DataTableSearchCombobox<ResultType extends { id: string }>({
 			onChange={(result: ResultType | null) => {
 				if (result) {
 					if (result.id === "new") {
-						onNoResultsActionSelect(searchTerm);
+						router.push(`${pathname}/new?searchTerm=${encodeURIComponent(searchTerm)}`);
 						return;
 					}
 					setIsNavigatingToResult(result.id);

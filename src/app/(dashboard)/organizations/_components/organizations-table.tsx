@@ -6,28 +6,18 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type OrganizationsList } from "~/actions";
-import { ManageOrganizationSheet } from "./manage-organization-sheet";
+import { ORGANIZATIONS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { createOrganizationsTableColumns } from "./organizations-table-columns";
 
-function OrganizationsTable({ organizations }: { organizations: OrganizationsList }) {
+function OrganizationsTable({ result }: { result: OrganizationsList }) {
 	const { toast } = useToast();
 
-	const [editingOrganization, setEditingOrganization] = React.useState<OrganizationsList[number] | null>();
-	const [confirmOrganizationDelete, setConfirmOrganizationDelete] = React.useState<OrganizationsList[number] | null>(
-		null,
-	);
+	const [confirmOrganizationDelete, setConfirmOrganizationDelete] = React.useState<
+		OrganizationsList["data"][number] | null
+	>(null);
 
 	return (
 		<>
-			<ManageOrganizationSheet
-				withoutTrigger
-				open={!!editingOrganization}
-				setOpen={() => {
-					setEditingOrganization(null);
-				}}
-				organization={editingOrganization ?? undefined}
-			/>
-
 			<DestructiveActionDialog
 				open={!!confirmOrganizationDelete}
 				onOpenChange={() => {
@@ -56,16 +46,23 @@ function OrganizationsTable({ organizations }: { organizations: OrganizationsLis
 			/>
 
 			<DataTable
-				data={organizations}
-				columns={createOrganizationsTableColumns((organization) => {
-					setConfirmOrganizationDelete(organization);
-				})}
-				onTableRowClick={(organization) => {
-					if (organization.id) {
-						setEditingOrganization(organization);
-					}
+				search={{
+					onSearch: async (searchTerm) => {
+						const result = await actions.app.clients.search(searchTerm);
+
+						if (!result.success) {
+							throw new Error("Failed to search clients");
+						}
+
+						return result.data;
+					},
+					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
 				}}
-				filterInputPlaceholder="Filter organizations..."
+				columns={createOrganizationsTableColumns((client) => {
+					setConfirmOrganizationDelete(client);
+				})}
+				sortableColumns={ORGANIZATIONS_SORTABLE_COLUMNS}
+				{...result}
 			/>
 		</>
 	);

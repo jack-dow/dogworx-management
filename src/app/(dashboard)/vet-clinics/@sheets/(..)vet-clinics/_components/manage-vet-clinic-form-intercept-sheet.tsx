@@ -2,14 +2,15 @@
 
 import { useRouter } from "next/navigation";
 
-import { ManageVetClinicSheet } from "~/components/manage-vet-clinic-sheet";
+import { ManageVetClinic } from "~/components/manage-vet-clinic";
 import { type VetClinicById } from "~/actions";
 
-function ManageVetClinicFormInterceptSheet({ vetClinic }: { vetClinic?: VetClinicById }) {
+function ManageVetClinicFormInterceptSheet({ vetClinic }: { vetClinic?: VetClinicById | undefined }) {
 	const router = useRouter();
 
 	return (
-		<ManageVetClinicSheet
+		<ManageVetClinic
+			variant="sheet"
 			open={true}
 			setOpen={() => {
 				router.back();

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 async function UpdateVetClinicPageInterceptSheet({ params }: { params: { id: string } }) {
 	const response = await actions.app.vetClinics.byId(params.id);
 
-	return <ManageVetClinicFormInterceptSheet vetClinic={response.data} />;
+	return <ManageVetClinicFormInterceptSheet vetClinic={response.data ?? undefined} />;
 }
 
 export default UpdateVetClinicPageInterceptSheet;

@@ -18,26 +18,26 @@ import {
 	type PaginationSearchParams,
 } from "../utils";
 
-const defaultPaginationResponse = {
-	data: {
-		pagination: {
-			count: 0,
-			page: 1,
-			maxPage: 1,
-			limit: 5,
-			sortBy: "id",
-			sortDirection: "asc",
-		},
-		data: [],
-	},
-};
-
 const listOrganizations = createServerAction(async (options: PaginationSearchParams) => {
 	try {
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: defaultPaginationResponse };
+			return {
+				success: false,
+				error: "You are not authorized to view this page",
+				data: {
+					pagination: {
+						count: 0,
+						page: 1,
+						maxPage: 1,
+						limit: 5,
+						sortBy: "id",
+						sortDirection: "asc",
+					},
+					data: [],
+				},
+			};
 		}
 
 		const countQuery = await drizzle
@@ -84,7 +84,21 @@ const listOrganizations = createServerAction(async (options: PaginationSearchPar
 			},
 		};
 	} catch {
-		return { success: false, error: "Failed to list organizations", data: defaultPaginationResponse };
+		return {
+			success: false,
+			error: "Failed to list organizations",
+			data: {
+				pagination: {
+					count: 0,
+					page: 1,
+					maxPage: 1,
+					limit: 5,
+					sortBy: "id",
+					sortDirection: "asc",
+				},
+				data: [],
+			},
+		};
 	}
 });
 type OrganizationsList = ExtractServerActionData<typeof listOrganizations>;
@@ -115,6 +129,57 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 	}
 });
 type OrganizationsSearch = ExtractServerActionData<typeof searchOrganizations>;
+
+const getOrganizationById = createServerAction(async (id: string) => {
+	const validId = z.string().safeParse(id);
+
+	if (!validId.success) {
+		return { success: false, error: validId.error.issues, data: null };
+	}
+
+	try {
+		const user = await getServerUser();
+
+		if (user.emailAddress !== "jack.dowww@gmail.com") {
+			return { success: false, error: "You are not authorized to view this page", data: null };
+		}
+
+		const data = await drizzle.query.organizations.findFirst({
+			where: eq(organizations.id, validId.data),
+			with: {
+				organizationInviteLinks: {
+					with: {
+						user: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								organizationRole: true,
+								profileImageUrl: true,
+							},
+						},
+					},
+				},
+				users: {
+					columns: {
+						id: true,
+						givenName: true,
+						familyName: true,
+						emailAddress: true,
+						organizationRole: true,
+						profileImageUrl: true,
+					},
+				},
+			},
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: `Failed to get organization with id ${validId.data}`, data: null };
+	}
+});
+type OrganizationById = ExtractServerActionData<typeof getOrganizationById>;
 
 const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 	const validInviteLink = z.string().safeParse(id);
@@ -172,7 +237,16 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 				users: true,
 				organizationInviteLinks: {
 					with: {
-						user: true,
+						user: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								organizationRole: true,
+								profileImageUrl: true,
+							},
+						},
 					},
 				},
 			},
@@ -234,7 +308,16 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 				users: true,
 				organizationInviteLinks: {
 					with: {
-						user: true,
+						user: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								organizationRole: true,
+								profileImageUrl: true,
+							},
+						},
 					},
 				},
 			},
@@ -262,11 +345,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 			},
 			with: {
 				users: true,
-				organizationInviteLinks: {
-					with: {
-						user: true,
-					},
-				},
+				organizationInviteLinks: true,
 			},
 		});
 
@@ -298,9 +377,11 @@ export {
 	listOrganizations,
 	type OrganizationsList,
 	searchOrganizations,
+	type OrganizationsSearch,
+	getOrganizationById,
+	type OrganizationById,
 	getOrganizationInviteLinkById,
 	type OrganizationInviteLinkById,
-	type OrganizationsSearch,
 	insertOrganization,
 	type OrganizationInsert,
 	updateOrganization,

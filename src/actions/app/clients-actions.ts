@@ -98,6 +98,8 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 				id: true,
 				givenName: true,
 				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
 			},
 			limit: 50,
 			where: and(
@@ -119,11 +121,17 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 type ClientsSearch = ExtractServerActionData<typeof searchClients>;
 
 const getClientById = createServerAction(async (id: string) => {
+	const validId = z.string().safeParse(id);
+
+	if (!validId.success) {
+		return { success: false, error: validId.error.issues, data: null };
+	}
+
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.clients.findFirst({
-			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
+			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, validId.data)),
 			with: {
 				dogToClientRelationships: {
 					with: {
@@ -132,6 +140,7 @@ const getClientById = createServerAction(async (id: string) => {
 								id: true,
 								givenName: true,
 								color: true,
+								breed: true,
 							},
 						},
 					},
@@ -141,7 +150,7 @@ const getClientById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to get client with id ${id}`, data: null };
+		return { success: false, error: `Failed to get client with id ${validId.data}`, data: null };
 	}
 });
 type ClientById = ExtractServerActionData<typeof getClientById>;

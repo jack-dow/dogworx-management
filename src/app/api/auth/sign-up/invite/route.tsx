@@ -2,15 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq, sql } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, users, type User } from "~/db/schemas";
-import { type InsertUserSchema } from "~/db/validation";
+import { organizationInviteLinks, users } from "~/db/schemas";
+import { type InsertUserSchema, type SelectUserSchema } from "~/db/validation";
 import { SignUpSchema } from "~/lib/validation";
 import { generateId, type APIResponse } from "~/utils";
 
 export const fetchCache = "force-no-store";
 
 type CreateUserFromInvitePOSTResponse = APIResponse<
-	User | { message: string; user: InsertUserSchema },
+	SelectUserSchema | { message: string; user: InsertUserSchema },
 	"InviteLinkInvalid" | "AlreadyExists"
 >;
 async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromInvitePOSTResponse>> {
@@ -41,7 +41,11 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 			},
 		});
 
-		if (!inviteLink || inviteLink.uses >= inviteLink.maxUses || inviteLink.expiresAt < new Date()) {
+		if (
+			!inviteLink ||
+			(inviteLink.maxUses && inviteLink.uses >= inviteLink.maxUses) ||
+			inviteLink.expiresAt < new Date()
+		) {
 			return NextResponse.json(
 				{ success: false, error: { code: "InviteLinkInvalid", message: "Invite link is invalid" } },
 				{ status: 400 },
@@ -60,7 +64,7 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 		await drizzle.transaction(async (db) => {
 			await db.insert(users).values(newUser);
 
-			if (inviteLink.uses + 1 >= inviteLink.maxUses) {
+			if (inviteLink.maxUses && inviteLink.uses + 1 >= inviteLink.maxUses) {
 				await db.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${inviteLink.id}`);
 			} else {
 				await db

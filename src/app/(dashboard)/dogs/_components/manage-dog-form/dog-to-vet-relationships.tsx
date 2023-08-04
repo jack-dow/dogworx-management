@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { ManageVetSheet } from "~/components/manage-vet-sheet";
+import { ManageVet } from "~/components/manage-vet";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -13,7 +13,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
+import { FormControl, FormField, FormGroup, FormItem, FormMessage } from "~/components/ui/form";
 import {
 	EditIcon,
 	EllipsisVerticalIcon,
@@ -23,6 +23,7 @@ import {
 	UserCircleIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
+import { Loader } from "~/components/ui/loader";
 import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
@@ -33,12 +34,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { actions, type DogById } from "~/actions";
+import { useToast } from "~/components/ui/use-toast";
+import { actions, type DogById, type VetById, type VetsSearch } from "~/actions";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
 import { generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
-
-type Vet = ManageDogFormSchema["dogToVetRelationships"][number]["vet"];
 
 function DogToVetRelationships({
 	control,
@@ -47,7 +47,7 @@ function DogToVetRelationships({
 	control: Control<ManageDogFormSchema>;
 	existingDogToVetRelationships: DogById["dogToVetRelationships"] | undefined;
 }) {
-	const { setValue, getValues } = useFormContext<ManageDogFormSchema>();
+	const form = useFormContext<ManageDogFormSchema>();
 
 	const dogToVetRelationships = useFieldArray({
 		control,
@@ -55,14 +55,14 @@ function DogToVetRelationships({
 		keyName: "rhf-id",
 	});
 
-	const [editingVet, setEditingVet] = React.useState<Vet | null>(null);
+	const [editingVet, setEditingVet] = React.useState<VetById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState(false);
 
 	const searchVetsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
 
 	function handleDogToVetRelationshipDelete(relationshipId: string) {
-		const dogToVetRelationshipActions = { ...getValues("actions.dogToVetRelationships") };
+		const dogToVetRelationshipActions = { ...form.getValues("actions.dogToVetRelationships") };
 
 		dogToVetRelationships.remove(dogToVetRelationships.fields.findIndex((field) => field.id === relationshipId));
 
@@ -75,7 +75,7 @@ function DogToVetRelationships({
 			};
 		}
 
-		setValue("actions.dogToVetRelationships", dogToVetRelationshipActions);
+		form.setValue("actions.dogToVetRelationships", dogToVetRelationshipActions);
 
 		// HACK: Focus the combobox trigger after the dialog closes
 		setTimeout(() => {
@@ -83,7 +83,7 @@ function DogToVetRelationships({
 		}, 0);
 	}
 
-	function toggleDogToVetRelationship(vet: Vet) {
+	function toggleDogToVetRelationship(vet: VetsSearch[number]) {
 		const relationshipId = dogToVetRelationships.fields.find((vetRelationship) => vetRelationship.vetId === vet.id)?.id;
 
 		if (relationshipId) {
@@ -103,19 +103,19 @@ function DogToVetRelationships({
 
 		dogToVetRelationships.append({
 			id,
-			dogId: getValues("id"),
+			dogId: form.getValues("id"),
 			vetId: vet.id,
 			relationship: "primary",
 			vet,
 		});
 
-		setValue("actions.dogToVetRelationships", {
-			...getValues("actions.dogToVetRelationships"),
+		form.setValue("actions.dogToVetRelationships", {
+			...form.getValues("actions.dogToVetRelationships"),
 			[id]: {
 				type: "INSERT",
 				payload: {
 					id,
-					dogId: getValues("id"),
+					dogId: form.getValues("id"),
 					vetId: vet.id,
 					relationship: "primary",
 				},
@@ -125,7 +125,8 @@ function DogToVetRelationships({
 
 	return (
 		<>
-			<ManageVetSheet
+			<ManageVet
+				variant="sheet"
 				vet={editingVet ?? undefined}
 				open={!!editingVet}
 				setOpen={() => setEditingVet(null)}
@@ -145,13 +146,7 @@ function DogToVetRelationships({
 				}}
 			/>
 
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-				<div className="col-span-full">
-					<h3 className="text-base font-semibold leading-7 text-slate-900">Vets</h3>
-					<p className="mt-1 text-sm leading-6 text-muted-foreground">
-						Manage the relationships between this dog and vets.
-					</p>
-				</div>
+			<FormGroup title="Vets" description="Manage the relationships between this dog and vets.">
 				<div className="sm:col-span-6">
 					<SearchCombobox
 						ref={searchVetsComboboxTriggerRef}
@@ -179,7 +174,8 @@ function DogToVetRelationships({
 						renderResultItemText={(vet) => `${vet.givenName} ${vet.familyName}`}
 						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
 							<>
-								<ManageVetSheet
+								<ManageVet
+									variant="sheet"
 									open={isCreateVetSheetOpen}
 									setOpen={(value) => {
 										setIsCreateVetSheetOpen(value);
@@ -219,119 +215,172 @@ function DogToVetRelationships({
 				</div>
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
-						{dogToVetRelationships.fields.map((vetRelationship, index) => (
-							<li key={vetRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
-								<div className="flex items-center gap-x-4">
-									<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
-										<UserCircleIcon className="h-5 w-5" />
-									</div>
-
-									<div className="min-w-0 flex-auto truncate">
-										<p className="text-sm font-semibold leading-6 text-slate-900">
-											{vetRelationship.vet.givenName} {vetRelationship.vet.familyName}
-										</p>
-										<div className="flex space-x-2">
-											{vetRelationship.vet.emailAddress && (
-												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
-													<EnvelopeIcon className="mr-1 h-3 w-3" />
-													{vetRelationship.vet.emailAddress}
-												</p>
-											)}
-											{vetRelationship.vet.emailAddress && vetRelationship.vet.phoneNumber && (
-												<span aria-hidden="true">&middot;</span>
-											)}
-											{vetRelationship.vet.phoneNumber && (
-												<p className="flex items-center truncate text-xs leading-5 text-slate-500">
-													<PhoneIcon className="mr-1 h-3 w-3" />
-													{vetRelationship.vet.phoneNumber}
-												</p>
-											)}
-										</div>
-									</div>
-								</div>
-
-								<div className="flex space-x-4">
-									<FormField
-										control={control}
-										name={`dogToVetRelationships.${index}.relationship`}
-										rules={{ required: "Please select a relationship" }}
-										defaultValue={vetRelationship.relationship}
-										render={({ field }) => (
-											<FormItem>
-												<Select
-													onValueChange={(value) => {
-														field.onChange(value as typeof field.value);
-														setValue(`actions.dogToVetRelationships.${vetRelationship.id}`, {
-															type: "UPDATE",
-															payload: {
-																...vetRelationship,
-																relationship: value as typeof field.value,
-															},
-														});
-													}}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger>
-															<SelectValue placeholder="Select a relation">
-																<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
-															</SelectValue>
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														<SelectGroup>
-															<SelectLabel>Relationships</SelectLabel>
-															{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map(
-																(relation) => (
-																	<SelectItem key={relation} value={relation} className="capitalize">
-																		{relation.split("-").join(" ")}
-																	</SelectItem>
-																),
-															)}
-														</SelectGroup>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<div className="flex items-center">
-										<DropdownMenu>
-											<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-												<span className="sr-only">Open options</span>
-												<EllipsisVerticalIcon className="h-5 w-5" />
-											</DropdownMenuTrigger>
-											<DropdownMenuContent>
-												<DropdownMenuLabel>Actions</DropdownMenuLabel>
-												<DropdownMenuSeparator />
-												<DropdownMenuItem
-													onSelect={(e) => {
-														e.preventDefault();
-														setEditingVet(vetRelationship.vet);
-													}}
-												>
-													<EditIcon className="mr-2 h-4 w-4" />
-													<span>Edit Vet</span>
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													onSelect={() => {
-														toggleDogToVetRelationship(vetRelationship.vet);
-													}}
-												>
-													<TrashIcon className="mr-2 h-4 w-4" />
-													<span>Remove</span>
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</div>
-								</div>
-							</li>
+						{dogToVetRelationships.fields.map((dogToVetRelationship, index) => (
+							<DogToVetRelationship
+								key={dogToVetRelationship.id}
+								dogToVetRelationship={dogToVetRelationship}
+								index={index}
+								onEdit={(vet) => {
+									setEditingVet(vet);
+								}}
+								onDelete={(vet) => toggleDogToVetRelationship(vet)}
+							/>
 						))}
 					</ul>
 				</div>
-			</div>
+			</FormGroup>
 		</>
+	);
+}
+
+function DogToVetRelationship({
+	dogToVetRelationship,
+	index,
+	onEdit,
+	onDelete,
+}: {
+	dogToVetRelationship: ManageDogFormSchema["dogToVetRelationships"][number];
+	index: number;
+	onEdit: (vet: VetById) => void;
+	onDelete: (vet: VetsSearch[number]) => void;
+}) {
+	const { toast } = useToast();
+	const form = useFormContext<ManageDogFormSchema>();
+
+	const [isFetchingVet, setIsFetchingVet] = React.useState(false);
+	return (
+		<li key={dogToVetRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
+			<div className="flex items-center gap-x-4">
+				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
+					<UserCircleIcon className="h-5 w-5" />
+				</div>
+
+				<div className="min-w-0 flex-auto truncate">
+					<p className="text-sm font-semibold leading-6 text-slate-900">
+						{dogToVetRelationship.vet.givenName} {dogToVetRelationship.vet.familyName}
+					</p>
+					<div className="flex space-x-2 truncate">
+						{dogToVetRelationship.vet.emailAddress && (
+							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+								<EnvelopeIcon className="mr-1 h-3 w-3" />
+								{dogToVetRelationship.vet.emailAddress}
+							</p>
+						)}
+						{dogToVetRelationship.vet.emailAddress && dogToVetRelationship.vet.phoneNumber && (
+							<span aria-hidden="true">&middot;</span>
+						)}
+						{dogToVetRelationship.vet.phoneNumber && (
+							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+								<PhoneIcon className="mr-1 h-3 w-3" />
+								{dogToVetRelationship.vet.phoneNumber}
+							</p>
+						)}
+					</div>
+				</div>
+			</div>
+
+			<div className="flex space-x-4">
+				<FormField
+					control={form.control}
+					name={`dogToVetRelationships.${index}.relationship`}
+					rules={{ required: "Please select a relationship" }}
+					defaultValue={dogToVetRelationship.relationship}
+					render={({ field }) => (
+						<FormItem>
+							<Select
+								onValueChange={(value) => {
+									field.onChange(value as typeof field.value);
+									form.setValue(`actions.dogToVetRelationships.${dogToVetRelationship.id}`, {
+										type: "UPDATE",
+										payload: {
+											...dogToVetRelationship,
+											relationship: value as typeof field.value,
+										},
+									});
+								}}
+								value={field.value}
+							>
+								<FormControl>
+									<SelectTrigger>
+										<SelectValue placeholder="Select a relation">
+											<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
+										</SelectValue>
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									<SelectGroup>
+										<SelectLabel>Relationships</SelectLabel>
+										{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map((relation) => (
+											<SelectItem key={relation} value={relation} className="capitalize">
+												{relation.split("-").join(" ")}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<div className="flex items-center">
+					<DropdownMenu>
+						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+							<span className="sr-only">Open options</span>
+							<EllipsisVerticalIcon className="h-5 w-5" />
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+							<DropdownMenuLabel>Actions</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								onSelect={(e) => {
+									e.preventDefault();
+
+									const renderErrorToast = () => {
+										toast({
+											title: "Failed to fetch vet",
+											description: "Something went wrong while fetching the vet. Please try again",
+											variant: "destructive",
+										});
+									};
+
+									setIsFetchingVet(true);
+
+									actions.app.vets
+										.byId(dogToVetRelationship.vet.id)
+										.then((result) => {
+											if (result.success && result.data) {
+												onEdit(result.data);
+												return;
+											}
+
+											renderErrorToast();
+										})
+										.catch(() => {
+											renderErrorToast();
+										})
+										.finally(() => {
+											setIsFetchingVet(false);
+										});
+								}}
+							>
+								<EditIcon className="mr-2 h-4 w-4" />
+								<span className="flex-1">Edit Vet</span>
+								{isFetchingVet && <Loader size="sm" variant="black" className="mr-0" />}
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onSelect={() => {
+									onDelete(dogToVetRelationship.vet);
+								}}
+							>
+								<TrashIcon className="mr-2 h-4 w-4" />
+								<span>Remove</span>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
+			</div>
+		</li>
 	);
 }
 

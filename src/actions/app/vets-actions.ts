@@ -120,11 +120,17 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 type VetsSearch = ExtractServerActionData<typeof searchVets>;
 
 const getVetById = createServerAction(async (id: string) => {
+	const validId = z.string().safeParse(id);
+
+	if (!validId.success) {
+		return { success: false, error: validId.error.issues, data: null };
+	}
+
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.vets.findFirst({
-			where: and(eq(vets.organizationId, user.organizationId), eq(vets.id, id)),
+			where: and(eq(vets.organizationId, user.organizationId), eq(vets.id, validId.data)),
 			with: {
 				dogToVetRelationships: {
 					with: {
@@ -132,6 +138,8 @@ const getVetById = createServerAction(async (id: string) => {
 							columns: {
 								id: true,
 								givenName: true,
+								color: true,
+								breed: true,
 							},
 						},
 					},
@@ -153,7 +161,7 @@ const getVetById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to get client with id ${id}`, data: null };
+		return { success: false, error: `Failed to get vet with id ${validId.data}`, data: null };
 	}
 });
 type VetById = ExtractServerActionData<typeof getVetById>;

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,7 +17,7 @@ import {
 	AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
-import { Form } from "~/components/ui/form";
+import { Form, FormSection } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
@@ -47,17 +47,37 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	age: InsertDogSchema.shape.age,
 	sessions: z.array(
 		InsertDogSessionSchema.extend({
-			user: SelectUserSchema.nullable(),
+			user: SelectUserSchema.pick({
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				organizationId: true,
+				organizationRole: true,
+				profileImageUrl: true,
+			}).nullable(),
 		}),
 	),
 	dogToClientRelationships: z.array(
 		InsertDogToClientRelationshipSchema.extend({
-			client: SelectClientSchema,
+			client: SelectClientSchema.pick({
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
+			}),
 		}),
 	),
 	dogToVetRelationships: z.array(
 		InsertDogToVetRelationshipSchema.extend({
-			vet: SelectVetSchema,
+			vet: SelectVetSchema.pick({
+				id: true,
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				phoneNumber: true,
+			}),
 		}),
 	),
 	unsavedSessionIds: z.array(z.string()),
@@ -66,6 +86,7 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
 
 function ManageDogForm({ dog }: { dog?: DogById }) {
+	const searchParams = useSearchParams();
 	const params = useParams();
 	const isNew = !params.id;
 	const router = useRouter();
@@ -78,6 +99,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 		resolver: zodResolver(ManageDogFormSchema),
 		defaultValues: {
 			id: dog?.id || generateId(),
+			givenName: searchParams.get("searchTerm") ?? undefined,
 			desexed: false,
 			isAgeEstimate: false,
 			...dog,
@@ -101,12 +123,12 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 					sessions: form.getValues("sessions"),
 					dogToClientRelationships: mergeRelationships(
 						form.getValues("dogToClientRelationships"),
-						dog.dogToClientRelationships,
+						dog.dogToClientRelationships ?? [],
 						actions.dogToClientRelationships,
 					),
 					dogToVetRelationships: mergeRelationships(
 						form.getValues("dogToVetRelationships"),
-						dog.dogToVetRelationships,
+						dog.dogToVetRelationships ?? [],
 						actions.dogToVetRelationships,
 					),
 					actions,
@@ -119,6 +141,12 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			);
 		}
 	}, [dog, form]);
+
+	React.useEffect(() => {
+		if (searchParams.get("searchTerm")) {
+			router.replace("/dogs/new");
+		}
+	}, [searchParams, router]);
 
 	async function onSubmit(data: ManageDogFormSchema) {
 		let success = false;
@@ -214,29 +242,19 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 					<Separator />
 
-					<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
-						<div>
-							<h2 className="text-base font-semibold leading-7 text-foreground">Relationships</h2>
-							<p className="text-sm leading-6 text-muted-foreground">
-								Manage the relationships of this dog between other clients and vets within the system.
-							</p>
-						</div>
-						<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
-							<div className="sm:p-8">
-								<DogToClientRelationships
-									control={form.control}
-									existingDogToClientRelationships={dog?.dogToClientRelationships}
-								/>
+					<FormSection
+						title="Manage Relationships"
+						description="Manage the relationships of this dog between other clients and vets within the system."
+					>
+						<DogToClientRelationships
+							control={form.control}
+							existingDogToClientRelationships={dog?.dogToClientRelationships}
+						/>
 
-								<Separator className="my-4" />
+						<Separator className="my-4" />
 
-								<DogToVetRelationships
-									control={form.control}
-									existingDogToVetRelationships={dog?.dogToVetRelationships}
-								/>
-							</div>
-						</div>
-					</div>
+						<DogToVetRelationships control={form.control} existingDogToVetRelationships={dog?.dogToVetRelationships} />
+					</FormSection>
 
 					<Separator />
 

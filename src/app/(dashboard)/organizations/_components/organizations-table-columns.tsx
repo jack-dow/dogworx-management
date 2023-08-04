@@ -24,8 +24,8 @@ import { type OrganizationsList } from "~/actions";
 import { cn } from "~/utils";
 
 function createOrganizationsTableColumns(
-	onDeleteClick: (organization: OrganizationsList[number]) => void,
-): ColumnDef<OrganizationsList[number]>[] {
+	onDeleteClick: (organization: OrganizationsList["data"][number]) => void,
+): ColumnDef<OrganizationsList["data"][number]>[] {
 	return [
 		{
 			accessorKey: "name",
@@ -37,8 +37,6 @@ function createOrganizationsTableColumns(
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "users",

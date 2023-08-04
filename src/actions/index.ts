@@ -18,6 +18,7 @@ import {
 import { deleteVet, getVetById, insertVet, listVets, searchVets, updateVet } from "./app/vets-actions";
 import {
 	deleteOrganization,
+	getOrganizationById,
 	getOrganizationInviteLinkById,
 	insertOrganization,
 	listOrganizations,
@@ -66,6 +67,7 @@ const actions = {
 		organizations: {
 			list: listOrganizations,
 			search: searchOrganizations,
+			byId: getOrganizationById,
 			insert: insertOrganization,
 			update: updateOrganization,
 			delete: deleteOrganization,

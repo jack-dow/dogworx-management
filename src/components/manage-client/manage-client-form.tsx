@@ -10,6 +10,7 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { type ClientById } from "~/actions";
 import { generateId } from "~/utils";
+import { FormSection } from "../ui/form";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { type ManageClientFormSchema } from "./manage-client";
@@ -29,18 +30,18 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 
 	const router = useRouter();
 
-	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
-
 	const form = useFormContext<ManageClientFormSchema>();
+
+	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
 	async function handleSubmit(data: ManageClientFormSchema) {
 		const result = await onSubmit(data);
 
 		if (result.success) {
 			if (isNew) {
-				router.replace(`/dogs/${data.id}`);
+				router.replace(`/clients/${data.id}`);
 			} else {
-				router.push("/dogs");
+				router.push("/clients");
 			}
 			form.setValue("id", generateId());
 		}
@@ -66,12 +67,16 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 				}}
 				className="space-y-6 lg:space-y-10"
 			>
-				<ClientPersonalInformation control={form.control} type="form" />
+				<ClientPersonalInformation control={form.control} variant="form" />
 
 				<Separator className="my-4" />
 
-				<ClientToDogRelationships control={form.control} isNew={isNew} type="form" />
-
+				<FormSection
+					title="Manage Relationships"
+					description="Manage the relationships of this client between other dogs within the system."
+				>
+					<ClientToDogRelationships control={form.control} isNew={isNew} variant="form" />
+				</FormSection>
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">

@@ -1,19 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type DogsList } from "~/actions";
+import { DOGS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { createDogsTableColumns } from "./dogs-table-columns";
 
-function DogsTable({ dogs }: { dogs: DogsList }) {
-	const router = useRouter();
+function DogsTable({ result }: { result: DogsList }) {
 	const { toast } = useToast();
 
-	const [confirmDogDelete, setConfirmDogDelete] = React.useState<DogsList[number] | null>(null);
+	const [confirmDogDelete, setConfirmDogDelete] = React.useState<DogsList["data"][number] | null>(null);
 
 	return (
 		<>
@@ -43,15 +42,25 @@ function DogsTable({ dogs }: { dogs: DogsList }) {
 					}
 				}}
 			/>
+
 			<DataTable
-				data={dogs}
+				search={{
+					onSearch: async (searchTerm) => {
+						const result = await actions.app.dogs.search(searchTerm);
+
+						if (!result.success) {
+							throw new Error("Failed to search dogs");
+						}
+
+						return result.data;
+					},
+					renderSearchResultItemText: (dog) => `${dog.givenName}`,
+				}}
 				columns={createDogsTableColumns((dog) => {
 					setConfirmDogDelete(dog);
 				})}
-				onTableRowClick={(dog) => {
-					router.push(`/dogs/${dog.id}`);
-				}}
-				filterInputPlaceholder="Filter dogs..."
+				sortableColumns={DOGS_SORTABLE_COLUMNS}
+				{...result}
 			/>
 		</>
 	);

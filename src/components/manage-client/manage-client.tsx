@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,6 +31,7 @@ const ManageClientFormSchema = z.intersection(
 					id: true,
 					givenName: true,
 					color: true,
+					breed: true,
 				}),
 			}),
 		),
@@ -39,23 +41,29 @@ const ManageClientFormSchema = z.intersection(
 type ManageClientFormSchema = z.infer<typeof ManageClientFormSchema>;
 
 type ManageClientProps<
-	FormType extends "sheet" | "form",
+	VariantType extends "sheet" | "form",
 	ClientProp extends ClientById | undefined,
-> = FormType extends "sheet"
-	? Omit<ManageClientSheetProps<ClientProp>, "onSubmit"> & { type: FormType }
-	: Omit<ManageClientFormProps, "onSubmit"> & { type: FormType };
+> = VariantType extends "sheet"
+	? Omit<ManageClientSheetProps<ClientProp>, "onSubmit"> & { variant: VariantType }
+	: Omit<ManageClientFormProps, "onSubmit"> & { variant: VariantType };
 
-function ManageClient<FormType extends "sheet" | "form", ClientProp extends ClientById | undefined>(
-	props: ManageClientProps<FormType, ClientProp>,
+function ManageClient<VariantType extends "sheet" | "form", ClientProp extends ClientById | undefined>(
+	props: ManageClientProps<VariantType, ClientProp>,
 ) {
+	const router = useRouter();
+	const searchParams = useSearchParams();
 	const isNew = !props.client;
 
 	const { toast } = useToast();
+
+	const searchTerm = searchParams.get("searchTerm") ?? "";
 
 	const form = useForm<ManageClientFormSchema>({
 		resolver: zodResolver(ManageClientFormSchema),
 		defaultValues: {
 			id: props.client?.id || props.defaultValues?.id || generateId(),
+			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
+			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			...props.client,
 			...props.defaultValues,
 			actions: {
@@ -64,6 +72,12 @@ function ManageClient<FormType extends "sheet" | "form", ClientProp extends Clie
 		},
 	});
 	useConfirmPageNavigation(form.formState.isDirty);
+
+	React.useEffect(() => {
+		if (searchParams.get("searchTerm")) {
+			router.replace("/clients/new");
+		}
+	}, [searchParams, router]);
 
 	React.useEffect(() => {
 		function syncClient(client: ClientById) {
@@ -124,7 +138,7 @@ function ManageClient<FormType extends "sheet" | "form", ClientProp extends Clie
 
 	return (
 		<Form {...form}>
-			{props.type === "sheet" ? (
+			{props.variant === "sheet" ? (
 				<ManageClientSheet {...props} onSubmit={onSubmit} />
 			) : (
 				<ManageClientForm {...props} onSubmit={onSubmit} />

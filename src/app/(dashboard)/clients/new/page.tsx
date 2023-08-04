@@ -12,7 +12,7 @@ function NewClientPage() {
 		<>
 			<PageHeader title="Create New Client" />
 
-			<ManageClient type="form" />
+			<ManageClient variant="form" />
 		</>
 	);
 }

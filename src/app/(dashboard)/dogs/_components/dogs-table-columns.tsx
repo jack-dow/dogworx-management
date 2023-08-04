@@ -25,7 +25,9 @@ import {
 import { type DogsList } from "~/actions";
 import { cn } from "~/utils";
 
-function createDogsTableColumns(onDeleteClick: (dog: DogsList[number]) => void): ColumnDef<DogsList[number]>[] {
+function createDogsTableColumns(
+	onDeleteClick: (dog: DogsList["data"][number]) => void,
+): ColumnDef<DogsList["data"][number]>[] {
 	return [
 		{
 			accessorKey: "givenName",
@@ -37,8 +39,6 @@ function createDogsTableColumns(onDeleteClick: (dog: DogsList[number]) => void):
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "breed",
@@ -50,8 +50,6 @@ function createDogsTableColumns(onDeleteClick: (dog: DogsList[number]) => void):
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			accessorKey: "color",
@@ -63,8 +61,6 @@ function createDogsTableColumns(onDeleteClick: (dog: DogsList[number]) => void):
 					</div>
 				);
 			},
-			filterFn: "fuzzy",
-			sortingFn: "fuzzy",
 		},
 		{
 			id: "actions",
