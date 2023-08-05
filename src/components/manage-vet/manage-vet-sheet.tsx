@@ -29,6 +29,7 @@ import {
 import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
+import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
@@ -154,6 +155,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 						<Separator className="my-4" />
 
 						<SheetFooter>
+							{!isNew && <VetDeleteDialog />}
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>

@@ -27,6 +27,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
+import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { type ManageClientFormSchema } from "./manage-client";
@@ -145,6 +146,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 						<Separator className="my-4" />
 
 						<SheetFooter>
+							{!isNew && <ClientDeleteDialog />}
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>

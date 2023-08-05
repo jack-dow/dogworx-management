@@ -4,6 +4,7 @@ import * as React from "react";
 import type { ToastActionElement, ToastProps } from "~/components/ui/toast";
 
 const TOAST_LIMIT = 10;
+// To actually change how long the toast stays on screen, change the duration prop on the ToastProvider in toaster.tsx
 const TOAST_REMOVE_DELAY = 1000000;
 
 type ToasterToast = ToastProps & {

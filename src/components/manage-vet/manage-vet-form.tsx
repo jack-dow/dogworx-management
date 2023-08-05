@@ -13,6 +13,7 @@ import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialo
 import { FormSection } from "../ui/form";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
+import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
@@ -91,6 +92,7 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">
+					{!isNew && <VetDeleteDialog />}
 					<Button
 						type="button"
 						onClick={() => {

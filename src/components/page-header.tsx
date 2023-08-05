@@ -31,7 +31,7 @@ function PageHeader({ title, back }: PageHeaderProps) {
 				</div>
 			)}
 
-			<div className="flex items-center justify-between">
+			<div className="flex items-center space-x-2">
 				<h1 className="text-2xl font-bold leading-7 text-slate-900 sm:truncate sm:text-3xl sm:tracking-tight">
 					{title}
 				</h1>

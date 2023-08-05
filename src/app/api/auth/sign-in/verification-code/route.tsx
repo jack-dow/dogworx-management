@@ -76,14 +76,11 @@ async function GET(request: NextRequest): Promise<NextResponse<SignInWithVerific
 
 		const sessionToken = await createSessionJWT({
 			id: sessionId,
-			createdAt: new Date(),
-			updatedAt: new Date(),
 			user: verificationCode.user,
 		});
 
 		await drizzle.insert(sessions).values({
 			id: sessionId,
-			sessionToken,
 			userId: verificationCode.user.id,
 			expiresAt: new Date(Date.now() + sessionCookieOptions.maxAge),
 			ipAddress: request.ip,

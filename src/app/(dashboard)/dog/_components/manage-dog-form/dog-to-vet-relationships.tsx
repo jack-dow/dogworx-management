@@ -134,11 +134,11 @@ function DogToVetRelationships({
 			/>
 
 			<DestructiveActionDialog
-				title="Are you sure?"
-				description="Once you save this dog, this relationship will be permanently deleted."
+				name="relationship"
+				requiresSaveOf="dog"
+				withoutTrigger
 				open={!!confirmRelationshipDelete}
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
-				actionText="Delete relationship"
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
 						handleDogToVetRelationshipDelete(confirmRelationshipDelete);
@@ -293,7 +293,7 @@ function DogToVetRelationship({
 
 									const existingAction = form.getValues(`actions.dogToVetRelationships.${dogToVetRelationship.id}`);
 
-									if (existingAction.type === "INSERT") {
+									if (existingAction?.type === "INSERT") {
 										form.setValue(`actions.dogToVetRelationships.${dogToVetRelationship.id}`, {
 											type: "INSERT",
 											payload: {

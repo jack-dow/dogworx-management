@@ -21,6 +21,7 @@ function getSessionToken() {
 async function getCurrentSession() {
 	const sessionToken = getSessionToken();
 
+
 	if (!sessionToken) {
 		redirect("/sign-in");
 	}

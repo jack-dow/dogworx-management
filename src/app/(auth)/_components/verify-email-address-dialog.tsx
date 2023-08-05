@@ -34,13 +34,12 @@ function VerifyEmailAddressAlertDialog({
 	const isSignUp = type === "sign-up";
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = React.useState(true);
-	const [sentFirstEmail, setSentFirstEmail] = React.useState(false);
-	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(0);
+	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(60);
 
 	React.useEffect(() => {
 		let timer: NodeJS.Timer;
 
-		if (resendCodeCountdown > 0) {
+		if (open && resendCodeCountdown > 0) {
 			timer = setInterval(() => {
 				setResendCodeCountdown((prevCountdown) => prevCountdown - 1);
 			}, 1000);
@@ -49,24 +48,21 @@ function VerifyEmailAddressAlertDialog({
 		return () => {
 			clearInterval(timer);
 		};
-	}, [resendCodeCountdown]);
+	}, [open, resendCodeCountdown]);
 
 	const handleSendEmail = React.useCallback(() => {
 		setIsLoading(true);
 		async function sendEmail() {
-			if (process.env.NODE_ENV !== "development") {
-				const response = await fetch("/api/auth/sign-in/magic-link/send", {
-					method: "POST",
-					body: JSON.stringify({ emailAddress }),
-				});
-				const body = (await response.json()) as SendMagicLinkPOSTResponse;
-				return body;
-			}
+			const response = await fetch("/api/auth/sign-in/magic-link/send", {
+				method: "POST",
+				body: JSON.stringify({ emailAddress }),
+			});
+			const body = (await response.json()) as SendMagicLinkPOSTResponse;
+			return body;
 		}
 
 		sendEmail()
 			.then(() => {
-				setSentFirstEmail(true);
 				setResendCodeCountdown(60);
 			})
 			.catch(() => {
@@ -79,13 +75,7 @@ function VerifyEmailAddressAlertDialog({
 			.finally(() => {
 				setIsLoading(false);
 			});
-	}, [emailAddress, toast, setSentFirstEmail, setResendCodeCountdown]);
-
-	React.useEffect(() => {
-		if (open && !sentFirstEmail) {
-			handleSendEmail();
-		}
-	}, [open, sentFirstEmail, handleSendEmail]);
+	}, [emailAddress, toast, setResendCodeCountdown]);
 
 	return (
 		<>
@@ -118,7 +108,6 @@ function VerifyEmailAddressAlertDialog({
 											variant: "destructive",
 										});
 										throw new Error("Invalid verification code");
-										return;
 									}
 
 									if (!response.ok) {

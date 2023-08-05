@@ -17,13 +17,12 @@ function VetsTable({ result }: { result: VetsList }) {
 	return (
 		<>
 			<DestructiveActionDialog
+				name="vet"
+				withoutTrigger
 				open={!!confirmVetDelete}
 				onOpenChange={() => {
 					setConfirmVetDelete(null);
 				}}
-				title="Are you sure?"
-				description="This action will permanently delete this vet and any associated relationships. This action cannot be undone."
-				actionText="Delete vet"
 				onConfirm={async () => {
 					if (confirmVetDelete == null) return;
 

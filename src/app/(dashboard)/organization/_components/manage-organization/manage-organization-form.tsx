@@ -11,8 +11,10 @@ import { Separator } from "~/components/ui/separator";
 import { type OrganizationById } from "~/actions";
 import { generateId } from "~/utils";
 import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
+import {useUser} from "~/app/(dashboard)/providers";
 
 type ManageOrganizationFormProps = {
 	open?: never;
@@ -27,6 +29,7 @@ type ManageOrganizationFormProps = {
 function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFormProps) {
 	const isNew = !organization;
 
+	const user = useUser();
 	const router = useRouter();
 
 	const form = useFormContext<ManageOrganizationFormSchema>();
@@ -81,6 +84,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">
+					{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}
 					<Button
 						type="button"
 						onClick={() => {

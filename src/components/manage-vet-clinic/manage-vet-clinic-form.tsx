@@ -14,6 +14,7 @@ import { FormSection } from "../ui/form";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
+import {VetClinicDeleteDialog} from "./vet-clinic-delete-dialog";
 
 type ManageVetClinicFormProps = {
 	open?: never;
@@ -82,6 +83,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">
+					{!isNew && <VetClinicDeleteDialog/>}
 					<Button
 						type="button"
 						onClick={() => {

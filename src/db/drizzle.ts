@@ -11,6 +11,5 @@ const connection = connect({
 });
 
 export const drizzle = createDrizzle(connection, {
-	logger: env.NODE_ENV === "development",
 	schema,
 });

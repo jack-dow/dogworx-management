@@ -53,14 +53,11 @@ async function GET(request: NextRequest) {
 
 		const sessionToken = await createSessionJWT({
 			id: sessionId,
-			createdAt: new Date(),
-			updatedAt: new Date(),
 			user: magicLink.user,
 		});
 
 		await drizzle.insert(sessions).values({
 			id: sessionId,
-			sessionToken,
 			userId: magicLink.user.id,
 			expiresAt: new Date(Date.now() + sessionCookieOptions.maxAge),
 			ipAddress: request.ip,

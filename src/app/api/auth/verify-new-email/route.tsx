@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { sessions, users, verificationCodes } from "~/db/schemas";
+import { users, verificationCodes } from "~/db/schemas";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { type APIResponse } from "~/utils";
 import { verifyAPISession } from "../../utils";
@@ -50,7 +50,7 @@ async function GET(request: NextRequest): Promise<NextResponse<VerifyNewEmailGET
 
 	try {
 		const verificationCode = await drizzle.query.verificationCodes.findFirst({
-			where: (verificationCodes, { eq }) => eq(verificationCodes.code, code),
+			where: eq(verificationCodes.code, code),
 		});
 
 		if (!verificationCode) {
@@ -94,20 +94,11 @@ async function GET(request: NextRequest): Promise<NextResponse<VerifyNewEmailGET
 
 		const newSessionToken = await createSessionJWT({
 			id: session.id,
-			createdAt: session.createdAt,
-			updatedAt: new Date(),
 			user: {
 				...session.user,
 				emailAddress: verificationCode.emailAddress,
 			},
 		});
-
-		await drizzle
-			.update(sessions)
-			.set({
-				sessionToken: newSessionToken,
-			})
-			.where(eq(sessions.id, session.id));
 
 		cookies().set({
 			...sessionCookieOptions,

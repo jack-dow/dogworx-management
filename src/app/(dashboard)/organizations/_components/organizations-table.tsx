@@ -19,13 +19,12 @@ function OrganizationsTable({ result }: { result: OrganizationsList }) {
 	return (
 		<>
 			<DestructiveActionDialog
+				name="organization"
+				withoutTrigger
 				open={!!confirmOrganizationDelete}
 				onOpenChange={() => {
 					setConfirmOrganizationDelete(null);
 				}}
-				title="Are you sure?"
-				description="This action will permanently delete this organization and any associated relationships. This action cannot be undone."
-				actionText="Delete organization"
 				onConfirm={async () => {
 					if (confirmOrganizationDelete == null) return;
 

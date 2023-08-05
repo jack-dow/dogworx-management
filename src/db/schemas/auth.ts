@@ -6,7 +6,7 @@ const unsignedSmallInt = customType<{
 	driverData: number;
 }>({
 	dataType() {
-		return "smallint UNSIGNED";
+		return "smallint unsigned";
 	},
 	fromDriver(data: number) {
 		return data;
@@ -48,7 +48,6 @@ const sessions = mysqlTable("auth_sessions", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-	sessionToken: varchar("session_token", { length: 900 }).notNull(),
 	userId: char("user_id", { length: 24 }).notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	ipAddress: varchar("ip_address", { length: 15 }),

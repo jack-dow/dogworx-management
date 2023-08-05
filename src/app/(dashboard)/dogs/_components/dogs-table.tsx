@@ -17,13 +17,12 @@ function DogsTable({ result }: { result: DogsList }) {
 	return (
 		<>
 			<DestructiveActionDialog
+				name="dog"
+				withoutTrigger
 				open={!!confirmDogDelete}
 				onOpenChange={() => {
 					setConfirmDogDelete(null);
 				}}
-				title="Are you sure?"
-				description="This action will permanently delete this dog and any associated relationships. This action cannot be undone."
-				actionText="Delete dog"
 				onConfirm={async () => {
 					if (confirmDogDelete == null) return;
 

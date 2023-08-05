@@ -23,32 +23,36 @@ function RootPage() {
 			<PageHeader title="Dashboard" />
 			<div className="flex flex-col space-y-4 ">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
-					<Button
-						disabled={isLoading}
-						onClick={() => {
-							setIsLoading(true);
-							signOut()
-								.then((result) => {
-									if (result.success) {
-										router.push("/sign-in");
-										router.refresh();
-									}
-								})
-								.catch(() => {
-									toast({
-										title: "Something went wrong",
-										description: "Failed to sign you out. Please try again",
-										variant: "destructive",
-									});
-								})
-								.finally(() => {
-									setIsLoading(false);
-								});
-						}}
-					>
-						{isLoading && <Loader size="sm" aria-hidden="true" className="mr-2" />}
-						Sign out
-					</Button>
+					{process.env.NODE_ENV === "development" && (
+						<>
+							<Button
+								disabled={isLoading}
+								onClick={() => {
+									setIsLoading(true);
+									signOut()
+										.then((result) => {
+											if (result.success) {
+												router.push("/sign-in");
+												router.refresh();
+											}
+										})
+										.catch(() => {
+											toast({
+												title: "Something went wrong",
+												description: "Failed to sign you out. Please try again",
+												variant: "destructive",
+											});
+										})
+										.finally(() => {
+											setIsLoading(false);
+										});
+								}}
+							>
+								{isLoading && <Loader size="sm" aria-hidden="true" className="mr-2" />}
+								Sign out
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 		</>

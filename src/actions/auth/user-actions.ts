@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogSessions, sessions, users } from "~/db/schemas";
+import { dogSessions, users } from "~/db/schemas";
 import { UpdateUserSchema } from "~/db/validation";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { createServerAction, getServerSession, getServerUser } from "../utils";
@@ -24,20 +24,11 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 
 		const newSessionToken = await createSessionJWT({
 			id: currentSession.id,
-			createdAt: currentSession.createdAt,
-			updatedAt: new Date(),
 			user: {
 				...currentSession.user,
 				...validation.data,
 			},
 		});
-
-		await drizzle
-			.update(sessions)
-			.set({
-				sessionToken: newSessionToken,
-			})
-			.where(eq(sessions.id, currentSession.id));
 
 		cookies().set({
 			...sessionCookieOptions,

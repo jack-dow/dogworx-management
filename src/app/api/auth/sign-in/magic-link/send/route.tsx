@@ -13,7 +13,7 @@ const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),
 });
 
-type SendMagicLinkPOSTResponse = APIResponse<undefined, "NoUserEmailAddressFound">;
+type SendMagicLinkPOSTResponse = APIResponse<undefined, "NoUserFound">;
 
 async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOSTResponse>> {
 	const body = (await request.json()) as unknown;
@@ -48,7 +48,7 @@ async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOS
 				{
 					success: false,
 					error: {
-						code: "NoUserEmailAddressFound",
+						code: "NoUserFound",
 						message: "No user with that email address exists",
 					},
 				},

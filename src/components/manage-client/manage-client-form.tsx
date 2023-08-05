@@ -11,6 +11,7 @@ import { Separator } from "~/components/ui/separator";
 import { type ClientById } from "~/actions";
 import { generateId } from "~/utils";
 import { FormSection } from "../ui/form";
+import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { type ManageClientFormSchema } from "./manage-client";
@@ -77,6 +78,7 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">
+					{!isNew && <ClientDeleteDialog />}
 					<Button
 						type="button"
 						onClick={() => {

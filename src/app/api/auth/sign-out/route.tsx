@@ -4,7 +4,8 @@ import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
 import { sessions } from "~/db/schemas";
-import { sessionCookieOptions } from "~/lib/auth-options";
+import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
+import { jwt } from "~/lib/jwt";
 import { type APIResponse } from "~/utils";
 
 type SignOutPOSTResponse = APIResponse<undefined>;
@@ -17,14 +18,14 @@ async function POST(): Promise<NextResponse<SignOutPOSTResponse>> {
 
 	try {
 		if (sessionToken) {
-			await drizzle.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
+			const sessionTokenData = (await jwt.verify(sessionToken)) as SessionCookie | null;
+
+			if (sessionTokenData) {
+				await drizzle.delete(sessions).where(eq(sessions.id, sessionTokenData.id));
+			}
 		}
 
-		cookies().set({
-			...sessionCookieOptions,
-			value: "",
-			maxAge: 0,
-		});
+		cookies().delete(sessionCookieOptions.name);
 
 		return NextResponse.json({
 			success: true,

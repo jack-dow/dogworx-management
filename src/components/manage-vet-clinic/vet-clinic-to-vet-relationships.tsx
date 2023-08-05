@@ -143,11 +143,11 @@ function VetClinicToVetRelationships({
 			/>
 
 			<DestructiveActionDialog
-				title="Are you sure?"
-				description="Once you save this vet clinic, this relationship will be permanently deleted."
+				name="relationship"
+				requiresSaveOf="vet clinic"
+				withoutTrigger
 				open={!!confirmRelationshipDelete}
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
-				actionText="Delete relationship"
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
 						handleVetToVetClinicRelationshipDelete(confirmRelationshipDelete);
@@ -303,7 +303,7 @@ function VetClinicToVetRelationship({
 										`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`,
 									);
 
-									if (existingAction.type === "INSERT") {
+									if (existingAction?.type === "INSERT") {
 										form.setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
 											type: "INSERT",
 											payload: {

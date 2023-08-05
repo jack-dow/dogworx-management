@@ -19,13 +19,12 @@ function VetClinicsTable({ result }: { result: VetClinicsList }) {
 	return (
 		<>
 			<DestructiveActionDialog
+				name="vet clinic"
+				withoutTrigger
 				open={!!confirmVetClinicDelete}
 				onOpenChange={() => {
 					setConfirmVetClinicDelete(null);
 				}}
-				title="Are you sure?"
-				description="This action will permanently delete this vet clinic and any associated relationships. This action cannot be undone."
-				actionText="Delete vet clinic"
 				onConfirm={async () => {
 					if (confirmVetClinicDelete == null) return;
 

@@ -7,10 +7,6 @@ import { sessions } from "./db/schemas";
 import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {
-	// if (process.env.NODE_ENV === "development") {
-	// 	return NextResponse.next();
-	// }
-
 	const sessionCookie = request.cookies.get(sessionCookieOptions.name);
 
 	const sessionToken = sessionCookie?.value;
@@ -33,96 +29,68 @@ export async function middleware(request: NextRequest) {
 
 		if (!sessionTokenData) {
 			const response = NextResponse.redirect(signInUrl);
-			response.cookies.set({
-				...sessionCookieOptions,
-				value: "",
-				maxAge: 0,
-			});
+
+			response.cookies.delete(sessionCookieOptions.name);
 
 			return response;
 		}
-
-		const session = await drizzle.query.sessions.findFirst({
-			where: (sessions, { eq }) => eq(sessions.sessionToken, sessionToken),
-		});
-
-		// If no session can be found with this session token, that means that this is a stolen token or the user has had their token stolen.
-		// In either case, we should delete all sessions for this user and redirect them to the sign-in page.
-		if (!session) {
-			await drizzle.delete(sessions).where(eq(sessions.userId, sessionTokenData.user.id));
-
-			const response = isAuthPage ? NextResponse.next() : NextResponse.redirect(signInUrl);
-
-			response.cookies.set({
-				...sessionCookieOptions,
-				value: "",
-				maxAge: 0,
-			});
-
-			return response;
-		}
-
-		if (session.expiresAt < new Date()) {
-			await drizzle.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
-
-			const response = isAuthPage ? NextResponse.next() : NextResponse.redirect(signInUrl);
-
-			response.cookies.set({
-				...sessionCookieOptions,
-				value: "",
-				maxAge: 0,
-			});
-
-			return response;
-		}
-
-		const response = isAuthPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
-		const requestHeaders = new Headers(request.headers);
 
 		// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
 		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry) {
+			const session = await drizzle.query.sessions.findFirst({
+				where: (sessions, { eq }) => eq(sessions.id, sessionTokenData.id),
+			});
+
+			if (!session || session.expiresAt < new Date()) {
+				if (session) {
+					await drizzle.delete(sessions).where(eq(sessions.id, sessionTokenData.id));
+				}
+
+				const response = isAuthPage ? NextResponse.next() : NextResponse.redirect(signInUrl);
+
+				response.cookies.delete(sessionCookieOptions.name);
+
+				return response;
+			}
+
+			const response = isAuthPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
+			const requestHeaders = new Headers(request.headers);
+
+			// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
 			const newSessionToken = await createSessionJWT({
 				id: sessionTokenData.id,
-				createdAt: sessionTokenData.createdAt,
-				updatedAt: new Date(),
 				user: sessionTokenData.user,
 			});
 
-			await drizzle
-				.update(sessions)
-				.set({
-					sessionToken: newSessionToken,
-					ipAddress: request.ip,
-					userAgent: requestHeaders.get("user-agent"),
-					city: request.geo?.city,
-					country: request.geo?.country,
-				})
-				.where(eq(sessions.id, session.id));
+			if (
+				session.ipAddress != request.ip ||
+				session.userAgent !== requestHeaders.get("user-agent") ||
+				session.city != request.geo?.city ||
+				session.country != request.geo?.country
+			) {
+				await drizzle
+					.update(sessions)
+					.set({
+						ipAddress: request.ip ?? session.ipAddress,
+						userAgent: requestHeaders.get("user-agent") || session.userAgent,
+						city: request.geo?.city || session.city,
+						country: request.geo?.country || session.country,
+					})
+					.where(eq(sessions.id, session.id));
+			}
 
 			response.cookies.set({
 				...sessionCookieOptions,
 				value: newSessionToken,
 			});
+
+			return response;
 		}
 
-		if (
-			session.ipAddress != request.ip ||
-			session.userAgent !== requestHeaders.get("user-agent") ||
-			session.city != request.geo?.city ||
-			session.country != request.geo?.country
-		) {
-			await drizzle
-				.update(sessions)
-				.set({
-					ipAddress: request.ip ?? session.ipAddress,
-					userAgent: requestHeaders.get("user-agent") || session.userAgent,
-					city: request.geo?.city || session.city,
-					country: request.geo?.country || session.country,
-				})
-				.where(eq(sessions.id, session.id));
+		// Valid JWT that hasn't expired yet but user is on auth page, redirect to dashboard page
+		if (isAuthPage) {
+			return NextResponse.redirect(new URL("/", request.url));
 		}
-
-		return response;
 	}
 
 	return NextResponse.next();

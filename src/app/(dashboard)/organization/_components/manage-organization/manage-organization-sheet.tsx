@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
 import {
@@ -27,7 +28,9 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
+import { useUser } from "~/app/(dashboard)/providers";
 import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 
@@ -63,6 +66,8 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
 
+	const router = useRouter();
+	const user = useUser();
 	const form = useFormContext<ManageOrganizationFormSchema>();
 
 	async function handleSubmit(data: ManageOrganizationFormSchema) {
@@ -73,7 +78,8 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 				onSuccessfulSubmit(result.data);
 			}
 
-			setInternalOpen(false);
+			router.push("/organizations");
+
 			form.reset();
 		}
 	}
@@ -151,6 +157,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 						<Separator className="my-4" />
 
 						<SheetFooter>
+							{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>

@@ -29,6 +29,7 @@ import {
 import { type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
+import { VetClinicDeleteDialog } from "./vet-clinic-delete-dialog";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 
 type DefaultValues = Partial<ManageVetClinicFormSchemaType>;
@@ -149,6 +150,7 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 						<Separator className="my-4" />
 
 						<SheetFooter>
+							{!isNew && <VetClinicDeleteDialog />}
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>

@@ -17,6 +17,7 @@ import {
 	AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
+import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { Form, FormSection } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
@@ -255,6 +256,30 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 					<Separator />
 
 					<div className="flex justify-end space-x-4">
+						{!isNew && (
+							<DestructiveActionDialog
+								name="dog"
+								onConfirm={async () => {
+									const result = await actions.app.dogs.delete(form.getValues("id"));
+
+									if (result.success) {
+										toast({
+											title: `Dog deleted`,
+											description: `Successfully deleted dog "${form.getValues("givenName")}"`,
+										});
+										router.push("/dogs");
+									} else {
+										toast({
+											title: `Dog deletion failed`,
+											description: `There was an error deleting dog "${form.getValues(
+												"givenName",
+											)}". Please try again.`,
+										});
+									}
+								}}
+							/>
+						)}
+
 						<Button
 							type="button"
 							onClick={() => {

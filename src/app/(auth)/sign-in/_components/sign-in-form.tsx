@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
+import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { SignInSchema } from "~/lib/validation";
 import { VerifyEmailAddressAlertDialog } from "../../_components/verify-email-address-dialog";
 
@@ -29,8 +30,45 @@ function SignInForm() {
 
 	const redirectedFrom = searchParams.get("ref");
 
-	function onSubmit(data: SignInSchema) {
-		setVerifyEmail(data.emailAddress);
+	async function onSubmit(data: SignInSchema) {
+		if (process.env.NODE_ENV === "development") {
+			setVerifyEmail(data.emailAddress);
+			return;
+		}
+
+		const response = await fetch("/api/auth/sign-in/magic-link/send", {
+			method: "POST",
+			body: JSON.stringify({ emailAddress: data.emailAddress }),
+		});
+		const body = (await response.json()) as SendMagicLinkPOSTResponse;
+
+		if (body.success) {
+			setVerifyEmail(data.emailAddress);
+			toast({
+				title: "Verification code sent",
+				description: "Please check your email for the code and magic link.",
+			});
+			return;
+		}
+
+		if (body.error.code === "NoUserFound") {
+			form.setError("emailAddress", {
+				type: "manual",
+				message: "Account not found",
+			});
+			toast({
+				title: "Unknown email address",
+				description: "Sorry, we couldn't find a user with that email address. Please try again.",
+				variant: "destructive",
+			});
+			return;
+		}
+
+		toast({
+			title: "Something went wrong",
+			description: "Your sign in request failed. Please try again.",
+			variant: "destructive",
+		});
 	}
 
 	React.useEffect(() => {

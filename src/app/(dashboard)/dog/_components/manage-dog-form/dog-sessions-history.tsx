@@ -87,11 +87,11 @@ function DogSessionsHistory({
 	return (
 		<>
 			<DestructiveActionDialog
-				title="Are you sure?"
-				description="Once you save this dog, this session will be permanently deleted."
+				name="session"
+				requiresSaveOf="dog"
+				withoutTrigger
 				open={!!confirmSessionDelete}
 				onOpenChange={() => setConfirmSessionDelete(null)}
-				actionText="Delete session"
 				onConfirm={() => {
 					if (confirmSessionDelete) {
 						handleDogSessionDelete(confirmSessionDelete);

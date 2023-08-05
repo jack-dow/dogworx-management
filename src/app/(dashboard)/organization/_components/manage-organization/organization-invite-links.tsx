@@ -68,11 +68,11 @@ function OrganizationInviteLinks({
 	return (
 		<>
 			<DestructiveActionDialog
-				title="Are you sure?"
-				description="Once you save this organization, this invite link will be permanently deleted."
+				name="invite link"
+				requiresSaveOf="organization"
+				withoutTrigger
 				open={!!confirmInviteLinkDelete}
 				onOpenChange={() => setConfirmInviteLinkDelete(null)}
-				actionText="Delete invite link"
 				onConfirm={() => {
 					if (confirmInviteLinkDelete) {
 						handleInviteLinkDelete(confirmInviteLinkDelete.id);

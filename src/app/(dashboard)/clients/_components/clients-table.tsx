@@ -17,13 +17,12 @@ function ClientsTable({ result }: { result: ClientsList }) {
 	return (
 		<>
 			<DestructiveActionDialog
+				name="client"
+				withoutTrigger
 				open={!!confirmClientDelete}
 				onOpenChange={() => {
 					setConfirmClientDelete(null);
 				}}
-				title="Are you sure?"
-				description="This action will permanently delete this client and any associated relationships. This action cannot be undone."
-				actionText="Delete client"
 				onConfirm={async () => {
 					if (confirmClientDelete == null) return;
 
