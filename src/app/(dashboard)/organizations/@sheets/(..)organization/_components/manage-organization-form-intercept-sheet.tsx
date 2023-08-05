@@ -14,6 +14,7 @@ function ManageOrganizationFormInterceptSheet({ organization }: { organization?:
 			open={true}
 			setOpen={() => {
 				router.back();
+				router.refresh();
 			}}
 			withoutTrigger
 			organization={organization}

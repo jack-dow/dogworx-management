@@ -14,6 +14,7 @@ function ManageVetClinicFormInterceptSheet({ vetClinic }: { vetClinic?: VetClini
 			open={true}
 			setOpen={() => {
 				router.back();
+				router.refresh();
 			}}
 			withoutTrigger
 			vetClinic={vetClinic}

@@ -14,6 +14,7 @@ function ManageClientFormInterceptSheet({ client }: { client?: ClientById | unde
 			open={true}
 			setOpen={() => {
 				router.back();
+				router.refresh();
 			}}
 			withoutTrigger
 			client={client}

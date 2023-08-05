@@ -14,6 +14,7 @@ function ManageVetFormInterceptSheet({ vet }: { vet?: VetById | undefined }) {
 			open={true}
 			setOpen={() => {
 				router.back();
+				router.refresh();
 			}}
 			withoutTrigger
 			vet={vet}
