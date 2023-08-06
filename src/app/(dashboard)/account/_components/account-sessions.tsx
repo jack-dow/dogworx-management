@@ -5,19 +5,17 @@ import { useFieldArray, type Control } from "react-hook-form";
 import UAParser from "ua-parser-js";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "~/components/ui/dialog";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
@@ -147,23 +145,25 @@ function SessionAccordion({
 								: "Click the button below to sign this session out of your account. "}
 						</p>
 						{!isCurrentSession && (
-							<AlertDialog open={isSignOutConfirmDialogOpen} onOpenChange={setIsSignOutConfirmDialogOpen}>
-								<AlertDialogTrigger asChild>
+							<Dialog open={isSignOutConfirmDialogOpen} onOpenChange={setIsSignOutConfirmDialogOpen}>
+								<DialogTrigger asChild>
 									<Button variant="link" className="-ml-4 text-destructive">
 										Remove this session
 									</Button>
-								</AlertDialogTrigger>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-										<AlertDialogDescription>
+								</DialogTrigger>
+								<DialogContent>
+									<DialogHeader>
+										<DialogTitle>Are you sure?</DialogTitle>
+										<DialogDescription>
 											You are about to sign this session out of your account. If you believe this is a suspicious login,
 											please reset your password and contact support.
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction
+										</DialogDescription>
+									</DialogHeader>
+									<DialogFooter>
+										<Button variant="outline" onClick={() => setIsSignOutConfirmDialogOpen(false)}>
+											Cancel
+										</Button>
+										<Button
 											variant="destructive"
 											disabled={isSigningOut}
 											onClick={(e) => {
@@ -194,10 +194,10 @@ function SessionAccordion({
 										>
 											{isSigningOut && <Loader size="sm" />}
 											<span>Sign session out</span>
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+										</Button>
+									</DialogFooter>
+								</DialogContent>
+							</Dialog>
 						)}
 					</div>
 				</div>

@@ -14,6 +14,14 @@ import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/ui/dialog";
+import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -267,6 +275,16 @@ function SessionDetail({
 				)}
 
 				<div className="flex justify-end">
+					{/* <Button
+						variant="ghost"
+						className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+						onClick={() => {
+							setIsEditing(!isEditing);
+						}}
+					>
+						<EditIcon className=" h-4 text-muted-foreground/70" />
+						<span className="sr-only">Edit Session</span>
+					</Button> */}
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
@@ -276,7 +294,7 @@ function SessionDetail({
 						</DropdownMenuTrigger>
 						<DropdownMenuContent
 							align="end"
-							className="w-[160px]"
+							className="w-[160px] data-[state=closed]:animate-none"
 							onCloseAutoFocus={(e) => {
 								e.preventDefault();
 							}}
@@ -316,9 +334,9 @@ function SessionDetail({
 								Delete
 							</DropdownMenuItem>
 							{/* <DropdownMenuItem>
-						<CopyIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-						Make a copy
-					</DropdownMenuItem> */}
+								<CopyIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+								Make a copy
+							</DropdownMenuItem> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
@@ -387,179 +405,219 @@ function EditableSessionDetail({
 		},
 	});
 
+	const [isConfirmCancelEditingOpen, setIsConfirmCancelEditingOpen] = React.useState(false);
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
 	const [month, setMonth] = React.useState<Date>(form.getValues("date"));
 
 	return (
-		<Form {...form}>
-			<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
-				<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
-					{user.profileImageUrl ? (
-						<Image
-							src={user.profileImageUrl}
-							alt="User's profile image"
-							width={128}
-							height={128}
-							className="aspect-square rounded-full object-cover"
-						/>
-					) : (
-						<>
-							{user.givenName[0]}
-							{user.familyName?.[0]}
-						</>
-					)}
-				</div>
-				<div className="min-w-0 flex-1 space-y-2">
-					<div className="relative">
-						<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
-							<FormField
-								control={form.control}
-								name="details"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="sr-only">Add session details</FormLabel>
-										<FormControl>
-											<RichTextEditor
-												id={sessionHistory?.id ?? "add-session-detail"}
-												onEditorChange={setEditor}
-												content={sessionHistory?.details ?? ""}
-												className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-												onValueChange={({ html, text }) => {
-													onDetailsTextChange(text, form.getValues("id"));
-													if (text === "") {
-														field.onChange(text);
-													} else {
-														field.onChange(sanitizeHtml(html));
-													}
-												}}
-												autofocus={!!sessionHistory}
-											/>
-										</FormControl>
-									</FormItem>
-								)}
-							/>
+		<>
+			<Dialog open={isConfirmCancelEditingOpen} onOpenChange={setIsConfirmCancelEditingOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Are you sure?</DialogTitle>
+						<DialogDescription>
+							If you cancel editing, any changes you have made to this session will not be saved.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsConfirmCancelEditingOpen(false)}>
+							Cancel
+						</Button>
+						<Button
+							onClick={() => {
+								if (onCancel) {
+									onCancel();
+								}
+							}}
+						>
+							Continue
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
-							{/* Spacer element to match the height of the toolbar */}
-							<div aria-hidden="true">
-								<div className="h-px" />
-								<div className="py-2">
-									<div className="py-px">
-										<div className="h-9" />
+			<Form {...form}>
+				<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
+					<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
+						{user.profileImageUrl ? (
+							<Image
+								src={user.profileImageUrl}
+								alt="User's profile image"
+								width={128}
+								height={128}
+								className="aspect-square rounded-full object-cover"
+							/>
+						) : (
+							<>
+								{user.givenName[0]}
+								{user.familyName?.[0]}
+							</>
+						)}
+					</div>
+					<div className="min-w-0 flex-1 space-y-2">
+						<div className="relative">
+							<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
+								<FormField
+									control={form.control}
+									name="details"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="sr-only">Add session details</FormLabel>
+											<FormControl>
+												<RichTextEditor
+													id={sessionHistory?.id ?? "add-session-detail"}
+													onEditorChange={setEditor}
+													content={sessionHistory?.details ?? ""}
+													className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+													onValueChange={({ html, text }) => {
+														onDetailsTextChange(text, form.getValues("id"));
+														if (text === "") {
+															field.onChange(text);
+														} else {
+															field.onChange(sanitizeHtml(html));
+														}
+													}}
+													autofocus={!!sessionHistory}
+												/>
+											</FormControl>
+										</FormItem>
+									)}
+								/>
+
+								{/* Spacer element to match the height of the toolbar */}
+								<div aria-hidden="true">
+									<div className="h-px" />
+									<div className="py-2">
+										<div className="py-px">
+											<div className="h-9" />
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
 
-						<div className="absolute inset-x-0 bottom-0 flex justify-between py-2 pl-3 pr-2">
-							<FormField
-								control={form.control}
-								name="date"
-								render={({ field }) => (
-									<FormItem>
-										<FormControl>
-											<Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-												<PopoverTrigger asChild>
-													<Button className="w-full" variant="outline">
-														<CalendarIcon className="mr-2 h-4 w-4" />
-														<span className="mr-2 truncate">
-															{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}
-														</span>
-														<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-													</Button>
-												</PopoverTrigger>
-												<PopoverContent className="w-auto p-0">
-													<div className="space-y-2 p-3 pb-1">
-														<Label htmlFor="session-date-input">Date</Label>
-														<Input
-															id="session-date-input"
-															autoComplete="off"
-															value={dateInputValue}
-															onChange={(e) => {
-																const val = e.target.value;
-																setDateInputValue(val);
+							<div className="absolute inset-x-0 bottom-0 flex justify-between py-2 pl-3 pr-2">
+								<FormField
+									control={form.control}
+									name="date"
+									render={({ field }) => (
+										<FormItem>
+											<FormControl>
+												<Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+													<PopoverTrigger asChild>
+														<Button className="w-full" variant="outline">
+															<CalendarIcon className="mr-2 h-4 w-4" />
+															<span className="mr-2 truncate">
+																{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}
+															</span>
+															<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+														</Button>
+													</PopoverTrigger>
+													<PopoverContent className="w-auto p-0">
+														<div className="space-y-2 p-3 pb-1">
+															<Label htmlFor="session-date-input">Date</Label>
+															<Input
+																id="session-date-input"
+																autoComplete="off"
+																value={dateInputValue}
+																onChange={(e) => {
+																	const val = e.target.value;
+																	setDateInputValue(val);
 
-																const date = chrono.parseDate(val) ?? new Date();
+																	const date = chrono.parseDate(val) ?? new Date();
 
-																field.onChange(date);
+																	field.onChange(date);
 
-																setMonth(date);
-															}}
-															onKeyDown={(e) => {
-																if (e.key === "Enter") {
-																	setIsDatePickerOpen(false);
+																	setMonth(date);
+																}}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") {
+																		setIsDatePickerOpen(false);
+																	}
+																}}
+															/>
+														</div>
+														<Calendar
+															mode="single"
+															selected={field.value ?? undefined}
+															month={month}
+															onMonthChange={setMonth}
+															onSelect={(value) => {
+																if (value) {
+																	field.onChange(value);
 																}
+																setIsDatePickerOpen(false);
+																setDateInputValue("");
 															}}
+															initialFocus={false}
 														/>
-													</div>
-													<Calendar
-														mode="single"
-														selected={field.value ?? undefined}
-														month={month}
-														onMonthChange={setMonth}
-														onSelect={(value) => {
-															if (value) {
-																field.onChange(value);
-															}
-															setIsDatePickerOpen(false);
-															setDateInputValue("");
-														}}
-														initialFocus={false}
-													/>
-												</PopoverContent>
-											</Popover>
-										</FormControl>
-									</FormItem>
-								)}
-							/>
-							<div className="shrink-0 space-x-2.5">
-								{sessionHistory && (
-									<Button variant="outline" size="sm" onClick={onCancel} className="hidden 2xl:inline-flex">
-										Cancel
-									</Button>
-								)}
-								<Button
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-
-										void form.handleSubmit((data) => {
-											onSubmit(data);
-											form.reset({
-												id: generateId(),
-												dogId,
-												details: "",
-												date: undefined,
-												user: user ?? undefined,
-												userId: user?.id ?? undefined,
-												...sessionHistory,
-											});
-											editor?.commands.clearContent();
-										})(e);
-									}}
-									size="sm"
-									disabled={!form.formState.isDirty && !!sessionHistory}
-								>
-									{sessionHistory?.id ? (
-										<div>
-											Update <span className="hidden md:inline">Session</span>
-										</div>
-									) : (
-										"Add Session"
+													</PopoverContent>
+												</Popover>
+											</FormControl>
+										</FormItem>
 									)}
-								</Button>
+								/>
+								<div className="shrink-0 space-x-2.5">
+									{sessionHistory && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => {
+												if (form.formState.isDirty) {
+													setIsConfirmCancelEditingOpen(true);
+													return;
+												}
+
+												onCancel();
+											}}
+											className="hidden 2xl:inline-flex"
+										>
+											Cancel
+										</Button>
+									)}
+									<Button
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+
+											void form.handleSubmit((data) => {
+												onSubmit(data);
+												form.reset({
+													id: generateId(),
+													dogId,
+													details: "",
+													date: undefined,
+													user: user ?? undefined,
+													userId: user?.id ?? undefined,
+													...sessionHistory,
+												});
+												editor?.commands.clearContent();
+											})(e);
+										}}
+										size="sm"
+										disabled={!form.formState.isDirty && !!sessionHistory}
+									>
+										{sessionHistory?.id ? (
+											<div>
+												Update <span className="hidden md:inline">Session</span>
+											</div>
+										) : (
+											"Add Session"
+										)}
+									</Button>
+								</div>
 							</div>
 						</div>
+						{form.formState.errors?.details && (
+							<p className="text-sm font-medium text-destructive">{form.formState.errors?.details?.message}</p>
+						)}
+						{form.formState.errors?.date && (
+							<p className="text-sm font-medium text-destructive">{form.formState.errors?.date?.message}</p>
+						)}
 					</div>
-					{form.formState.errors?.details && (
-						<p className="text-sm font-medium text-destructive">{form.formState.errors?.details?.message}</p>
-					)}
-					{form.formState.errors?.date && (
-						<p className="text-sm font-medium text-destructive">{form.formState.errors?.date?.message}</p>
-					)}
 				</div>
-			</div>
-		</Form>
+			</Form>
+		</>
 	);
 }
 

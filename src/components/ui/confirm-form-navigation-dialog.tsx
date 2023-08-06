@@ -1,15 +1,14 @@
 "use client";
 
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/ui/dialog";
+import { Button } from "./button";
 
 type ConfirmNavigationDialogProps = {
 	open: boolean;
@@ -19,20 +18,22 @@ type ConfirmNavigationDialogProps = {
 
 function ConfirmFormNavigationDialog({ open, onOpenChange, onConfirm }: ConfirmNavigationDialogProps) {
 	return (
-		<AlertDialog open={open} onOpenChange={onOpenChange}>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-					<AlertDialogDescription>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Unsaved changes</DialogTitle>
+					<DialogDescription>
 						Are you sure you want to exit this form? If you do, any unsaved changes will be lost.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction onClick={onConfirm}>Continue</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
+					</DialogDescription>
+				</DialogHeader>
+				<DialogFooter>
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
+						Cancel
+					</Button>
+					<Button onClick={onConfirm}>Continue</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

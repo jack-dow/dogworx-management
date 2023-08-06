@@ -4,17 +4,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
+import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -88,27 +79,14 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 
 	return (
 		<>
-			<AlertDialog open={isConfirmCloseDialogOpen} onOpenChange={setIsConfirmCloseDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to close this form? If you do, any unsaved changes will be lost.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								setInternalOpen(false);
-								form.reset();
-							}}
-						>
-							Continue
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<ConfirmFormNavigationDialog
+				open={isConfirmCloseDialogOpen}
+				onOpenChange={setIsConfirmCloseDialogOpen}
+				onConfirm={() => {
+					setInternalOpen(false);
+					form.reset();
+				}}
+			/>
 
 			<Sheet
 				open={internalOpen}

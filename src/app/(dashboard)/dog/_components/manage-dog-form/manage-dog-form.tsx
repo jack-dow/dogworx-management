@@ -6,18 +6,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
+import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/ui/dialog";
 import { Form, FormSection } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
@@ -187,48 +186,38 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 	return (
 		<>
-			<AlertDialog open={isConfirmNavigationDialogOpen} onOpenChange={setIsConfirmNavigationDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to close this form? If you do, any unsaved changes will be lost.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								router.back();
-							}}
-						>
-							Continue
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<ConfirmFormNavigationDialog
+				open={isConfirmNavigationDialogOpen}
+				onOpenChange={setIsConfirmNavigationDialogOpen}
+				onConfirm={() => {
+					router.back();
+				}}
+			/>
 
-			<AlertDialog open={isConfirmSubmittingDialogOpen} onOpenChange={setIsConfirmSubmittingDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Uncommitted changes</AlertDialogTitle>
-						<AlertDialogDescription>
+			<Dialog open={isConfirmSubmittingDialogOpen} onOpenChange={setIsConfirmSubmittingDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Uncommitted changes</DialogTitle>
+						<DialogDescription>
 							Are you sure you want to submit this form? If you do, any uncommitted changes will be lost.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsConfirmSubmittingDialogOpen(false)}>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
 							onClick={() => {
 								form.setValue("unsavedSessionIds", []);
 								void form.handleSubmit(onSubmit)();
 							}}
 						>
 							Continue
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Form {...form}>
 				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10">

@@ -3,16 +3,6 @@
 import * as React from "react";
 import { useFormContext } from "react-hook-form";
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
@@ -28,6 +18,7 @@ import {
 } from "~/components/ui/sheet";
 import { type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
 import { hasTrueValue } from "~/utils";
+import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicDeleteDialog } from "./vet-clinic-delete-dialog";
@@ -81,27 +72,14 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 
 	return (
 		<>
-			<AlertDialog open={isConfirmCloseDialogOpen} onOpenChange={setIsConfirmCloseDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to close this form? If you do, any unsaved changes will be lost.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								setInternalOpen(false);
-								form.reset();
-							}}
-						>
-							Continue
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<ConfirmFormNavigationDialog
+				open={isConfirmCloseDialogOpen}
+				onOpenChange={setIsConfirmCloseDialogOpen}
+				onConfirm={() => {
+					setInternalOpen(false);
+					form.reset();
+				}}
+			/>
 
 			<Sheet
 				open={internalOpen}
