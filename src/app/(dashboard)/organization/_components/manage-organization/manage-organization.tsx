@@ -11,7 +11,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { actions, type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
 import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { ManageOrganizationForm, type ManageOrganizationFormProps } from "./manage-organization-form";
 import { ManageOrganizationSheet, type ManageOrganizationSheetProps } from "./manage-organization-sheet";
 
@@ -64,7 +64,8 @@ function ManageOrganization<
 			},
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -78,6 +79,7 @@ function ManageOrganization<
 			form.reset(
 				{ ...organization, actions },
 				{
+					keepDirty: true,
 					keepDirtyValues: true,
 				},
 			);

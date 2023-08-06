@@ -34,7 +34,7 @@ import {
 } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { generateId, mergeRelationships } from "~/utils";
+import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
 import { DogBasicInformation } from "./dog-basic-information";
 import { DogSessionsHistory } from "./dog-sessions-history";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
@@ -112,7 +112,8 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			unsavedSessionIds: [],
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty && !form.formState.isSubmitted);
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+	useConfirmPageNavigation(isFormDirty && !form.formState.isSubmitted);
 
 	useDidUpdate(() => {
 		if (dog) {
@@ -283,7 +284,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						<Button
 							type="button"
 							onClick={() => {
-								if (form.formState.isDirty) {
+								if (isFormDirty) {
 									setIsConfirmNavigationDialogOpen(true);
 								} else {
 									router.back();
@@ -293,7 +294,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						>
 							Back
 						</Button>
-						<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+						<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 							{form.formState.isSubmitting && <Loader size="sm" />}
 							{isNew ? "Create" : "Update"} dog
 						</Button>

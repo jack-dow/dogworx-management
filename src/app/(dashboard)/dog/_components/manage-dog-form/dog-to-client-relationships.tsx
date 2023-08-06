@@ -133,6 +133,13 @@ function DogToClientRelationships({
 				open={!!editingClient}
 				setOpen={() => setEditingClient(null)}
 				withoutTrigger
+				onSuccessfulSubmit={(client) => {
+					dogToClientRelationships.fields.forEach((field, index) => {
+						if (field.clientId === client.id) {
+							form.setValue(`dogToClientRelationships.${index}.client`, client);
+						}
+					});
+				}}
 			/>
 
 			<DestructiveActionDialog
@@ -384,7 +391,7 @@ function DogToClientRelationship({
 							>
 								<EditIcon className="mr-2 h-4 w-4" />
 								<span className="flex-1">Edit Client</span>
-								{isFetchingClient && <Loader size="sm" variant="black" className="mr-0" />}
+								{isFetchingClient && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onSelect={() => {

@@ -140,6 +140,13 @@ function VetClinicToVetRelationships({
 				open={!!editingVet}
 				setOpen={() => setEditingVet(null)}
 				withoutTrigger
+				onSuccessfulSubmit={(vet) => {
+					vetToVetClinicRelationships.fields.forEach((field, index) => {
+						if (field.vetId === vet.id) {
+							form.setValue(`vetToVetClinicRelationships.${index}.vet`, vet);
+						}
+					});
+				}}
 			/>
 
 			<DestructiveActionDialog
@@ -234,6 +241,7 @@ function VetClinicToVetRelationships({
 									setEditingVet(vetClinic);
 								}}
 								onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+								variant={variant}
 							/>
 						))}
 					</ul>
@@ -248,11 +256,13 @@ function VetClinicToVetRelationship({
 	index,
 	onEdit,
 	onDelete,
+	variant,
 }: {
 	vetToVetClinicRelationship: ManageVetClinicFormSchemaType["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vet: VetById) => void;
 	onDelete: (vet: VetsSearch[number]) => void;
+	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetClinicFormSchemaType>();
@@ -353,7 +363,11 @@ function VetClinicToVetRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent withoutPortal>
+						<DropdownMenuContent
+							withoutPortal
+							align={variant == "sheet" ? "start" : "center"}
+							alignOffset={variant === "sheet" ? -114 : 0}
+						>
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
@@ -388,8 +402,8 @@ function VetClinicToVetRelationship({
 								}}
 							>
 								<EditIcon className="mr-2 h-4 w-4" />
-								<span className="flex-1">Edit Vet Clinic</span>
-								{isFetchingVet && <Loader size="sm" variant="black" className="mr-0" />}
+								<span className="flex-1">Edit</span>
+								{isFetchingVet && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onSelect={() => {

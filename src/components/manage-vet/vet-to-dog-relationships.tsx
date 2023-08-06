@@ -166,7 +166,11 @@ function VetToDogRelationships({
 												<span className="sr-only">Open options</span>
 												<EllipsisVerticalIcon className="h-5 w-5" />
 											</DropdownMenuTrigger>
-											<DropdownMenuContent>
+											<DropdownMenuContent
+												withoutPortal
+												align={variant == "sheet" ? "start" : "center"}
+												alignOffset={variant === "sheet" ? -114 : 0}
+											>
 												<DropdownMenuLabel>Actions</DropdownMenuLabel>
 												<DropdownMenuSeparator />
 

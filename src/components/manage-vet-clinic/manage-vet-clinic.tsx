@@ -12,7 +12,7 @@ import { actions, type VetClinicById, type VetClinicInsert, type VetClinicUpdate
 import { InsertVetClinicSchema, InsertVetToVetClinicRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
-import { generateId, mergeRelationships } from "~/utils";
+import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
 import { ManageVetClinicForm, type ManageVetClinicFormProps } from "./manage-vet-clinic-form";
 import { ManageVetClinicSheet, type ManageVetClinicSheetProps } from "./manage-vet-clinic-sheet";
 
@@ -67,7 +67,8 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 			},
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -89,6 +90,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 					actions,
 				},
 				{
+					keepDirty: true,
 					keepDirtyValues: true,
 				},
 			);
@@ -141,4 +143,4 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 	);
 }
 
-export { type ManageVetClinicFormSchemaType, ManageVetClinicFormSchema, ManageVetClinic };
+export { type ManageVetClinicFormSchemaType, ManageVetClinic };

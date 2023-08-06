@@ -21,7 +21,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem, FormSection } from "~/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormSection } from "~/components/ui/form";
 import {
 	CalendarIcon,
 	ChevronUpDownIcon,
@@ -330,12 +330,20 @@ function SessionDetail({
 const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
 	details: z
 		.string()
-		.min(1, { message: "Must include some details about this session" })
-		.max(100000, { message: "Details must be less than 100,000 characters long." }),
+		.max(100000, { message: "Details must be less than 100,000 characters long." })
+		.nonempty({ message: "Must include some details about this session" }),
 	date: z.date({
 		required_error: "Must select a date for this session",
 	}),
-	user: SelectUserSchema.nullable(),
+	user: SelectUserSchema.pick({
+		id: true,
+		givenName: true,
+		familyName: true,
+		emailAddress: true,
+		organizationId: true,
+		organizationRole: true,
+		profileImageUrl: true,
+	}).nullable(),
 });
 type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
@@ -373,8 +381,8 @@ function EditableSessionDetail({
 			dogId,
 			details: "",
 			date: undefined,
-			user: user ?? null,
-			userId: user?.id ?? undefined,
+			user: user,
+			userId: user?.id,
 			...sessionHistory,
 		},
 	});
@@ -382,13 +390,6 @@ function EditableSessionDetail({
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
 	const [month, setMonth] = React.useState<Date>(form.getValues("date"));
-
-	React.useEffect(() => {
-		if (user) {
-			form.setValue("user", user);
-			form.setValue("userId", user?.id);
-		}
-	}, [form, user]);
 
 	return (
 		<Form {...form}>
@@ -412,18 +413,31 @@ function EditableSessionDetail({
 				<div className="min-w-0 flex-1 space-y-2">
 					<div className="relative">
 						<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
-							<Label className="sr-only" htmlFor={sessionHistory?.id ?? "add-session-detail"}>
-								Add session details
-							</Label>
-							<RichTextEditor
-								id={sessionHistory?.id ?? "add-session-detail"}
-								onEditorChange={setEditor}
-								content={sessionHistory?.details ?? ""}
-								className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-								onTextValueChange={(text) => {
-									onDetailsTextChange(text, form.getValues("id"));
-								}}
-								autofocus={!!sessionHistory}
+							<FormField
+								control={form.control}
+								name="details"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="sr-only">Add session details</FormLabel>
+										<FormControl>
+											<RichTextEditor
+												id={sessionHistory?.id ?? "add-session-detail"}
+												onEditorChange={setEditor}
+												content={sessionHistory?.details ?? ""}
+												className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+												onValueChange={({ html, text }) => {
+													onDetailsTextChange(text, form.getValues("id"));
+													if (text === "") {
+														field.onChange(text);
+													} else {
+														field.onChange(sanitizeHtml(html));
+													}
+												}}
+												autofocus={!!sessionHistory}
+											/>
+										</FormControl>
+									</FormItem>
+								)}
 							/>
 
 							{/* Spacer element to match the height of the toolbar */}
@@ -467,7 +481,8 @@ function EditableSessionDetail({
 
 																const date = chrono.parseDate(val) ?? new Date();
 
-																form.setValue("date", date);
+																field.onChange(date);
+
 																setMonth(date);
 															}}
 															onKeyDown={(e) => {
@@ -508,14 +523,6 @@ function EditableSessionDetail({
 										e.preventDefault();
 										e.stopPropagation();
 
-										const text = editor?.getText();
-
-										if (text === "") {
-											form.setValue("details", text);
-										} else {
-											form.setValue("details", sanitizeHtml(editor?.getHTML() ?? ""));
-										}
-
 										void form.handleSubmit((data) => {
 											onSubmit(data);
 											form.reset({
@@ -531,6 +538,7 @@ function EditableSessionDetail({
 										})(e);
 									}}
 									size="sm"
+									disabled={!form.formState.isDirty && !!sessionHistory}
 								>
 									{sessionHistory?.id ? (
 										<div>

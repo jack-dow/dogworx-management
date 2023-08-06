@@ -9,12 +9,12 @@ import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-naviga
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { type VetClinicById } from "~/actions";
-import { generateId } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { FormSection } from "../ui/form";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
+import { VetClinicDeleteDialog } from "./vet-clinic-delete-dialog";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
-import {VetClinicDeleteDialog} from "./vet-clinic-delete-dialog";
 
 type ManageVetClinicFormProps = {
 	open?: never;
@@ -32,6 +32,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 	const router = useRouter();
 
 	const form = useFormContext<ManageVetClinicFormSchemaType>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
@@ -83,11 +84,11 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 				<Separator className="my-4" />
 
 				<div className="flex justify-end space-x-4">
-					{!isNew && <VetClinicDeleteDialog/>}
+					{!isNew && <VetClinicDeleteDialog />}
 					<Button
 						type="button"
 						onClick={() => {
-							if (form.formState.isDirty) {
+							if (isFormDirty) {
 								setIsConfirmNavigationDialogOpen(true);
 							} else {
 								router.back();
@@ -97,7 +98,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} vet clinic
 					</Button>

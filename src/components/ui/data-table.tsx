@@ -156,7 +156,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 						</DropdownMenuContent>
 					</DropdownMenu>
 					<Separator orientation="vertical" className="h-4" />
-					<Link href={`${name}/new`} onClick={() => setIsLoading(true)}>
+					<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
 						<Button size="sm">Create {name}</Button>
 					</Link>
 				</div>

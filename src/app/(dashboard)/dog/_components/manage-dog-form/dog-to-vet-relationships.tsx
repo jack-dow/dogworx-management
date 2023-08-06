@@ -131,6 +131,13 @@ function DogToVetRelationships({
 				open={!!editingVet}
 				setOpen={() => setEditingVet(null)}
 				withoutTrigger
+				onSuccessfulSubmit={(vet) => {
+					dogToVetRelationships.fields.forEach((field, index) => {
+						if (field.vetId === vet.id) {
+							form.setValue(`dogToVetRelationships.${index}.vet`, vet);
+						}
+					});
+				}}
 			/>
 
 			<DestructiveActionDialog
@@ -380,7 +387,7 @@ function DogToVetRelationship({
 							>
 								<EditIcon className="mr-2 h-4 w-4" />
 								<span className="flex-1">Edit Vet</span>
-								{isFetchingVet && <Loader size="sm" variant="black" className="mr-0" />}
+								{isFetchingVet && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onSelect={() => {

@@ -29,6 +29,7 @@ import {
 } from "~/components/ui/sheet";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
+import { hasTrueValue } from "~/utils";
 import { type ManageOrganizationFormSchema } from "./manage-organization";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
@@ -69,6 +70,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 	const router = useRouter();
 	const user = useUser();
 	const form = useFormContext<ManageOrganizationFormSchema>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	async function handleSubmit(data: ManageOrganizationFormSchema) {
 		const result = await onSubmit(data);
@@ -112,7 +114,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 				open={internalOpen}
 				onOpenChange={(value) => {
 					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (form.formState.isDirty && value === false) {
+					if (isFormDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
 						return;
 					}
@@ -161,7 +163,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>
-							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 								{form.formState.isSubmitting && <Loader size="sm" />}
 								{isNew ? "Create" : "Update"} organization
 							</Button>

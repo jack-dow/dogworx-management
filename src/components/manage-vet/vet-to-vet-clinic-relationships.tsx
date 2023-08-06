@@ -138,6 +138,13 @@ function VetToVetClinicRelationships({
 				open={!!editingVetClinic}
 				setOpen={() => setEditingVetClinic(null)}
 				withoutTrigger
+				onSuccessfulSubmit={(vetClinic) => {
+					vetToVetClinicRelationships.fields.forEach((field, index) => {
+						if (field.vetClinicId === vetClinic.id) {
+							form.setValue(`vetToVetClinicRelationships.${index}.vetClinic`, vetClinic, { shouldDirty: true });
+						}
+					});
+				}}
 			/>
 
 			<DestructiveActionDialog
@@ -232,6 +239,7 @@ function VetToVetClinicRelationships({
 									setEditingVetClinic(vetClinic);
 								}}
 								onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+								variant={variant}
 							/>
 						))}
 					</ul>
@@ -246,11 +254,13 @@ function VetToVetClinicRelationship({
 	index,
 	onEdit,
 	onDelete,
+	variant,
 }: {
 	vetToVetClinicRelationship: ManageVetFormSchemaType["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vetClinic: VetClinicById) => void;
 	onDelete: (vetClinic: VetClinicsSearch[number]) => void;
+	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchemaType>();
@@ -349,7 +359,11 @@ function VetToVetClinicRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent withoutPortal>
+						<DropdownMenuContent
+							withoutPortal
+							align={variant == "sheet" ? "start" : "center"}
+							alignOffset={variant === "sheet" ? -114 : 0}
+						>
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
@@ -385,8 +399,8 @@ function VetToVetClinicRelationship({
 								}}
 							>
 								<EditIcon className="mr-2 h-4 w-4" />
-								<span className="flex-1">Edit Vet Clinic</span>
-								{isFetchingVetClinic && <Loader size="sm" variant="black" className="mr-0" />}
+								<span className="flex-1">Edit</span>
+								{isFetchingVetClinic && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onSelect={() => {

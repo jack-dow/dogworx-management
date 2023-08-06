@@ -11,7 +11,7 @@ import { actions, type ClientById, type ClientInsert, type ClientUpdate } from "
 import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
-import { generateId, mergeRelationships } from "~/utils";
+import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
 import { Form } from "../ui/form";
 import { ManageClientForm, type ManageClientFormProps } from "./manage-client-form";
 import { ManageClientSheet, type ManageClientSheetProps } from "./manage-client-sheet";
@@ -71,7 +71,8 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 			},
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -93,6 +94,7 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 					actions,
 				},
 				{
+					keepDirty: true,
 					keepDirtyValues: true,
 				},
 			);

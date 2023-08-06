@@ -104,4 +104,50 @@ function constructPaginationSearchParams(currentParams: ReadonlyURLSearchParams,
 	return searchParams;
 }
 
-export { type APIResponse, cn, mergeRelationships, generateId, getBaseUrl, constructPaginationSearchParams };
+type NestedBooleanObject = {
+	[key: string]: boolean | Array<boolean | NestedBooleanObject> | NestedBooleanObject;
+};
+
+// This function exists to check formState.dirtyFields of a react-hook-form to see if there are any fields that have been changed by the user
+// The reason I made this instead of just using formState.isDirty is because they work in different ways.
+// SEE: https://github.com/react-hook-form/react-hook-form/issues/4740 - for some ways that isDirty can be weird (imo)
+// formState.dirtyFields will include keys with a true value only if the value has been changed by the client or set with keepDirty: true (or equivalent)
+// This is good because we then can keep track of actions on the form but not worry about it messing with the dirty state of the form.
+// Therefore, imo it is the best way to check if a field has been changed by the user. I don't love this implementation so hopefully there will be a better way soon.
+function hasTrueValue(obj: NestedBooleanObject): boolean {
+	for (const key in obj) {
+		const value = obj[key];
+
+		if (typeof value === "boolean") {
+			if (value === true) {
+				return true;
+			}
+		} else if (Array.isArray(value)) {
+			for (const item of value) {
+				if (typeof item === "boolean" && item === true) {
+					return true;
+				} else if (typeof item === "object") {
+					if (hasTrueValue(item)) {
+						return true;
+					}
+				}
+			}
+		} else if (typeof value === "object") {
+			if (hasTrueValue(value)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+export {
+	type APIResponse,
+	cn,
+	mergeRelationships,
+	generateId,
+	getBaseUrl,
+	constructPaginationSearchParams,
+	hasTrueValue,
+};

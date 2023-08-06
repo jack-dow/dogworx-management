@@ -18,7 +18,7 @@ import {
 } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
-import { generateId, mergeRelationships } from "~/utils";
+import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
 import { ManageVetForm, type ManageVetFormProps } from "./manage-vet-form";
 import { ManageVetSheet, type ManageVetSheetProps } from "./manage-vet-sheet";
 
@@ -87,7 +87,8 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 			},
 		},
 	});
-	useConfirmPageNavigation(form.formState.isDirty);
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -96,31 +97,28 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 	}, [searchParams, router]);
 
 	React.useEffect(() => {
-		function syncVet(vet: VetById) {
+		if (props.vet) {
 			const actions = form.getValues("actions");
 			form.reset(
 				{
-					...vet,
-					dogToVetRelationships: mergeRelationships(
-						form.getValues("dogToVetRelationships"),
-						vet?.dogToVetRelationships ?? [],
-						actions.dogToVetRelationships,
-					),
+					...props.vet,
 					vetToVetClinicRelationships: mergeRelationships(
 						form.getValues("vetToVetClinicRelationships"),
-						vet.vetToVetClinicRelationships ?? [],
+						props.vet.vetToVetClinicRelationships ?? [],
 						actions.vetToVetClinicRelationships,
+					),
+					dogToVetRelationships: mergeRelationships(
+						form.getValues("dogToVetRelationships"),
+						props.vet?.dogToVetRelationships ?? [],
+						actions.dogToVetRelationships,
 					),
 					actions,
 				},
 				{
+					keepDirty: true,
 					keepDirtyValues: true,
 				},
 			);
-		}
-
-		if (props.vet) {
-			syncVet(props.vet);
 		}
 	}, [props.vet, form]);
 

@@ -27,6 +27,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
+import { hasTrueValue } from "~/utils";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetDeleteDialog } from "./vet-delete-dialog";
@@ -64,6 +65,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 	const setInternalOpen = setOpen ?? _setOpen;
 
 	const form = useFormContext<ManageVetFormSchemaType>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	async function handleSubmit(data: ManageVetFormSchemaType) {
 		const result = await onSubmit(data);
@@ -106,7 +108,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 				open={internalOpen}
 				onOpenChange={(value) => {
 					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (form.formState.isDirty && value === false) {
+					if (isFormDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
 						return;
 					}
@@ -159,7 +161,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>
-							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 								{form.formState.isSubmitting && <Loader size="sm" />}
 								{isNew ? "Create" : "Update"} vet
 							</Button>

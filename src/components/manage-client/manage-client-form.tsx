@@ -9,7 +9,7 @@ import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-naviga
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { type ClientById } from "~/actions";
-import { generateId } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { FormSection } from "../ui/form";
 import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
@@ -32,6 +32,7 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 	const router = useRouter();
 
 	const form = useFormContext<ManageClientFormSchema>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
@@ -82,7 +83,7 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 					<Button
 						type="button"
 						onClick={() => {
-							if (form.formState.isDirty) {
+							if (isFormDirty) {
 								setIsConfirmNavigationDialogOpen(true);
 							} else {
 								router.back();
@@ -92,7 +93,7 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} client
 					</Button>

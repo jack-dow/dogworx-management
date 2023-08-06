@@ -27,6 +27,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
+import { hasTrueValue } from "~/utils";
 import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
@@ -63,6 +64,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 	const setInternalOpen = setOpen ?? _setOpen;
 
 	const form = useFormContext<ManageClientFormSchema>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	async function handleSubmit(data: ManageClientFormSchema) {
 		const result = await onSubmit(data);
@@ -105,7 +107,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 				open={internalOpen}
 				onOpenChange={(value) => {
 					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (form.formState.isDirty && value === false) {
+					if (isFormDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
 						return;
 					}

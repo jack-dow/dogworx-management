@@ -11,15 +11,14 @@ import { TiptapExtensions } from "./extensions";
 type RichEditorProps = {
 	className?: string;
 	onEditorChange?: (editor: Editor) => void;
-	onTextValueChange?: (text: string) => void;
-	onHtmlValueChange?: (html: string) => void;
+	onValueChange?: ({ html, text }: { html: string; text: string }) => void;
 	id?: string;
 	content?: string;
 	autofocus?: boolean;
 };
 
 const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
-	({ className, onEditorChange, onTextValueChange, onHtmlValueChange, id, content, autofocus = false }, ref) => {
+	({ className, onEditorChange, onValueChange, id, content, autofocus = false }, ref) => {
 		const editor = useEditor({
 			extensions: TiptapExtensions,
 			editorProps: {
@@ -39,11 +38,8 @@ const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
 				},
 			},
 			onUpdate: (e) => {
-				if (onTextValueChange) {
-					onTextValueChange(e.editor.getText() ?? "");
-				}
-				if (onHtmlValueChange) {
-					onHtmlValueChange(sanitizeHtml(e.editor.getHTML() ?? ""));
+				if (onValueChange) {
+					onValueChange({ html: sanitizeHtml(e.editor.getHTML()), text: e.editor.getText() });
 				}
 			},
 			content,

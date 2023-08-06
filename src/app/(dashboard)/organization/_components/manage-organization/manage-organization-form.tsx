@@ -9,12 +9,12 @@ import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-naviga
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { type OrganizationById } from "~/actions";
-import { generateId } from "~/utils";
+import { useUser } from "~/app/(dashboard)/providers";
+import { generateId, hasTrueValue } from "~/utils";
 import { type ManageOrganizationFormSchema } from "./manage-organization";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
-import {useUser} from "~/app/(dashboard)/providers";
 
 type ManageOrganizationFormProps = {
 	open?: never;
@@ -33,6 +33,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 	const router = useRouter();
 
 	const form = useFormContext<ManageOrganizationFormSchema>();
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 
@@ -88,7 +89,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 					<Button
 						type="button"
 						onClick={() => {
-							if (form.formState.isDirty) {
+							if (isFormDirty) {
 								setIsConfirmNavigationDialogOpen(true);
 							} else {
 								router.back();
@@ -98,7 +99,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} organization
 					</Button>

@@ -124,7 +124,7 @@ function VetContactInformation({
 							<FormItem>
 								<FormLabel>Notes</FormLabel>
 								<FormControl>
-									<RichTextEditor content={field.value ?? ""} onHtmlValueChange={field.onChange} />
+									<RichTextEditor content={field.value ?? ""} onValueChange={({ html }) => field.onChange(html)} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
