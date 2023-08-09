@@ -22,7 +22,6 @@ import {
 	UserCircleIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
-import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
 import {
 	Select,
 	SelectContent,
@@ -34,9 +33,10 @@ import {
 } from "~/components/ui/select";
 import { actions, type VetById, type VetClinicById, type VetsSearch } from "~/actions";
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/utils";
+import { cn, generateId } from "~/utils";
 import { ManageVet } from "../manage-vet";
 import { Loader } from "../ui/loader";
+import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 
@@ -59,9 +59,9 @@ function VetClinicToVetRelationships({
 
 	const [editingVet, setEditingVet] = React.useState<VetById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState(false);
+	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState<string | null>(null);
 
-	const searchVetsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
+	const searchVetsInputRef = React.useRef<HTMLInputElement>(null);
 
 	function handleVetToVetClinicRelationshipDelete(relationshipId: string) {
 		const vetToVetClinicRelationshipActions = { ...form.getValues("actions.vetToVetClinicRelationships") };
@@ -83,7 +83,7 @@ function VetClinicToVetRelationships({
 
 		// HACK: Focus the button after the dialog closes
 		setTimeout(() => {
-			searchVetsComboboxTriggerRef?.current?.focus();
+			searchVetsInputRef?.current?.focus();
 		}, 0);
 	}
 
@@ -162,90 +162,88 @@ function VetClinicToVetRelationships({
 				}}
 			/>
 
-			<FieldsWrapper title={"Vets"} description={"Manage the relationships between this vet clinic and their vets."}>
+			<FieldsWrapper title="Vets" description="Manage the relationships between this vet clinic and their vets.">
+				{isCreateVetSheetOpen !== null && (
+					<ManageVet
+						variant="sheet"
+						open={true}
+						setOpen={() => {
+							setIsCreateVetSheetOpen(null);
+
+							// HACK: Focus the input after the sheet closes
+							setTimeout(() => {
+								searchVetsInputRef?.current?.focus();
+							}, 0);
+						}}
+						defaultValues={{
+							givenName:
+								isCreateVetSheetOpen.split(" ").length === 1
+									? isCreateVetSheetOpen
+									: isCreateVetSheetOpen.split(" ").slice(0, -1).join(" "),
+							familyName:
+								isCreateVetSheetOpen.split(" ").length > 1 ? isCreateVetSheetOpen.split(" ").pop() : undefined,
+						}}
+						onSuccessfulSubmit={(vet) => {
+							toggleVetToVetClinicRelationship(vet);
+							searchVetsInputRef?.current?.focus();
+						}}
+						withoutTrigger
+					/>
+				)}
+
 				<div className="sm:col-span-6">
-					<SearchCombobox
-						withinSheet
-						ref={searchVetsComboboxTriggerRef}
-						labelText="Search Vets"
-						triggerText={
+					<MultiSelectSearchCombobox
+						ref={searchVetsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={vetToVetClinicRelationships.fields.map(
+							(vetToVetClinicRelationship) => vetToVetClinicRelationship.vet,
+						)}
+						onSelect={(vet) => {
+							toggleVetToVetClinicRelationship(vet);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.vets.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
 							vetToVetClinicRelationships.fields.length === 0
-								? "Search vets"
+								? "Search vets..."
 								: vetToVetClinicRelationships.fields.length === 1
 								? "1 vet selected"
 								: `${vetToVetClinicRelationships.fields.length} vets selected`
 						}
-						onSearch={async (searchTerm) => {
-							try {
-								const res = await actions.app.vets.search(searchTerm);
-
-								return res.data ?? [];
-							} catch {
-								return [];
-							}
-						}}
-						selected={vetToVetClinicRelationships.fields.map((vetClinicRelationship) => vetClinicRelationship.vet)}
-						onSelect={(vet) => {
-							toggleVetToVetClinicRelationship(vet);
-						}}
-						renderResultItemText={(vet) => `${vet.givenName} ${vet.familyName}`}
-						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
-							<>
-								<ManageVet
-									variant="sheet"
-									open={isCreateVetSheetOpen}
-									setOpen={(value) => {
-										setIsCreateVetSheetOpen(value);
-
-										if (value === false) {
-											// HACK: Focus the input after the sheet closes
-											setTimeout(() => {
-												inputRef?.current?.focus();
-											}, 0);
-										}
-									}}
-									defaultValues={{
-										givenName:
-											searchTerm.split(" ").length === 1 ? searchTerm : searchTerm.split(" ").slice(0, -1).join(" "),
-										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
-									}}
-									onSuccessfulSubmit={(vet) => {
-										toggleVetToVetClinicRelationship(vet);
-										setResults([...results, vet]);
-										setConfirmedNoResults(false);
-										inputRef?.current?.focus();
-									}}
-									withoutTrigger
-								/>
-
-								<SearchComboboxItem
-									onSelect={() => {
-										setIsCreateVetSheetOpen(true);
-									}}
-								>
-									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new vet {searchTerm && `"${searchTerm}"`} </span>
-								</SearchComboboxItem>
-							</>
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									setIsCreateVetSheetOpen(searchTerm);
+								}}
+							>
+								<UserPlusIcon className="mr-2 h-4 w-4" />
+								<span>Create new vet {searchTerm && `"${searchTerm}"`} </span>
+							</MultiSelectSearchComboboxAction>
 						)}
 					/>
 				</div>
-				<div className="sm:col-span-6">
-					<ul role="list" className="divide-y divide-slate-100">
-						{vetToVetClinicRelationships.fields.map((vetToVetClinicRelationship, index) => (
-							<VetClinicToVetRelationship
-								key={vetToVetClinicRelationship.id}
-								vetToVetClinicRelationship={vetToVetClinicRelationship}
-								index={index}
-								onEdit={(vetClinic) => {
-									setEditingVet(vetClinic);
-								}}
-								onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
-								variant={variant}
-							/>
-						))}
-					</ul>
-				</div>
+
+				{vetToVetClinicRelationships.fields.length > 0 && (
+					<div className="sm:col-span-6">
+						<ul role="list" className="divide-y divide-slate-100">
+							{vetToVetClinicRelationships.fields.map((vetToVetClinicRelationship, index) => (
+								<VetClinicToVetRelationship
+									key={vetToVetClinicRelationship.id}
+									vetToVetClinicRelationship={vetToVetClinicRelationship}
+									index={index}
+									onEdit={(vetClinic) => {
+										setEditingVet(vetClinic);
+									}}
+									onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+									variant={variant}
+								/>
+							))}
+						</ul>
+					</div>
+				)}
 			</FieldsWrapper>
 		</>
 	);
@@ -269,7 +267,10 @@ function VetClinicToVetRelationship({
 
 	const [isFetchingVet, setIsFetchingVet] = React.useState(false);
 	return (
-		<li key={vetToVetClinicRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
+		<li
+			key={vetToVetClinicRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
 			<div className="flex items-center gap-x-4">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />

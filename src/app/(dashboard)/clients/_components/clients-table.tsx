@@ -57,7 +57,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
+					resultLabel: (client) => `${client.givenName} ${client.familyName}`,
 				}}
 				columns={createClientsTableColumns((client) => {
 					setConfirmClientDelete(client);

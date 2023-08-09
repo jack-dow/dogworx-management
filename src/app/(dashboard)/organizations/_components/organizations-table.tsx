@@ -55,7 +55,7 @@ function OrganizationsTable({ result }: { result: OrganizationsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
+					resultLabel: (client) => `${client.givenName} ${client.familyName}`,
 				}}
 				columns={createOrganizationsTableColumns((client) => {
 					setConfirmOrganizationDelete(client);

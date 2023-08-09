@@ -59,7 +59,7 @@ const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
 						editor?.chain().focus().run();
 					}}
 					className={cn(
-						"relative min-h-[150px] w-full border rounded-md border-input  px-3 py-2 text-sm shadow-sm",
+						"relative min-h-[150px] w-full rounded-md ring-1 ring-inset ring-input px-3 py-2 text-sm shadow-sm transition-colors focus-within:ring-inset focus-within:ring-ring",
 						className,
 					)}
 				>

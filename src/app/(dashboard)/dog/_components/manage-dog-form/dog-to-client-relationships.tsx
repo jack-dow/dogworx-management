@@ -24,7 +24,10 @@ import {
 	UserPlusIcon,
 } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
-import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
+import {
+	MultiSelectSearchCombobox,
+	MultiSelectSearchComboboxAction,
+} from "~/components/ui/multi-select-search-combobox";
 import {
 	Select,
 	SelectContent,
@@ -37,7 +40,7 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type ClientById, type ClientsSearch, type DogById } from "~/actions";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/utils";
+import { cn, generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 function DogToClientRelationships({
@@ -57,9 +60,9 @@ function DogToClientRelationships({
 
 	const [editingClient, setEditingClient] = React.useState<ClientById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState(false);
+	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<string | null>(null);
 
-	const searchClientsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
+	const searchClientsInputRef = React.useRef<HTMLInputElement>(null);
 
 	function handleDogToClientRelationshipDelete(relationshipId: string) {
 		const dogToClientRelationshipActions = { ...form.getValues("actions.dogToClientRelationships") };
@@ -79,7 +82,7 @@ function DogToClientRelationships({
 
 		// HACK: Focus the combobox trigger after the dialog closes
 		setTimeout(() => {
-			searchClientsComboboxTriggerRef?.current?.focus();
+			searchClientsInputRef?.current?.focus();
 		}, 0);
 	}
 
@@ -156,87 +159,84 @@ function DogToClientRelationships({
 			/>
 
 			<FormGroup title="Clients" description="Manage the relationships between this dog and clients.">
+				{isCreateClientSheetOpen !== null && (
+					<ManageClient
+						variant="sheet"
+						open={true}
+						setOpen={() => {
+							setIsCreateClientSheetOpen(null);
+
+							// HACK: Focus the input after the sheet closes
+							setTimeout(() => {
+								searchClientsInputRef?.current?.focus();
+							}, 0);
+						}}
+						defaultValues={{
+							givenName:
+								isCreateClientSheetOpen.split(" ").length === 1
+									? isCreateClientSheetOpen
+									: isCreateClientSheetOpen.split(" ").slice(0, -1).join(" "),
+							familyName:
+								isCreateClientSheetOpen.split(" ").length > 1 ? isCreateClientSheetOpen.split(" ").pop() : undefined,
+						}}
+						onSuccessfulSubmit={(client) => {
+							toggleDogToClientRelationship(client);
+							searchClientsInputRef?.current?.focus();
+						}}
+						withoutTrigger
+					/>
+				)}
+
 				<div className="sm:col-span-6">
-					<SearchCombobox
-						ref={searchClientsComboboxTriggerRef}
-						labelText="Search Clients"
-						triggerText={
+					<MultiSelectSearchCombobox
+						ref={searchClientsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.client)}
+						onSelect={(client) => {
+							toggleDogToClientRelationship(client);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.clients.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
 							dogToClientRelationships.fields.length === 0
-								? "Search Clients"
+								? "Search clients..."
 								: dogToClientRelationships.fields.length === 1
 								? "1 client selected"
 								: `${dogToClientRelationships.fields.length} clients selected`
 						}
-						onSearch={async (searchTerm) => {
-							try {
-								const res = await actions.app.clients.search(searchTerm);
-
-								return res.data ?? [];
-							} catch {
-								return [];
-							}
-						}}
-						selected={dogToClientRelationships.fields.map((clientRelationship) => clientRelationship.client)}
-						onSelect={(client) => {
-							toggleDogToClientRelationship(client);
-						}}
-						renderResultItemText={(client) => `${client.givenName} ${client.familyName}`}
-						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
-							<>
-								<ManageClient
-									variant="sheet"
-									open={isCreateClientSheetOpen}
-									setOpen={(value) => {
-										setIsCreateClientSheetOpen(value);
-
-										if (value === false) {
-											// HACK: Focus the input after the sheet closes
-											setTimeout(() => {
-												inputRef?.current?.focus();
-											}, 0);
-										}
-									}}
-									defaultValues={{
-										givenName:
-											searchTerm.split(" ").length === 1 ? searchTerm : searchTerm.split(" ").slice(0, -1).join(" "),
-										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
-									}}
-									onSuccessfulSubmit={(client) => {
-										toggleDogToClientRelationship(client);
-										setResults([...results, client]);
-										setConfirmedNoResults(false);
-										inputRef?.current?.focus();
-									}}
-									withoutTrigger
-								/>
-
-								<SearchComboboxItem
-									onSelect={() => {
-										setIsCreateClientSheetOpen(true);
-									}}
-								>
-									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new client {searchTerm && `"${searchTerm}"`} </span>
-								</SearchComboboxItem>
-							</>
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									setIsCreateClientSheetOpen(searchTerm);
+								}}
+							>
+								<UserPlusIcon className="mr-2 h-4 w-4" />
+								<span className="truncate">Create new client {searchTerm && `"${searchTerm}"`} </span>
+							</MultiSelectSearchComboboxAction>
 						)}
 					/>
 				</div>
-				<div className="sm:col-span-6">
-					<ul role="list" className="divide-y divide-slate-100">
-						{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
-							<DogToClientRelationship
-								key={dogToClientRelationship.id}
-								dogToClientRelationship={dogToClientRelationship}
-								index={index}
-								onEdit={(client) => {
-									setEditingClient(client);
-								}}
-								onDelete={(client) => toggleDogToClientRelationship(client)}
-							/>
-						))}
-					</ul>
-				</div>
+
+				{dogToClientRelationships.fields.length > 0 && (
+					<div className="sm:col-span-6">
+						<ul role="list" className="divide-y divide-slate-100">
+							{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
+								<DogToClientRelationship
+									key={dogToClientRelationship.id}
+									dogToClientRelationship={dogToClientRelationship}
+									index={index}
+									onEdit={(client) => {
+										setEditingClient(client);
+									}}
+									onDelete={(client) => toggleDogToClientRelationship(client)}
+								/>
+							))}
+						</ul>
+					</div>
+				)}
 			</FormGroup>
 		</>
 	);
@@ -258,7 +258,10 @@ function DogToClientRelationship({
 
 	const [isFetchingClient, setIsFetchingClient] = React.useState(false);
 	return (
-		<li key={dogToClientRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
+		<li
+			key={dogToClientRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
 			<div className="flex items-center gap-x-4">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
@@ -350,7 +353,7 @@ function DogToClientRelationship({
 
 				<div className="flex items-center">
 					<DropdownMenu>
-						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>

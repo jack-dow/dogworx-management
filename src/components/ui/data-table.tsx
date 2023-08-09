@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import {
 	flexRender,
 	getCoreRowModel,
@@ -16,22 +17,20 @@ import {
 } from "@tanstack/react-table";
 
 import {
-	AscendingIcon,
 	ChevronDoubleLeftIcon,
 	ChevronDoubleRightIcon,
 	ChevronDownIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
-	DescendingIcon,
+	SortAscIcon,
+	SortDescIcon,
 	SortIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
 import { type SortableColumns } from "~/actions/sortable-columns";
-import { useDebouncedValue } from "~/hooks/use-debounced-value";
+import { type PaginationSearchParams } from "~/actions/utils";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn, constructPaginationSearchParams } from "~/utils";
 import { Button } from "./button";
-import { Combobox, ComboboxInput, ComboboxItem, ComboboxPopover } from "./combobox";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -41,16 +40,40 @@ import {
 	DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { Loader } from "./loader";
+import { SearchCombobox, SearchComboboxAction, type SearchComboboxProps } from "./search-combobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { Separator } from "./separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
-import { useToast } from "./use-toast";
 
 declare module "@tanstack/table-core" {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	interface ColumnMeta<TData, TValue> {
 		className?: string;
 	}
+}
+
+function constructPaginationSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
+	const searchParams = new URLSearchParams();
+
+	const page = newParams.page ?? currentParams.get("page") ?? undefined;
+	const limit = newParams.limit ?? currentParams.get("limit") ?? undefined;
+	const sortBy = newParams.sortBy ?? currentParams.get("sortBy") ?? undefined;
+	const sortDirection = newParams.sortDirection ?? currentParams.get("sortDirection") ?? undefined;
+
+	if (page && String(page) !== "1") {
+		searchParams.append("page", page.toString());
+	}
+	if (limit) {
+		searchParams.append("limit", limit.toString());
+	}
+	if (sortBy) {
+		searchParams.append("sortBy", sortBy);
+	}
+	if (sortDirection) {
+		searchParams.append("sortDirection", sortDirection);
+	}
+
+	return searchParams;
 }
 
 type DataTablePagination = Omit<DataTablePaginationProps, "setIsLoading"> & {
@@ -60,7 +83,7 @@ type DataTablePagination = Omit<DataTablePaginationProps, "setIsLoading"> & {
 };
 
 interface DataTableProps<TData, TValue, SearchResultType extends { id: string }> {
-	search: Omit<DataTableSearchComboboxProps<SearchResultType>, "count">;
+	search: Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel">;
 	pagination: DataTablePagination;
 	columns: ColumnDef<TData, TValue>[];
 	sortableColumns: SortableColumns;
@@ -115,7 +138,39 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 		<div className="space-y-4">
 			<div className="flex items-center gap-4">
 				<div className="flex flex-1 items-center space-x-3">
-					<DataTableSearchCombobox count={count} {...search} />
+					<div className="relative w-full max-w-[288px]">
+						<SearchCombobox
+							{...search}
+							onSelect={(result) => {
+								if (result) {
+									setIsLoading(true);
+									router.push(`${pathname.slice(0, -1)}/${result.id}`);
+								}
+							}}
+							placeholder={`Search ${count} ${name}s...`}
+							className="h-8"
+							classNames={{
+								results: "max-w-[288px]",
+							}}
+							renderActions={({ searchTerm }) => (
+								<SearchComboboxAction
+									onSelect={() => {
+										setIsLoading(true);
+										router.push(
+											`${pathname.slice(0, -1)}/new${searchTerm ? `searchTerm=${encodeURIComponent(searchTerm)}` : ""}`,
+										);
+										return;
+									}}
+								>
+									<UserPlusIcon className="mr-2 h-4 w-4" />
+									<span className="truncate">
+										Create new {name} {searchTerm && `"${searchTerm}"`}
+									</span>
+								</SearchComboboxAction>
+							)}
+						/>
+					</div>
+
 					{isLoading && <Loader variant="black" size="sm" />}
 				</div>
 				<div className="flex flex-1 items-center justify-end space-x-3 md:space-x-5">
@@ -144,9 +199,9 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 											{column.label}
 											{column.id === sortBy ? (
 												sortDirection === "asc" ? (
-													<AscendingIcon className="h-4 w-4" />
+													<SortAscIcon className="h-4 w-4" />
 												) : (
-													<DescendingIcon className="h-4 w-4" />
+													<SortDescIcon className="h-4 w-4" />
 												)
 											) : null}
 										</DropdownMenuItem>
@@ -262,7 +317,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 					<Link
 						href={`${pathname}?${constructPaginationSearchParams(params, {
 							page: 1,
-						}).toString()}`}
+						})}`}
 						onClick={() => setIsLoading(true)}
 					>
 						<Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex" disabled={page === 1}>
@@ -273,7 +328,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 					<Link
 						href={`${pathname}?${constructPaginationSearchParams(params, {
 							page: page === 1 ? 1 : page - 1,
-						}).toString()}`}
+						})}`}
 						onClick={() => setIsLoading(true)}
 					>
 						<Button variant="outline" className="h-8 w-8 p-0" disabled={page === 1}>
@@ -284,7 +339,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 					<Link
 						href={`${pathname}?${constructPaginationSearchParams(params, {
 							page: page === maxPage ? maxPage : page + 1,
-						}).toString()}`}
+						})}`}
 						onClick={() => setIsLoading(true)}
 					>
 						<Button variant="outline" className="h-8 w-8 p-0" disabled={page === maxPage}>
@@ -295,7 +350,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 					<Link
 						href={`${pathname}?${constructPaginationSearchParams(params, {
 							page: maxPage,
-						}).toString()}`}
+						})}`}
 						onClick={() => setIsLoading(true)}
 					>
 						<Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex" disabled={page === maxPage}>
@@ -306,153 +361,6 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 				</div>
 			</div>
 		</div>
-	);
-}
-
-type DataTableSearchComboboxProps<ResultType extends { id: string }> = {
-	count: number;
-	onSearch: (searchTerm: string) => Promise<ResultType[]>;
-	renderSearchResultItemText: (item: ResultType) => string;
-};
-
-function DataTableSearchCombobox<ResultType extends { id: string }>({
-	count,
-	onSearch,
-	renderSearchResultItemText,
-}: DataTableSearchComboboxProps<ResultType>) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const searchParams = useSearchParams();
-	const { toast } = useToast();
-
-	const [searchTerm, setSearchTerm] = React.useState("");
-	const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
-	const [isFetchingResults, setIsFetchingResults] = React.useState(false);
-	const [isNavigatingToResult, setIsNavigatingToResult] = React.useState<string | false>(false);
-	const [results, setResults] = React.useState<ResultType[]>([]);
-	const [confirmedNoResults, setConfirmedNoResults] = React.useState(false);
-
-	const inputRef = React.useRef<HTMLInputElement>(null);
-
-	React.useEffect(() => {
-		if (!debouncedSearchTerm) {
-			return;
-		}
-
-		onSearch(debouncedSearchTerm)
-			.then((data) => {
-				setResults(data);
-
-				if (!data || data.length === 0) {
-					setConfirmedNoResults(true);
-				}
-			})
-			.catch(() => {
-				toast({
-					title: `Failed to search ${pathname.split("/")[1]}`,
-					description: `An unknown error occurred whilst trying to search. Please try again later.`,
-					variant: "destructive",
-				});
-			})
-			.finally(() => {
-				setIsFetchingResults(false);
-			});
-	}, [debouncedSearchTerm, onSearch, pathname, toast]);
-
-	useDidUpdate(() => {
-		if (isNavigatingToResult) {
-			setIsNavigatingToResult(false);
-		}
-	}, [pathname, searchParams]);
-
-	let name = pathname.split("/")[1];
-	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
-	name = name?.split("-").join(" ");
-
-	return (
-		<Combobox
-			nullable
-			onChange={(result: ResultType | null) => {
-				if (result) {
-					if (result.id === "new") {
-						router.push(`${pathname.slice(0, -1)}/new?searchTerm=${encodeURIComponent(searchTerm)}`);
-						return;
-					}
-					setIsNavigatingToResult(result.id);
-					router.push(`${pathname.slice(0, -1)}/${result.id}`);
-				}
-			}}
-		>
-			<div className="relative w-full max-w-[288px]">
-				<ComboboxInput
-					ref={inputRef}
-					className="h-8"
-					placeholder={`Search ${count} ${name}s...`}
-					defaultValue={searchTerm}
-					onChange={(event) => {
-						setSearchTerm(event.currentTarget.value);
-
-						if (event.currentTarget.value) {
-							setIsFetchingResults(true);
-						}
-
-						setResults([]);
-						setConfirmedNoResults(false);
-					}}
-				/>
-				<ComboboxPopover className={cn(!isFetchingResults && !confirmedNoResults && results.length === 0 && "hidden")}>
-					{isFetchingResults && (
-						<div className="flex items-center justify-center py-6">
-							<Loader className="m-0" variant="black" size="sm" />
-						</div>
-					)}
-
-					{!isFetchingResults && confirmedNoResults && (
-						<ComboboxItem value="not-found" disabled className="py-6 text-center text-sm">
-							No results found...
-						</ComboboxItem>
-					)}
-
-					{!isFetchingResults && !confirmedNoResults && results.length > 0 && (
-						<>
-							{results.map((result) => (
-								<ComboboxItem
-									key={result.id}
-									value={result}
-									onClick={(event) => {
-										if (event.metaKey || event.ctrlKey) {
-											event.preventDefault();
-											event.stopPropagation();
-											window.open(`${pathname.slice(0, -1)}/${result.id}`, "_blank");
-										}
-									}}
-									className="justify-between"
-								>
-									<span className="truncate">{renderSearchResultItemText(result)}</span>
-									{isNavigatingToResult === result.id && (
-										<div>
-											<Loader variant="black" size="sm" />
-										</div>
-									)}
-								</ComboboxItem>
-							))}
-						</>
-					)}
-
-					{((results.length === 0 && searchTerm === "") || confirmedNoResults) && (
-						<div className="overflow-hidden p-1 text-foreground">
-							<div className=" px-2 py-1.5 text-xs font-medium text-muted-foreground">Actions</div>
-							<ComboboxItem value={{ id: "new" }}>
-								<UserPlusIcon className="mr-2 h-4 w-4" />
-								<span>
-									Create new {name} {searchTerm && `"${searchTerm}"`}
-								</span>
-							</ComboboxItem>
-						</div>
-					)}
-				</ComboboxPopover>
-			</div>
-		</Combobox>
 	);
 }
 

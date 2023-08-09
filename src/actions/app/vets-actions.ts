@@ -86,7 +86,7 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {

@@ -19,14 +19,6 @@ const config = {
 	},
 	images: {
 		domains: ["dogworx-management-dev.s3.ap-southeast-2.amazonaws.com"],
-		remotePatterns: [
-			{
-				protocol: "https",
-				hostname: "*.googleusercontent.com",
-				port: "",
-				pathname: "**",
-			},
-		],
 	},
 };
 export default withBundleAnalyzer(config);

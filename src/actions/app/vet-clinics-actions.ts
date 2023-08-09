@@ -86,7 +86,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {
@@ -113,7 +113,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search vetClinics", data: [] };
+		return { success: false, error: "Failed to search vetClinics", data: null };
 	}
 });
 type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;

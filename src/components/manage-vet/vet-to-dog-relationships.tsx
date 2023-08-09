@@ -16,6 +16,7 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
+import { cn } from "~/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -122,7 +123,10 @@ function VetToDogRelationship({
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
 	return (
-		<li key={dogToVetRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+		<li
+			key={dogToVetRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
 			<div className="flex items-center gap-x-4">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 					<DogIcon className="h-5 w-5" />

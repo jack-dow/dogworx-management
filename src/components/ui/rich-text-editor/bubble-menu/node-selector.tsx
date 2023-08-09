@@ -1,18 +1,21 @@
 import { type Dispatch, type FC, type SetStateAction } from "react";
 import { type Editor } from "@tiptap/core";
-// eslint-disable-next-line no-restricted-imports
-import {
-	CheckSquareIcon,
-	CodeIcon,
-	Heading1Icon,
-	Heading2Icon,
-	Heading3Icon,
-	ListOrderedIcon,
-	TextIcon,
-	TextQuoteIcon,
-} from "lucide-react";
 
-import { CheckIcon, ChevronDownIcon } from "~/components/ui/icons";
+// eslint-disable-next-line no-restricted-imports
+
+import {
+	CheckIcon,
+	CheckSquareIcon,
+	ChevronDownIcon,
+	CodeIcon,
+	ListBulletsIcon,
+	ListNumbersIcon,
+	QuotesIcon,
+	TextH1Icon,
+	TextH2Icon,
+	TextH3Icon,
+	TextTIcon,
+} from "~/components/ui/icons";
 import { type BubbleMenuItem } from "./bubble-menu";
 
 interface NodeSelectorProps {
@@ -25,26 +28,26 @@ export const NodeSelector: FC<NodeSelectorProps> = ({ editor, isOpen, setIsOpen 
 	const items: BubbleMenuItem[] = [
 		{
 			name: "Text",
-			icon: TextIcon,
+			icon: TextTIcon,
 			command: () => editor.chain().focus().toggleNode("paragraph", "paragraph").run(),
 			// I feel like there has to be a more efficient way to do this – feel free to PR if you know how!
 			isActive: () => editor.isActive("paragraph") && !editor.isActive("bulletList") && !editor.isActive("orderedList"),
 		},
 		{
 			name: "Heading 1",
-			icon: Heading1Icon,
+			icon: TextH1Icon,
 			command: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
 			isActive: () => editor.isActive("heading", { level: 1 }),
 		},
 		{
 			name: "Heading 2",
-			icon: Heading2Icon,
+			icon: TextH2Icon,
 			command: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
 			isActive: () => editor.isActive("heading", { level: 2 }),
 		},
 		{
 			name: "Heading 3",
-			icon: Heading3Icon,
+			icon: TextH3Icon,
 			command: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
 			isActive: () => editor.isActive("heading", { level: 3 }),
 		},
@@ -56,20 +59,23 @@ export const NodeSelector: FC<NodeSelectorProps> = ({ editor, isOpen, setIsOpen 
 		},
 		{
 			name: "Bullet List",
-			icon: ListOrderedIcon,
+			icon: ListBulletsIcon,
 			command: () => editor.chain().focus().toggleBulletList().run(),
 			isActive: () => editor.isActive("bulletList"),
 		},
 		{
 			name: "Numbered List",
-			icon: ListOrderedIcon,
+			icon: ListNumbersIcon,
 			command: () => editor.chain().focus().toggleOrderedList().run(),
 			isActive: () => editor.isActive("orderedList"),
 		},
 		{
 			name: "Quote",
-			icon: TextQuoteIcon,
-			command: () => editor.chain().focus().toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
+			icon: QuotesIcon,
+			command: () => {
+				editor.chain().focus().toggleNode("paragraph", "paragraph").run();
+				editor.chain().focus().toggleBlockquote().run();
+			},
 			isActive: () => editor.isActive("blockquote"),
 		},
 		{
@@ -105,6 +111,9 @@ export const NodeSelector: FC<NodeSelectorProps> = ({ editor, isOpen, setIsOpen 
 							type="button"
 							onClick={(e) => {
 								e.stopPropagation();
+								if (editor.isActive("blockquote")) {
+									editor.chain().focus().toggleBlockquote().run();
+								}
 								item.command();
 								setIsOpen(false);
 							}}

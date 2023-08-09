@@ -57,7 +57,7 @@ function VetsTable({ result }: { result: VetsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (vet) => `${vet.givenName} ${vet.familyName}`,
+					resultLabel: (vet) => `${vet.givenName} ${vet.familyName}`,
 				}}
 				columns={createVetsTableColumns((vet) => {
 					setConfirmVetDelete(vet);

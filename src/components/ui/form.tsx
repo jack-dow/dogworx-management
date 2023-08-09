@@ -195,7 +195,7 @@ type FormGroupProps = {
 
 function FormGroup({ title, description, children }: FormGroupProps) {
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-y-6">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
 			{title && description && (
 				<div className="col-span-full">
 					<h3 className={formTitleClasses}>{title}</h3>

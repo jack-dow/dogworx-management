@@ -242,7 +242,12 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 								}}
 							>
 								<PopoverTrigger asChild>
-									<Button variant="outline" role="combobox" aria-expanded={isDatePickerOpen} className="w-full">
+									<Button
+										variant="outline"
+										role="combobox"
+										aria-expanded={isDatePickerOpen}
+										className="w-full focus-visible:outline-1 focus-visible:outline-offset-0"
+									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										<span className="mr-2 truncate">
 											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}

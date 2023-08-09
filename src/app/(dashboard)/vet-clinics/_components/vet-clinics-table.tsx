@@ -55,7 +55,7 @@ function VetClinicsTable({ result }: { result: VetClinicsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (vetClinic) => `${vetClinic.name}`,
+					resultLabel: (vetClinic) => `${vetClinic.name}`,
 				}}
 				columns={createVetClinicsTableColumns((vetClinic) => {
 					setConfirmVetClinicDelete(vetClinic);

@@ -1,11 +1,10 @@
 import { useState, type FC } from "react";
 import { BubbleMenu as TipTapBubbleMenu, type BubbleMenuProps as TipTapBubbleMenuProps } from "@tiptap/react";
-// eslint-disable-next-line no-restricted-imports
-import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "lucide-react";
 
 import { cn } from "~/utils";
+import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "../../icons";
 import { ColorSelector } from "./color-selector";
-import { LinkSelector } from "./link-selector";
+// import { LinkSelector } from "./link-selector";
 import { NodeSelector } from "./node-selector";
 
 interface BubbleMenuItem {
@@ -69,14 +68,14 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 			onHidden: () => {
 				setIsNodeSelectorOpen(false);
 				setIsColorSelectorOpen(false);
-				setIsLinkSelectorOpen(false);
+				// setIsLinkSelectorOpen(false);
 			},
 		},
 	};
 
 	const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
 	const [isColorSelectorOpen, setIsColorSelectorOpen] = useState(false);
-	const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
+	// const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
 
 	return (
 		<TipTapBubbleMenu
@@ -89,10 +88,10 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 				setIsOpen={() => {
 					setIsNodeSelectorOpen(!isNodeSelectorOpen);
 					setIsColorSelectorOpen(false);
-					setIsLinkSelectorOpen(false);
+					// setIsLinkSelectorOpen(false);
 				}}
 			/>
-			<LinkSelector
+			{/* <LinkSelector
 				editor={props.editor}
 				isOpen={isLinkSelectorOpen}
 				setIsOpen={() => {
@@ -100,7 +99,7 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 					setIsColorSelectorOpen(false);
 					setIsNodeSelectorOpen(false);
 				}}
-			/>
+			/> */}
 			<div className="flex">
 				{items.map((item, index) => (
 					<button
@@ -125,7 +124,7 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 				setIsOpen={() => {
 					setIsColorSelectorOpen(!isColorSelectorOpen);
 					setIsNodeSelectorOpen(false);
-					setIsLinkSelectorOpen(false);
+					// setIsLinkSelectorOpen(false);
 				}}
 			/>
 		</TipTapBubbleMenu>

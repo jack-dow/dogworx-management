@@ -31,9 +31,19 @@
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 210 40% 98%;
 
-		--ring: 215 20.2% 65.1%;
+		--ring: 200, 98%, 39%;
 
 		--radius: 0.5rem;
+
+		--rte-highlight-default: #ffffff;
+		--rte-highlight-purple: #f6f3f8;
+		--rte-highlight-red: #fdebeb;
+		--rte-highlight-yellow: #fbf4a2;
+		--rte-highlight-blue: #c1ecf9;
+		--rte-highlight-green: #acf79f;
+		--rte-highlight-orange: #faebdd;
+		--rte-highlight-pink: #faf1f5;
+		--rte-highlight-gray: #f1f1ef;
 	}
 
 	.dark {

@@ -31,11 +31,6 @@ const config = {
 		"no-restricted-imports": [
 			"error",
 			{
-				name: "lucide-react",
-				message:
-					"Icons should be imported from '~/components/ui/icons' instead of 'lucide-react' to ensure consistent styling",
-			},
-			{
 				name: "@heroicons/react/20/solid",
 				message:
 					"Icons should be imported from '~/components/ui/icons' instead of '@heroicons/react to ensure consistent styling'",

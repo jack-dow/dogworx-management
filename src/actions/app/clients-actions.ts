@@ -87,7 +87,7 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {
@@ -115,7 +115,7 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search clients", data: [] };
+		return { success: false, error: "Failed to search clients", data: null };
 	}
 });
 type ClientsSearch = ExtractServerActionData<typeof searchClients>;

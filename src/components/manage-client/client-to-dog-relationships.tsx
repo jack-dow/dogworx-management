@@ -125,7 +125,7 @@ function ClientToDogRelationship({
 	return (
 		<li
 			key={dogToClientRelationship.id}
-			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4 pt-2" : "py-4")}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
 			<div className="flex items-center gap-x-4">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">

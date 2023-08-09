@@ -292,13 +292,7 @@ function SessionDetail({
 								<span className="sr-only">Open menu</span>
 							</Button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							align="end"
-							className="w-[160px] data-[state=closed]:animate-none"
-							onCloseAutoFocus={(e) => {
-								e.preventDefault();
-							}}
-						>
+						<DropdownMenuContent align="end" className="w-[160px] data-[state=closed]:animate-none">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
@@ -457,7 +451,7 @@ function EditableSessionDetail({
 					</div>
 					<div className="min-w-0 flex-1 space-y-2">
 						<div className="relative">
-							<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-2 focus-within:ring-indigo-600">
+							<div className="rounded-lg shadow-sm ring-1 ring-inset ring-input focus-within:ring-1 focus-within:ring-ring">
 								<FormField
 									control={form.control}
 									name="details"
@@ -469,7 +463,7 @@ function EditableSessionDetail({
 													id={sessionHistory?.id ?? "add-session-detail"}
 													onEditorChange={setEditor}
 													content={sessionHistory?.details ?? ""}
-													className="resize-none rounded-b-none border-0 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+													className="resize-none rounded-b-none shadow-none ring-0 focus-visible:ring-0"
 													onValueChange={({ html, text }) => {
 														onDetailsTextChange(text, form.getValues("id"));
 														if (text === "") {
@@ -505,7 +499,10 @@ function EditableSessionDetail({
 											<FormControl>
 												<Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
 													<PopoverTrigger asChild>
-														<Button className="w-full" variant="outline">
+														<Button
+															variant="outline"
+															className="w-full focus-visible:outline-1 focus-visible:outline-offset-0"
+														>
 															<CalendarIcon className="mr-2 h-4 w-4" />
 															<span className="mr-2 truncate">
 																{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}

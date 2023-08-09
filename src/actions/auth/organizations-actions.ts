@@ -107,14 +107,14 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const data = await drizzle.query.organizations.findMany({
@@ -214,7 +214,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const { actions, ...data } = validValues.data;
@@ -270,7 +270,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const { id, actions, ...data } = validValues.data;
