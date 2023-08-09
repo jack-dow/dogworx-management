@@ -118,6 +118,8 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 				title: "Account updated",
 				description: "Your account has been updated successfully.",
 			});
+
+			form.reset(data);
 		} catch (error) {
 			toast({
 				title: "Failed to update account",
@@ -128,10 +130,13 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-10 ">
+			<form
+				onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
+				className="space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12"
+			>
 				<AccountDisplayName control={form.control} />
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountEmailAddress control={form.control} />
 				<AccountVerifyNewEmailAddressDialog
@@ -144,7 +149,7 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 					}}
 				/>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountProfileImage
 					setUploadedProfileImage={(file) => {
@@ -152,18 +157,18 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 					}}
 				/>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountSessions control={form.control} />
 
-				<Separator className="my-4" />
+				<Separator className="hidden sm:flex" />
 
 				<AccountDelete />
 
 				<Separator className="my-8" />
 
 				<div className="flex justify-end">
-					<Button type="submit" disabled={form.formState.isSubmitting}>
+					<Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isDirty}>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						Save changes
 					</Button>

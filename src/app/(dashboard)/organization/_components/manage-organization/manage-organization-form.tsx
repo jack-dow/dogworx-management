@@ -74,7 +74,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 			>
 				<OrganizationInformation control={form.control} variant="form" />
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<OrganizationInviteLinks
 					control={form.control}
@@ -82,7 +82,7 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 					variant="form"
 				/>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<div className="flex justify-end space-x-4">
 					{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}

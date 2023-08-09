@@ -36,15 +36,14 @@ function AccountSessions({ control }: { control: Control<ManageAccountFormSchema
 	const activeSession = sessions.fields.find((session) => session.id === currentSession?.id);
 
 	return (
-		<div className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+		<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
 			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Sessions</h2>
 				<p className="text-sm leading-6 text-muted-foreground">
-					These are the sessions/devices that have logged into your account. Click the session to view more information
-					and log it out.
+					These are the sessions/devices that have logged into your account. Click the session to view more information.
 				</p>
 			</div>
-			<div className="sm:rounded-xl sm:bg-white sm:p-8 sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
+			<div className="xl:col-span-2">
 				<Accordion type="single" collapsible className="w-full">
 					{activeSession && (
 						<SessionAccordion

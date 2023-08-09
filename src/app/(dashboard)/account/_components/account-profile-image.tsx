@@ -13,14 +13,14 @@ import { type ManageAccountFormSchema } from "./manage-account-form";
 
 function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileImage: (file: File | null) => void }) {
 	const { toast } = useToast();
-	const { setValue, watch } = useFormContext<ManageAccountFormSchema>();
+	const form = useFormContext<ManageAccountFormSchema>();
 
 	const onDrop = React.useCallback(
 		(acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 			acceptedFiles.forEach((file) => {
 				setUploadedProfileImage(file);
 
-				setValue("profileImageUrl", URL.createObjectURL(file));
+				form.setValue("profileImageUrl", URL.createObjectURL(file), { shouldDirty: true });
 			});
 
 			rejectedFiles.forEach((file) => {
@@ -38,10 +38,10 @@ function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileIm
 				});
 			});
 		},
-		[setValue, toast, setUploadedProfileImage],
+		[form, toast, setUploadedProfileImage],
 	);
 
-	const profileImageUrl = watch("profileImageUrl");
+	const profileImageUrl = form.watch("profileImageUrl");
 
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		onDrop,
@@ -55,24 +55,20 @@ function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileIm
 	});
 
 	return (
-		<div className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+		<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
 			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Profile Image</h2>
-				{/* <p className="text-sm leading-6 text-muted-foreground">
-								You can use any of your verified emails to sign in and your primary email address will be displayed
-								throughout the app to other users.
-							</p> */}
 			</div>
 			{!profileImageUrl ? (
-				<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
-					<div className="sm:p-8">
+				<div className=" xl:col-span-2">
+					<div>
 						<div
 							{...getRootProps({
 								onClick: (e) => {
 									e.preventDefault();
 								},
 							})}
-							className="relative block w-full rounded-lg border-2 border-dashed border-slate-300 p-12 text-center hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+							className="relative block w-full cursor-pointer rounded-lg border-2 border-dashed border-slate-300 p-12 text-center hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 						>
 							<input {...getInputProps()} />
 							<p className="font-semibold">{isDragActive ? "Drop" : "Drag"} file here </p>
@@ -113,7 +109,7 @@ function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileIm
 									onClick={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
-										setValue("profileImageUrl", undefined);
+										form.setValue("profileImageUrl", undefined, { shouldDirty: true });
 										setUploadedProfileImage(null);
 									}}
 								>

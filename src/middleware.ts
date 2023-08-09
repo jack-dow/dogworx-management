@@ -77,6 +77,8 @@ export async function middleware(request: NextRequest) {
 						country: request.geo?.country || session.country,
 					})
 					.where(eq(sessions.id, session.id));
+			} else {
+				await drizzle.update(sessions).set({ updatedAt: new Date() }).where(eq(sessions.id, session.id));
 			}
 
 			response.cookies.set({
