@@ -22,9 +22,9 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 	const form = useForm<SignUpSchema>({
 		resolver: zodResolver(SignUpSchema),
 		defaultValues: {
-			givenName: "Jack",
+			givenName: "",
 			familyName: "",
-			emailAddress: "jdooow@gmail.com",
+			emailAddress: "",
 		},
 	});
 
