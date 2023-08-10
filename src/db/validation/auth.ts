@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { organizationInviteLinks, organizations, sessions, users } from "../schemas";
+import { organizationInviteLinks, organizations, sessions, users } from "../schema";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 // -----------------------------------------------------------------------------

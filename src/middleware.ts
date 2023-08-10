@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { jwt } from "~/lib/jwt";
 import { drizzle } from "./db/drizzle";
-import { sessions } from "./db/schemas";
+import { sessions } from "./db/schema";
 import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {

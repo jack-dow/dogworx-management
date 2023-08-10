@@ -2,7 +2,7 @@ import { connect } from "@planetscale/database";
 import { drizzle as createDrizzle } from "drizzle-orm/planetscale-serverless";
 
 import { env } from "~/env.mjs";
-import * as schema from "./schemas";
+import * as schema from "./schema";
 
 const connection = connect({
 	host: env.DATABASE_HOST,
@@ -11,5 +11,6 @@ const connection = connect({
 });
 
 export const drizzle = createDrizzle(connection, {
+	logger: true,
 	schema,
 });

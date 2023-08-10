@@ -53,7 +53,7 @@ function DogsTable({ result }: { result: DogsList }) {
 
 						return result.data;
 					},
-					resultLabel: (dog) => `${dog.givenName}`,
+					resultLabel: (dog) => `${dog.givenName} ${dog.familyName}`,
 				}}
 				columns={createDogsTableColumns((dog) => {
 					setConfirmDogDelete(dog);

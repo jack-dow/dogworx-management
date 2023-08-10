@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
-import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
+import { InsertClientSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
@@ -25,16 +25,6 @@ const ManageClientFormSchema = z.intersection(
 		state: z.string().max(50).optional(),
 		postalCode: z.string().max(10).optional(),
 		notes: z.string().max(100000).nullish(),
-		dogToClientRelationships: z.array(
-			InsertDogToClientRelationshipSchema.extend({
-				dog: SelectDogSchema.pick({
-					id: true,
-					givenName: true,
-					color: true,
-					breed: true,
-				}),
-			}),
-		),
 	}),
 	EmailOrPhoneNumberSchema,
 );

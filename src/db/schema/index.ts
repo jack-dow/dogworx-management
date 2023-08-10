@@ -1,4 +1,4 @@
 export * from "./app";
 export * from "./auth";
 
-export * as Schemas from "./index";
+export * as schema from "./index";

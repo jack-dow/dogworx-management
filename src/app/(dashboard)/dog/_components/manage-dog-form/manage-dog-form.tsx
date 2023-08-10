@@ -25,9 +25,7 @@ import { actions, type DogById } from "~/actions";
 import {
 	InsertDogSchema,
 	InsertDogSessionSchema,
-	InsertDogToClientRelationshipSchema,
 	InsertDogToVetRelationshipSchema,
-	SelectClientSchema,
 	SelectUserSchema,
 	SelectVetSchema,
 } from "~/db/validation";
@@ -56,17 +54,6 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 				organizationRole: true,
 				profileImageUrl: true,
 			}).nullable(),
-		}),
-	),
-	dogToClientRelationships: z.array(
-		InsertDogToClientRelationshipSchema.extend({
-			client: SelectClientSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				phoneNumber: true,
-			}),
 		}),
 	),
 	dogToVetRelationships: z.array(

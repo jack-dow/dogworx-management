@@ -18,11 +18,11 @@ import {
 } from "~/components/ui/sheet";
 import { type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
 import { hasTrueValue } from "~/utils";
+import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { type ManageClientFormSchema } from "./manage-client";
-import {ConfirmFormNavigationDialog} from "../ui/confirm-form-navigation-dialog";
 
 type DefaultValues = Partial<ManageClientFormSchema>;
 
@@ -66,7 +66,6 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
 		}
 	}
 
@@ -77,7 +76,6 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
-					form.reset();
 				}}
 			/>
 
@@ -91,7 +89,6 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
@@ -121,7 +118,12 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 
 						<Separator className="my-4" />
 
-						<ClientToDogRelationships control={form.control} isNew={isNew} variant="sheet" />
+						<ClientToDogRelationships
+							control={form.control}
+							existingDogToClientRelationships={client?.dogToClientRelationships}
+							variant="sheet"
+							setOpen={setInternalOpen}
+						/>
 
 						<Separator className="my-4" />
 

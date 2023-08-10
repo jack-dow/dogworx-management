@@ -32,6 +32,7 @@ const ManageVetFormSchema = z.intersection(
 				dog: SelectDogSchema.pick({
 					id: true,
 					givenName: true,
+					familyName: true,
 					color: true,
 					breed: true,
 				}),

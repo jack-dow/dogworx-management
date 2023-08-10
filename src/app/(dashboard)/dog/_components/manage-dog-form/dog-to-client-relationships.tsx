@@ -79,11 +79,6 @@ function DogToClientRelationships({
 		}
 
 		form.setValue("actions.dogToClientRelationships", dogToClientRelationshipActions);
-
-		// HACK: Focus the combobox trigger after the dialog closes
-		setTimeout(() => {
-			searchClientsInputRef?.current?.focus();
-		}, 0);
 	}
 
 	function toggleDogToClientRelationship(client: ClientsSearch[number]) {
@@ -150,7 +145,13 @@ function DogToClientRelationships({
 				requiresSaveOf="dog"
 				withoutTrigger
 				open={!!confirmRelationshipDelete}
-				onOpenChange={() => setConfirmRelationshipDelete(null)}
+				onOpenChange={() => {
+					setConfirmRelationshipDelete(null);
+					// HACK: Focus the combobox trigger after the dialog closes
+					setTimeout(() => {
+						searchClientsInputRef?.current?.focus();
+					}, 0);
+				}}
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
 						handleDogToClientRelationshipDelete(confirmRelationshipDelete);

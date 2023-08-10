@@ -5,7 +5,7 @@ import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { vetClinics, vetToVetClinicRelationships } from "~/db/schemas";
+import { vetClinics, vetToVetClinicRelationships } from "~/db/schema";
 import { InsertVetClinicSchema, UpdateVetClinicSchema } from "~/db/validation";
 import { VET_CLINICS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
@@ -99,7 +99,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 				emailAddress: true,
 				phoneNumber: true,
 			},
-			limit: 50,
+			limit: 20,
 			where: and(
 				eq(vetClinics.organizationId, user.organizationId),
 				or(

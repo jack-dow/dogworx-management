@@ -5,10 +5,11 @@ import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { clients, dogToClientRelationships } from "~/db/schemas";
+import { clients, dogs, dogToClientRelationships } from "~/db/schema";
 import { InsertClientSchema, UpdateClientSchema } from "~/db/validation";
 import { CLIENTS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
+	constructFamilyName,
 	createServerAction,
 	getServerUser,
 	SearchTermSchema,
@@ -101,7 +102,7 @@ const searchClients = createServerAction(async (searchTerm: string) => {
 				emailAddress: true,
 				phoneNumber: true,
 			},
-			limit: 50,
+			limit: 20,
 			where: and(
 				eq(clients.organizationId, user.organizationId),
 				or(
@@ -139,6 +140,7 @@ const getClientById = createServerAction(async (id: string) => {
 							columns: {
 								id: true,
 								givenName: true,
+								familyName: true,
 								color: true,
 								breed: true,
 							},
@@ -165,7 +167,7 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 	try {
 		const user = await getServerUser();
 
-		const { actions, ...data } = validValues.data;
+		const { actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
 
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
 			actions.dogToClientRelationships,
@@ -180,6 +182,36 @@ const insertClient = createServerAction(async (values: InsertClientSchema) => {
 
 			if (dogToClientRelationshipsActionsLog.inserts.length > 0) {
 				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionsLog.inserts);
+
+				if (data.familyName) {
+					const clientsDogs = await drizzle.query.dogs.findMany({
+						columns: {
+							id: true,
+							familyName: true,
+						},
+						where: and(
+							eq(dogs.organizationId, user.organizationId),
+							inArray(
+								dogs.id,
+								dogToClientRelationshipsArray
+									.filter(({ relationship }) => relationship === "owner")
+									.map((dogToClientRelationship) => dogToClientRelationship.dogId),
+							),
+						),
+					});
+
+					for (const dog of clientsDogs) {
+						await trx
+							.update(dogs)
+							.set({
+								familyName:
+									dog.familyName && !dog.familyName.includes(data.familyName)
+										? [data.familyName, ...dog.familyName.split("/")].sort().join("/")
+										: data.familyName,
+							})
+							.where(eq(dogs.id, dog.id));
+					}
+				}
 			}
 		});
 
@@ -213,12 +245,41 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 	try {
 		const user = await getServerUser();
 
-		const { id, actions, ...data } = validValues.data;
+		const { id, actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
 
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
 			actions?.dogToClientRelationships ?? {},
 			user.organizationId,
 		);
+
+		const existingClient = await drizzle.query.clients.findFirst({
+			where: and(eq(clients.organizationId, user.organizationId), eq(clients.id, id)),
+			columns: {
+				familyName: true,
+			},
+
+			with: {
+				// Need to fetch the dogId of all the dogToClientRelationships that are being deleted, so we can update the family name of the dogs
+				dogToClientRelationships: {
+					where: (dogToClientRelationships) =>
+						inArray(
+							dogToClientRelationships.id,
+							dogToClientRelationshipsActionsLog.deletes.length > 0
+								? dogToClientRelationshipsActionsLog.deletes
+								: ["0"],
+						),
+					columns: {
+						dogId: true,
+					},
+				},
+			},
+		});
+
+		if (!existingClient) {
+			return { success: false, error: `Failed to find client with id ${id}`, data: null };
+		}
+
+		const dogsToUpdateFamilyNameIds = new Set<string>();
 
 		await drizzle.transaction(async (trx) => {
 			await trx
@@ -228,6 +289,8 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 
 			if (dogToClientRelationshipsActionsLog.inserts.length > 0) {
 				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionsLog.inserts);
+
+				dogToClientRelationshipsActionsLog.inserts.forEach(({ dogId }) => dogsToUpdateFamilyNameIds.add(dogId));
 			}
 
 			if (dogToClientRelationshipsActionsLog.updates.length > 0) {
@@ -253,8 +316,53 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 							inArray(dogToClientRelationships.id, dogToClientRelationshipsActionsLog.deletes),
 						),
 					);
+
+				existingClient.dogToClientRelationships.forEach(({ dogId }) => dogsToUpdateFamilyNameIds.add(dogId));
+			}
+
+			// Ensure this clients dogs have the correct family name
+			if (validValues.data.familyName !== existingClient.familyName) {
+				dogToClientRelationshipsArray
+					.filter(({ relationship }) => relationship === "owner")
+					.forEach((relationship) => dogsToUpdateFamilyNameIds.add(relationship.dogId));
 			}
 		});
+
+		if (dogsToUpdateFamilyNameIds.size > 0) {
+			const dogsToUpdateFamilyName = await drizzle.query.dogs.findMany({
+				columns: {
+					id: true,
+				},
+				where: and(
+					eq(dogs.organizationId, user.organizationId),
+					inArray(dogs.id, Array.from(dogsToUpdateFamilyNameIds)),
+				),
+				with: {
+					dogToClientRelationships: {
+						columns: {
+							relationship: true,
+						},
+						with: {
+							client: {
+								columns: {
+									familyName: true,
+								},
+							},
+						},
+					},
+				},
+			});
+
+			for (const dog of dogsToUpdateFamilyName) {
+				await drizzle
+					.update(dogs)
+					.set({
+						// Ensure if there are two owners with the same family name and one owners family name is changed, the other family name still exists
+						familyName: constructFamilyName(dog.dogToClientRelationships),
+					})
+					.where(eq(dogs.id, dog.id));
+			}
+		}
 
 		revalidatePath("/clients");
 		revalidatePath("/dog/[id]");
@@ -271,7 +379,8 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 		});
 
 		return { success: true, data: client };
-	} catch {
+	} catch (error) {
+		console.log(error);
 		return { success: false, error: "Failed to update client", data: null };
 	}
 });

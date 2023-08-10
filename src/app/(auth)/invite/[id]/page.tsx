@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { actions } from "~/actions";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks } from "~/db/schemas";
+import { organizationInviteLinks } from "~/db/schema";
 import { InviteForm } from "./_components/invite-form";
 
 export const metadata: Metadata = {

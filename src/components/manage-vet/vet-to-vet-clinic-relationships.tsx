@@ -201,10 +201,10 @@ function VetToVetClinicRelationships({
 						}}
 						placeholder={
 							vetToVetClinicRelationships.fields.length === 0
-								? "Search vets..."
+								? "Search vet clinics..."
 								: vetToVetClinicRelationships.fields.length === 1
-								? "1 vet selected"
-								: `${vetToVetClinicRelationships.fields.length} vets selected`
+								? "1 vet clinic selected"
+								: `${vetToVetClinicRelationships.fields.length} vet clinics selected`
 						}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction

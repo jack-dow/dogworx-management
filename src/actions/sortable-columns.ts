@@ -1,6 +1,6 @@
 import { type AnyColumn } from "drizzle-orm";
 
-import { clients, dogs, organizations, vetClinics, vets } from "~/db/schemas";
+import { clients, dogs, organizations, vetClinics, vets } from "~/db/schema";
 
 type SortableColumns = {
 	[key: string]: {

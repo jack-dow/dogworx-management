@@ -230,9 +230,9 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 				name="age"
 				render={({ field }) => (
 					<FormItem>
-						<div className="flex justify-between">
+						<div className="flex justify-between gap-x-2">
 							<FormLabel>Birthday</FormLabel>
-							{ageInWords && <span className="text-xs text-muted-foreground">{ageInWords}</span>}
+							{ageInWords && <span className="truncate text-xs text-muted-foreground">{ageInWords}</span>}
 						</div>
 						<FormControl>
 							<Popover

@@ -66,7 +66,6 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
 		}
 	}
 
@@ -77,7 +76,6 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
-					form.reset();
 				}}
 			/>
 
@@ -91,7 +89,6 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (

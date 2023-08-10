@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 const unsignedSmallInt = customType<{
@@ -20,8 +20,13 @@ const organizationRoleOptions = ["owner", "admin", "member"] as const;
 // -----------------------------------------------------------------------------
 const users = mysqlTable("auth_users", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
@@ -46,8 +51,13 @@ const usersRelations = relations(users, ({ many, one }) => ({
 // -----------------------------------------------------------------------------
 const sessions = mysqlTable("auth_sessions", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	userId: char("user_id", { length: 24 }).notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	ipAddress: varchar("ip_address", { length: 15 }),
@@ -86,8 +96,13 @@ const verificationCodesRelations = relations(verificationCodes, ({ one }) => ({
 // -----------------------------------------------------------------------------
 const organizations = mysqlTable("auth_organizations", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
 	maxUsers: unsignedSmallInt("max_users").notNull(),
 	notes: text("notes"),
@@ -103,8 +118,13 @@ const organizationsRelations = relations(organizations, ({ many }) => ({
 // -----------------------------------------------------------------------------
 const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	userId: char("user_id", { length: 24 }).notNull(),

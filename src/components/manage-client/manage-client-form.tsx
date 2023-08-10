@@ -74,7 +74,11 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 					title="Manage Relationships"
 					description="Manage the relationships of this client between other dogs within the system."
 				>
-					<ClientToDogRelationships control={form.control} isNew={isNew} variant="form" />
+					<ClientToDogRelationships
+						control={form.control}
+						existingDogToClientRelationships={client?.dogToClientRelationships}
+						variant="form"
+					/>
 				</FormSection>
 
 				<Separator />

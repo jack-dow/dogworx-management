@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogs, dogSessions, dogToClientRelationships, dogToVetRelationships } from "~/db/schemas";
+import { dogs, dogSessions, dogToClientRelationships, dogToVetRelationships } from "~/db/schema";
 import { InsertDogSchema, UpdateDogSchema } from "~/db/validation";
 import { DOGS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
+	constructFamilyName,
 	createServerAction,
 	getServerUser,
 	SearchTermSchema,
@@ -39,6 +40,7 @@ const listDogs = createServerAction(async (options: PaginationSearchParams) => {
 			columns: {
 				id: true,
 				givenName: true,
+				familyName: true,
 				breed: true,
 				color: true,
 			},
@@ -92,13 +94,26 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 	try {
 		const user = await getServerUser();
 
+		const names = validSearchTerm.data.split(" ");
+		let givenName = names[0];
+		if (names.length > 0) {
+			givenName = names.shift();
+		}
+		const familyName = names.join(" ");
+
 		const data = await drizzle.query.dogs.findMany({
 			columns: {
 				id: true,
 				givenName: true,
+				familyName: true,
+				breed: true,
+				color: true,
 			},
-			limit: 50,
-			where: and(eq(dogs.organizationId, user.organizationId), like(dogs.givenName, `%${validSearchTerm.data ?? ""}%`)),
+			limit: 20,
+			where: and(
+				eq(dogs.organizationId, user.organizationId),
+				or(like(dogs.givenName, `%${givenName}%`), like(dogs.familyName, `%${familyName || givenName}%`)),
+			),
 			orderBy: (dogs, { asc }) => [asc(dogs.givenName), asc(dogs.id)],
 		});
 
@@ -183,7 +198,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 	try {
 		const user = await getServerUser();
 
-		const { actions, ...data } = validValues.data;
+		const { actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
 
 		const sessionsActionsLog = separateActionsLogSchema(actions.sessions, user.organizationId);
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
@@ -198,6 +213,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(dogs).values({
 				...data,
+				familyName: constructFamilyName(dogToClientRelationshipsArray),
 				organizationId: user.organizationId,
 			});
 
@@ -234,7 +250,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 	try {
 		const user = await getServerUser();
 
-		const { id, actions, ...data } = validValues.data;
+		const { id, actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
 
 		const sessionsActionsLog = separateActionsLogSchema(actions?.sessions ?? {}, user.organizationId);
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
@@ -245,6 +261,10 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 			actions?.dogToVetRelationships ?? {},
 			user.organizationId,
 		);
+
+		if (dogToClientRelationshipsArray) {
+			data.familyName = constructFamilyName(dogToClientRelationshipsArray);
+		}
 
 		await drizzle.transaction(async (trx) => {
 			await trx

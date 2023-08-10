@@ -87,7 +87,11 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 
 					<Separator className="my-4" />
 
-					<VetToDogRelationships control={form.control} isNew={isNew} variant="form" />
+					<VetToDogRelationships
+						control={form.control}
+						existingDogToVetRelationships={vet?.dogToVetRelationships}
+						variant="form"
+					/>
 				</FormSection>
 
 				<Separator />

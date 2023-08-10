@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { boolean, char, date, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 import { organizations, users } from "./auth";
@@ -8,9 +8,15 @@ import { organizations, users } from "./auth";
 // -----------------------------------------------------------------------------
 const dogs = mysqlTable("dogs", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
+	familyName: varchar("family_name", { length: 100 }),
 	breed: varchar("breed", { length: 50 }).notNull(),
 	age: date("age").notNull(),
 	isAgeEstimate: boolean("is_age_estimate").notNull(),
@@ -36,8 +42,13 @@ const dogsRelations = relations(dogs, ({ many, one }) => ({
 // -----------------------------------------------------------------------------
 const dogSessions = mysqlTable("dog_sessions", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	dogId: char("dog_id", { length: 24 }).notNull(),
 	userId: char("user_id", { length: 24 }),
 	date: timestamp("date").notNull(),
@@ -65,8 +76,13 @@ const dogSessionsRelations = relations(dogSessions, ({ one }) => ({
 // -----------------------------------------------------------------------------
 const clients = mysqlTable("clients", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
@@ -92,8 +108,13 @@ const clientsRelations = relations(clients, ({ many, one }) => ({
 // -----------------------------------------------------------------------------
 const vets = mysqlTable("vets", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
@@ -116,8 +137,13 @@ const vetsRelations = relations(vets, ({ many, one }) => ({
 // -----------------------------------------------------------------------------
 const vetClinics = mysqlTable("vet_clinics", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
 	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
@@ -138,8 +164,13 @@ const vetClinicsRelations = relations(vetClinics, ({ many, one }) => ({
 // -----------------------------------------------------------------------------
 const dogToClientRelationships = mysqlTable("dog_to_client_relationships", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	dogId: char("dog_id", { length: 24 }).notNull(),
 	clientId: char("client_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["owner", "emergency-contact", "fosterer", "groomer"]).notNull(),
@@ -166,8 +197,13 @@ const dogToClientRelationshipsRelations = relations(dogToClientRelationships, ({
 // -----------------------------------------------------------------------------
 const dogToVetRelationships = mysqlTable("dog_to_vet_relationships", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	dogId: char("dog_id", { length: 24 }).notNull(),
 	vetId: char("vet_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["primary", "secondary"]).notNull(),
@@ -194,8 +230,13 @@ const dogToVetRelationshipsRelations = relations(dogToVetRelationships, ({ one }
 // -----------------------------------------------------------------------------
 const vetToVetClinicRelationships = mysqlTable("vet_to_vet_clinic_relationships", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	vetId: char("vet_id", { length: 24 }).notNull(),
 	vetClinicId: char("vet_clinic_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["full-time", "part-time"]).notNull(),

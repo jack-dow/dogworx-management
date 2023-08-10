@@ -5,7 +5,7 @@ import { eq, inArray, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, organizations } from "~/db/schemas";
+import { organizationInviteLinks, organizations } from "~/db/schema";
 import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/db/validation";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {

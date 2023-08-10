@@ -84,7 +84,6 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
-					form.reset();
 				}}
 			/>
 
@@ -98,7 +97,6 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (

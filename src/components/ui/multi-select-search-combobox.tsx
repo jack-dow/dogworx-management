@@ -60,7 +60,7 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 		const [isOpen, setIsOpen] = React.useState(false);
 		const [searchTerm, setSearchTerm] = React.useState("");
 		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
-		const [results, setResults] = React.useState<Array<RequiredResultProps>>([]);
+		const [results, setResults] = React.useState<Array<RequiredResultProps>>(selected);
 		const [_selected, _setSelected] = React.useState(selected);
 		const [isLoading, setIsLoading] = React.useState(false);
 		const [, startTransition] = React.useTransition();
@@ -86,6 +86,13 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 			},
 			[isOpen, setIsOpen],
 		);
+
+		React.useEffect(() => {
+			if (searchTerm === "") {
+				setResults(selected);
+			}
+			_setSelected(selected);
+		}, [selected, searchTerm]);
 
 		useDidUpdate(() => {
 			if (!debouncedSearchTerm) {
@@ -212,4 +219,23 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 );
 MultiSelectSearchCombobox.displayName = "MultiSelectSearch";
 
-export { MultiSelectSearchCombobox, CommandItem as MultiSelectSearchComboboxAction };
+const MultiSelectSearchComboboxAction = React.forwardRef<
+	React.ElementRef<typeof CommandPrimitive.Item>,
+	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+>((props, ref) => (
+	<CommandItem
+		ref={ref}
+		{...props}
+		onMouseDown={(event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (props.onMouseDown) {
+				props.onMouseDown(event);
+			}
+		}}
+	/>
+));
+
+MultiSelectSearchComboboxAction.displayName = CommandPrimitive.Item.displayName;
+
+export { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction };

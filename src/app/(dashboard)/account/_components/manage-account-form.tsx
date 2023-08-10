@@ -14,7 +14,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
-import { type sessions } from "~/db/schemas";
+import { type sessions } from "~/db/schema";
 import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
 import { AccountDelete } from "./account-delete";
 import { AccountDisplayName } from "./account-display-name";

@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogSessions, users } from "~/db/schemas";
+import { dogSessions, users } from "~/db/schema";
 import { UpdateUserSchema } from "~/db/validation";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { createServerAction, getServerSession, getServerUser } from "../utils";

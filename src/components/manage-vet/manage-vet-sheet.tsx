@@ -67,7 +67,6 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
 		}
 	}
 
@@ -78,7 +77,6 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
-					form.reset();
 				}}
 			/>
 
@@ -92,7 +90,6 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
@@ -130,7 +127,12 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 
 						<Separator className="my-4" />
 
-						<VetToDogRelationships control={form.control} isNew={isNew} variant="sheet" />
+						<VetToDogRelationships
+							control={form.control}
+							existingDogToVetRelationships={vet?.dogToVetRelationships}
+							variant="sheet"
+							setOpen={setInternalOpen}
+						/>
 
 						<Separator className="my-4" />
 

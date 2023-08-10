@@ -1,1 +1,0 @@
-ALTER TABLE `clients` RENAME COLUMN `zip_code` TO `postcode`;

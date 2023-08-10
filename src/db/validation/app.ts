@@ -10,7 +10,7 @@ import {
 	vetClinics,
 	vets,
 	vetToVetClinicRelationships,
-} from "~/db/schemas";
+} from "~/db/schema";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 // Order is different from schema order because of block-scoping
@@ -118,6 +118,49 @@ export type UpdateDogSessionSchema = z.infer<typeof UpdateDogSessionSchema>;
 export const DogSessionActionsLogSchema = createActionsLogSchema(InsertDogSessionSchema, UpdateDogSessionSchema);
 
 // -----------------------------------------------------------------------------
+// Clients
+// -----------------------------------------------------------------------------
+export const SelectClientSchema = createSelectSchema(clients);
+
+export const InsertClientSchema = createInsertSchema(clients)
+	.omit({ createdAt: true, updatedAt: true, organizationId: true })
+	.extend({
+		id: IdSchema,
+		dogToClientRelationships: z.array(
+			InsertDogToClientRelationshipSchema.extend({
+				dog: createSelectSchema(dogs).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					color: true,
+					breed: true,
+				}),
+			}),
+		),
+		actions: z.object({
+			dogToClientRelationships: DogToClientRelationshipActionsLogSchema,
+		}),
+	});
+export type InsertClientSchema = z.infer<typeof InsertClientSchema>;
+
+export const UpdateClientSchema = InsertClientSchema.partial().extend({
+	id: IdSchema,
+	dogToClientRelationships: z.array(
+		InsertDogToClientRelationshipSchema.extend({
+			dog: createSelectSchema(dogs).pick({
+				id: true,
+				givenName: true,
+				familyName: true,
+				color: true,
+				breed: true,
+			}),
+		}),
+	),
+});
+
+export type UpdateClientSchema = z.infer<typeof UpdateClientSchema>;
+
+// -----------------------------------------------------------------------------
 // Dogs
 // -----------------------------------------------------------------------------
 export const SelectDogSchema = createSelectSchema(dogs);
@@ -126,6 +169,17 @@ export const InsertDogSchema = createInsertSchema(dogs)
 	.omit({ createdAt: true, updatedAt: true, organizationId: true })
 	.extend({
 		id: IdSchema,
+		dogToClientRelationships: z.array(
+			InsertDogToClientRelationshipSchema.extend({
+				client: SelectClientSchema.pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					emailAddress: true,
+					phoneNumber: true,
+				}),
+			}),
+		),
 		actions: z.object({
 			sessions: DogSessionActionsLogSchema,
 			dogToClientRelationships: DogToClientRelationshipActionsLogSchema,
@@ -138,27 +192,6 @@ export const UpdateDogSchema = InsertDogSchema.partial().extend({
 	id: IdSchema,
 });
 export type UpdateDogSchema = z.infer<typeof UpdateDogSchema>;
-
-// -----------------------------------------------------------------------------
-// Clients
-// -----------------------------------------------------------------------------
-export const SelectClientSchema = createSelectSchema(clients);
-
-export const InsertClientSchema = createInsertSchema(clients)
-	.omit({ createdAt: true, updatedAt: true, organizationId: true })
-	.extend({
-		id: IdSchema,
-		actions: z.object({
-			dogToClientRelationships: DogToClientRelationshipActionsLogSchema,
-		}),
-	});
-export type InsertClientSchema = z.infer<typeof InsertClientSchema>;
-
-export const UpdateClientSchema = InsertClientSchema.partial().extend({
-	id: IdSchema,
-});
-
-export type UpdateClientSchema = z.infer<typeof UpdateClientSchema>;
 
 // -----------------------------------------------------------------------------
 // Vets

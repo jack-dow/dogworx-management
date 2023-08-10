@@ -5,7 +5,7 @@ import ms from "ms";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { verificationCodes } from "~/db/schemas";
+import { verificationCodes } from "~/db/schema";
 import { resend } from "~/lib/resend";
 import { generateId, type APIResponse } from "~/utils";
 import { verifyAPISession } from "../../../utils";
