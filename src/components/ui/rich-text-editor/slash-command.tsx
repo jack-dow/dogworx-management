@@ -5,7 +5,16 @@ import Suggestion from "@tiptap/suggestion";
 // eslint-disable-next-line no-restricted-imports
 import tippy from "tippy.js";
 
-import { ListBulletsIcon, ListNumbersIcon, TextAlignLeftIcon, TextH1Icon, TextH2Icon, TextH3Icon } from "../icons";
+import {
+	CheckSquareIcon,
+	ListBulletsIcon,
+	ListNumbersIcon,
+	QuotesIcon,
+	TextAlignLeftIcon,
+	TextH1Icon,
+	TextH2Icon,
+	TextH3Icon,
+} from "../icons";
 
 interface CommandItemProps {
 	title: string;
@@ -70,15 +79,15 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").run();
 			},
 		},
-		// {
-		// 	title: "To-do List",
-		// 	description: "Track tasks with a to-do list.",
-		// 	searchTerms: ["todo", "task", "list", "check", "checkbox"],
-		// 	icon: <CheckSquareIcon className="h-5 w-5" />,
-		// 	command: ({ editor, range }: CommandProps) => {
-		// 		editor.chain().focus().deleteRange(range).toggleTaskList().run();
-		// 	},
-		// },
+		{
+			title: "To-do List",
+			description: "Track tasks with a to-do list.",
+			searchTerms: ["todo", "task", "list", "check", "checkbox"],
+			icon: <CheckSquareIcon className="h-5 w-5" />,
+			command: ({ editor, range }: CommandProps) => {
+				editor.chain().focus().deleteRange(range).toggleTaskList().run();
+			},
+		},
 		{
 			title: "Heading 1",
 			description: "Big section heading.",
@@ -124,14 +133,14 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 				editor.chain().focus().deleteRange(range).toggleOrderedList().run();
 			},
 		},
-		// {
-		// 	title: "Quote",
-		// 	description: "Capture a quote.",
-		// 	searchTerms: ["blockquote"],
-		// 	icon: <TextQuoteIcon className="h-5 w-5" />,
-		// 	command: ({ editor, range }: CommandProps) =>
-		// 		editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
-		// },
+		{
+			title: "Quote",
+			description: "Capture a quote.",
+			searchTerms: ["blockquote"],
+			icon: <QuotesIcon className="h-5 w-5" />,
+			command: ({ editor, range }: CommandProps) =>
+				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
+		},
 		// {
 		// 	title: "Code",
 		// 	description: "Capture a code snippet.",

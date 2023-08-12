@@ -37,7 +37,7 @@ function DesktopSidebar() {
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
 					<Link href="/" shallow>
-						<Image src={DogworxPawLogoGradient as string} alt="Dogworx Paw Logo (Gradient Version)" />
+						<Image src={DogworxPawLogoGradient as string} priority alt="Dogworx Paw Logo (Gradient Version)" />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">

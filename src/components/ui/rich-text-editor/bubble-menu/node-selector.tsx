@@ -1,13 +1,10 @@
 import { type Dispatch, type FC, type SetStateAction } from "react";
 import { type Editor } from "@tiptap/core";
 
-// eslint-disable-next-line no-restricted-imports
-
 import {
 	CheckIcon,
 	CheckSquareIcon,
 	ChevronDownIcon,
-	CodeIcon,
 	ListBulletsIcon,
 	ListNumbersIcon,
 	QuotesIcon,
@@ -78,12 +75,12 @@ export const NodeSelector: FC<NodeSelectorProps> = ({ editor, isOpen, setIsOpen 
 			},
 			isActive: () => editor.isActive("blockquote"),
 		},
-		{
-			name: "Code",
-			icon: CodeIcon,
-			command: () => editor.chain().focus().toggleCodeBlock().run(),
-			isActive: () => editor.isActive("codeBlock"),
-		},
+		// {
+		// 	name: "Code",
+		// 	icon: CodeIcon,
+		// 	command: () => editor.chain().focus().toggleCodeBlock().run(),
+		// 	isActive: () => editor.isActive("codeBlock"),
+		// },
 	];
 
 	const activeItem = items.filter((item) => item.isActive()).pop() ?? {

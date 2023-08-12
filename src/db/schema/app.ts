@@ -28,7 +28,7 @@ const dogs = mysqlTable("dogs", {
 });
 
 const dogsRelations = relations(dogs, ({ many, one }) => ({
-	sessions: many(dogSessions),
+	dogSessions: many(dogSessions),
 	dogToClientRelationships: many(dogToClientRelationships),
 	dogToVetRelationships: many(dogToVetRelationships),
 	organization: one(organizations, {

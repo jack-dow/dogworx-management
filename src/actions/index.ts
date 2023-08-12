@@ -6,6 +6,7 @@ import {
 	searchClients,
 	updateClient,
 } from "./app/clients-actions";
+import { deleteDogSession, insertDogSession, searchDogSessions, updateDogSession } from "./app/dog-sessions-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./app/dogs-actions";
 import {
 	deleteVetClinic,
@@ -18,6 +19,7 @@ import {
 import { deleteVet, getVetById, insertVet, listVets, searchVets, updateVet } from "./app/vets-actions";
 import {
 	deleteOrganization,
+	getCurrentOrganization,
 	getOrganizationById,
 	getOrganizationInviteLinkById,
 	insertOrganization,
@@ -46,6 +48,12 @@ const actions = {
 			update: updateDog,
 			delete: deleteDog,
 		},
+		dogSessions: {
+			search: searchDogSessions,
+			insert: insertDogSession,
+			update: updateDogSession,
+			delete: deleteDogSession,
+		},
 		vetClinics: {
 			list: listVetClinics,
 			search: searchVetClinics,
@@ -68,6 +76,7 @@ const actions = {
 			list: listOrganizations,
 			search: searchOrganizations,
 			byId: getOrganizationById,
+			current: getCurrentOrganization,
 			insert: insertOrganization,
 			update: updateOrganization,
 			delete: deleteOrganization,
@@ -88,6 +97,7 @@ export { actions };
 
 export type * from "./app/clients-actions";
 export type * from "./app/dogs-actions";
+export type * from "./app/dog-sessions-actions";
 export type * from "./app/vet-clinics-actions";
 export type * from "./app/vets-actions";
 

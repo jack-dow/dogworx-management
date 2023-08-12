@@ -172,7 +172,9 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 
 								{!isLoading && (searchTerm === "" || results.length === 0) && renderActions && (
 									// IMPORTANT: We need to substring the search term here because otherwise if the searchTerm is too long it causes the app to freeze
-									<CommandGroup heading="Actions">{renderActions({ searchTerm: searchTerm.substring(0, 30) })}</CommandGroup>
+									<CommandGroup heading="Actions">
+										{renderActions({ searchTerm: searchTerm.substring(0, 30) })}
+									</CommandGroup>
 								)}
 							</CommandList>
 						</div>
@@ -184,4 +186,22 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 );
 SearchCombobox.displayName = "SearchCombobox";
 
-export { type SearchComboboxProps, SearchCombobox, CommandItem as SearchComboboxAction };
+const SearchComboboxAction = React.forwardRef<
+	React.ElementRef<typeof CommandPrimitive.Item>,
+	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+>((props, ref) => (
+	<CommandItem
+		ref={ref}
+		{...props}
+		onMouseDown={(event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (props.onMouseDown) {
+				props.onMouseDown(event);
+			}
+		}}
+	/>
+));
+SearchComboboxAction.displayName = CommandPrimitive.Item.displayName;
+
+export { type SearchComboboxProps, SearchCombobox, SearchComboboxAction };

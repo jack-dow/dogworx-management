@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
@@ -85,16 +85,16 @@ const listDogs = createServerAction(async (options: PaginationSearchParams) => {
 type DogsList = ExtractServerActionData<typeof listDogs>;
 
 const searchDogs = createServerAction(async (searchTerm: string) => {
-	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
+	const validation = SearchTermSchema.safeParse(searchTerm);
 
-	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: null };
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
-		const names = validSearchTerm.data.split(" ");
+		const names = validation.data.split(" ");
 		let givenName = names[0];
 		if (names.length > 0) {
 			givenName = names.shift();
@@ -125,19 +125,21 @@ const searchDogs = createServerAction(async (searchTerm: string) => {
 type DogsSearch = ExtractServerActionData<typeof searchDogs>;
 
 const getDogById = createServerAction(async (id: string) => {
-	const validId = z.string().safeParse(id);
+	const validation = z.string().safeParse(id);
 
-	if (!validId.success) {
-		return { success: false, error: validId.error.issues, data: null };
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		const data = await drizzle.query.dogs.findFirst({
-			where: and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, validId.data)),
+			where: and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, validation.data)),
 			with: {
-				sessions: {
+				dogSessions: {
+					limit: 4,
+					orderBy: (dogSessions, { asc }) => [desc(dogSessions.date), asc(dogSessions.id)],
 					with: {
 						user: {
 							columns: {
@@ -183,24 +185,24 @@ const getDogById = createServerAction(async (id: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: `Failed to fetch dog with id: ${validId.data}`, data: null };
+		return { success: false, error: `Failed to fetch dog with id: ${validation.data}`, data: null };
 	}
 });
 type DogById = ExtractServerActionData<typeof getDogById>;
 
 const insertDog = createServerAction(async (values: InsertDogSchema) => {
-	const validValues = InsertDogSchema.safeParse(values);
+	const validation = InsertDogSchema.safeParse(values);
 
-	if (!validValues.success) {
-		return { success: false, error: validValues.error.issues, data: null };
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
-		const { actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
+		const { actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validation.data;
 
-		const sessionsActionsLog = separateActionsLogSchema(actions.sessions, user.organizationId);
+		const sessionsActionsLog = separateActionsLogSchema(actions.dogSessions, user.organizationId);
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
 			actions.dogToClientRelationships,
 			user.organizationId,
@@ -235,7 +237,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 
 		return { success: true, data: undefined };
 	} catch {
-		return { success: false, error: `Failed to insert dog with id: ${validValues.data.id}`, data: null };
+		return { success: false, error: `Failed to insert dog with id: ${validation.data.id}`, data: null };
 	}
 });
 type DogInsert = ExtractServerActionData<typeof insertDog>;
@@ -252,7 +254,6 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 
 		const { id, actions, dogToClientRelationships: dogToClientRelationshipsArray, ...data } = validValues.data;
 
-		const sessionsActionsLog = separateActionsLogSchema(actions?.sessions ?? {}, user.organizationId);
 		const dogToClientRelationshipsActionsLog = separateActionsLogSchema(
 			actions?.dogToClientRelationships ?? {},
 			user.organizationId,
@@ -271,35 +272,6 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 				.update(dogs)
 				.set(data)
 				.where(and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, id)));
-
-			//
-			// ## Session History
-			//
-			if (sessionsActionsLog.inserts.length > 0) {
-				await trx.insert(dogSessions).values(sessionsActionsLog.inserts);
-			}
-
-			if (sessionsActionsLog.updates.length > 0) {
-				for (const updatedSessionHistory of sessionsActionsLog.updates) {
-					await trx
-						.update(dogSessions)
-						.set(updatedSessionHistory)
-						.where(
-							and(eq(dogSessions.organizationId, user.organizationId), eq(dogSessions.id, updatedSessionHistory.id)),
-						);
-				}
-			}
-
-			if (sessionsActionsLog.deletes.length > 0) {
-				await trx
-					.delete(dogSessions)
-					.where(
-						and(
-							eq(dogSessions.organizationId, user.organizationId),
-							inArray(dogSessions.id, sessionsActionsLog.deletes),
-						),
-					);
-			}
 
 			//
 			// ## Client Relationship Actions
@@ -392,7 +364,7 @@ const deleteDog = createServerAction(async (id: string) => {
 				id: true,
 			},
 			with: {
-				sessions: true,
+				dogSessions: true,
 				dogToClientRelationships: true,
 				dogToVetRelationships: true,
 			},
@@ -402,11 +374,11 @@ const deleteDog = createServerAction(async (id: string) => {
 			await drizzle.transaction(async (trx) => {
 				await trx.delete(dogs).where(eq(dogs.id, id));
 
-				if (dog.sessions.length > 0) {
+				if (dog.dogSessions.length > 0) {
 					await trx.delete(dogSessions).where(
 						inArray(
 							dogSessions.id,
-							dog.sessions.map((s) => s.id),
+							dog.dogSessions.map((s) => s.id),
 						),
 					);
 				}
@@ -435,7 +407,7 @@ const deleteDog = createServerAction(async (id: string) => {
 
 		return { success: true, data: validId.data };
 	} catch {
-		return { success: false, error: `Failed to fetch dog with id: ${id}`, data: null };
+		return { success: false, error: `Failed to delete dog with id: ${id}`, data: null };
 	}
 });
 type DogDelete = ExtractServerActionData<typeof deleteDog>;

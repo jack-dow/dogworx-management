@@ -157,7 +157,9 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									onSelect={() => {
 										setIsLoading(true);
 										router.push(
-											`${pathname.slice(0, -1)}/new${searchTerm ? `searchTerm=${encodeURIComponent(searchTerm)}` : ""}`,
+											`${pathname.slice(0, -1)}/new${
+												searchTerm ? `?searchTerm=${encodeURIComponent(searchTerm)}` : ""
+											}`,
 										);
 										return;
 									}}

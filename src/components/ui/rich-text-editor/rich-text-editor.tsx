@@ -39,7 +39,10 @@ const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
 			},
 			onUpdate: (e) => {
 				if (onValueChange) {
-					onValueChange({ html: sanitizeHtml(e.editor.getHTML()), text: e.editor.getText() });
+					onValueChange({
+						html: sanitizeHtml(e.editor.getHTML(), { allowedAttributes: { ol: ["start"] } }),
+						text: e.editor.getText(),
+					});
 				}
 			},
 			content,

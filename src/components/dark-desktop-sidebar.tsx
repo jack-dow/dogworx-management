@@ -24,7 +24,6 @@ import {
 	CalendarDaysIcon,
 	ClientsIcon,
 	DogIcon,
-	InvoiceIcon,
 	LogOutIcon,
 	UserIcon,
 	VetClinicIcon,
@@ -47,7 +46,6 @@ export const navigation: Array<Navigation> = [
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
 	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
 	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: false },
-	{ name: "Invoices", href: "/invoices", icon: InvoiceIcon, disabled: true },
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
 ];
 
@@ -64,7 +62,7 @@ function DarkDesktopSidebar() {
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-950 px-6 ">
 				<div className="flex shrink-0 items-center pb-4 pt-6">
 					<Link href="/" shallow>
-						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" width={150} />
+						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" priority width={150} />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">

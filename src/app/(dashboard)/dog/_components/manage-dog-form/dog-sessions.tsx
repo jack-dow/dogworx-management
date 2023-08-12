@@ -6,8 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type Editor } from "@tiptap/react";
 import * as chrono from "chrono-node";
 import dayjs from "dayjs";
-import { useFieldArray, useForm, useFormContext, type Control } from "react-hook-form";
-import sanitizeHtml from "sanitize-html";
+import { useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
@@ -32,7 +31,10 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormSection } from "~/components/ui/form";
 import {
 	CalendarIcon,
+	ChevronLeftIcon,
+	ChevronRightIcon,
 	ChevronUpDownIcon,
+	CopyIcon,
 	EditIcon,
 	EllipsisVerticalIcon,
 	TrashIcon,
@@ -40,47 +42,61 @@ import {
 } from "~/components/ui/icons";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Loader } from "~/components/ui/loader";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
+import { useToast } from "~/components/ui/use-toast";
+import { actions, type DogById } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { InsertDogSessionSchema, SelectUserSchema } from "~/db/validation";
 import { cn, generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
-type Session = NonNullable<ManageDogFormSchema["sessions"]>[number];
+const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
+	details: z
+		.string()
+		.max(100000, { message: "Details must be less than 100,000 characters long." })
+		.nonempty({ message: "Must include some details about this session" }),
+	date: z.date({
+		required_error: "Must select a date for this session",
+	}),
+	user: SelectUserSchema.pick({
+		id: true,
+		givenName: true,
+		familyName: true,
+		emailAddress: true,
+		organizationId: true,
+		organizationRole: true,
+		profileImageUrl: true,
+	}).nullable(),
+});
+type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
 
-function DogSessionsHistory({
-	control,
-	existingDogSessions,
-}: {
-	control: Control<ManageDogFormSchema>;
-	existingDogSessions: Array<Session>;
-}) {
+type DogSession = EditableSessionDetailFormSchema | DogById["dogSessions"][number];
+
+function DogSessions({ isNew, dogSessions }: { isNew: boolean; dogSessions?: DogById["dogSessions"] }) {
+	const { toast } = useToast();
 	const form = useFormContext<ManageDogFormSchema>();
-	const sessionHistory = useFieldArray({
-		control,
-		name: "sessions",
-		keyName: "rhf-id",
-	});
+
+	const [_dogSessions, setDogSessions] = React.useState<Array<DogSession>>(dogSessions ?? []);
+
+	const [page, setPage] = React.useState(1);
+	const [loadedPages, setLoadedPages] = React.useState(1);
+	const [isLoading, setIsLoading] = React.useState(false);
+	const [hasMore, setHasMore] = React.useState(_dogSessions.length > 3);
 
 	const [confirmSessionDelete, setConfirmSessionDelete] = React.useState<string | null>(null);
 
-	function handleDogSessionDelete(sessionId: string) {
-		const dogSessionActions = form.getValues("actions.sessions");
+	const visibleSessions = [..._dogSessions]
+		.sort((a, b) => {
+			// Compare by date in descending order
+			if (b.date > a.date) return 1;
+			if (b.date < a.date) return -1;
 
-		sessionHistory.remove(sessionHistory.fields.findIndex((f) => f.id === sessionId));
-
-		if (dogSessionActions[sessionId]?.type === "INSERT") {
-			delete dogSessionActions[sessionId];
-		} else {
-			dogSessionActions[sessionId] = {
-				type: "DELETE",
-				payload: sessionId,
-			};
-		}
-
-		form.setValue("actions.sessions", dogSessionActions);
-	}
+			// If dates are the same, compare cuids as strings
+			return a.id.localeCompare(b.id);
+		})
+		.slice((page - 1) * 3, page * 3);
 
 	function removeSessionFromUnsavedSessions(sessionId: string) {
 		const unsavedSessionIds = form.getValues("unsavedSessionIds");
@@ -96,13 +112,62 @@ function DogSessionsHistory({
 		<>
 			<DestructiveActionDialog
 				name="session"
-				requiresSaveOf="dog"
 				withoutTrigger
 				open={!!confirmSessionDelete}
 				onOpenChange={() => setConfirmSessionDelete(null)}
-				onConfirm={() => {
+				onConfirm={async () => {
 					if (confirmSessionDelete) {
-						handleDogSessionDelete(confirmSessionDelete);
+						if (isNew) {
+							const dogSessionActions = form.getValues("actions.dogSessions");
+
+							delete dogSessionActions[confirmSessionDelete];
+
+							form.setValue("actions.dogSessions", dogSessionActions);
+
+							setDogSessions(_dogSessions.filter((f) => f.id !== confirmSessionDelete));
+							removeSessionFromUnsavedSessions(confirmSessionDelete);
+
+							if (visibleSessions.length - 1 === 0) {
+								setPage(page - 1);
+								setLoadedPages(loadedPages - 1);
+							}
+							return;
+						}
+
+						await actions.app.dogSessions
+							.delete({ id: confirmSessionDelete, dogId: form.getValues("id") })
+							.then((result) => {
+								if (!result.success) {
+									throw new Error("Failed to delete session");
+								}
+
+								setDogSessions(_dogSessions.filter((f) => f.id !== confirmSessionDelete));
+								removeSessionFromUnsavedSessions(confirmSessionDelete);
+
+								if (_dogSessions.length - 1 < result.data.count) {
+									setHasMore(true);
+								}
+
+								if (_dogSessions.length - 1 === result.data.count) {
+									setHasMore(false);
+								}
+
+								if (visibleSessions.length - 1 === 0) {
+									setPage(page - 1);
+									setLoadedPages(loadedPages - 1);
+								}
+
+								toast({
+									title: "Session deleted",
+									description: "This session has been successfully deleted.",
+								});
+							})
+							.catch(() => {
+								toast({
+									title: "Session deletion failed",
+									description: "There was an error deleting this session. Please try again.",
+								});
+							});
 					}
 				}}
 			/>
@@ -111,18 +176,50 @@ function DogSessionsHistory({
 				<div className="space-y-8">
 					<EditableSessionDetail
 						dogId={form.getValues("id")}
-						onSubmit={(session) => {
-							removeSessionFromUnsavedSessions(session.id);
+						onSubmit={async (session) => {
+							if (isNew) {
+								setDogSessions([..._dogSessions, session]);
+								removeSessionFromUnsavedSessions(session.id);
 
-							sessionHistory.append(session);
+								form.setValue(
+									"actions.dogSessions",
+									{
+										...form.getValues("actions.dogSessions"),
+										[session.id]: {
+											type: "INSERT",
+											payload: session,
+										},
+									},
+									{ shouldDirty: true },
+								);
+								return;
+							}
 
-							form.setValue("actions.sessions", {
-								...form.getValues("actions.sessions"),
-								[session.id]: {
-									type: "INSERT",
-									payload: session,
-								},
-							});
+							await actions.app.dogSessions
+								.insert(session)
+								.then((result) => {
+									if (!result.success) {
+										throw new Error("Failed to create session");
+									}
+
+									setDogSessions([..._dogSessions, session]);
+									removeSessionFromUnsavedSessions(session.id);
+
+									if (_dogSessions.length + 1 > loadedPages * 3) {
+										setHasMore(true);
+									}
+
+									toast({
+										title: "Session created",
+										description: "Session has been successfully created.",
+									});
+								})
+								.catch(() => {
+									toast({
+										title: "Session creation failed",
+										description: "There was an error adding this session. Please try again.",
+									});
+								});
 						}}
 						onDetailsTextChange={(text, id) => {
 							const unsavedSessionIds = form.getValues("unsavedSessionIds");
@@ -138,61 +235,163 @@ function DogSessionsHistory({
 
 					<div>
 						<ul role="list" className="-mb-8">
-							{[...sessionHistory.fields]
-								.sort((a, b) => b.date.getTime() - a.date.getTime())
-								.map((session, index) => {
-									return (
-										<SessionDetail
-											key={session.id}
-											dogId={form.getValues("id")}
-											session={session}
-											isLast={index === sessionHistory.fields.length - 1}
-											onUpdate={(updatedSession) => {
-												removeSessionFromUnsavedSessions(updatedSession.id);
+							{visibleSessions.map((session, index) => {
+								return (
+									<SessionDetail
+										key={session.id}
+										dogId={form.getValues("id")}
+										session={session}
+										isLast={index === 2 || index === visibleSessions.length - 1}
+										onUpdate={async (updatedSession) => {
+											if (isNew) {
+												setDogSessions((prev) =>
+													prev.map((s) => {
+														if (s.id === updatedSession.id) {
+															return updatedSession;
+														}
 
-												const sessionHistoryActions = { ...form.getValues("actions.sessions") };
-
-												const existingAction = sessionHistoryActions[updatedSession.id];
-
-												sessionHistoryActions[updatedSession.id] = {
-													type: existingAction?.type === "INSERT" ? "INSERT" : "UPDATE",
-													payload: updatedSession,
-												};
-
-												sessionHistory.update(
-													sessionHistory.fields.findIndex((f) => f.id === updatedSession.id),
-													updatedSession,
+														return s;
+													}),
 												);
 
-												form.setValue("actions.sessions", sessionHistoryActions);
-											}}
-											onDelete={() => {
-												removeSessionFromUnsavedSessions(session.id);
+												removeSessionFromUnsavedSessions(updatedSession.id);
+												return;
+											}
 
-												if (existingDogSessions.some((s) => s.id === session.id)) {
-													setConfirmSessionDelete(session.id);
-												} else {
-													handleDogSessionDelete(session.id);
-												}
-											}}
-											onDetailsTextChange={(text, id) => {
-												const unsavedSessionIds = form.getValues("unsavedSessionIds");
-												if (text && !unsavedSessionIds.includes(id)) {
-													form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
-												}
+											await actions.app.dogSessions
+												.update(updatedSession)
+												.then((result) => {
+													if (!result.success) {
+														throw new Error("Failed to update session");
+													}
 
-												if (!text) {
-													removeSessionFromUnsavedSessions(id);
-												}
-											}}
-											onCancel={() => {
-												removeSessionFromUnsavedSessions(session.id);
-											}}
-										/>
-									);
-								})}
+													setDogSessions((prev) =>
+														prev.map((s) => {
+															if (s.id === updatedSession.id) {
+																return updatedSession;
+															}
+
+															return s;
+														}),
+													);
+													removeSessionFromUnsavedSessions(updatedSession.id);
+
+													toast({
+														title: "Session updated",
+														description: "Session has been successfully updated.",
+													});
+												})
+												.catch(() => {
+													toast({
+														title: "Session update failed",
+														description: "There was an error updating this session. Please try again.",
+													});
+												});
+										}}
+										onCopy={(session) => {
+											setDogSessions((prev) => [...prev, session]);
+
+											if (_dogSessions.length + 1 > loadedPages * 3) {
+												setHasMore(true);
+											}
+										}}
+										onDelete={() => {
+											setConfirmSessionDelete(session.id);
+										}}
+										onDetailsTextChange={(text, id) => {
+											const unsavedSessionIds = form.getValues("unsavedSessionIds");
+											if (text && !unsavedSessionIds.includes(id)) {
+												form.setValue("unsavedSessionIds", [...unsavedSessionIds, id]);
+											}
+
+											if (!text) {
+												removeSessionFromUnsavedSessions(id);
+											}
+										}}
+										onCancel={() => {
+											removeSessionFromUnsavedSessions(session.id);
+										}}
+									/>
+								);
+							})}
 						</ul>
 					</div>
+
+					{visibleSessions.length > 0 && (
+						<div className="flex items-center justify-center space-x-2">
+							<Button
+								variant="outline"
+								className="h-8 w-8 p-0"
+								disabled={page === 1}
+								onClick={() => {
+									setPage(page - 1);
+									setHasMore(true);
+								}}
+							>
+								<span className="sr-only">Go to previous page</span>
+								<ChevronLeftIcon className="h-4 w-4" />
+							</Button>
+
+							<Button
+								variant="outline"
+								className="h-8 w-8 p-0"
+								disabled={isNew ? _dogSessions.length <= page * 3 : !hasMore || isLoading}
+								onClick={() => {
+									if (page !== loadedPages || isNew) {
+										if (page + 1 === loadedPages && _dogSessions.length <= loadedPages * 3) {
+											setHasMore(false);
+										}
+										setPage(page + 1);
+										return;
+									}
+
+									if (_dogSessions.length > loadedPages * 3) {
+										setIsLoading(true);
+										const cursor = [..._dogSessions]
+											.sort((a, b) => {
+												// Compare by date in descending order
+												if (b.date > a.date) return 1;
+												if (b.date < a.date) return -1;
+
+												// If dates are the same, compare cuids as strings
+												return a.id.localeCompare(b.id);
+											})
+											.pop()!;
+
+										actions.app.dogSessions
+											.search(cursor)
+											.then((result) => {
+												if (!result.success) {
+													throw new Error("Failed to load sessions");
+												}
+
+												setDogSessions((prev) => [...prev, ...result.data]);
+												setPage(page + 1);
+												setLoadedPages(loadedPages + 1);
+												setHasMore(result.data.length === 3);
+											})
+											.catch(() => {
+												toast({
+													title: "Failed to load sessions",
+													description: "There was an error loading more sessions. Please try again.",
+												});
+											})
+											.finally(() => {
+												setIsLoading(false);
+											});
+										return;
+									}
+								}}
+							>
+								<span className="sr-only">Go to next page</span>
+								{isLoading ? (
+									<Loader size="sm" variant="black" className="mr-0" />
+								) : (
+									<ChevronRightIcon className="h-4 w-4" />
+								)}
+							</Button>
+						</div>
+					)}
 				</div>
 			</FormSection>
 		</>
@@ -205,18 +404,24 @@ function SessionDetail({
 	isLast,
 	onDetailsTextChange,
 	onUpdate,
+	onCopy,
 	onDelete,
 	onCancel,
 }: {
-	session: Session;
+	session: DogSession;
 	isLast: boolean;
 	dogId: string;
 	onDetailsTextChange: (text: string, id: string) => void;
-	onUpdate: (session: Session) => void;
+	onUpdate: (session: DogSession) => Promise<void>;
+	onCopy: (session: DogSession) => void;
 	onDelete: () => void;
 	onCancel: () => void;
 }) {
+	const { toast } = useToast();
+	const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);
 	const [isEditing, setIsEditing] = React.useState(false);
+
+	const [isCopying, setIsCopying] = React.useState(false);
 
 	return (
 		<li>
@@ -227,14 +432,15 @@ function SessionDetail({
 				{isEditing ? (
 					<EditableSessionDetail
 						dogId={dogId}
-						sessionHistory={session}
+						dogSession={session}
 						onCancel={() => {
 							onCancel();
 							setIsEditing(false);
 						}}
-						onSubmit={(session) => {
-							setIsEditing(false);
-							onUpdate(session);
+						onSubmit={async (session) => {
+							await onUpdate(session).then(() => {
+								setIsEditing(false);
+							});
 						}}
 						onDetailsTextChange={onDetailsTextChange}
 					/>
@@ -269,23 +475,16 @@ function SessionDetail({
 								</div>
 								<p className="mt-0.5 text-sm text-slate-500">{dayjs(session.date).format("MMMM D, YYYY")}</p>
 							</div>
-							<div className="prose prose-sm mt-2 max-w-none" dangerouslySetInnerHTML={{ __html: session.details }} />
+							<div
+								className="prose prose-sm mt-2 max-w-none whitespace-pre-wrap"
+								dangerouslySetInnerHTML={{ __html: session.details }}
+							/>
 						</div>
 					</div>
 				)}
 
 				<div className="flex justify-end">
-					{/* <Button
-						variant="ghost"
-						className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-						onClick={() => {
-							setIsEditing(!isEditing);
-						}}
-					>
-						<EditIcon className=" h-4 text-muted-foreground/70" />
-						<span className="sr-only">Edit Session</span>
-					</Button> */}
-					<DropdownMenu>
+					<DropdownMenu open={isActionsDropdownOpen} onOpenChange={setIsActionsDropdownOpen}>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
 								<EllipsisVerticalIcon className="h-4 w-4" />
@@ -299,10 +498,6 @@ function SessionDetail({
 								className="cursor-pointer"
 								onClick={() => {
 									setIsEditing(!isEditing);
-									if (isEditing) {
-										onCancel();
-										return;
-									}
 								}}
 							>
 								{isEditing ? (
@@ -317,20 +512,59 @@ function SessionDetail({
 									</>
 								)}
 							</DropdownMenuItem>
+
 							<DropdownMenuItem
 								className="cursor-pointer"
 								onClick={(e) => {
 									e.stopPropagation();
+
 									onDelete();
 								}}
 							>
 								<TrashIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-								Delete
+								<span className="truncate">Delete</span>
 							</DropdownMenuItem>
-							{/* <DropdownMenuItem>
+
+							<DropdownMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									setIsCopying(true);
+
+									const newSession = {
+										...session,
+										id: generateId(),
+									};
+
+									actions.app.dogSessions
+										.insert(newSession)
+										.then((result) => {
+											if (!result.success) {
+												throw new Error("Failed to copy session");
+											}
+
+											onCopy(newSession);
+
+											toast({
+												title: "Session copied",
+												description: "Session has been successfully copied.",
+											});
+										})
+										.catch(() => {
+											toast({
+												title: "Session copy failed",
+												description: "There was an error copying this session. Please try again.",
+											});
+										})
+										.finally(() => {
+											setIsActionsDropdownOpen(false);
+											setIsCopying(false);
+										});
+								}}
+							>
 								<CopyIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-								Make a copy
-							</DropdownMenuItem> */}
+								<span className="truncate">Copy</span>
+								{isCopying && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
@@ -339,48 +573,28 @@ function SessionDetail({
 	);
 }
 
-const EditableSessionDetailFormSchema = InsertDogSessionSchema.extend({
-	details: z
-		.string()
-		.max(100000, { message: "Details must be less than 100,000 characters long." })
-		.nonempty({ message: "Must include some details about this session" }),
-	date: z.date({
-		required_error: "Must select a date for this session",
-	}),
-	user: SelectUserSchema.pick({
-		id: true,
-		givenName: true,
-		familyName: true,
-		emailAddress: true,
-		organizationId: true,
-		organizationRole: true,
-		profileImageUrl: true,
-	}).nullable(),
-});
-type EditableSessionDetailFormSchema = z.infer<typeof EditableSessionDetailFormSchema>;
-
 type EditableSessionDetailProps =
 	| {
-			sessionHistory: Session;
+			dogSession: DogSession;
 			onCancel: () => void;
 			onDetailsTextChange: (text: string, id: string) => void;
-			onSubmit: (sessionHistory: Session) => void;
+			onSubmit: (_dogSessions: DogSession) => Promise<void>;
 			dogId: string;
 	  }
 	| {
-			sessionHistory?: never;
+			dogSession?: never;
 			onCancel?: never;
 			onDetailsTextChange: (text: string, id: string) => void;
-			onSubmit: (sessionHistory: Session) => void;
+			onSubmit: (_dogSessions: EditableSessionDetailFormSchema) => Promise<void>;
 			dogId: string;
 	  };
 
 function EditableSessionDetail({
-	sessionHistory,
+	dogSession,
 	onCancel,
+	onDetailsTextChange,
 	onSubmit,
 	dogId,
-	onDetailsTextChange,
 }: EditableSessionDetailProps) {
 	const user = useUser();
 
@@ -395,7 +609,7 @@ function EditableSessionDetail({
 			date: undefined,
 			user: user,
 			userId: user?.id,
-			...sessionHistory,
+			...dogSession,
 		},
 	});
 
@@ -432,7 +646,7 @@ function EditableSessionDetail({
 			</Dialog>
 
 			<Form {...form}>
-				<div className={cn("flex flex-1 items-start space-x-4", sessionHistory && "pr-2")}>
+				<div className={cn("flex flex-1 items-start space-x-4", dogSession && "pr-2")}>
 					<div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-8 ring-white">
 						{user.profileImageUrl ? (
 							<Image
@@ -460,19 +674,19 @@ function EditableSessionDetail({
 											<FormLabel className="sr-only">Add session details</FormLabel>
 											<FormControl>
 												<RichTextEditor
-													id={sessionHistory?.id ?? "add-session-detail"}
+													id={dogSession?.id ?? "add-session-detail"}
 													onEditorChange={setEditor}
-													content={sessionHistory?.details ?? ""}
+													content={dogSession?.details ?? ""}
 													className="resize-none rounded-b-none shadow-none ring-0 focus-visible:ring-0"
 													onValueChange={({ html, text }) => {
 														onDetailsTextChange(text, form.getValues("id"));
 														if (text === "") {
 															field.onChange(text);
 														} else {
-															field.onChange(sanitizeHtml(html));
+															field.onChange(html);
 														}
 													}}
-													autofocus={!!sessionHistory}
+													autofocus={!!dogSession}
 												/>
 											</FormControl>
 										</FormItem>
@@ -497,7 +711,19 @@ function EditableSessionDetail({
 									render={({ field }) => (
 										<FormItem>
 											<FormControl>
-												<Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+												<Popover
+													open={isDatePickerOpen}
+													onOpenChange={(value) => {
+														setIsDatePickerOpen(value);
+														if (value === false) {
+															// Wait for popover to animate out before resetting
+															setTimeout(() => {
+																setMonth(new Date());
+																setDateInputValue("");
+															}, 150);
+														}
+													}}
+												>
 													<PopoverTrigger asChild>
 														<Button
 															variant="outline"
@@ -555,7 +781,7 @@ function EditableSessionDetail({
 									)}
 								/>
 								<div className="shrink-0 space-x-2.5">
-									{sessionHistory && (
+									{dogSession && (
 										<Button
 											variant="outline"
 											size="sm"
@@ -577,8 +803,8 @@ function EditableSessionDetail({
 											e.preventDefault();
 											e.stopPropagation();
 
-											void form.handleSubmit((data) => {
-												onSubmit(data);
+											void form.handleSubmit(async (data) => {
+												await onSubmit(data);
 												form.reset({
 													id: generateId(),
 													dogId,
@@ -586,18 +812,19 @@ function EditableSessionDetail({
 													date: undefined,
 													user: user ?? undefined,
 													userId: user?.id ?? undefined,
-													...sessionHistory,
+													...dogSession,
 												});
 												editor?.commands.clearContent();
 											})(e);
 										}}
 										size="sm"
-										disabled={!form.formState.isDirty && !!sessionHistory}
+										disabled={(!form.formState.isDirty && !!dogSession) || form.formState.isSubmitting}
 									>
-										{sessionHistory?.id ? (
-											<div>
+										{form.formState.isSubmitting && <Loader size="sm" />}
+										{dogSession?.id ? (
+											<span>
 												Update <span className="hidden md:inline">Session</span>
-											</div>
+											</span>
 										) : (
 											"Add Session"
 										)}
@@ -618,4 +845,4 @@ function EditableSessionDetail({
 	);
 }
 
-export { DogSessionsHistory };
+export { DogSessions };

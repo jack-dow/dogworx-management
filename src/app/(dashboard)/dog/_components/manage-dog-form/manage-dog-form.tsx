@@ -22,18 +22,12 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type DogById } from "~/actions";
-import {
-	InsertDogSchema,
-	InsertDogSessionSchema,
-	InsertDogToVetRelationshipSchema,
-	SelectUserSchema,
-	SelectVetSchema,
-} from "~/db/validation";
+import { InsertDogSchema, InsertDogToVetRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
 import { DogBasicInformation } from "./dog-basic-information";
-import { DogSessionsHistory } from "./dog-sessions-history";
+import { DogSessions } from "./dog-sessions";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
 
@@ -43,19 +37,6 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	color: z.string().max(25).nonempty({ message: "Required" }),
 	notes: z.string().max(100000).nullish(),
 	age: InsertDogSchema.shape.age,
-	sessions: z.array(
-		InsertDogSessionSchema.extend({
-			user: SelectUserSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				organizationId: true,
-				organizationRole: true,
-				profileImageUrl: true,
-			}).nullable(),
-		}),
-	),
 	dogToVetRelationships: z.array(
 		InsertDogToVetRelationshipSchema.extend({
 			vet: SelectVetSchema.pick({
@@ -91,7 +72,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			isAgeEstimate: true,
 			...dog,
 			actions: {
-				sessions: {},
+				dogSessions: {},
 				dogToClientRelationships: {},
 				dogToVetRelationships: {},
 			},
@@ -108,7 +89,6 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			form.reset(
 				{
 					...dog,
-					sessions: form.getValues("sessions"),
 					dogToClientRelationships: mergeRelationships(
 						form.getValues("dogToClientRelationships"),
 						dog.dogToClientRelationships ?? [],
@@ -212,7 +192,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 					<Separator />
 
-					<DogSessionsHistory control={form.control} existingDogSessions={dog?.sessions ?? []} />
+					<DogSessions isNew={isNew} dogSessions={dog?.dogSessions} />
 
 					<Separator />
 

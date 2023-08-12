@@ -181,7 +181,7 @@ export const InsertDogSchema = createInsertSchema(dogs)
 			}),
 		),
 		actions: z.object({
-			sessions: DogSessionActionsLogSchema,
+			dogSessions: DogSessionActionsLogSchema,
 			dogToClientRelationships: DogToClientRelationshipActionsLogSchema,
 			dogToVetRelationships: DogToVetRelationshipActionsLogSchema,
 		}),

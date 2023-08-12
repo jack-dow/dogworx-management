@@ -181,6 +181,21 @@ const getOrganizationById = createServerAction(async (id: string) => {
 });
 type OrganizationById = ExtractServerActionData<typeof getOrganizationById>;
 
+const getCurrentOrganization = createServerAction(async () => {
+	try {
+		const user = await getServerUser();
+
+		const data = await drizzle.query.organizations.findFirst({
+			where: eq(organizations.id, user.organizationId),
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: `Failed to get the users current organization`, data: null };
+	}
+});
+type CurrentOrganization = ExtractServerActionData<typeof getCurrentOrganization>;
+
 const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 	const validInviteLink = z.string().safeParse(id);
 
@@ -380,6 +395,8 @@ export {
 	type OrganizationsSearch,
 	getOrganizationById,
 	type OrganizationById,
+	getCurrentOrganization,
+	type CurrentOrganization,
 	getOrganizationInviteLinkById,
 	type OrganizationInviteLinkById,
 	insertOrganization,
