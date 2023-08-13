@@ -207,6 +207,7 @@ function DogSessions({ isNew, dogSessions }: { isNew: boolean; dogSessions?: Dog
 
 									if (_dogSessions.length + 1 > loadedPages * 3) {
 										setHasMore(true);
+										setLoadedPages(loadedPages + 1);
 									}
 
 									toast({

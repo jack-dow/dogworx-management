@@ -63,6 +63,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 				}
 
 				if (event.key === "Escape") {
+					event.stopPropagation();
 					input.blur();
 				}
 			},

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageClient } from "~/components/manage-client";
+import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -272,21 +273,21 @@ function DogToClientRelationship({
 					<p className="text-sm font-semibold leading-6 text-slate-900">
 						{dogToClientRelationship.client.givenName} {dogToClientRelationship.client.familyName}
 					</p>
-					<div className="flex space-x-2 truncate">
+					<div className="flex items-center space-x-2 truncate">
 						{dogToClientRelationship.client.emailAddress && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToClientRelationship.client.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
 								{dogToClientRelationship.client.emailAddress}
-							</p>
+							</ClickToCopy>
 						)}
 						{dogToClientRelationship.client.emailAddress && dogToClientRelationship.client.phoneNumber && (
 							<span aria-hidden="true">&middot;</span>
 						)}
 						{dogToClientRelationship.client.phoneNumber && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToClientRelationship.client.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
 								{dogToClientRelationship.client.phoneNumber}
-							</p>
+							</ClickToCopy>
 						)}
 					</div>
 				</div>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageVet } from "~/components/manage-vet";
+import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -269,21 +270,21 @@ function DogToVetRelationship({
 					<p className="text-sm font-semibold leading-6 text-slate-900">
 						{dogToVetRelationship.vet.givenName} {dogToVetRelationship.vet.familyName}
 					</p>
-					<div className="flex space-x-2 truncate">
+					<div className="flex items-center space-x-2 truncate">
 						{dogToVetRelationship.vet.emailAddress && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToVetRelationship.vet.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
 								{dogToVetRelationship.vet.emailAddress}
-							</p>
+							</ClickToCopy>
 						)}
 						{dogToVetRelationship.vet.emailAddress && dogToVetRelationship.vet.phoneNumber && (
 							<span aria-hidden="true">&middot;</span>
 						)}
 						{dogToVetRelationship.vet.phoneNumber && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToVetRelationship.vet.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
 								{dogToVetRelationship.vet.phoneNumber}
-							</p>
+							</ClickToCopy>
 						)}
 					</div>
 				</div>

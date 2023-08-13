@@ -76,6 +76,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 

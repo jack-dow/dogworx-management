@@ -77,6 +77,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
 					setInternalOpen(false);
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 

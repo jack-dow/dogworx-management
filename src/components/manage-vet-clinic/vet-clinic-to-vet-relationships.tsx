@@ -35,6 +35,7 @@ import { actions, type VetById, type VetClinicById, type VetsSearch } from "~/ac
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
 import { cn, generateId } from "~/utils";
 import { ManageVet } from "../manage-vet";
+import { ClickToCopy } from "../ui/click-to-copy";
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { useToast } from "../ui/use-toast";
@@ -280,19 +281,21 @@ function VetClinicToVetRelationship({
 					<p className="text-sm font-semibold leading-6 text-slate-900">
 						{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
 					</p>
-					<div>
+					<div className="flex items-center space-x-2 truncate">
 						{vetToVetClinicRelationship.vet.emailAddress && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={vetToVetClinicRelationship.vet.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
 								{vetToVetClinicRelationship.vet.emailAddress}
-							</p>
+							</ClickToCopy>
 						)}
-
+						{vetToVetClinicRelationship.vet.emailAddress && vetToVetClinicRelationship.vet.phoneNumber && (
+							<span aria-hidden="true">&middot;</span>
+						)}
 						{vetToVetClinicRelationship.vet.phoneNumber && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={vetToVetClinicRelationship.vet.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
 								{vetToVetClinicRelationship.vet.phoneNumber}
-							</p>
+							</ClickToCopy>
 						)}
 					</div>
 				</div>
