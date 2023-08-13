@@ -1,5 +1,6 @@
 import { type Metadata } from "next";
 
+import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
 import { ManageOrganization } from "../_components/manage-organization";
@@ -18,11 +19,7 @@ async function UpdateOrganizationPage({ params }: { params: { id: string } }) {
 				back={{ href: "/organizations" }}
 			/>
 
-			{result.data ? (
-				<ManageOrganization variant="form" organization={result.data} />
-			) : (
-				<div>Organization not found D:</div>
-			)}
+			{result.data ? <ManageOrganization variant="form" organization={result.data} /> : <NotFound />}
 		</>
 	);
 }

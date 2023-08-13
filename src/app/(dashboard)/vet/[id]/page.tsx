@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 
 import { ManageVet } from "~/components/manage-vet";
+import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
 
@@ -18,7 +19,7 @@ async function UpdateVetPage({ params }: { params: { id: string } }) {
 				back={{ href: "/vets" }}
 			/>
 
-			{result.data ? <ManageVet variant="form" vet={result.data} /> : <div>Vet not found D:</div>}
+			{result.data ? <ManageVet variant="form" vet={result.data} /> : <NotFound />}
 		</>
 	);
 }

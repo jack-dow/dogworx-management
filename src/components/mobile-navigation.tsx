@@ -52,7 +52,8 @@ function MobileNavigation() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(item.href.slice(0, -1));
+									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
 									return (
 										<li key={item.name}>
 											<a
