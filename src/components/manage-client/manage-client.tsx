@@ -100,6 +100,7 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 			form.reset({
 				...form.getValues(),
 				...props.defaultValues,
+				id: generateId(),
 			});
 		}
 	}, [props.defaultValues, form]);

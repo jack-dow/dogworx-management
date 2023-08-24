@@ -4,9 +4,10 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { parseDate } from "chrono-node";
 import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
+import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
@@ -24,8 +25,9 @@ import { TimeInput } from "../ui/time-input";
 import { type ManageBookingFormSchemaType } from "./manage-booking";
 
 dayjs.extend(customParseFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
+dayjs.extend(advancedFormat);
 
 function convertToNumber(input: string): number | null {
 	// Step 1: Remove leading and trailing whitespace
@@ -53,7 +55,29 @@ function roundDateToNearest15Minutes(date: Date) {
 	// Adjust the date by adding or subtracting the calculated minutes
 	const roundedDate = originalDate.add(minutesToNext15, "minute");
 
-	return roundedDate;
+	return roundedDate.toDate();
+}
+
+function secondsToHumanReadable(seconds: number): string {
+	if (seconds === 86400) {
+		return "1 day";
+	}
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = seconds % 60;
+
+	const formattedTime = [];
+	if (hours > 0) {
+		formattedTime.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+	}
+	if (minutes > 0) {
+		formattedTime.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+	}
+	if (remainingSeconds > 0 || formattedTime.length === 0) {
+		formattedTime.push(`${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`);
+	}
+
+	return formattedTime.join(", ");
 }
 
 function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById["dog"] }) {
@@ -63,10 +87,10 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-	const [month, setMonth] = React.useState<Date>(dayjs(form.getValues("date")).utc(true).tz(dayjs.tz.guess()).toDate());
+	const [month, setMonth] = React.useState<Date>(dayjs(form.getValues("date")).toDate());
 
 	const [timeInputValue, setTimeInputValue] = React.useState(
-		form.getValues("date") ? dayjs(form.getValues("date")).utc(true).tz(dayjs.tz.guess()).format("HH:mm") : "",
+		form.getValues("date") ? dayjs(form.getValues("date")).format("HH:mm") : "",
 	);
 
 	const [durationInputValue, setDurationInputValue] = React.useState(
@@ -79,8 +103,7 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 				control={form.control}
 				name="date"
 				render={({ field }) => {
-					console.log(field.value);
-					const date = dayjs(field.value).utc(true).tz(dayjs.tz.guess());
+					const date = dayjs(field.value);
 					return (
 						<div className="grid grid-cols-3 gap-4">
 							<FormItem className="col-span-2">
@@ -106,7 +129,7 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 											>
 												<CalendarIcon className="mr-2 h-4 w-4" />
 												<span className="mr-2 truncate">
-													{field.value ? date.format("MMMM D, YYYY") : "Select date"}
+													{field.value ? date.format("MMMM Do, YYYY") : "Select date"}
 												</span>
 												<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 											</Button>
@@ -126,13 +149,13 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 														const parsedValue = parseDate(val);
 														const newDate = roundDateToNearest15Minutes(parsedValue ?? today);
 
-														if (form.formState.errors.details && newDate.toDate() >= today) {
+														if (form.formState.errors.details && newDate >= today) {
 															form.clearErrors("details");
 														}
 
-														field.onChange(dayjs(newDate.toISOString()).utc().toDate());
+														field.onChange(newDate);
 														setTimeInputValue(newDate ? dayjs(newDate).format("HH:mm") : "");
-														setMonth(newDate.toDate());
+														setMonth(newDate);
 													}}
 													onKeyDown={(e) => {
 														if (e.key === "Enter") {
@@ -154,11 +177,7 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 															form.clearErrors("details");
 														}
 
-														const newDate = dayjs(value.toISOString()).utc().toDate();
-
-														console.log(dayjs(value.toISOString()).utc().format());
-
-														field.onChange(newDate);
+														field.onChange(value);
 														setTimeInputValue(dayjs(value).format("HH:mm"));
 													}
 													setIsDatePickerOpen(false);
@@ -183,7 +202,7 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 											setTimeInputValue(value);
 
 											if (value) {
-												const date = dayjs(form.getValues("date")).utc(true).tz(dayjs.tz.guess());
+												const date = dayjs(form.getValues("date"));
 												const time = dayjs(value, "HH:mm");
 												const newDate = date.set("hour", time.hour()).set("minute", time.minute());
 												field.onChange(newDate.toDate());
@@ -218,7 +237,11 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 											field.onChange(value * 60, { shouldValidate: true });
 										} else {
 											// Otherwise see if it is a valid time
-											const parsed = ms(value);
+											let parsed = ms(value);
+
+											if (parsed > 86400000) {
+												parsed = 86400000;
+											}
 
 											// If it's a valid time, convert it to seconds and set it
 											if (parsed) {
@@ -236,7 +259,7 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 									const duration = form.getValues("duration");
 
 									if (duration) {
-										setDurationInputValue(ms(duration * 1000, { long: true }));
+										setDurationInputValue(secondsToHumanReadable(duration));
 										return;
 									}
 

@@ -103,6 +103,10 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 						return;
 					}
 
+					if (value === false) {
+						handleClose();
+					}
+
 					setInternalOpen(value);
 				}}
 			>

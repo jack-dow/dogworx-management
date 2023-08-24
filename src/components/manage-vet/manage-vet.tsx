@@ -128,6 +128,7 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 			form.reset({
 				...form.getValues(),
 				...props.defaultValues,
+				id: generateId(),
 			});
 		}
 	}, [props.defaultValues, form]);

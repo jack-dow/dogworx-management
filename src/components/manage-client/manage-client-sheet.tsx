@@ -102,6 +102,10 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 						return;
 					}
 
+					if (value === false) {
+						handleClose();
+					}
+
 					setInternalOpen(value);
 				}}
 			>

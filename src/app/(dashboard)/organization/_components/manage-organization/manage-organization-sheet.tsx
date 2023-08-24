@@ -105,6 +105,10 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 						return;
 					}
 
+					if (value === false) {
+						handleClose();
+					}
+
 					setInternalOpen(value);
 				}}
 			>

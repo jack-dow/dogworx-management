@@ -3,6 +3,7 @@
 import * as React from "react";
 import { parseDate } from "chrono-node";
 import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 import { useFormContext, type Control } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -18,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { cn } from "~/utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
+
+dayjs.extend(advancedFormat);
 
 function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
@@ -243,7 +246,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										<span className="mr-2 truncate">
-											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select date"}
+											{field.value ? dayjs(field.value).format("MMMM Do, YYYY") : "Select date"}
 										</span>
 										<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 									</Button>

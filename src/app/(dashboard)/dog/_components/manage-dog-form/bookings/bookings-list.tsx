@@ -3,8 +3,6 @@
 import * as React from "react";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { useFormContext } from "react-hook-form";
 
 import { ManageBooking } from "~/components/manage-booking";
@@ -19,8 +17,6 @@ import { type ManageDogFormSchema } from "../manage-dog-form";
 import { Booking } from "./booking";
 
 dayjs.extend(customParseFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 function sortBookingsAscending(a: DogById["bookings"][number], b: DogById["bookings"][number]) {
 	if (a.date > b.date) {
@@ -66,11 +62,13 @@ function BookingsList({
 	isNew,
 	bookings,
 	setBookings,
+	onAddOrUpdateBooking,
 	tab,
 }: {
 	isNew: boolean;
 	bookings: DogById["bookings"];
 	setBookings: React.Dispatch<React.SetStateAction<DogById["bookings"]>>;
+	onAddOrUpdateBooking: (booking: DogById["bookings"][number]) => void;
 	tab: "past" | "future";
 }) {
 	const user = useUser();
@@ -91,14 +89,14 @@ function BookingsList({
 	let visibleSessions: typeof bookings = [];
 
 	if (tab === "past") {
-		visibleSessions = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 6, page * 6);
+		visibleSessions = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
 	} else {
-		visibleSessions = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 6, page * 6);
+		visibleSessions = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
 	}
 
 	React.useEffect(() => {
 		// If new booking has been added, ensure loaded pages is correct
-		if (bookings.length > loadedPages * 6) {
+		if (bookings.length > loadedPages * 5) {
 			setHasMore(true);
 			setLoadedPages(loadedPages + 1);
 		}
@@ -202,17 +200,7 @@ function BookingsList({
 					breed: form.getValues("breed"),
 				}}
 				defaultValues={copiedBooking ?? undefined}
-				onSuccessfulSubmit={(updatedBooking) => {
-					setBookings((prev) =>
-						prev.map((b) => {
-							if (b.id === updatedBooking.id) {
-								return updatedBooking;
-							}
-
-							return b;
-						}),
-					);
-				}}
+				onSuccessfulSubmit={onAddOrUpdateBooking}
 				onSubmit={
 					isNew
 						? // eslint-disable-next-line @typescript-eslint/require-await
@@ -229,13 +217,11 @@ function BookingsList({
 									{ shouldDirty: true },
 								);
 
-								const bookingDate = dayjs(booking.date).utc(true).tz(dayjs.tz.guess());
-
-								const isPastBooking = bookingDate.isBefore(dayjs().startOf("day"));
-
 								toast({
 									title: "Booking updated",
-									description: `Successfully updated booking to dog's ${isPastBooking ? "past" : "future"} bookings.`,
+									description: `Successfully updated booking to dog's ${
+										dayjs(booking.date).isBefore(dayjs()) ? "past" : "future"
+									} bookings.`,
 								});
 
 								return {
@@ -262,9 +248,8 @@ function BookingsList({
 						<Booking
 							key={booking.id}
 							booking={booking}
-							isLast={index === 2 || index === visibleSessions.length - 1}
+							isLast={index === 4 || index === visibleSessions.length - 1}
 							onEditClick={() => {
-								console.log({ booking });
 								setEditingBooking(booking);
 								setIsManageBookingDialogOpen(true);
 							}}
@@ -298,17 +283,17 @@ function BookingsList({
 					<Button
 						variant="outline"
 						className="h-8 w-8 p-0"
-						disabled={isNew ? bookings.length <= page * 6 : !hasMore || isLoading}
+						disabled={isNew ? bookings.length <= page * 5 : !hasMore || isLoading}
 						onClick={() => {
 							if (page !== loadedPages || isNew) {
-								if (page + 1 === loadedPages && bookings.length <= loadedPages * 6) {
+								if (page + 1 === loadedPages && bookings.length <= loadedPages * 5) {
 									setHasMore(false);
 								}
 								setPage(page + 1);
 								return;
 							}
 
-							if (bookings.length > loadedPages * 6) {
+							if (bookings.length > loadedPages * 5) {
 								setIsLoading(true);
 
 								let cursor: (typeof bookings)[number] | null = null;
@@ -316,12 +301,12 @@ function BookingsList({
 								if (tab === "past") {
 									cursor = [...bookings]
 										.sort(sortBookingsDescending)
-										.slice((page - 1) * 6, page * 6)
+										.slice((page - 1) * 5, page * 5)
 										.pop()!;
 								} else {
 									cursor = [...bookings]
 										.sort(sortBookingsAscending)
-										.slice((page - 1) * 6, page * 6)
+										.slice((page - 1) * 5, page * 5)
 										.pop()!;
 								}
 

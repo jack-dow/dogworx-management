@@ -4,8 +4,6 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,8 +18,6 @@ import { ManageBookingDialog, type ManageBookingDialogProps } from "./manage-boo
 import { ManageBookingForm, type ManageBookingFormProps } from "./manage-booking-form";
 
 dayjs.extend(customParseFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const ManageBookingFormSchema = InsertBookingSchema.extend({
 	details: z.string().max(100000, { message: "Details must be less than 100,000 characters long." }).nullable(),
@@ -62,11 +58,7 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		profileImageUrl: true,
 	}).nullish(),
 }).superRefine((val, ctx) => {
-	const bookingDate = dayjs.utc(val.date).tz(dayjs.tz.guess());
-
-	const isPastBooking = bookingDate.isBefore(dayjs().startOf("day"));
-
-	if (isPastBooking && !val.details) {
+	if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
 		ctx.addIssue({
 			code: z.ZodIssueCode.too_small,
 			minimum: 1,
@@ -133,6 +125,7 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 			form.reset({
 				...form.getValues(),
 				...props.defaultValues,
+				id: generateId(),
 			});
 		}
 	}, [props.defaultValues, form]);
@@ -142,7 +135,6 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 		let newBooking: BookingInsert | BookingUpdate | null | undefined;
 
 		if (props.booking) {
-			console.log({ data });
 			const response = await actions.app.bookings.update(data);
 			success = response.success && !!response.data;
 			newBooking = response.data;

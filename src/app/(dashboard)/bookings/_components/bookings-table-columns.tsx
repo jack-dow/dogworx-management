@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { Button } from "~/components/ui/button";
@@ -19,6 +20,7 @@ import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons
 import { type BookingsList } from "~/actions";
 
 dayjs.extend(customParseFormat);
+dayjs.extend(advancedFormat);
 
 function createBookingsTableColumns(
 	onDeleteClick: (booking: BookingsList["data"][number]) => void,
@@ -50,34 +52,45 @@ function createBookingsTableColumns(
 				</div>
 			),
 			cell: ({ row }) => {
+				const date = dayjs(row.getValue("date"));
+				const end = date.add(row.original.duration, "seconds");
+
 				return (
-					<div className="flex max-w-[500px] select-none items-center capitalize">
-						<span className="truncate capitalize">{dayjs(row.getValue("date")).format("MMMM D, YYYY")}</span>
+					<div className="flex max-w-[500px] select-none items-center">
+						<span className="truncate">
+							{date.day() !== end.day() ? (
+								<>
+									{date.format("MMMM Do, YYYY")} - {end.format("MMMM Do, YYYY")}
+								</>
+							) : (
+								<>{date.format("MMMM Do, YYYY")}</>
+							)}
+						</span>
 					</div>
 				);
 			},
 		},
-		// {
-		// 	accessorKey: "time",
-		// 	header: () => (
-		// 		<div className="text-xs">
-		// 			<span className="truncate">Time</span>
-		// 		</div>
-		// 	),
-		// 	cell: ({ row }) => {
-		// 		const startTime = dayjs(row.original.startTime, "h:mm");
-		// 		const endTime = dayjs(row.original.endTime, "h:mm");
+		{
+			accessorKey: "time",
+			header: () => (
+				<div className="text-xs">
+					<span className="truncate">Time</span>
+				</div>
+			),
+			cell: ({ row }) => {
+				const date = dayjs(row.getValue("date"));
+				const end = date.add(row.original.duration, "seconds");
 
-		// 		return (
-		// 			<div className="flex max-w-[500px] select-none items-center capitalize">
-		// 				<span className="truncate capitalize">
-		// 					{startTime.format("h:mm")}
-		// 					{startTime.format("a") !== endTime.format("a") ? startTime.format("a") : ""} - {endTime.format("h:mma")}
-		// 				</span>
-		// 			</div>
-		// 		);
-		// 	},
-		// },
+				return (
+					<div className="flex max-w-[500px] select-none items-center">
+						<span className="truncate">
+							{date.format("h:mm")} {date.format("a") !== end.format("a") ? date.format("a") : ""} -{" "}
+							{end.format("h:mma")}
+						</span>
+					</div>
+				);
+			},
+		},
 		{
 			id: "actions",
 			cell: ({ row }) => (

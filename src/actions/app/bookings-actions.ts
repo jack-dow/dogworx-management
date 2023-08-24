@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { and, desc, eq, gt, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -235,6 +236,10 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 			where: and(eq(bookings.organizationId, user.organizationId), eq(bookings.id, data.id)),
 		});
 
+		revalidatePath("/bookings");
+		revalidatePath("/booking/[id]");
+		revalidatePath("/dog/[id]");
+
 		return { success: true, data: booking };
 	} catch {
 		return { success: false, error: `Failed to insert booking with id: ${validation.data.id}`, data: null };
@@ -243,7 +248,6 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 type BookingInsert = ExtractServerActionData<typeof insertBooking>;
 
 const updateBooking = createServerAction(async (values: UpdateBookingSchema) => {
-	console.log({ values });
 	const validation = UpdateBookingSchema.safeParse(values);
 
 	if (!validation.success) {
@@ -254,8 +258,6 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 		const user = await getServerUser();
 
 		const { id, ...data } = validation.data;
-
-		console.log({ data });
 
 		await drizzle
 			.update(bookings)
@@ -278,6 +280,10 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 			},
 			where: and(eq(bookings.organizationId, user.organizationId), eq(bookings.id, id)),
 		});
+
+		revalidatePath("/bookings");
+		revalidatePath("/booking/[id]");
+		revalidatePath("/dog/[id]");
 
 		return { success: true, data: booking };
 	} catch {

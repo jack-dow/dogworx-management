@@ -102,6 +102,10 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 						return;
 					}
 
+					if (value === false) {
+						handleClose();
+					}
+
 					setInternalOpen(value);
 				}}
 			>

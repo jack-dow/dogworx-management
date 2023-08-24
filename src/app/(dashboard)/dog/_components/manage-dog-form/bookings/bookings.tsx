@@ -3,8 +3,6 @@
 import * as React from "react";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { useFormContext } from "react-hook-form";
 
 import { ManageBooking } from "~/components/manage-booking";
@@ -20,8 +18,6 @@ import { type ManageDogFormSchema } from "../manage-dog-form";
 import { BookingsList } from "./bookings-list";
 
 dayjs.extend(customParseFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["bookings"] }) {
 	const user = useUser();
@@ -35,6 +31,15 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 
 	const [hasFetchedInitialFutureSessions, setHasFetchedInitialFutureSessions] = React.useState(false);
 	const [isLoadingInitialFutureSessions, setIsLoadingInitialFutureSessions] = React.useState(false);
+
+	function handleAddOrUpdateBooking(booking: DogById["bookings"][number]) {
+		if (dayjs(booking.date).isBefore(dayjs())) {
+			setPastBookings((prev) => [...prev.filter((f) => f.id !== booking.id), booking]);
+			return;
+		}
+
+		setFutureBookings((prev) => [...prev.filter((f) => f.id !== booking.id), booking]);
+	}
 
 	return (
 		<>
@@ -122,13 +127,11 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 											{ shouldDirty: true },
 										);
 
-										const bookingDate = dayjs(booking.date).utc(true).tz(dayjs.tz.guess());
-
-										const isPastBooking = bookingDate.isBefore(dayjs().startOf("day"));
-
 										toast({
 											title: "Booking added",
-											description: `Successfully added booking to dog's ${isPastBooking ? "past" : "future"} bookings.`,
+											description: `Successfully added booking to dog's ${
+												dayjs(booking.date).isBefore(dayjs()) ? "past" : "future"
+											} bookings.`,
 										});
 
 										return {
@@ -169,11 +172,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 									}
 								}}
 								onSuccessfulSubmit={(booking) => {
-									const bookingDate = dayjs(booking.date).utc(true).tz(dayjs.tz.guess());
-
-									const isPastBooking = bookingDate.isBefore(dayjs().startOf("day"));
-
-									if (isPastBooking) {
+									if (dayjs(booking.date).isBefore(dayjs())) {
 										setPastBookings([...pastBookings, booking]);
 									} else {
 										setFutureBookings([...futureBookings, booking]);
@@ -182,7 +181,13 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 							/>
 						</div>
 						<TabsContent value="past">
-							<BookingsList isNew={isNew} bookings={pastBookings} setBookings={setPastBookings} tab="past" />
+							<BookingsList
+								isNew={isNew}
+								bookings={pastBookings}
+								setBookings={setPastBookings}
+								tab="past"
+								onAddOrUpdateBooking={handleAddOrUpdateBooking}
+							/>
 						</TabsContent>
 
 						<TabsContent value="future">
@@ -191,6 +196,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 								bookings={futureBookings ?? []}
 								setBookings={setFutureBookings}
 								tab="future"
+								onAddOrUpdateBooking={handleAddOrUpdateBooking}
 							/>
 						</TabsContent>
 					</Tabs>

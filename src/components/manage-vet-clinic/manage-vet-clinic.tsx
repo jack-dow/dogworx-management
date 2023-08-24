@@ -106,6 +106,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 			form.reset({
 				...form.getValues(),
 				...props.defaultValues,
+				id: generateId(),
 			});
 		}
 	}, [props.defaultValues, form]);

@@ -380,7 +380,6 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 
 		return { success: true, data: client };
 	} catch (error) {
-		console.log(error);
 		return { success: false, error: "Failed to update client", data: null };
 	}
 });

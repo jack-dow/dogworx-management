@@ -84,6 +84,10 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 						return;
 					}
 
+					if (value === false) {
+						handleClose();
+					}
+
 					setInternalOpen(value);
 				}}
 			>

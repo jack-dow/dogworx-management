@@ -4,8 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -21,8 +20,7 @@ import { type DogById } from "~/actions";
 import { cn } from "~/utils";
 
 dayjs.extend(customParseFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(advancedFormat);
 
 function Booking({
 	booking,
@@ -39,9 +37,7 @@ function Booking({
 }) {
 	const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);
 
-	console.log(booking.date);
-
-	const date = dayjs(booking.date).utc(true).tz(dayjs.tz.guess());
+ 	const date = dayjs(booking.date);
 	const end = date.add(booking.duration, "seconds");
 
 	return (
@@ -84,11 +80,11 @@ function Booking({
 							<p className="mt-0.5 text-sm text-slate-500">
 								{date.day() !== end.day() ? (
 									<>
-										{date.format("MMMM D, YYYY, h:mma")} - {end.format("h:mma, MMMM D, YYYY")}
+										{date.format("MMMM Do, YYYY, h:mma")} - {end.format("h:mma, MMMM Do, YYYY")}
 									</>
 								) : (
 									<>
-										{date.format("MMMM D, YYYY")} &bull; {date.format("h:mm")}
+										{date.format("MMMM Do, YYYY")} &bull; {date.format("h:mm")}
 										{date.format("a") !== end.format("a") ? date.format("a") : ""} - {end.format("h:mma")}
 									</>
 								)}
