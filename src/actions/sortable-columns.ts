@@ -1,6 +1,6 @@
 import { type AnyColumn } from "drizzle-orm";
 
-import { clients, dogs, organizations, vetClinics, vets } from "~/db/schemas";
+import { bookings, clients, dogs, organizations, users, vetClinics, vets } from "~/db/schema";
 
 type SortableColumns = {
 	[key: string]: {
@@ -160,6 +160,57 @@ const ORGANIZATIONS_SORTABLE_COLUMNS = {
 	},
 } satisfies SortableColumns;
 
+const USERS_SORTABLE_COLUMNS = {
+	fullName: {
+		id: "fullName",
+		label: "Full name",
+		columns: [users.givenName, users.familyName],
+	},
+	givenName: {
+		id: "givenName",
+		label: "First name",
+		columns: [users.givenName],
+	},
+	familyName: {
+		id: "familyName",
+		label: "Last name",
+		columns: [users.familyName],
+	},
+	emailAddress: {
+		id: "emailAddress",
+		label: "Email address",
+		columns: [users.emailAddress],
+	},
+	createdAt: {
+		id: "createdAt",
+		label: "Created at",
+		columns: [users.createdAt],
+	},
+	updatedAt: {
+		id: "updatedAt",
+		label: "Last updated at",
+		columns: [users.updatedAt],
+	},
+} satisfies SortableColumns;
+
+const DOG_SESSIONS_SORTABLE_COLUMNS = {
+	date: {
+		id: "date",
+		label: "Date",
+		columns: [bookings.date, bookings.duration],
+	},
+	createdAt: {
+		id: "createdAt",
+		label: "Created at",
+		columns: [bookings.createdAt],
+	},
+	updatedAt: {
+		id: "updatedAt",
+		label: "Last updated at",
+		columns: [bookings.updatedAt],
+	},
+} satisfies SortableColumns;
+
 export {
 	type SortableColumns,
 	CLIENTS_SORTABLE_COLUMNS,
@@ -167,4 +218,6 @@ export {
 	VET_CLINICS_SORTABLE_COLUMNS,
 	VETS_SORTABLE_COLUMNS,
 	ORGANIZATIONS_SORTABLE_COLUMNS,
+	USERS_SORTABLE_COLUMNS,
+	DOG_SESSIONS_SORTABLE_COLUMNS,
 };

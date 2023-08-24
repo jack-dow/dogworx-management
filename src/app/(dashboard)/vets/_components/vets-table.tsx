@@ -33,7 +33,7 @@ function VetsTable({ result }: { result: VetsList }) {
 							title: `Vet deleted`,
 							description: `Successfully deleted vet "${confirmVetDelete.givenName}${
 								confirmVetDelete.familyName ? " " + confirmVetDelete.familyName : ""
-							}"`,
+							}".`,
 						});
 					} else {
 						toast({
@@ -41,6 +41,7 @@ function VetsTable({ result }: { result: VetsList }) {
 							description: `There was an error deleting vet "${confirmVetDelete.givenName}${
 								confirmVetDelete.familyName ? " " + confirmVetDelete.familyName : ""
 							}". Please try again.`,
+							variant: "destructive"
 						});
 					}
 				}}
@@ -57,7 +58,7 @@ function VetsTable({ result }: { result: VetsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (vet) => `${vet.givenName} ${vet.familyName}`,
+					resultLabel: (vet) => `${vet.givenName} ${vet.familyName}`,
 				}}
 				columns={createVetsTableColumns((vet) => {
 					setConfirmVetDelete(vet);

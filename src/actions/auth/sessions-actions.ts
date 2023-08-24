@@ -6,7 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { sessions } from "~/db/schemas";
+import { sessions } from "~/db/schema";
 import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
 import { jwt } from "~/lib/jwt";
 import { createServerAction, getServerUser } from "../utils";
@@ -20,7 +20,6 @@ function getSessionToken() {
 
 async function getCurrentSession() {
 	const sessionToken = getSessionToken();
-
 
 	if (!sessionToken) {
 		redirect("/sign-in");

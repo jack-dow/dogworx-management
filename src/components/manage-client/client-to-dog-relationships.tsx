@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { DogIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
+import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
 import {
 	Select,
 	SelectContent,
@@ -15,8 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
+import { actions, type ClientById, type DogsSearch } from "~/actions";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation";
-import { cn } from "~/utils";
+import { cn, generateId } from "~/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -28,17 +29,21 @@ import {
 } from "../ui/dropdown-menu";
 import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGroup } from "../ui/form";
 import { Loader } from "../ui/loader";
+import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { type ManageClientFormSchema } from "./manage-client";
 
 function ClientToDogRelationships({
 	control,
-	isNew,
+	existingDogToClientRelationships,
 	variant,
+	setOpen,
 }: {
 	control: Control<ManageClientFormSchema>;
-	isNew: boolean;
+	existingDogToClientRelationships: ClientById["dogToClientRelationships"] | undefined;
 	variant: "sheet" | "form";
+	setOpen?: (open: boolean) => void;
 }) {
+	const router = useRouter();
 	const form = useFormContext<ManageClientFormSchema>();
 
 	const dogToClientRelationships = useFieldArray({
@@ -47,20 +52,69 @@ function ClientToDogRelationships({
 		keyName: "rhf-id",
 	});
 
-	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<
-		ManageClientFormSchema["dogToClientRelationships"][number] | null
-	>(null);
+	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
+
+	const searchDogsInputRef = React.useRef<HTMLInputElement>(null);
 
 	function handleDogToClientRelationshipDelete(relationshipId: string) {
-		dogToClientRelationships.remove(
-			dogToClientRelationships.fields.findIndex((relationship) => relationship.id === relationshipId),
-		);
+		const dogToClientRelationshipActions = { ...form.getValues("actions.dogToClientRelationships") };
+
+		dogToClientRelationships.remove(dogToClientRelationships.fields.findIndex((field) => field.id === relationshipId));
+
+		if (dogToClientRelationshipActions[relationshipId]?.type === "INSERT") {
+			delete dogToClientRelationshipActions[relationshipId];
+		} else {
+			dogToClientRelationshipActions[relationshipId] = {
+				type: "DELETE",
+				payload: relationshipId,
+			};
+		}
+
+		form.setValue("actions.dogToClientRelationships", dogToClientRelationshipActions);
+
+		// HACK: Focus the button after the dialog closes
+		setTimeout(() => {
+			searchDogsInputRef?.current?.focus();
+		}, 0);
+	}
+
+	function toggleDogToClientRelationship(dog: DogsSearch[number]) {
+		const relationshipId = dogToClientRelationships.fields.find(
+			(dogToClientRelationship) => dogToClientRelationship.dogId === dog.id,
+		)?.id;
+
+		if (relationshipId) {
+			const existingDogToClientRelationship = existingDogToClientRelationships?.find(
+				(dogToClientRelationship) => dogToClientRelationship.id === relationshipId,
+			);
+			if (existingDogToClientRelationship) {
+				setConfirmRelationshipDelete(existingDogToClientRelationship.id);
+			} else {
+				handleDogToClientRelationshipDelete(relationshipId);
+			}
+
+			return;
+		}
+		const id = generateId();
+
+		dogToClientRelationships.append({
+			id,
+			clientId: form.getValues("id"),
+			dogId: dog.id,
+			relationship: "owner",
+			dog,
+		});
 
 		form.setValue("actions.dogToClientRelationships", {
 			...form.getValues("actions.dogToClientRelationships"),
-			[relationshipId]: {
-				type: "DELETE",
-				payload: relationshipId,
+			[id]: {
+				type: "INSERT",
+				payload: {
+					id,
+					clientId: form.getValues("id"),
+					dogId: dog.id,
+					relationship: "owner",
+				},
 			},
 		});
 	}
@@ -77,12 +131,52 @@ function ClientToDogRelationships({
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
-						handleDogToClientRelationshipDelete(confirmRelationshipDelete.id);
+						handleDogToClientRelationshipDelete(confirmRelationshipDelete);
+						// HACK: Focus the combobox trigger after the dialog closes
+						setTimeout(() => {
+							searchDogsInputRef?.current?.focus();
+						}, 0);
 					}
 				}}
 			/>
 
 			<FieldsWrapper title="Dogs" description="Manage the relationships between this client and their dogs.">
+				<div className="sm:col-span-6">
+					<MultiSelectSearchCombobox
+						ref={searchDogsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.dog)}
+						onSelect={(dog) => {
+							toggleDogToClientRelationship(dog);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.dogs.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
+							dogToClientRelationships.fields.length === 0
+								? "Search dogs..."
+								: dogToClientRelationships.fields.length === 1
+								? "1 dog selected"
+								: `${dogToClientRelationships.fields.length} dogs selected`
+						}
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+									if (setOpen) {
+										setOpen(false);
+									}
+								}}
+							>
+								<PlusIcon className="mr-1 h-4 w-4" />
+								<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
+							</MultiSelectSearchComboboxAction>
+						)}
+					/>
+				</div>
+
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
 						{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
@@ -90,14 +184,7 @@ function ClientToDogRelationships({
 								key={dogToClientRelationship.id}
 								dogToClientRelationship={dogToClientRelationship}
 								index={index}
-								onDelete={() => {
-									if (isNew) {
-										handleDogToClientRelationshipDelete(dogToClientRelationship.id);
-									} else {
-										setConfirmRelationshipDelete(dogToClientRelationship);
-									}
-								}}
-								variant={variant}
+								onDelete={() => toggleDogToClientRelationship(dogToClientRelationship.dog)}
 							/>
 						))}
 					</ul>
@@ -111,12 +198,10 @@ function ClientToDogRelationship({
 	dogToClientRelationship,
 	index,
 	onDelete,
-	variant,
 }: {
 	dogToClientRelationship: ManageClientFormSchema["dogToClientRelationships"][number];
 	index: number;
 	onDelete: () => void;
-	variant: "sheet" | "form";
 }) {
 	const form = useFormContext<ManageClientFormSchema>();
 	const router = useRouter();
@@ -125,7 +210,7 @@ function ClientToDogRelationship({
 	return (
 		<li
 			key={dogToClientRelationship.id}
-			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4 pt-2" : "py-4")}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
 			<div className="flex items-center gap-x-4">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
@@ -177,7 +262,7 @@ function ClientToDogRelationship({
 							>
 								<FormControl>
 									<SelectTrigger>
-										<SelectValue placeholder="Select a relation">
+										<SelectValue placeholder="Select relation">
 											<span className="capitalize">{field.value?.split("-").join(" ")}</span>
 										</SelectValue>
 									</SelectTrigger>
@@ -204,11 +289,7 @@ function ClientToDogRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							withoutPortal
-							align={variant == "sheet" ? "start" : "center"}
-							alignOffset={variant === "sheet" ? -114 : 0}
-						>
+						<DropdownMenuContent withoutPortal align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
@@ -227,7 +308,8 @@ function ClientToDogRelationship({
 								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => {
+								onSelect={(e) => {
+									e.preventDefault();
 									onDelete();
 								}}
 							>

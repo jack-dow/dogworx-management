@@ -67,9 +67,5 @@ module.exports = {
 			},
 		},
 	},
-	plugins: [
-		require("tailwindcss-animate"),
-		require("@tailwindcss/typography"),
-		require("@headlessui/tailwindcss")({ prefix: "ui" }),
-	],
+	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography"), require("@tailwindcss/forms")],
 };

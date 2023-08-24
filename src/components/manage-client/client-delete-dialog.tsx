@@ -23,7 +23,7 @@ function ClientDeleteDialog() {
 						title: `Client deleted`,
 						description: `Successfully deleted client "${form.getValues("givenName")}${
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
-						}"`,
+						}".`,
 					});
 					router.push("/clients");
 				} else {
@@ -32,6 +32,7 @@ function ClientDeleteDialog() {
 						description: `There was an error deleting client "${form.getValues("givenName")}${
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
 						}". Please try again.`,
+						variant: "destructive",
 					});
 				}
 			}}

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageVet } from "~/components/manage-vet";
+import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -24,7 +25,10 @@ import {
 	UserPlusIcon,
 } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
-import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
+import {
+	MultiSelectSearchCombobox,
+	MultiSelectSearchComboboxAction,
+} from "~/components/ui/multi-select-search-combobox";
 import {
 	Select,
 	SelectContent,
@@ -37,7 +41,7 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type DogById, type VetById, type VetsSearch } from "~/actions";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/utils";
+import { cn, generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 function DogToVetRelationships({
@@ -57,9 +61,9 @@ function DogToVetRelationships({
 
 	const [editingVet, setEditingVet] = React.useState<VetById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState(false);
+	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState<string | null>(null);
 
-	const searchVetsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
+	const searchVetsInputRef = React.useRef<HTMLInputElement>(null);
 
 	function handleDogToVetRelationshipDelete(relationshipId: string) {
 		const dogToVetRelationshipActions = { ...form.getValues("actions.dogToVetRelationships") };
@@ -77,9 +81,9 @@ function DogToVetRelationships({
 
 		form.setValue("actions.dogToVetRelationships", dogToVetRelationshipActions);
 
-		// HACK: Focus the combobox trigger after the dialog closes
+		// HACK: Focus the combobox input after the dialog closes
 		setTimeout(() => {
-			searchVetsComboboxTriggerRef?.current?.focus();
+			searchVetsInputRef?.current?.focus();
 		}, 0);
 	}
 
@@ -129,7 +133,11 @@ function DogToVetRelationships({
 				variant="sheet"
 				vet={editingVet ?? undefined}
 				open={!!editingVet}
-				setOpen={() => setEditingVet(null)}
+				setOpen={(value) => {
+					if (value === false) {
+						setEditingVet(null);
+					}
+				}}
 				withoutTrigger
 				onSuccessfulSubmit={(vet) => {
 					dogToVetRelationships.fields.forEach((field, index) => {
@@ -149,92 +157,97 @@ function DogToVetRelationships({
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
 						handleDogToVetRelationshipDelete(confirmRelationshipDelete);
+						// HACK: Focus the combobox trigger after the dialog closes
+						setTimeout(() => {
+							searchVetsInputRef?.current?.focus();
+						}, 0);
 					}
 				}}
 			/>
 
 			<FormGroup title="Vets" description="Manage the relationships between this dog and vets.">
+				<ManageVet
+					variant="sheet"
+					open={!!isCreateVetSheetOpen}
+					setOpen={(value) => {
+						if (value === false) {
+							setIsCreateVetSheetOpen(null);
+
+							// HACK: Focus the input after the sheet closes
+							setTimeout(() => {
+								searchVetsInputRef?.current?.focus();
+							}, 0);
+						}
+					}}
+					defaultValues={{
+						givenName: isCreateVetSheetOpen
+							? isCreateVetSheetOpen.split(" ").length === 1
+								? isCreateVetSheetOpen
+								: isCreateVetSheetOpen.split(" ").slice(0, -1).join(" ")
+							: undefined,
+						familyName: isCreateVetSheetOpen
+							? isCreateVetSheetOpen?.split(" ").length > 1
+								? isCreateVetSheetOpen?.split(" ").pop()
+								: undefined
+							: undefined,
+					}}
+					onSuccessfulSubmit={(vet) => {
+						toggleDogToVetRelationship(vet);
+						searchVetsInputRef?.current?.focus();
+					}}
+					withoutTrigger
+				/>
+
 				<div className="sm:col-span-6">
-					<SearchCombobox
-						ref={searchVetsComboboxTriggerRef}
-						labelText="Search Vets"
-						triggerText={
+					<MultiSelectSearchCombobox
+						ref={searchVetsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToVetRelationships.fields.map((dogToVetRelationship) => dogToVetRelationship.vet)}
+						onSelect={(vet) => {
+							toggleDogToVetRelationship(vet);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.vets.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
 							dogToVetRelationships.fields.length === 0
-								? "Search Vets"
+								? "Search vets..."
 								: dogToVetRelationships.fields.length === 1
 								? "1 vet selected"
 								: `${dogToVetRelationships.fields.length} vets selected`
 						}
-						onSearch={async (searchTerm) => {
-							try {
-								const res = await actions.app.vets.search(searchTerm);
-
-								return res.data ?? [];
-							} catch {
-								return [];
-							}
-						}}
-						selected={dogToVetRelationships.fields.map((vetRelationship) => vetRelationship.vet)}
-						onSelect={(vet) => {
-							toggleDogToVetRelationship(vet);
-						}}
-						renderResultItemText={(vet) => `${vet.givenName} ${vet.familyName}`}
-						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
-							<>
-								<ManageVet
-									variant="sheet"
-									open={isCreateVetSheetOpen}
-									setOpen={(value) => {
-										setIsCreateVetSheetOpen(value);
-
-										if (value === false) {
-											// HACK: Focus the input after the sheet closes
-											setTimeout(() => {
-												inputRef?.current?.focus();
-											}, 0);
-										}
-									}}
-									defaultValues={{
-										givenName:
-											searchTerm.split(" ").length === 1 ? searchTerm : searchTerm.split(" ").slice(0, -1).join(" "),
-										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
-									}}
-									onSuccessfulSubmit={(vet) => {
-										toggleDogToVetRelationship(vet);
-										setResults([...results, vet]);
-										setConfirmedNoResults(false);
-										inputRef?.current?.focus();
-									}}
-									withoutTrigger
-								/>
-
-								<SearchComboboxItem
-									onSelect={() => {
-										setIsCreateVetSheetOpen(true);
-									}}
-								>
-									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new vet {searchTerm && `"${searchTerm}"`} </span>
-								</SearchComboboxItem>
-							</>
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									setIsCreateVetSheetOpen(searchTerm);
+								}}
+							>
+								<UserPlusIcon className="mr-2 h-4 w-4" />
+								<span className="truncate">Create new vet {searchTerm && `"${searchTerm}"`} </span>
+							</MultiSelectSearchComboboxAction>
 						)}
 					/>
 				</div>
-				<div className="sm:col-span-6">
-					<ul role="list" className="divide-y divide-slate-100">
-						{dogToVetRelationships.fields.map((dogToVetRelationship, index) => (
-							<DogToVetRelationship
-								key={dogToVetRelationship.id}
-								dogToVetRelationship={dogToVetRelationship}
-								index={index}
-								onEdit={(vet) => {
-									setEditingVet(vet);
-								}}
-								onDelete={(vet) => toggleDogToVetRelationship(vet)}
-							/>
-						))}
-					</ul>
-				</div>
+
+				{dogToVetRelationships.fields.length > 0 && (
+					<div className="sm:col-span-6">
+						<ul role="list" className="divide-y divide-slate-100">
+							{dogToVetRelationships.fields.map((dogToVetRelationship, index) => (
+								<DogToVetRelationship
+									key={dogToVetRelationship.id}
+									dogToVetRelationship={dogToVetRelationship}
+									index={index}
+									onEdit={(vet) => {
+										setEditingVet(vet);
+									}}
+									onDelete={(vet) => toggleDogToVetRelationship(vet)}
+								/>
+							))}
+						</ul>
+					</div>
+				)}
 			</FormGroup>
 		</>
 	);
@@ -256,31 +269,34 @@ function DogToVetRelationship({
 
 	const [isFetchingVet, setIsFetchingVet] = React.useState(false);
 	return (
-		<li key={dogToVetRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
-			<div className="flex items-center gap-x-4">
+		<li
+			key={dogToVetRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
+			<div className="flex items-center gap-x-2">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
 				</div>
 
 				<div className="min-w-0 flex-auto truncate">
-					<p className="text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
 						{dogToVetRelationship.vet.givenName} {dogToVetRelationship.vet.familyName}
 					</p>
-					<div className="flex space-x-2 truncate">
+					<div className="flex items-center space-x-2 truncate px-2">
 						{dogToVetRelationship.vet.emailAddress && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToVetRelationship.vet.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
 								{dogToVetRelationship.vet.emailAddress}
-							</p>
+							</ClickToCopy>
 						)}
 						{dogToVetRelationship.vet.emailAddress && dogToVetRelationship.vet.phoneNumber && (
 							<span aria-hidden="true">&middot;</span>
 						)}
 						{dogToVetRelationship.vet.phoneNumber && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToVetRelationship.vet.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
 								{dogToVetRelationship.vet.phoneNumber}
-							</p>
+							</ClickToCopy>
 						)}
 					</div>
 				</div>
@@ -323,7 +339,7 @@ function DogToVetRelationship({
 							>
 								<FormControl>
 									<SelectTrigger>
-										<SelectValue placeholder="Select a relation">
+										<SelectValue placeholder="Select relation">
 											<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
 										</SelectValue>
 									</SelectTrigger>
@@ -350,7 +366,7 @@ function DogToVetRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent>
+						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
@@ -360,7 +376,7 @@ function DogToVetRelationship({
 									const renderErrorToast = () => {
 										toast({
 											title: "Failed to fetch vet",
-											description: "Something went wrong while fetching the vet. Please try again",
+											description: "Something went wrong while fetching the vet. Please try again.",
 											variant: "destructive",
 										});
 									};
@@ -390,7 +406,8 @@ function DogToVetRelationship({
 								{isFetchingVet && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => {
+								onSelect={(e) => {
+									e.preventDefault();
 									onDelete(dogToVetRelationship.vet);
 								}}
 							>

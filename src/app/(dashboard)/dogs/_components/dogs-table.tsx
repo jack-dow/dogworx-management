@@ -31,12 +31,13 @@ function DogsTable({ result }: { result: DogsList }) {
 					if (result.success) {
 						toast({
 							title: `Dog deleted`,
-							description: `Successfully deleted dog "${confirmDogDelete.givenName}"`,
+							description: `Successfully deleted dog "${confirmDogDelete.givenName}".`,
 						});
 					} else {
 						toast({
 							title: `Dog deletion failed`,
 							description: `There was an error deleting dog "${confirmDogDelete.givenName}". Please try again.`,
+							variant: "destructive",
 						});
 					}
 				}}
@@ -53,7 +54,7 @@ function DogsTable({ result }: { result: DogsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (dog) => `${dog.givenName}`,
+					resultLabel: (dog) => `${dog.givenName} ${dog.familyName}`,
 				}}
 				columns={createDogsTableColumns((dog) => {
 					setConfirmDogDelete(dog);

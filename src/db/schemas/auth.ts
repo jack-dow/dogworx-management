@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
-const unsignedSmallInt = customType<{
+export const unsignedSmallInt = customType<{
 	data: number;
 	driverData: number;
 }>({

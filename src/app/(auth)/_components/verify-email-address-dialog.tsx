@@ -69,7 +69,8 @@ function VerifyEmailAddressAlertDialog({
 				toast({
 					title: "Failed to send verification code",
 					description:
-						"An unknown error occurred while trying to send a new verification code to your email address. Please try again later.",
+						"An unknown error occurred while trying to send a new verification code to your email address. Please try again.",
+					variant: "destructive",
 				});
 			})
 			.finally(() => {
@@ -104,7 +105,7 @@ function VerifyEmailAddressAlertDialog({
 											description:
 												typeof body.error.message === "string"
 													? body.error.message
-													: "The verification code you provided is invalid or expired. Please request a new one and try again",
+													: "The verification code you provided is invalid or expired. Please request a new one and try again.",
 											variant: "destructive",
 										});
 										throw new Error("Invalid verification code");
@@ -115,7 +116,8 @@ function VerifyEmailAddressAlertDialog({
 											title: `Failed to ${isSignUp ? "verify email address" : "sign in"}`,
 											description: `An unknown error occurred while trying to ${
 												isSignUp ? "verify your email address" : "sign in"
-											}. Please try again later.`,
+											}. Please try again.`,
+											variant: "destructive",
 										});
 										throw new Error("Failed to verify email address");
 									}

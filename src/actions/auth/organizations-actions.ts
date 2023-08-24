@@ -5,7 +5,7 @@ import { eq, inArray, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, organizations } from "~/db/schemas";
+import { organizationInviteLinks, organizations } from "~/db/schema";
 import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/db/validation";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
@@ -107,14 +107,14 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const data = await drizzle.query.organizations.findMany({
@@ -181,6 +181,21 @@ const getOrganizationById = createServerAction(async (id: string) => {
 });
 type OrganizationById = ExtractServerActionData<typeof getOrganizationById>;
 
+const getCurrentOrganization = createServerAction(async () => {
+	try {
+		const user = await getServerUser();
+
+		const data = await drizzle.query.organizations.findFirst({
+			where: eq(organizations.id, user.organizationId),
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: `Failed to get the users current organization`, data: null };
+	}
+});
+type CurrentOrganization = ExtractServerActionData<typeof getCurrentOrganization>;
+
 const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
 	const validInviteLink = z.string().safeParse(id);
 
@@ -214,7 +229,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const { actions, ...data } = validValues.data;
@@ -270,7 +285,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 		const user = await getServerUser();
 
 		if (user.emailAddress !== "jack.dowww@gmail.com") {
-			return { success: false, error: "You are not authorized to view this page", data: [] };
+			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
 		const { id, actions, ...data } = validValues.data;
@@ -380,6 +395,8 @@ export {
 	type OrganizationsSearch,
 	getOrganizationById,
 	type OrganizationById,
+	getCurrentOrganization,
+	type CurrentOrganization,
 	getOrganizationInviteLinkById,
 	type OrganizationInviteLinkById,
 	insertOrganization,

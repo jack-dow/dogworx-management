@@ -3,8 +3,18 @@ import { Extension, type Editor, type Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion from "@tiptap/suggestion";
 // eslint-disable-next-line no-restricted-imports
-import { Heading1Icon, Heading2Icon, Heading3Icon, ListIcon, ListOrderedIcon, TextIcon } from "lucide-react";
 import tippy from "tippy.js";
+
+import {
+	CheckSquareIcon,
+	ListBulletsIcon,
+	ListNumbersIcon,
+	QuotesIcon,
+	TextAlignLeftIcon,
+	TextH1Icon,
+	TextH2Icon,
+	TextH3Icon,
+} from "../icons";
 
 interface CommandItemProps {
 	title: string;
@@ -54,7 +64,7 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 		// {
 		// 	title: "Send Feedback",
 		// 	description: "Let us know how we can improve.",
-		// 	icon: <MessageSquarePlusIcon size={18} />,
+		// 	icon: <MessageSquarePlusIcon className="h-5 w-5" />,
 		// 	command: ({ editor, range }: CommandProps) => {
 		// 		editor.chain().focus().deleteRange(range).run();
 		// 		window.open("/feedback", "_blank");
@@ -64,25 +74,25 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			title: "Text",
 			description: "Just start typing with plain text.",
 			searchTerms: ["p", "paragraph"],
-			icon: <TextIcon size={18} />,
+			icon: <TextAlignLeftIcon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").run();
 			},
 		},
-		// {
-		// 	title: "To-do List",
-		// 	description: "Track tasks with a to-do list.",
-		// 	searchTerms: ["todo", "task", "list", "check", "checkbox"],
-		// 	icon: <CheckSquareIcon size={18} />,
-		// 	command: ({ editor, range }: CommandProps) => {
-		// 		editor.chain().focus().deleteRange(range).toggleTaskList().run();
-		// 	},
-		// },
+		{
+			title: "To-do List",
+			description: "Track tasks with a to-do list.",
+			searchTerms: ["todo", "task", "list", "check", "checkbox"],
+			icon: <CheckSquareIcon className="h-5 w-5" />,
+			command: ({ editor, range }: CommandProps) => {
+				editor.chain().focus().deleteRange(range).toggleTaskList().run();
+			},
+		},
 		{
 			title: "Heading 1",
 			description: "Big section heading.",
 			searchTerms: ["title", "big", "large"],
-			icon: <Heading1Icon size={18} />,
+			icon: <TextH1Icon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
 			},
@@ -91,7 +101,7 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			title: "Heading 2",
 			description: "Medium section heading.",
 			searchTerms: ["subtitle", "medium"],
-			icon: <Heading2Icon size={18} />,
+			icon: <TextH2Icon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
 			},
@@ -100,7 +110,7 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			title: "Heading 3",
 			description: "Small section heading.",
 			searchTerms: ["subtitle", "small"],
-			icon: <Heading3Icon size={18} />,
+			icon: <TextH3Icon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
 			},
@@ -109,7 +119,7 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			title: "Bullet List",
 			description: "Create a simple bullet list.",
 			searchTerms: ["unordered", "point"],
-			icon: <ListIcon size={18} />,
+			icon: <ListBulletsIcon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).toggleBulletList().run();
 			},
@@ -118,31 +128,31 @@ const getSuggestionItems = ({ query }: { query: string }) => {
 			title: "Numbered List",
 			description: "Create a list with numbering.",
 			searchTerms: ["ordered"],
-			icon: <ListOrderedIcon size={18} />,
+			icon: <ListNumbersIcon className="h-5 w-5" />,
 			command: ({ editor, range }: CommandProps) => {
 				editor.chain().focus().deleteRange(range).toggleOrderedList().run();
 			},
 		},
-		// {
-		// 	title: "Quote",
-		// 	description: "Capture a quote.",
-		// 	searchTerms: ["blockquote"],
-		// 	icon: <TextQuoteIcon size={18} />,
-		// 	command: ({ editor, range }: CommandProps) =>
-		// 		editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
-		// },
+		{
+			title: "Quote",
+			description: "Capture a quote.",
+			searchTerms: ["blockquote"],
+			icon: <QuotesIcon className="h-5 w-5" />,
+			command: ({ editor, range }: CommandProps) =>
+				editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").toggleBlockquote().run(),
+		},
 		// {
 		// 	title: "Code",
 		// 	description: "Capture a code snippet.",
 		// 	searchTerms: ["codeblock"],
-		// 	icon: <CodeIcon size={18} />,
+		// 	icon: <CodeIcon className="h-5 w-5" />,
 		// 	command: ({ editor, range }: CommandProps) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
 		// },
 		// {
 		// 	title: "Image",
 		// 	description: "Upload an image from your computer.",
 		// 	searchTerms: ["photo", "picture", "media"],
-		// 	icon: <ImageIcon size={18} />,
+		// 	icon: <ImageIcon className="h-5 w-5" />,
 		// 	command: ({ editor, range }: CommandProps) => {
 		// 		editor.chain().focus().deleteRange(range).run();
 		// 		// upload image

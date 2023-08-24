@@ -17,12 +17,12 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
-import { hasTrueValue } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
+import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { type ManageClientFormSchema } from "./manage-client";
-import {ConfirmFormNavigationDialog} from "../ui/confirm-form-navigation-dialog";
 
 type DefaultValues = Partial<ManageClientFormSchema>;
 
@@ -66,8 +66,20 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
+
+			setTimeout(() => {
+				form.reset();
+				form.setValue("id", generateId());
+			}, 205);
 		}
+	}
+
+	function handleClose() {
+		setInternalOpen(false);
+		setTimeout(() => {
+			form.reset();
+			form.setValue("id", generateId());
+		}, 205);
 	}
 
 	return (
@@ -76,8 +88,8 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					setInternalOpen(false);
-					form.reset();
+					handleClose();
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 
@@ -91,12 +103,11 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
 					<SheetTrigger asChild>
-						<Button>Create Client</Button>
+						<Button>Create client</Button>
 					</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
@@ -121,7 +132,12 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 
 						<Separator className="my-4" />
 
-						<ClientToDogRelationships control={form.control} isNew={isNew} variant="sheet" />
+						<ClientToDogRelationships
+							control={form.control}
+							existingDogToClientRelationships={client?.dogToClientRelationships}
+							variant="sheet"
+							setOpen={setInternalOpen}
+						/>
 
 						<Separator className="my-4" />
 

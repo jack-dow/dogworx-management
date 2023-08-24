@@ -58,7 +58,7 @@ function SignInForm() {
 			});
 			toast({
 				title: "Unknown email address",
-				description: "Sorry, we couldn't find a user with that email address. Please try again.",
+				description: "We couldn't find a user with that email address. Please try again.",
 				variant: "destructive",
 			});
 			return;
@@ -66,7 +66,7 @@ function SignInForm() {
 
 		toast({
 			title: "Something went wrong",
-			description: "Your sign in request failed. Please try again.",
+			description: "An unknown error ocurred and your sign in request failed. Please try again.",
 			variant: "destructive",
 		});
 	}

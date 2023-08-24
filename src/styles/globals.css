@@ -31,9 +31,19 @@
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 210 40% 98%;
 
-		--ring: 215 20.2% 65.1%;
+		--ring: 200, 98%, 39%;
 
 		--radius: 0.5rem;
+
+		--rte-highlight-default: #ffffff;
+		--rte-highlight-purple: #f6f3f8;
+		--rte-highlight-red: #fdebeb;
+		--rte-highlight-yellow: #fbf4a2;
+		--rte-highlight-blue: #c1ecf9;
+		--rte-highlight-green: #acf79f;
+		--rte-highlight-orange: #faebdd;
+		--rte-highlight-pink: #faf1f5;
+		--rte-highlight-gray: #f1f1ef;
 	}
 
 	.dark {
@@ -71,6 +81,23 @@
 @layer base {
 	* {
 		@apply border-border;
+
+		input[type="time"]::-webkit-clear-button {
+			display: "none";
+		}
+
+		input[type="time"]::-webkit-calendar-picker-indicator {
+			background: none;
+			display: none;
+		}
+
+		input[type="time"]::-webkit-datetime-edit-hour-field,
+		input[type="time"]::-webkit-datetime-edit-minute-field,
+		input[type="time"]::-webkit-datetime-edit-second-field,
+		input[type="time"]::-webkit-datetime-edit-ampm-field,
+		input[type="time"]::-webkit-datetime-edit-text {
+			@apply p-0.5 text-start text-sm tabular-nums focus:rounded-sm focus:bg-primary focus:text-primary-foreground focus:caret-transparent focus:outline-none;
+		}
 	}
 	body {
 		@apply bg-background text-foreground;

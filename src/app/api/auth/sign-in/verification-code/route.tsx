@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { sessions, verificationCodes } from "~/db/schemas";
+import { sessions, verificationCodes } from "~/db/schema";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { generateId, type APIResponse } from "~/utils";
 

@@ -101,6 +101,15 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 		}
 	}, [props.vetClinic, form]);
 
+	React.useEffect(() => {
+		if (props.defaultValues) {
+			form.reset({
+				...form.getValues(),
+				...props.defaultValues,
+			});
+		}
+	}, [props.defaultValues, form]);
+
 	async function onSubmit(data: ManageVetClinicFormSchemaType) {
 		let success = false;
 		let newVetClinic: VetClinicUpdate | VetClinicInsert | null | undefined;
@@ -118,14 +127,15 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 		if (success) {
 			toast({
 				title: `Vet Clinic ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} vet clinic "${data.name}"`,
+				description: `Successfully ${isNew ? "created" : "updated"} vet clinic "${data.name}".`,
 			});
 		} else {
 			toast({
 				title: `Vet Clinic ${isNew ? "Creation" : "Update"} Failed`,
 				description: `There was an error ${isNew ? "creating" : "updating"} vet clinic "${
 					data.name
-				}". Please try again later.`,
+				}". Please try again.`,
+				variant: "destructive",
 			});
 		}
 

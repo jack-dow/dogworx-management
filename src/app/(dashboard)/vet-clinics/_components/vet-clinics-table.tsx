@@ -33,12 +33,13 @@ function VetClinicsTable({ result }: { result: VetClinicsList }) {
 					if (result.success) {
 						toast({
 							title: `Vet clinic deleted`,
-							description: `Successfully deleted vet clinic "${confirmVetClinicDelete.name}"`,
+							description: `Successfully deleted vet clinic "${confirmVetClinicDelete.name}".`,
 						});
 					} else {
 						toast({
 							title: `Vet clinic deletion failed`,
 							description: `There was an error deleting vet clinic "${confirmVetClinicDelete.name}". Please try again.`,
+							variant: "destructive",
 						});
 					}
 				}}
@@ -55,7 +56,7 @@ function VetClinicsTable({ result }: { result: VetClinicsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (vetClinic) => `${vetClinic.name}`,
+					resultLabel: (vetClinic) => `${vetClinic.name}`,
 				}}
 				columns={createVetClinicsTableColumns((vetClinic) => {
 					setConfirmVetClinicDelete(vetClinic);

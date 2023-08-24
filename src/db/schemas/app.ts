@@ -1,7 +1,34 @@
+<<<<<<< Updated upstream:src/db/schemas/app.ts
 import { relations } from "drizzle-orm";
 import { boolean, char, date, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+=======
+import { relations, sql } from "drizzle-orm";
+import {
+	boolean,
+	char,
+	customType,
+	date,
+	mysqlEnum,
+	mysqlTable,
+	text,
+	timestamp,
+	varchar,
+} from "drizzle-orm/mysql-core";
+>>>>>>> Stashed changes:src/db/schema/app.ts
 
 import { organizations, users } from "./auth";
+
+const unsignedMediumInt = customType<{
+	data: number;
+	driverData: number;
+}>({
+	dataType() {
+		return "mediumint unsigned";
+	},
+	fromDriver(data: number) {
+		return data;
+	},
+});
 
 // -----------------------------------------------------------------------------
 // Dogs
@@ -22,7 +49,11 @@ const dogs = mysqlTable("dogs", {
 });
 
 const dogsRelations = relations(dogs, ({ many, one }) => ({
+<<<<<<< Updated upstream:src/db/schemas/app.ts
 	sessions: many(dogSessions),
+=======
+	bookings: many(bookings),
+>>>>>>> Stashed changes:src/db/schema/app.ts
 	dogToClientRelationships: many(dogToClientRelationships),
 	dogToVetRelationships: many(dogToVetRelationships),
 	organization: one(organizations, {
@@ -32,30 +63,36 @@ const dogsRelations = relations(dogs, ({ many, one }) => ({
 }));
 
 // -----------------------------------------------------------------------------
-// Dogs Sessions
+// Bookings
 // -----------------------------------------------------------------------------
-const dogSessions = mysqlTable("dog_sessions", {
+const bookings = mysqlTable("bookings", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 	dogId: char("dog_id", { length: 24 }).notNull(),
-	userId: char("user_id", { length: 24 }),
+	createdById: char("created_by_id", { length: 24 }),
+	assignedToId: char("assigned_to_id", { length: 24 }),
 	date: timestamp("date").notNull(),
-	details: text("details").notNull(),
+	duration: unsignedMediumInt("duration_in_seconds").notNull(),
+	details: text("details"),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 });
 
-const dogSessionsRelations = relations(dogSessions, ({ one }) => ({
+const bookingsRelations = relations(bookings, ({ one }) => ({
 	dog: one(dogs, {
-		fields: [dogSessions.dogId],
+		fields: [bookings.dogId],
 		references: [dogs.id],
 	}),
-	user: one(users, {
-		fields: [dogSessions.userId],
+	createdBy: one(users, {
+		fields: [bookings.createdById],
+		references: [users.id],
+	}),
+	assignedTo: one(users, {
+		fields: [bookings.assignedToId],
 		references: [users.id],
 	}),
 	organization: one(organizations, {
-		fields: [dogSessions.organizationId],
+		fields: [bookings.organizationId],
 		references: [organizations.id],
 	}),
 }));
@@ -220,8 +257,8 @@ const vetToVetClinicRelationshipsRelations = relations(vetToVetClinicRelationshi
 export {
 	dogs,
 	dogsRelations,
-	dogSessions,
-	dogSessionsRelations,
+	bookings,
+	bookingsRelations,
 	clients,
 	clientsRelations,
 	vets,

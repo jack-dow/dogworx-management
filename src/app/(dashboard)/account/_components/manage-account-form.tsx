@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type InferModel } from "drizzle-orm";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -14,7 +13,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
-import { type sessions } from "~/db/schemas";
+import { type sessions } from "~/db/schema";
 import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
 import { AccountDelete } from "./account-delete";
 import { AccountDisplayName } from "./account-display-name";
@@ -23,7 +22,7 @@ import { AccountProfileImage } from "./account-profile-image";
 import { AccountSessions } from "./account-sessions";
 import { AccountVerifyNewEmailAddressDialog } from "./account-verify-new-email-address-dialog";
 
-type Session = InferModel<typeof sessions>;
+type Session = typeof sessions.$inferSelect;
 
 const ManageAccountFormSchema = InsertUserSchema.extend({
 	sessions: z.array(SelectSessionSchema),
@@ -118,20 +117,26 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 				title: "Account updated",
 				description: "Your account has been updated successfully.",
 			});
+
+			form.reset(data);
 		} catch (error) {
 			toast({
 				title: "Failed to update account",
-				description: "Something went wrong while updating your account. Please try again later.",
+				description: "Something went wrong while updating your account. Please try again.",
+				variant: "destructive",
 			});
 		}
 	}
 
 	return (
 		<Form {...form}>
-			<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-10 ">
+			<form
+				onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
+				className="space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12"
+			>
 				<AccountDisplayName control={form.control} />
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountEmailAddress control={form.control} />
 				<AccountVerifyNewEmailAddressDialog
@@ -144,7 +149,7 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 					}}
 				/>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountProfileImage
 					setUploadedProfileImage={(file) => {
@@ -152,18 +157,18 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 					}}
 				/>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<AccountSessions control={form.control} />
 
-				<Separator className="my-4" />
+				<Separator className="hidden sm:flex" />
 
 				<AccountDelete />
 
 				<Separator className="my-8" />
 
 				<div className="flex justify-end">
-					<Button type="submit" disabled={form.formState.isSubmitting}>
+					<Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isDirty}>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						Save changes
 					</Button>

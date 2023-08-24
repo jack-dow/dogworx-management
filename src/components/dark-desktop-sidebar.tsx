@@ -24,7 +24,6 @@ import {
 	CalendarDaysIcon,
 	ClientsIcon,
 	DogIcon,
-	InvoiceIcon,
 	LogOutIcon,
 	UserIcon,
 	VetClinicIcon,
@@ -47,8 +46,7 @@ export const navigation: Array<Navigation> = [
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
 	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
 	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: false },
-	{ name: "Invoices", href: "/invoices", icon: InvoiceIcon, disabled: true },
-	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: true },
+	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: false },
 ];
 
 function DarkDesktopSidebar() {
@@ -63,8 +61,12 @@ function DarkDesktopSidebar() {
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-950 px-6 ">
 				<div className="flex shrink-0 items-center pb-4 pt-6">
-					<Link href="/" shallow>
-						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" width={150} />
+					<Link
+						href="/"
+						shallow
+						className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>
+						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" priority width={150} />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">
@@ -72,7 +74,8 @@ function DarkDesktopSidebar() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(item.href);
+									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
 									return (
 										<li key={item.name}>
 											<a
@@ -85,6 +88,7 @@ function DarkDesktopSidebar() {
 														? "text-slate-300 hover:text-slate-50 hover:bg-slate-900"
 														: "opacity-50 cursor-not-allowed text-slate-300 hover:bg-transparent hover:text-slate-300",
 													"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
+													"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 												)}
 											>
 												<item.icon
@@ -113,6 +117,7 @@ function DarkDesktopSidebar() {
 													? "bg-slate-900 text-white"
 													: "text-slate-300 hover:text-slate-50 hover:bg-slate-900",
 												"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
+												"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 											)}
 										>
 											<BuildingOfficeIcon
@@ -134,7 +139,7 @@ function DarkDesktopSidebar() {
 								<DropdownMenuTrigger asChild>
 									<Button
 										variant="ghost"
-										className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3 hover:bg-slate-800"
+										className="mb-2 flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3 hover:bg-slate-800"
 									>
 										{session.user.profileImageUrl ? (
 											<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-gray-800">
@@ -195,7 +200,7 @@ function DarkDesktopSidebar() {
 												.catch(() => {
 													toast({
 														title: "Sign out failed",
-														description: "We had an issue signing you out of your account. Please try again later.",
+														description: "We had an issue signing you out of your account. Please try again.",
 														variant: "destructive",
 													});
 												})

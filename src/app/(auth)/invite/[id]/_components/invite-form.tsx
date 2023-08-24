@@ -22,9 +22,9 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 	const form = useForm<SignUpSchema>({
 		resolver: zodResolver(SignUpSchema),
 		defaultValues: {
-			givenName: "Jack",
+			givenName: "",
 			familyName: "",
-			emailAddress: "jdooow@gmail.com",
+			emailAddress: "",
 		},
 	});
 
@@ -57,7 +57,7 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 
 				toast({
 					title: "Something went wrong.",
-					description: "Your sign up request failed. Please try again.",
+					description: "An unknown error ocurred and your sign up request failed. Please try again.",
 					variant: "destructive",
 				});
 				return;
@@ -80,13 +80,14 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 
 			toast({
 				title: "Something went wrong",
-				description: "Your sign in request failed. Please try again.",
+				description: "An unknown error ocurred and your sign in request failed. Please try again.",
 				variant: "destructive",
 			});
 		} catch (error) {
 			toast({
 				title: `An unknown error occurred`,
-				description: "Something went wrong, please try again.",
+				description: "An unknown error ocurred, please try again.",
+				variant: "destructive",
 			});
 		}
 	}

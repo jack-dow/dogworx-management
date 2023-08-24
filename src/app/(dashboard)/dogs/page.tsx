@@ -18,7 +18,7 @@ async function DogsPage({ searchParams }: { searchParams?: { [key: string]: stri
 
 	return (
 		<>
-			<PageHeader title="Manage Dogs" back={{ href: "/dogs" }} />
+			<PageHeader title="Manage Dogs" back={{ href: "/" }} />
 
 			<DogsTable result={response.data} />
 		</>

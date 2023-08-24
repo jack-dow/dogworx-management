@@ -4,6 +4,7 @@ import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
 import { ManageClient } from "~/components/manage-client";
+import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -24,7 +25,10 @@ import {
 	UserPlusIcon,
 } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
-import { SearchCombobox, SearchComboboxItem } from "~/components/ui/search-combobox";
+import {
+	MultiSelectSearchCombobox,
+	MultiSelectSearchComboboxAction,
+} from "~/components/ui/multi-select-search-combobox";
 import {
 	Select,
 	SelectContent,
@@ -37,7 +41,7 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type ClientById, type ClientsSearch, type DogById } from "~/actions";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation";
-import { generateId } from "~/utils";
+import { cn, generateId } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 function DogToClientRelationships({
@@ -57,9 +61,9 @@ function DogToClientRelationships({
 
 	const [editingClient, setEditingClient] = React.useState<ClientById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState(false);
+	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<string | null>(null);
 
-	const searchClientsComboboxTriggerRef = React.useRef<HTMLButtonElement>(null);
+	const searchClientsInputRef = React.useRef<HTMLInputElement>(null);
 
 	function handleDogToClientRelationshipDelete(relationshipId: string) {
 		const dogToClientRelationshipActions = { ...form.getValues("actions.dogToClientRelationships") };
@@ -76,11 +80,6 @@ function DogToClientRelationships({
 		}
 
 		form.setValue("actions.dogToClientRelationships", dogToClientRelationshipActions);
-
-		// HACK: Focus the combobox trigger after the dialog closes
-		setTimeout(() => {
-			searchClientsComboboxTriggerRef?.current?.focus();
-		}, 0);
 	}
 
 	function toggleDogToClientRelationship(client: ClientsSearch[number]) {
@@ -131,7 +130,11 @@ function DogToClientRelationships({
 				variant="sheet"
 				client={editingClient ?? undefined}
 				open={!!editingClient}
-				setOpen={() => setEditingClient(null)}
+				setOpen={(value) => {
+					if (value === false) {
+						setEditingClient(null);
+					}
+				}}
 				withoutTrigger
 				onSuccessfulSubmit={(client) => {
 					dogToClientRelationships.fields.forEach((field, index) => {
@@ -147,96 +150,103 @@ function DogToClientRelationships({
 				requiresSaveOf="dog"
 				withoutTrigger
 				open={!!confirmRelationshipDelete}
-				onOpenChange={() => setConfirmRelationshipDelete(null)}
+				onOpenChange={() => {
+					setConfirmRelationshipDelete(null);
+				}}
 				onConfirm={() => {
 					if (confirmRelationshipDelete) {
 						handleDogToClientRelationshipDelete(confirmRelationshipDelete);
+						// HACK: Focus the combobox trigger after the dialog closes
+						setTimeout(() => {
+							searchClientsInputRef?.current?.focus();
+						}, 0);
 					}
 				}}
 			/>
 
 			<FormGroup title="Clients" description="Manage the relationships between this dog and clients.">
+				<ManageClient
+					variant="sheet"
+					open={!!isCreateClientSheetOpen}
+					setOpen={(value) => {
+						if (value === false) {
+							setIsCreateClientSheetOpen(null);
+
+							// HACK: Focus the input after the sheet closes
+							setTimeout(() => {
+								searchClientsInputRef?.current?.focus();
+							}, 0);
+						}
+					}}
+					defaultValues={{
+						givenName: isCreateClientSheetOpen
+							? isCreateClientSheetOpen?.split(" ").length === 1
+								? isCreateClientSheetOpen
+								: isCreateClientSheetOpen?.split(" ").slice(0, -1).join(" ")
+							: undefined,
+						familyName: isCreateClientSheetOpen
+							? isCreateClientSheetOpen.split(" ").length > 1
+								? isCreateClientSheetOpen.split(" ").pop()
+								: undefined
+							: undefined,
+					}}
+					onSuccessfulSubmit={(client) => {
+						toggleDogToClientRelationship(client);
+						searchClientsInputRef?.current?.focus();
+					}}
+					withoutTrigger
+				/>
+
 				<div className="sm:col-span-6">
-					<SearchCombobox
-						ref={searchClientsComboboxTriggerRef}
-						labelText="Search Clients"
-						triggerText={
+					<MultiSelectSearchCombobox
+						ref={searchClientsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.client)}
+						onSelect={(client) => {
+							toggleDogToClientRelationship(client);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.clients.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
 							dogToClientRelationships.fields.length === 0
-								? "Search Clients"
+								? "Search clients..."
 								: dogToClientRelationships.fields.length === 1
 								? "1 client selected"
 								: `${dogToClientRelationships.fields.length} clients selected`
 						}
-						onSearch={async (searchTerm) => {
-							try {
-								const res = await actions.app.clients.search(searchTerm);
-
-								return res.data ?? [];
-							} catch {
-								return [];
-							}
-						}}
-						selected={dogToClientRelationships.fields.map((clientRelationship) => clientRelationship.client)}
-						onSelect={(client) => {
-							toggleDogToClientRelationship(client);
-						}}
-						renderResultItemText={(client) => `${client.givenName} ${client.familyName}`}
-						renderNoResultActions={({ searchTerm, setConfirmedNoResults, inputRef, results, setResults }) => (
-							<>
-								<ManageClient
-									variant="sheet"
-									open={isCreateClientSheetOpen}
-									setOpen={(value) => {
-										setIsCreateClientSheetOpen(value);
-
-										if (value === false) {
-											// HACK: Focus the input after the sheet closes
-											setTimeout(() => {
-												inputRef?.current?.focus();
-											}, 0);
-										}
-									}}
-									defaultValues={{
-										givenName:
-											searchTerm.split(" ").length === 1 ? searchTerm : searchTerm.split(" ").slice(0, -1).join(" "),
-										familyName: searchTerm.split(" ").length > 1 ? searchTerm.split(" ").pop() : undefined,
-									}}
-									onSuccessfulSubmit={(client) => {
-										toggleDogToClientRelationship(client);
-										setResults([...results, client]);
-										setConfirmedNoResults(false);
-										inputRef?.current?.focus();
-									}}
-									withoutTrigger
-								/>
-
-								<SearchComboboxItem
-									onSelect={() => {
-										setIsCreateClientSheetOpen(true);
-									}}
-								>
-									<UserPlusIcon className="mr-2 h-4 w-4" />
-									<span>Create new client {searchTerm && `"${searchTerm}"`} </span>
-								</SearchComboboxItem>
-							</>
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									setIsCreateClientSheetOpen(searchTerm);
+								}}
+							>
+								<UserPlusIcon className="mr-2 h-4 w-4" />
+								<span className="truncate">Create new client {searchTerm && `"${searchTerm}"`} </span>
+							</MultiSelectSearchComboboxAction>
 						)}
 					/>
 				</div>
-				<div className="sm:col-span-6">
-					<ul role="list" className="divide-y divide-slate-100">
-						{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
-							<DogToClientRelationship
-								key={dogToClientRelationship.id}
-								dogToClientRelationship={dogToClientRelationship}
-								index={index}
-								onEdit={(client) => {
-									setEditingClient(client);
-								}}
-								onDelete={(client) => toggleDogToClientRelationship(client)}
-							/>
-						))}
-					</ul>
-				</div>
+
+				{dogToClientRelationships.fields.length > 0 && (
+					<div className="sm:col-span-6">
+						<ul role="list" className="divide-y divide-slate-100">
+							{dogToClientRelationships.fields.map((dogToClientRelationship, index) => (
+								<DogToClientRelationship
+									key={dogToClientRelationship.id}
+									dogToClientRelationship={dogToClientRelationship}
+									index={index}
+									onEdit={(client) => {
+										setEditingClient(client);
+									}}
+									onDelete={(client) => toggleDogToClientRelationship(client)}
+								/>
+							))}
+						</ul>
+					</div>
+				)}
 			</FormGroup>
 		</>
 	);
@@ -258,31 +268,34 @@ function DogToClientRelationship({
 
 	const [isFetchingClient, setIsFetchingClient] = React.useState(false);
 	return (
-		<li key={dogToClientRelationship.id} className="flex max-w-full items-center justify-between gap-x-6 py-4">
-			<div className="flex items-center gap-x-4">
+		<li
+			key={dogToClientRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
+			<div className="flex items-center gap-x-2">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
 				</div>
 
 				<div className="min-w-0 flex-auto truncate">
-					<p className="text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
 						{dogToClientRelationship.client.givenName} {dogToClientRelationship.client.familyName}
 					</p>
-					<div className="flex space-x-2 truncate">
+					<div className="flex items-center space-x-2 truncate px-2">
 						{dogToClientRelationship.client.emailAddress && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToClientRelationship.client.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
 								{dogToClientRelationship.client.emailAddress}
-							</p>
+							</ClickToCopy>
 						)}
 						{dogToClientRelationship.client.emailAddress && dogToClientRelationship.client.phoneNumber && (
 							<span aria-hidden="true">&middot;</span>
 						)}
 						{dogToClientRelationship.client.phoneNumber && (
-							<p className="flex items-center truncate text-xs leading-5 text-slate-500">
+							<ClickToCopy text={dogToClientRelationship.client.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
 								{dogToClientRelationship.client.phoneNumber}
-							</p>
+							</ClickToCopy>
 						)}
 					</div>
 				</div>
@@ -327,7 +340,7 @@ function DogToClientRelationship({
 							>
 								<FormControl>
 									<SelectTrigger>
-										<SelectValue placeholder="Select a relation">
+										<SelectValue placeholder="Select relation">
 											<span className="truncate capitalize">{field.value?.split("-").join(" ")}</span>
 										</SelectValue>
 									</SelectTrigger>
@@ -350,11 +363,11 @@ function DogToClientRelationship({
 
 				<div className="flex items-center">
 					<DropdownMenu>
-						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent>
+						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
@@ -364,7 +377,7 @@ function DogToClientRelationship({
 									const renderErrorToast = () => {
 										toast({
 											title: "Failed to fetch client",
-											description: "Something went wrong while fetching the client. Please try again",
+											description: "Something went wrong while fetching the client. Please try again.",
 											variant: "destructive",
 										});
 									};
@@ -394,7 +407,8 @@ function DogToClientRelationship({
 								{isFetchingClient && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => {
+								onSelect={(e) => {
+									e.preventDefault();
 									onDelete(dogToClientRelationship.client);
 								}}
 							>

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq, sql } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, users } from "~/db/schemas";
+import { organizationInviteLinks, users } from "~/db/schema";
 import { type InsertUserSchema, type SelectUserSchema } from "~/db/validation";
 import { SignUpSchema } from "~/lib/validation";
 import { generateId, type APIResponse } from "~/utils";

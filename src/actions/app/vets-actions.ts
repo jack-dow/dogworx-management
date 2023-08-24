@@ -5,7 +5,7 @@ import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogToVetRelationships, vets, vetToVetClinicRelationships } from "~/db/schemas";
+import { dogToVetRelationships, vets, vetToVetClinicRelationships } from "~/db/schema";
 import { InsertVetSchema, UpdateVetSchema } from "~/db/validation";
 import { VETS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
@@ -86,7 +86,7 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 	const validSearchTerm = SearchTermSchema.safeParse(searchTerm);
 
 	if (!validSearchTerm.success) {
-		return { success: false, error: validSearchTerm.error.issues, data: [] };
+		return { success: false, error: validSearchTerm.error.issues, data: null };
 	}
 
 	try {
@@ -100,7 +100,7 @@ const searchVets = createServerAction(async (searchTerm: string) => {
 				emailAddress: true,
 				phoneNumber: true,
 			},
-			limit: 50,
+			limit: 20,
 			where: and(
 				eq(vets.organizationId, user.organizationId),
 				or(
@@ -138,6 +138,7 @@ const getVetById = createServerAction(async (id: string) => {
 							columns: {
 								id: true,
 								givenName: true,
+								familyName: true,
 								color: true,
 								breed: true,
 							},

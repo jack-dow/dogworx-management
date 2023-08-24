@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { DogIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
+import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
 import {
 	Select,
 	SelectContent,
@@ -15,7 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
+import { actions, type DogsSearch, type VetById } from "~/actions";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
+import { cn, generateId } from "~/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -27,22 +29,24 @@ import {
 } from "../ui/dropdown-menu";
 import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGroup } from "../ui/form";
 import { Loader } from "../ui/loader";
+import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 
 function VetToDogRelationships({
 	control,
-	isNew,
+	existingDogToVetRelationships,
 	variant,
+	setOpen,
 }: {
 	control: Control<ManageVetFormSchemaType>;
-	isNew: boolean;
+	existingDogToVetRelationships: VetById["dogToVetRelationships"] | undefined;
 	variant: "sheet" | "form";
+	setOpen?: (open: boolean) => void;
 }) {
 	const form = useFormContext<ManageVetFormSchemaType>();
+	const router = useRouter();
 
-	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<
-		ManageVetFormSchemaType["dogToVetRelationships"][number] | null
-	>(null);
+	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 
 	const dogToVetRelationships = useFieldArray({
 		control,
@@ -50,20 +54,69 @@ function VetToDogRelationships({
 		keyName: "rhf-id",
 	});
 
-	function handleVetToDogRelationshipDelete() {
-		if (confirmRelationshipDelete) {
-			dogToVetRelationships.remove(
-				dogToVetRelationships.fields.findIndex((relationship) => relationship.id === confirmRelationshipDelete.id),
-			);
+	const searchDogsInputRef = React.useRef<HTMLInputElement>(null);
 
-			form.setValue("actions.dogToVetRelationships", {
-				...form.getValues("actions.dogToVetRelationships"),
-				[confirmRelationshipDelete.id]: {
-					type: "DELETE",
-					payload: confirmRelationshipDelete.id,
-				},
-			});
+	function handleDogToVetRelationshipDelete(relationshipId: string) {
+		const dogToVetRelationshipActions = { ...form.getValues("actions.dogToVetRelationships") };
+
+		dogToVetRelationships.remove(dogToVetRelationships.fields.findIndex((field) => field.id === relationshipId));
+
+		if (dogToVetRelationshipActions[relationshipId]?.type === "INSERT") {
+			delete dogToVetRelationshipActions[relationshipId];
+		} else {
+			dogToVetRelationshipActions[relationshipId] = {
+				type: "DELETE",
+				payload: relationshipId,
+			};
 		}
+
+		form.setValue("actions.dogToVetRelationships", dogToVetRelationshipActions);
+
+		// HACK: Focus the button after the dialog closes
+		setTimeout(() => {
+			searchDogsInputRef?.current?.focus();
+		}, 0);
+	}
+
+	function toggleDogToVetRelationship(dog: DogsSearch[number]) {
+		const relationshipId = dogToVetRelationships.fields.find(
+			(dogToVetRelationship) => dogToVetRelationship.dogId === dog.id,
+		)?.id;
+
+		if (relationshipId) {
+			const existingDogToVetRelationship = existingDogToVetRelationships?.find(
+				(dogToVetRelationship) => dogToVetRelationship.id === relationshipId,
+			);
+			if (existingDogToVetRelationship) {
+				setConfirmRelationshipDelete(existingDogToVetRelationship.id);
+			} else {
+				handleDogToVetRelationshipDelete(relationshipId);
+			}
+
+			return;
+		}
+		const id = generateId();
+
+		dogToVetRelationships.append({
+			id,
+			vetId: form.getValues("id"),
+			dogId: dog.id,
+			relationship: "primary",
+			dog,
+		});
+
+		form.setValue("actions.dogToVetRelationships", {
+			...form.getValues("actions.dogToVetRelationships"),
+			[id]: {
+				type: "INSERT",
+				payload: {
+					id,
+					vetId: form.getValues("id"),
+					dogId: dog.id,
+					relationship: "primary",
+				},
+			},
+		});
 	}
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
@@ -77,11 +130,53 @@ function VetToDogRelationships({
 				open={!!confirmRelationshipDelete}
 				onOpenChange={() => setConfirmRelationshipDelete(null)}
 				onConfirm={() => {
-					handleVetToDogRelationshipDelete();
+					if (confirmRelationshipDelete) {
+						handleDogToVetRelationshipDelete(confirmRelationshipDelete);
+						// HACK: Focus the combobox trigger after the dialog closes
+						setTimeout(() => {
+							searchDogsInputRef?.current?.focus();
+						}, 0);
+					}
 				}}
 			/>
 
 			<FieldsWrapper title="Dogs" description="Manage the relationships between this vet and the dogs they treat.">
+				<div className="sm:col-span-6">
+					<MultiSelectSearchCombobox
+						ref={searchDogsInputRef}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToVetRelationships.fields.map((dogToVetRelationship) => dogToVetRelationship.dog)}
+						onSelect={(dog) => {
+							toggleDogToVetRelationship(dog);
+						}}
+						onSearch={async (searchTerm) => {
+							const res = await actions.app.dogs.search(searchTerm);
+
+							return res.data ?? [];
+						}}
+						placeholder={
+							dogToVetRelationships.fields.length === 0
+								? "Search dogs..."
+								: dogToVetRelationships.fields.length === 1
+								? "1 dog selected"
+								: `${dogToVetRelationships.fields.length} dogs selected`
+						}
+						renderActions={({ searchTerm }) => (
+							<MultiSelectSearchComboboxAction
+								onSelect={() => {
+									router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+									if (setOpen) {
+										setOpen(false);
+									}
+								}}
+							>
+								<PlusIcon className="mr-1 h-4 w-4" />
+								<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
+							</MultiSelectSearchComboboxAction>
+						)}
+					/>
+				</div>
+
 				<div className="sm:col-span-6">
 					<ul role="list" className="divide-y divide-slate-100">
 						{dogToVetRelationships.fields.map((dogToVetRelationship, index) => (
@@ -89,14 +184,7 @@ function VetToDogRelationships({
 								key={dogToVetRelationship.id}
 								dogToVetRelationship={dogToVetRelationship}
 								index={index}
-								onDelete={() => {
-									if (isNew) {
-										handleVetToDogRelationshipDelete();
-									} else {
-										setConfirmRelationshipDelete(dogToVetRelationship);
-									}
-								}}
-								variant={variant}
+								onDelete={() => toggleDogToVetRelationship(dogToVetRelationship.dog)}
 							/>
 						))}
 					</ul>
@@ -110,19 +198,20 @@ function VetToDogRelationship({
 	dogToVetRelationship,
 	index,
 	onDelete,
-	variant,
 }: {
 	dogToVetRelationship: ManageVetFormSchemaType["dogToVetRelationships"][number];
 	index: number;
 	onDelete: () => void;
-	variant: "sheet" | "form";
 }) {
 	const form = useFormContext<ManageVetFormSchemaType>();
 	const router = useRouter();
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
 	return (
-		<li key={dogToVetRelationship.id} className="flex items-center justify-between gap-x-6 py-4">
+		<li
+			key={dogToVetRelationship.id}
+			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
+		>
 			<div className="flex items-center gap-x-4">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 					<DogIcon className="h-5 w-5" />
@@ -174,7 +263,7 @@ function VetToDogRelationship({
 							>
 								<FormControl>
 									<SelectTrigger>
-										<SelectValue placeholder="Select a relation">
+										<SelectValue placeholder="Select relation">
 											<span className="capitalize">{field.value?.split("-").join(" ")} Vet</span>
 										</SelectValue>
 									</SelectTrigger>
@@ -201,11 +290,7 @@ function VetToDogRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							withoutPortal
-							align={variant == "sheet" ? "start" : "center"}
-							alignOffset={variant === "sheet" ? -114 : 0}
-						>
+						<DropdownMenuContent withoutPortal align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
@@ -224,7 +309,8 @@ function VetToDogRelationship({
 								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => {
+								onSelect={(e) => {
+									e.preventDefault();
 									onDelete();
 								}}
 							>

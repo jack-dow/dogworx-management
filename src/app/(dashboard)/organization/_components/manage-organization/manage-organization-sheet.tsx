@@ -20,7 +20,7 @@ import {
 } from "~/components/ui/sheet";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
-import { hasTrueValue } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { type ManageOrganizationFormSchema } from "./manage-organization";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
@@ -77,14 +77,22 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 		}
 	}
 
+	function handleClose() {
+		setInternalOpen(false);
+		setTimeout(() => {
+			form.reset();
+			form.setValue("id", generateId());
+		}, 205);
+	}
+
 	return (
 		<>
 			<ConfirmFormNavigationDialog
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					setInternalOpen(false);
-					form.reset();
+					handleClose();
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 
@@ -98,12 +106,11 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
 					<SheetTrigger asChild>
-						<Button>Create Organization</Button>
+						<Button>Create organization</Button>
 					</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">

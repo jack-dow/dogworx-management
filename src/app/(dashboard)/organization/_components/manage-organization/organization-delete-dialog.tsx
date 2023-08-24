@@ -21,13 +21,14 @@ function OrganizationDeleteDialog() {
 				if (result.success) {
 					toast({
 						title: `Organization deleted`,
-						description: `Successfully deleted organization "${form.getValues("name")}"`,
+						description: `Successfully deleted organization "${form.getValues("name")}".`,
 					});
 					router.push("/organizations");
 				} else {
 					toast({
 						title: `Organization deletion failed`,
 						description: `There was an error deleting organization "${form.getValues("name")}". Please try again.`,
+						variant: "destructive",
 					});
 				}
 			}}

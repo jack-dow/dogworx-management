@@ -17,7 +17,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
-import { hasTrueValue } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
@@ -67,8 +67,20 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
+
+			setTimeout(() => {
+				form.reset();
+				form.setValue("id", generateId());
+			}, 205);
 		}
+	}
+
+	function handleClose() {
+		setInternalOpen(false);
+		setTimeout(() => {
+			form.reset();
+			form.setValue("id", generateId());
+		}, 205);
 	}
 
 	return (
@@ -77,8 +89,8 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					setInternalOpen(false);
-					form.reset();
+					handleClose();
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 
@@ -92,12 +104,11 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
 					<SheetTrigger asChild>
-						<Button>Create Vet</Button>
+						<Button>Create vet</Button>
 					</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
@@ -130,7 +141,12 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 
 						<Separator className="my-4" />
 
-						<VetToDogRelationships control={form.control} isNew={isNew} variant="sheet" />
+						<VetToDogRelationships
+							control={form.control}
+							existingDogToVetRelationships={vet?.dogToVetRelationships}
+							variant="sheet"
+							setOpen={setInternalOpen}
+						/>
 
 						<Separator className="my-4" />
 

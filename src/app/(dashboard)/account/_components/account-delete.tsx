@@ -28,7 +28,7 @@ function AccountDelete() {
 	const [isDeletingAccount, setIsDeletingAccount] = React.useState(false);
 
 	return (
-		<div className="grid grid-cols-1 items-center gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+		<div className="grid grid-cols-1 items-center gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
 			<div>
 				<h2 className="text-base font-semibold leading-7 text-foreground">Delete account</h2>
 				<p className="text-sm leading-6 text-muted-foreground">
@@ -78,7 +78,9 @@ function AccountDelete() {
 											.catch(() => {
 												toast({
 													title: "Something went wrong",
-													description: "We were unable to delete your account. Please try again later.",
+													description:
+														"An unknown error ocurred and we were unable to delete your account. Please try again.",
+													variant: "destructive",
 												});
 												setIsDeletingAccount(false);
 											});

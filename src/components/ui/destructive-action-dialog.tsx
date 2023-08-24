@@ -16,6 +16,7 @@ type DestructiveActionDialogProps = {
 	name: string;
 	requiresSaveOf?: string;
 	withoutTrigger?: boolean;
+	trigger?: React.ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	onConfirm: () => Promise<void> | void;
@@ -26,6 +27,7 @@ function DestructiveActionDialog({
 	requiresSaveOf,
 	withoutTrigger,
 	onConfirm,
+	trigger,
 	open,
 	onOpenChange,
 }: DestructiveActionDialogProps) {
@@ -40,9 +42,7 @@ function DestructiveActionDialog({
 	return (
 		<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
 			{!withoutTrigger && (
-				<DialogTrigger asChild>
-					<Button variant="destructive">Delete {name}</Button>
-				</DialogTrigger>
+				<DialogTrigger asChild>{trigger ?? <Button variant="destructive">Delete {name}</Button>}</DialogTrigger>
 			)}
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>

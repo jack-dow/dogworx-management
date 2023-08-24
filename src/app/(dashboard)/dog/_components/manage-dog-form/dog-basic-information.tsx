@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as chrono from "chrono-node";
+import { parseDate } from "chrono-node";
 import dayjs from "dayjs";
 import { useFormContext, type Control } from "react-hook-form";
 
@@ -26,7 +26,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 			description="The information you provide here will be used to create your dog's profile."
 		>
 			<FormGroup>
-				<div className="sm:col-span-2">
+				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
 						control={control}
 						name="givenName"
@@ -42,7 +42,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 					/>
 				</div>
 
-				<div className="sm:col-span-2">
+				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
 						control={control}
 						name="breed"
@@ -58,7 +58,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 					/>
 				</div>
 
-				<div className="sm:col-span-2">
+				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
 						control={control}
 						name="color"
@@ -74,7 +74,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 					/>
 				</div>
 
-				<div className="mt-2 space-y-2 sm:col-span-2">
+				<div className="space-y-2 sm:col-span-3 md:col-span-2">
 					<BirthdayInputCalendar control={control} />
 					<FormField
 						control={control}
@@ -95,7 +95,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 					/>
 				</div>
 
-				<div className="sm:col-span-2">
+				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
 						control={control}
 						name="sex"
@@ -112,7 +112,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 										<SelectTrigger>
 											<SelectValue>
 												{/* This is required because field is black for a second on page load otherwise */}
-												<span className={cn(field.value && "capitalize")}>{field.value ?? "Select a sex"}</span>
+												<span className={cn(field.value && "capitalize")}>{field.value ?? "Select sex"}</span>
 											</SelectValue>
 										</SelectTrigger>
 									</FormControl>
@@ -131,7 +131,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 					/>
 				</div>
 
-				<div className="sm:col-span-2">
+				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
 						control={control}
 						name="desexed"
@@ -139,13 +139,6 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 							<FormItem>
 								<FormLabel>Desexed</FormLabel>
 								<FormControl>
-									{/* <SegmentedControl
-												data={["Yes", "No"]}
-												value={field.value ? "Yes" : "No"}
-												onChange={(value) => {
-													field.onChange(value === "Yes");
-												}}
-											/> */}
 									<Tabs
 										value={field.value ? "yes" : "no"}
 										onValueChange={(value) => {
@@ -230,9 +223,9 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 				name="age"
 				render={({ field }) => (
 					<FormItem>
-						<div className="flex justify-between">
+						<div className="inline-flex w-full justify-between gap-x-2">
 							<FormLabel>Birthday</FormLabel>
-							{ageInWords && <span className="text-xs text-muted-foreground">{ageInWords}</span>}
+							{ageInWords && <span className="truncate text-xs text-muted-foreground">{ageInWords}</span>}
 						</div>
 						<FormControl>
 							<Popover
@@ -242,10 +235,15 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 								}}
 							>
 								<PopoverTrigger asChild>
-									<Button variant="outline" role="combobox" aria-expanded={isDatePickerOpen} className="w-full">
+									<Button
+										variant="outline"
+										role="combobox"
+										aria-expanded={isDatePickerOpen}
+										className="w-full focus-visible:outline-1 focus-visible:outline-offset-0"
+									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										<span className="mr-2 truncate">
-											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select a date"}
+											{field.value ? dayjs(field.value).format("MMMM D, YYYY") : "Select date"}
 										</span>
 										<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 									</Button>
@@ -261,7 +259,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 												const val = e.target.value;
 												setInputValue(val);
 
-												const date = chrono.parseDate(val) ?? new Date();
+												const date = parseDate(val) ?? new Date();
 
 												field.onChange(date);
 												setMonth(date);

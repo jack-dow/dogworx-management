@@ -66,7 +66,8 @@ function AccountVerifyNewEmailAddressDialog({
 				toast({
 					title: "Failed to send verification code",
 					description:
-						"An unknown error occurred while trying to send a new verification code to your email address. Please try again later.",
+						"An unknown error occurred while trying to send a new verification code to your email address. Please try again.",
+					variant: "destructive",
 				});
 			})
 			.finally(() => {
@@ -116,7 +117,7 @@ function AccountVerifyNewEmailAddressDialog({
 										if (body.error.code === "NotAuthorized") {
 											toast({
 												title: "Not authorized",
-												description: "You are not authorized to perform this action",
+												description: "You are not authorized to perform this action.",
 												variant: "destructive",
 											});
 										}

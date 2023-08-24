@@ -17,7 +17,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
-import { hasTrueValue } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
@@ -66,8 +66,20 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 			}
 
 			setInternalOpen(false);
-			form.reset();
+
+			setTimeout(() => {
+				form.reset();
+				form.setValue("id", generateId());
+			}, 205);
 		}
+	}
+
+	function handleClose() {
+		setInternalOpen(false);
+		setTimeout(() => {
+			form.reset();
+			form.setValue("id", generateId());
+		}, 205);
 	}
 
 	return (
@@ -76,8 +88,8 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					setInternalOpen(false);
-					form.reset();
+					handleClose();
+					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
 
@@ -91,12 +103,11 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 					}
 
 					setInternalOpen(value);
-					form.reset();
 				}}
 			>
 				{!withoutTrigger && (
 					<SheetTrigger asChild>
-						<Button>Create Vet Clinic</Button>
+						<Button>Create vet clinic</Button>
 					</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">

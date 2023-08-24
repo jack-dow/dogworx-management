@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { organizationInviteLinks, organizations, sessions, users } from "../schemas";
+import { organizationInviteLinks, organizations, sessions, users } from "../schema";
 import { createActionsLogSchema, IdSchema } from "./utils";
 
 // -----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizatio
 	id: IdSchema,
 	organizationId: IdSchema,
 	userId: IdSchema,
-	uses: z.number().int().default(0),
+	uses: z.number().int().positive().default(0),
 	maxUses: z.number().int().positive().nullable(),
 });
 export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizationInviteLinkSchema>;

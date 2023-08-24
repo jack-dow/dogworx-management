@@ -107,14 +107,15 @@ function ManageOrganization<
 		if (success) {
 			toast({
 				title: `Organization ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} organization "${data.name}"`,
+				description: `Successfully ${isNew ? "created" : "updated"} organization "${data.name}".`,
 			});
 		} else {
 			toast({
 				title: `Organization ${isNew ? "Creation" : "Update"} Failed`,
 				description: `There was an error ${isNew ? "creating" : "updating"} organization "${
 					data.name
-				}". Please try again later.`,
+				}". Please try again.`,
+				variant: "destructive",
 			});
 		}
 

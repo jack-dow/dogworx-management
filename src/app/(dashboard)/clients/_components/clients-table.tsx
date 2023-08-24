@@ -33,7 +33,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 							title: `Client deleted`,
 							description: `Successfully deleted client "${confirmClientDelete.givenName}${
 								confirmClientDelete.familyName ? " " + confirmClientDelete.familyName : ""
-							}"`,
+							}".`,
 						});
 					} else {
 						toast({
@@ -41,6 +41,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 							description: `There was an error deleting client "${confirmClientDelete.givenName}${
 								confirmClientDelete.familyName ? " " + confirmClientDelete.familyName : ""
 							}". Please try again.`,
+							variant: "destructive",
 						});
 					}
 				}}
@@ -57,7 +58,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
+					resultLabel: (client) => `${client.givenName} ${client.familyName}`,
 				}}
 				columns={createClientsTableColumns((client) => {
 					setConfirmClientDelete(client);

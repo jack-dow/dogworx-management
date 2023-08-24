@@ -126,7 +126,7 @@ function OrganizationInviteLinks({
 													<span className="sr-only">Open options</span>
 													<EllipsisVerticalIcon className="h-5 w-5" />
 												</DropdownMenuTrigger>
-												<DropdownMenuContent>
+												<DropdownMenuContent align="end">
 													<DropdownMenuLabel>Actions</DropdownMenuLabel>
 													<DropdownMenuSeparator />
 

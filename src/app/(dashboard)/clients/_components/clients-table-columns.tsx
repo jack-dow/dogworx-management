@@ -22,7 +22,7 @@ function createClientsTableColumns(
 			accessorKey: "fullName",
 			accessorFn: (row) => `${row.givenName} ${row.familyName}`,
 			header: () => (
-				<div className="text-sm">
+				<div className="text-xs">
 					<span className="truncate">Full name</span>
 				</div>
 			),
@@ -38,7 +38,7 @@ function createClientsTableColumns(
 		{
 			accessorKey: "emailAddress",
 			header: () => (
-				<div className="hidden text-sm sm:table-cell">
+				<div className="hidden text-xs sm:table-cell">
 					<span className="truncate">Email address</span>
 				</div>
 			),
@@ -56,7 +56,7 @@ function createClientsTableColumns(
 		{
 			accessorKey: "phoneNumber",
 			header: () => (
-				<div className="truncate text-sm">
+				<div className="truncate text-xs">
 					Phone <span className="hidden sm:inline">number</span>
 				</div>
 			),

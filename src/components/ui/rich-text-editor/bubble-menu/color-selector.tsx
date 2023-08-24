@@ -17,7 +17,7 @@ interface ColorSelectorProps {
 const TEXT_COLORS = [
 	{
 		name: "Default",
-		color: "var(--novel-black)",
+		color: "var(--tw-prose-body)",
 	},
 	{
 		name: "Purple",
@@ -56,39 +56,39 @@ const TEXT_COLORS = [
 const HIGHLIGHT_COLORS = [
 	{
 		name: "Default",
-		color: "var(--novel-highlight-default)",
+		color: "var(--rte-highlight-default)",
 	},
 	{
 		name: "Purple",
-		color: "var(--novel-highlight-purple)",
+		color: "var(--rte-highlight-purple)",
 	},
 	{
 		name: "Red",
-		color: "var(--novel-highlight-red)",
+		color: "var(--rte-highlight-red)",
 	},
 	{
 		name: "Yellow",
-		color: "var(--novel-highlight-yellow)",
+		color: "var(--rte-highlight-yellow)",
 	},
 	{
 		name: "Blue",
-		color: "var(--novel-highlight-blue)",
+		color: "var(--rte-highlight-blue)",
 	},
 	{
 		name: "Green",
-		color: "var(--novel-highlight-green)",
+		color: "var(--rte-highlight-green)",
 	},
 	{
 		name: "Orange",
-		color: "var(--novel-highlight-orange)",
+		color: "var(--rte-highlight-orange)",
 	},
 	{
 		name: "Pink",
-		color: "var(--novel-highlight-pink)",
+		color: "var(--rte-highlight-pink)",
 	},
 	{
 		name: "Gray",
-		color: "var(--novel-highlight-gray)",
+		color: "var(--rte-highlight-gray)",
 	},
 ] satisfies BubbleColorMenuItem[];
 

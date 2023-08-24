@@ -1,3 +1,4 @@
+import { type ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import ms from "ms";
 
 import { type SelectUserSchema } from "~/db/validation";
@@ -8,9 +9,10 @@ const sessionCookieOptions = {
 	httpOnly: true,
 	maxAge: ms("30d"),
 	path: "/",
+	// Disables cookies so we can view the site on mible in development
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
-} as const;
+} satisfies Partial<ResponseCookie>;
 
 type SessionCookiePayload = {
 	id: string;
@@ -22,7 +24,7 @@ type SessionCookie = SessionCookiePayload & {
 	nbf: number;
 };
 
-const sessionJWTExpiry = process.env.NODE_ENV === "development" ? 10 : 900; // 15 minutes
+const sessionJWTExpiry = 900; // 15 minutes
 
 async function createSessionJWT(payload: SessionCookiePayload) {
 	const accessToken = await jwt.sign(payload);

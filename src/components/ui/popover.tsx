@@ -11,6 +11,7 @@ const PopoverTrigger = PopoverPrimitive.Trigger;
 
 const PopoverContent = React.forwardRef<
 	React.ElementRef<typeof PopoverPrimitive.Content>,
+	// Use withoutPortal whenever using PopoverContent inside a component that already is within a Portal (e.g. sheet or dialog). This fixes weird focus behavior and other bugs
 	React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & { withoutPortal?: boolean }
 >(({ className, align = "center", withoutPortal = false, sideOffset = 4, ...props }, ref) => {
 	const Content = (

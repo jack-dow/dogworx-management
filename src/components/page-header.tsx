@@ -17,7 +17,7 @@ function PageHeader({ title, back }: PageHeaderProps) {
 		<div className="flex shrink-0 flex-col pb-4 lg:pb-6">
 			{back && (
 				<div className="mb-2">
-					<nav aria-label="Back">
+					<nav aria-label="Back" className="flex">
 						<Link
 							href={back.href}
 							className="flex items-center text-sm font-medium capitalize text-slate-500 hover:text-slate-700"

@@ -23,7 +23,7 @@ function VetDeleteDialog() {
 						title: `Vet deleted`,
 						description: `Successfully deleted vet "${form.getValues("givenName")}${
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
-						}"`,
+						}".`,
 					});
 					router.push("/vets");
 				} else {
@@ -32,6 +32,7 @@ function VetDeleteDialog() {
 						description: `There was an error deleting vet "${form.getValues("givenName")}${
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
 						}". Please try again.`,
+						variant: "destructive",
 					});
 				}
 			}}

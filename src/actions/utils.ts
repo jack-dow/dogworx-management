@@ -141,6 +141,25 @@ function validatePaginationSearchParams({
 	return { count, page, limit, maxPage, sortBy, sortDirection, orderBy };
 }
 
+function constructFamilyName(
+	dogToClientRelationships: Array<{ relationship: string; client: { familyName: string } }>,
+) {
+	return (
+		dogToClientRelationships
+			.filter(({ relationship }) => relationship === "owner")
+			.map(({ client }) => client.familyName)
+			// Ensure a family name only appears once
+			.reduce((uniqueFamilyNames, familyName) => {
+				if (!uniqueFamilyNames.includes(familyName)) {
+					uniqueFamilyNames.push(familyName);
+				}
+				return uniqueFamilyNames;
+			}, [] as string[])
+			.sort()
+			.join("/")
+	);
+}
+
 export {
 	type ExtractServerActionData,
 	createServerAction,
@@ -150,4 +169,5 @@ export {
 	getServerUser,
 	type PaginationSearchParams,
 	validatePaginationSearchParams,
+	constructFamilyName,
 };

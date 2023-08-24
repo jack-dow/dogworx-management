@@ -68,15 +68,20 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 			>
 				<ClientPersonalInformation control={form.control} variant="form" />
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<FormSection
 					title="Manage Relationships"
 					description="Manage the relationships of this client between other dogs within the system."
 				>
-					<ClientToDogRelationships control={form.control} isNew={isNew} variant="form" />
+					<ClientToDogRelationships
+						control={form.control}
+						existingDogToClientRelationships={client?.dogToClientRelationships}
+						variant="form"
+					/>
 				</FormSection>
-				<Separator className="my-4" />
+
+				<Separator />
 
 				<div className="flex justify-end space-x-4">
 					{!isNew && <ClientDeleteDialog />}

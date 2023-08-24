@@ -1,5 +1,6 @@
 import { type Metadata } from "next";
 
+import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
 import { ManageDogForm } from "../_components/manage-dog-form";
@@ -18,7 +19,7 @@ async function UpdateDogPage({ params }: { params: { id: string } }) {
 				back={{ href: "/dogs" }}
 			/>
 
-			{dog.data ? <ManageDogForm dog={dog.data} /> : <div>Dog not found D:</div>}
+			{dog.data ? <ManageDogForm dog={dog.data} /> : <NotFound />}
 		</>
 	);
 }

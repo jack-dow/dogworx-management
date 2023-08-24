@@ -32,6 +32,7 @@ const ManageVetFormSchema = z.intersection(
 				dog: SelectDogSchema.pick({
 					id: true,
 					givenName: true,
+					familyName: true,
 					color: true,
 					breed: true,
 				}),
@@ -122,6 +123,15 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 		}
 	}, [props.vet, form]);
 
+	React.useEffect(() => {
+		if (props.defaultValues) {
+			form.reset({
+				...form.getValues(),
+				...props.defaultValues,
+			});
+		}
+	}, [props.defaultValues, form]);
+
 	async function onSubmit(data: ManageVetFormSchemaType) {
 		let success = false;
 		let newVet: VetUpdate | VetInsert | null | undefined;
@@ -141,14 +151,15 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 				title: `Vet ${isNew ? "Created" : "Updated"}`,
 				description: `Successfully ${isNew ? "created" : "updated"} vet "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
-				}"`,
+				}".`,
 			});
 		} else {
 			toast({
 				title: `Vet ${isNew ? "Creation" : "Update"} Failed`,
 				description: `There was an error ${isNew ? "creating" : "updating"} vet "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
-				}". Please try again later.`,
+				}". Please try again.`,
+				variant: "destructive",
 			});
 		}
 

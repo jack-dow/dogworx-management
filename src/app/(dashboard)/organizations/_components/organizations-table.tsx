@@ -33,12 +33,13 @@ function OrganizationsTable({ result }: { result: OrganizationsList }) {
 					if (result.success) {
 						toast({
 							title: `Organization deleted`,
-							description: `Successfully deleted organization "${confirmOrganizationDelete.name}"`,
+							description: `Successfully deleted organization "${confirmOrganizationDelete.name}".`,
 						});
 					} else {
 						toast({
 							title: `Organization deletion failed`,
 							description: `There was an error deleting organization "${confirmOrganizationDelete.name}". Please try again.`,
+							variant: "destructive",
 						});
 					}
 				}}
@@ -55,7 +56,7 @@ function OrganizationsTable({ result }: { result: OrganizationsList }) {
 
 						return result.data;
 					},
-					renderSearchResultItemText: (client) => `${client.givenName} ${client.familyName}`,
+					resultLabel: (client) => `${client.givenName} ${client.familyName}`,
 				}}
 				columns={createOrganizationsTableColumns((client) => {
 					setConfirmOrganizationDelete(client);

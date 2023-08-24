@@ -6,6 +6,7 @@ import { Inter } from "next/font/google";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { cn } from "~/utils";
 
 export const metadata: Metadata = {
@@ -18,11 +19,13 @@ const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning className="h-full">
-			<body className={cn("min-h-full font-sans antialiased  flex flex-col text-slate-600", fontSans.variable)}>
-				{children}
-				<TailwindIndicator />
-				<Toaster />
-			</body>
+			<TooltipProvider>
+				<body className={cn("min-h-full font-sans antialiased  flex flex-col text-slate-600", fontSans.variable)}>
+					{children}
+					<TailwindIndicator />
+					<Toaster />
+				</body>
+			</TooltipProvider>
 		</html>
 	);
 }

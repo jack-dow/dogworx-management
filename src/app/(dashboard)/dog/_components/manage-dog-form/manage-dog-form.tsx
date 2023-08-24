@@ -22,20 +22,12 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type DogById } from "~/actions";
-import {
-	InsertDogSchema,
-	InsertDogSessionSchema,
-	InsertDogToClientRelationshipSchema,
-	InsertDogToVetRelationshipSchema,
-	SelectClientSchema,
-	SelectUserSchema,
-	SelectVetSchema,
-} from "~/db/validation";
+import { InsertDogSchema, InsertDogToVetRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
+import { Bookings } from "./bookings";
 import { DogBasicInformation } from "./dog-basic-information";
-import { DogSessionsHistory } from "./dog-sessions-history";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
 
@@ -45,30 +37,6 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	color: z.string().max(25).nonempty({ message: "Required" }),
 	notes: z.string().max(100000).nullish(),
 	age: InsertDogSchema.shape.age,
-	sessions: z.array(
-		InsertDogSessionSchema.extend({
-			user: SelectUserSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				organizationId: true,
-				organizationRole: true,
-				profileImageUrl: true,
-			}).nullable(),
-		}),
-	),
-	dogToClientRelationships: z.array(
-		InsertDogToClientRelationshipSchema.extend({
-			client: SelectClientSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				phoneNumber: true,
-			}),
-		}),
-	),
 	dogToVetRelationships: z.array(
 		InsertDogToVetRelationshipSchema.extend({
 			vet: SelectVetSchema.pick({
@@ -104,7 +72,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			isAgeEstimate: true,
 			...dog,
 			actions: {
-				sessions: {},
+				bookings: {},
 				dogToClientRelationships: {},
 				dogToVetRelationships: {},
 			},
@@ -121,7 +89,6 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 			form.reset(
 				{
 					...dog,
-					sessions: form.getValues("sessions"),
 					dogToClientRelationships: mergeRelationships(
 						form.getValues("dogToClientRelationships"),
 						dog.dogToClientRelationships ?? [],
@@ -168,18 +135,23 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 		}
 
 		if (success) {
-			router.push("/dogs");
+			if (isNew) {
+				router.replace(`/dog/${data.id}`);
+			} else {
+				router.push("/dogs");
+			}
 
 			toast({
 				title: `Dog ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} dog "${data.givenName}"`,
+				description: `Successfully ${isNew ? "created" : "updated"} dog "${data.givenName}".`,
 			});
 
 			form.setValue("id", generateId());
 		} else {
 			toast({
 				title: `Dog ${isNew ? "Creation" : "Update"} Failed`,
-				description: `Failed to ${isNew ? "create" : "update"} dog "${data.givenName}"`,
+				description: `Failed to ${isNew ? "create" : "update"} dog "${data.givenName}". Please try again.`,
+				variant: "destructive",
 			});
 		}
 	}
@@ -225,7 +197,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 					<Separator />
 
-					<DogSessionsHistory control={form.control} existingDogSessions={dog?.sessions ?? []} />
+					<Bookings isNew={isNew} bookings={dog?.bookings} />
 
 					<Separator />
 
@@ -255,7 +227,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 									if (result.success) {
 										toast({
 											title: `Dog deleted`,
-											description: `Successfully deleted dog "${form.getValues("givenName")}"`,
+											description: `Successfully deleted dog "${form.getValues("givenName")}".`,
 										});
 										router.push("/dogs");
 									} else {
@@ -264,6 +236,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 											description: `There was an error deleting dog "${form.getValues(
 												"givenName",
 											)}". Please try again.`,
+											variant: "destructive",
 										});
 									}
 								}}

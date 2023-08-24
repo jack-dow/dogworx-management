@@ -52,7 +52,8 @@ function MobileNavigation() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(item.href);
+									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
 									return (
 										<li key={item.name}>
 											<a
@@ -65,6 +66,7 @@ function MobileNavigation() {
 														? "text-slate-700 hover:text-indigo-600 hover:bg-slate-50"
 														: "opacity-25 cursor-not-allowed text-slate-700 hover:bg-transparent hover:text-slate-700",
 													"group flex gap-x-4 rounded-md p-2 font-medium text-base leading-6 items-center",
+													"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 												)}
 											>
 												<item.icon
@@ -90,7 +92,10 @@ function MobileNavigation() {
 						<li className="-mx-2 mt-auto">
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3">
+									<Button
+										variant="ghost"
+										className="mb-2 flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3"
+									>
 										{session.user.profileImageUrl ? (
 											<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-gray-100">
 												<Image
@@ -150,7 +155,7 @@ function MobileNavigation() {
 												.catch(() => {
 													toast({
 														title: "Sign out failed",
-														description: "We had an issue signing you out of your account. Please try again later.",
+														description: "We had an issue signing you out of your account. Please try again.",
 														variant: "destructive",
 													});
 												})

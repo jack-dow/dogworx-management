@@ -68,7 +68,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 			>
 				<VetClinicContactInformation control={form.control} variant="form" />
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<FormSection
 					title="Manage Relationships"
@@ -81,7 +81,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 					/>
 				</FormSection>
 
-				<Separator className="my-4" />
+				<Separator />
 
 				<div className="flex justify-end space-x-4">
 					{!isNew && <VetClinicDeleteDialog />}

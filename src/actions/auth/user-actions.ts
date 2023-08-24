@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { dogSessions, users } from "~/db/schemas";
+import { bookings, users } from "~/db/schema";
 import { UpdateUserSchema } from "~/db/validation";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { createServerAction, getServerSession, getServerUser } from "../utils";
@@ -60,9 +60,9 @@ const deleteUser = createServerAction(async (id: string) => {
 			.where(and(eq(users.organizationId, user.organizationId), eq(users.id, validation.data)));
 
 		await drizzle
-			.update(dogSessions)
-			.set({ userId: null })
-			.where(and(eq(dogSessions.organizationId, user.organizationId), eq(dogSessions.userId, validation.data)));
+			.update(bookings)
+			.set({ createdById: null })
+			.where(and(eq(bookings.organizationId, user.organizationId), eq(bookings.createdById, validation.data)));
 
 		return { success: true, data: undefined };
 	} catch {

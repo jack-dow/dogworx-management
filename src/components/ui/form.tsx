@@ -175,7 +175,7 @@ type FormSectionProps = {
 
 function FormSection({ title, description, children }: FormSectionProps) {
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-4 ">
 			<div>
 				<h2 className={formTitleClasses}>{title}</h2>
 				<p className={formDescriptionClasses}>{description}</p>
@@ -195,7 +195,7 @@ type FormGroupProps = {
 
 function FormGroup({ title, description, children }: FormGroupProps) {
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-y-6">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
 			{title && description && (
 				<div className="col-span-full">
 					<h3 className={formTitleClasses}>{title}</h3>

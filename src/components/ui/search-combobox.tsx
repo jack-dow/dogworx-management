@@ -1,202 +1,244 @@
 "use client";
 
 import * as React from "react";
+import { Command as CommandPrimitive } from "cmdk";
 
-import { Button } from "~/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
-import { CheckIcon, ChevronUpDownIcon } from "~/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn } from "~/utils";
-import { Label } from "./label";
+import { cn, shareRef } from "~/utils";
+import { CheckIcon } from "./icons";
 import { Loader } from "./loader";
+import { useToast } from "./use-toast";
 
-type SearchComboboxContextProps = {
-	searchTerm: string;
-	confirmedNoResults: boolean;
-	setConfirmedNoResults: (value: boolean) => void;
-	inputRef: React.RefObject<HTMLInputElement>;
-	results: Array<RequiredResultProps>;
-	setResults: (value: Array<RequiredResultProps>) => void;
-};
+type RequiredResultProps = { id: string };
 
-const SearchComboboxContent = React.createContext<SearchComboboxContextProps | null>(null);
-
-type RequiredResultProps = {
-	id: string;
-};
-
-interface SearchComboboxProps<Result> {
-	labelText: string;
-	triggerText: string;
+type SearchComboboxProps<Result extends RequiredResultProps> = {
+	resultLabel: (result: Result) => string;
 	onSearch: (searchTerm: string) => Promise<Array<Result>>;
-	selected: Array<Result>;
-	onSelect: (result: Result) => void;
-	renderResultItemText: (result: Result) => string;
-	renderNoResultActions?: (props: SearchComboboxContextProps) => React.ReactNode;
-	/** Sets Popover modal prop to false and makes Popover content not render in a portal to ensure proper focus control when combobox is rendered within a sheet */
-	withinSheet?: boolean;
+	defaultSelected?: Result | null;
+	onSelectChange?: (result: Result | null) => void;
+	renderActions?: ({ searchTerm }: { searchTerm: string }) => React.ReactNode;
 	disabled?: boolean;
-}
+	placeholder?: string;
+	className?: string;
+	classNames?: {
+		input?: string;
+		results?: string;
+	};
+};
 
 // HACK: Using custom type to allow generics with forwardRef. Using this method to void recasting React.forwardRef like this: https://fettblog.eu/typescript-react-generic-forward-refs/#option-3%3A-augment-forwardref
 // As that gets rid of properties like displayName which make it a whole mess. This is a hacky solution but it works. See: https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref/58473012
 // Hopefully forwardRef types will be fixed in the future
 interface WithForwardRefType extends React.FC<SearchComboboxProps<RequiredResultProps>> {
 	<T extends RequiredResultProps>(
-		props: SearchComboboxProps<T> & { ref: React.ForwardedRef<HTMLButtonElement> },
+		props: SearchComboboxProps<T> & { ref?: React.ForwardedRef<HTMLInputElement> },
 	): ReturnType<React.FC<SearchComboboxProps<T>>>;
 }
 
 const SearchCombobox: WithForwardRefType = React.forwardRef(
 	(
 		{
-			labelText,
-			triggerText,
+			resultLabel,
 			onSearch,
-			selected,
-			onSelect,
-			renderResultItemText,
-			renderNoResultActions,
-			withinSheet = false,
-			disabled = false,
+			placeholder,
+			defaultSelected,
+			onSelectChange,
+			disabled,
+			renderActions,
+			className,
+			classNames,
 		},
-		ref: React.ForwardedRef<HTMLButtonElement>,
+		ref: React.ForwardedRef<HTMLInputElement>,
 	) => {
-		const [isOpen, setIsOpen] = React.useState(false);
-		const [searchTerm, setSearchTerm] = React.useState("");
-		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
-		const [confirmedNoResults, setConfirmedNoResults] = React.useState(false);
-		const [results, setResults] = React.useState<Array<RequiredResultProps>>(selected);
-
+		const { toast } = useToast();
 		const inputRef = React.useRef<HTMLInputElement>(null);
-		const triggerId = React.useId();
+
+		const [isOpen, setIsOpen] = React.useState(false);
+		const [searchTerm, setSearchTerm] = React.useState(defaultSelected ? resultLabel(defaultSelected) : "");
+		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
+		const [results, setResults] = React.useState<Array<RequiredResultProps>>(defaultSelected ? [defaultSelected] : []);
+		const [selected, setSelected] = React.useState<RequiredResultProps | null>(defaultSelected ?? null);
+		const [isLoading, setIsLoading] = React.useState(false);
+		const [, startTransition] = React.useTransition();
+
+		const handleKeyDown = React.useCallback(
+			(event: React.KeyboardEvent<HTMLDivElement>) => {
+				const input = inputRef.current;
+				if (!input) {
+					return;
+				}
+
+				if (event.key === "Escape") {
+					if (isOpen) {
+						event.stopPropagation();
+						setIsOpen(false);
+					}
+				} else {
+					if (!isOpen) {
+						setIsOpen(true);
+					}
+				}
+			},
+			[isOpen, setIsOpen],
+		);
 
 		useDidUpdate(() => {
 			if (!debouncedSearchTerm) {
 				return;
 			}
 
-			const fetchResults = async () => {
-				const res = await onSearch(debouncedSearchTerm);
-
-				setResults(res ?? []);
-
-				if (!res || res.length === 0) {
-					setConfirmedNoResults(true);
-				}
-			};
-
-			void fetchResults();
+			startTransition(() => {
+				onSearch(debouncedSearchTerm)
+					.then((data) => {
+						if (searchTerm) {
+							setResults(data);
+						}
+					})
+					.catch(() => {
+						toast({
+							title: "Failed to search",
+							description: "Something went wrong while searching. Please try again.",
+							variant: "destructive",
+						});
+					})
+					.finally(() => {
+						setIsLoading(false);
+					});
+			});
 		}, [debouncedSearchTerm]);
 
-		React.useEffect(() => {
-			if (searchTerm === "") {
-				setResults(selected);
-				setConfirmedNoResults(false);
-			}
-		}, [selected, searchTerm]);
-
 		return (
-			<SearchComboboxContent.Provider
-				value={{ searchTerm, confirmedNoResults, setConfirmedNoResults, inputRef, results, setResults }}
-			>
-				<Label htmlFor={triggerId}>{labelText}</Label>
-				<div className="mt-2">
-					<Popover
-						open={isOpen}
-						onOpenChange={(open) => {
-							setIsOpen(open);
-							if (open === false) {
-								setConfirmedNoResults(true);
-								setSearchTerm("");
+			<CommandPrimitive onKeyDown={handleKeyDown} shouldFilter={false} loop>
+				<div className="relative">
+					<CommandInput
+						ref={shareRef(inputRef, ref)}
+						value={searchTerm}
+						onValueChange={(value) => {
+							setSearchTerm(value);
+
+							if (value !== "") {
+								setIsLoading(true);
+								return;
 							}
+
+							setIsLoading(false);
+							setResults(selected ? [selected] : []);
 						}}
-						modal={!withinSheet}
-					>
-						<PopoverTrigger asChild ref={ref}>
-							<Button
-								id={triggerId}
-								variant="outline"
-								role="combobox"
-								aria-expanded={isOpen}
-								className="w-full"
-								disabled={disabled}
-							>
-								<span className="mr-2 truncate">{triggerText}</span>
-								<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className="max-w-3xl p-0" align="start" withoutPortal={withinSheet}>
-							<Command loop shouldFilter={false}>
-								<CommandInput
-									ref={inputRef}
-									value={searchTerm}
-									onValueChange={(value) => {
-										setSearchTerm(value);
-
-										if (value) {
-											setResults([]);
-											setConfirmedNoResults(false);
-										}
-									}}
-								/>
-								<CommandList>
-									{!confirmedNoResults && (
-										<CommandEmpty>
-											<div className="flex items-center justify-center">
-												<Loader className="m-0" variant="black" size="sm" />
-											</div>
-										</CommandEmpty>
-									)}
-
-									{results.length > 0 && (
-										<CommandGroup className="max-h-[145px] overflow-auto">
-											{results.map((result) => {
-												const isActive = !!selected.find(({ id }) => id === result.id);
-												return (
-													<CommandItem
-														key={result.id}
-														value={result.id}
-														onSelect={() => {
-															onSelect(result);
-															inputRef?.current?.focus();
-														}}
-													>
-														<CheckIcon className={cn("mr-2 h-4 w-4", isActive ? "opacity-100" : "opacity-0")} />
-														<span className="flex-1">{renderResultItemText(result)}</span>
-													</CommandItem>
-												);
-											})}
-										</CommandGroup>
-									)}
-
-									{confirmedNoResults && searchTerm !== "" && (
-										<div className="py-6 pb-[18px] text-center text-sm">No results found...</div>
-									)}
-
-									{((results.length === 0 && searchTerm === "") || confirmedNoResults) && renderNoResultActions && (
-										<CommandGroup heading="Actions">
-											{renderNoResultActions({
-												searchTerm,
-												confirmedNoResults,
-												setConfirmedNoResults,
-												inputRef,
-												results,
-												setResults,
-											})}
-										</CommandGroup>
-									)}
-								</CommandList>
-							</Command>
-						</PopoverContent>
-					</Popover>
+						onBlur={() => {
+							// HACK: This hack is ugly but ensures that this is run after all other react events before the next render.
+							// This is required otherwise when the combobox is within another radix component, like sheet or dialog, it has some funky focus behavior
+							setTimeout(() => {
+								setIsOpen(false);
+								setSearchTerm(selected ? resultLabel(selected) : "");
+							}, 0);
+						}}
+						onFocus={() => setIsOpen(true)}
+						placeholder={placeholder}
+						disabled={disabled}
+						className={cn(classNames?.input, className)}
+					/>
 				</div>
-			</SearchComboboxContent.Provider>
+
+				<div className="relative">
+					{isOpen && (isLoading || results.length > 0 || renderActions || searchTerm !== "") && (
+						<div
+							className={cn(
+								"absolute top-0 z-10 w-96 rounded-md bg-white shadow-lg outline-none animate-in fade-in-0 zoom-in-95 mt-1",
+								classNames?.results,
+							)}
+						>
+							<CommandList className="rounded-md ring-1 ring-slate-200">
+								{isLoading ? (
+									<CommandPrimitive.Loading>
+										<div className="flex items-center justify-center py-6">
+											<Loader className="m-0" variant="black" size="sm" />
+										</div>
+									</CommandPrimitive.Loading>
+								) : null}
+
+								{results.length > 0 && !isLoading && (
+									<CommandGroup className="max-h-[150px] overflow-auto">
+										{results.map((option) => {
+											const isSelected = selected?.id === option.id;
+
+											return (
+												<CommandItem
+													key={option.id}
+													value={option.id}
+													onMouseDown={(event) => {
+														event.preventDefault();
+														event.stopPropagation();
+													}}
+													onSelect={() => {
+														if (isSelected) {
+															setSelected(null);
+															onSelectChange?.(null);
+															if (!searchTerm) {
+																setResults([]);
+															}
+															return;
+														}
+
+														setIsOpen(false);
+														setSearchTerm(resultLabel(option));
+														setSelected(option);
+														onSelectChange?.(option);
+													}}
+													className={cn("flex items-center gap-2 w-full", !isSelected ? "pl-8" : null)}
+												>
+													{isSelected ? <CheckIcon className="w-4" /> : null}
+													{resultLabel(option)}
+												</CommandItem>
+											);
+										})}
+									</CommandGroup>
+								)}
+
+								{!isLoading && searchTerm !== "" && results.length === 0 && (
+									<div
+										className={cn(
+											"select-none rounded-sm px-2 pt-6 text-center text-sm",
+											!renderActions ? "pb-6" : "pb-3.5",
+										)}
+									>
+										No results found...
+									</div>
+								)}
+
+								{!isLoading && (searchTerm === "" || results.length === 0) && renderActions && (
+									// IMPORTANT: We need to substring the search term here because otherwise if the searchTerm is too long it causes the app to freeze
+									<CommandGroup heading="Actions">
+										{renderActions({ searchTerm: searchTerm.substring(0, 30) })}
+									</CommandGroup>
+								)}
+							</CommandList>
+						</div>
+					)}
+				</div>
+			</CommandPrimitive>
 		);
 	},
 );
-SearchCombobox.displayName = "Search";
+SearchCombobox.displayName = "SearchCombobox";
 
-export { SearchCombobox, CommandItem as SearchComboboxItem };
+const SearchComboboxAction = React.forwardRef<
+	React.ElementRef<typeof CommandPrimitive.Item>,
+	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+>((props, ref) => (
+	<CommandItem
+		ref={ref}
+		{...props}
+		onMouseDown={(event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (props.onMouseDown) {
+				props.onMouseDown(event);
+			}
+		}}
+	/>
+));
+SearchComboboxAction.displayName = CommandPrimitive.Item.displayName;
+
+export { type SearchComboboxProps, SearchCombobox, SearchComboboxAction };

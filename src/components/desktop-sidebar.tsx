@@ -37,7 +37,7 @@ function DesktopSidebar() {
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
 					<Link href="/" shallow>
-						<Image src={DogworxPawLogoGradient as string} alt="Dogworx Paw Logo (Gradient Version)" />
+						<Image src={DogworxPawLogoGradient as string} priority alt="Dogworx Paw Logo (Gradient Version)" />
 					</Link>
 				</div>
 				<nav className="flex flex-1 flex-col">
@@ -45,7 +45,8 @@ function DesktopSidebar() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(item.href);
+									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
 									return (
 										<li key={item.name}>
 											<a
@@ -142,7 +143,7 @@ function DesktopSidebar() {
 												.catch(() => {
 													toast({
 														title: "Sign out failed",
-														description: "We had an issue signing you out of your account. Please try again later.",
+														description: "We had an issue signing you out of your account. Please try again.",
 														variant: "destructive",
 													});
 												})

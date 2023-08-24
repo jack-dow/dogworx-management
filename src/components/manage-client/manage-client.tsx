@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
-import { InsertClientSchema, InsertDogToClientRelationshipSchema, SelectDogSchema } from "~/db/validation";
+import { InsertClientSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
@@ -25,16 +25,6 @@ const ManageClientFormSchema = z.intersection(
 		state: z.string().max(50).optional(),
 		postalCode: z.string().max(10).optional(),
 		notes: z.string().max(100000).nullish(),
-		dogToClientRelationships: z.array(
-			InsertDogToClientRelationshipSchema.extend({
-				dog: SelectDogSchema.pick({
-					id: true,
-					givenName: true,
-					color: true,
-					breed: true,
-				}),
-			}),
-		),
 	}),
 	EmailOrPhoneNumberSchema,
 );
@@ -105,6 +95,15 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 		}
 	}, [props.client, form, toast]);
 
+	React.useEffect(() => {
+		if (props.defaultValues) {
+			form.reset({
+				...form.getValues(),
+				...props.defaultValues,
+			});
+		}
+	}, [props.defaultValues, form]);
+
 	async function onSubmit(data: ManageClientFormSchema) {
 		let success = false;
 		let newClient: ClientUpdate | ClientInsert | null | undefined;
@@ -124,14 +123,15 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 				title: `Client ${isNew ? "Created" : "Updated"}`,
 				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
-				}"`,
+				}".`,
 			});
 		} else {
 			toast({
 				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
 				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
 					data.familyName ? " " + data.familyName : ""
-				}". Please try again later.`,
+				}". Please try again.`,
+				variant: "destructive",
 			});
 		}
 
