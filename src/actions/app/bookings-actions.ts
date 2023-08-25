@@ -36,7 +36,7 @@ const listBookings = createServerAction(async (options: PaginationSearchParams) 
 		const data = await drizzle.query.bookings.findMany({
 			columns: {
 				id: true,
-				createdById: true,
+				assignedToId: true,
 				dogId: true,
 				date: true,
 				duration: true,
@@ -133,7 +133,7 @@ const searchBookings = createServerAction(async (options: SearchBookingsOptions)
 				asc(bookings.id),
 			],
 			with: {
-				createdBy: {
+				assignedTo: {
 					columns: {
 						id: true,
 						givenName: true,
@@ -179,7 +179,7 @@ const getBookingById = createServerAction(async (id: string) => {
 						breed: true,
 					},
 				},
-				createdBy: {
+				assignedTo: {
 					columns: {
 						id: true,
 						givenName: true,
@@ -221,7 +221,7 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 
 		const booking = await drizzle.query.bookings.findFirst({
 			with: {
-				createdBy: {
+				assignedTo: {
 					columns: {
 						id: true,
 						givenName: true,
@@ -265,7 +265,7 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 
 		const booking = await drizzle.query.bookings.findFirst({
 			with: {
-				createdBy: {
+				assignedTo: {
 					columns: {
 						id: true,
 						givenName: true,

@@ -26,6 +26,15 @@ type SearchComboboxProps<Result extends RequiredResultProps> = {
 		input?: string;
 		results?: string;
 	};
+	onBlur?: ({
+		setSearchTerm,
+		setSelected,
+		setResults,
+	}: {
+		setSearchTerm: (searchTerm: string) => void;
+		setSelected: (selected: RequiredResultProps | null) => void;
+		setResults: (results: Array<RequiredResultProps>) => void;
+	}) => void;
 };
 
 // HACK: Using custom type to allow generics with forwardRef. Using this method to void recasting React.forwardRef like this: https://fettblog.eu/typescript-react-generic-forward-refs/#option-3%3A-augment-forwardref
@@ -49,6 +58,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 			renderActions,
 			className,
 			classNames,
+			onBlur,
 		},
 		ref: React.ForwardedRef<HTMLInputElement>,
 	) => {
@@ -150,6 +160,10 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 							setTimeout(() => {
 								setIsOpen(false);
 								setSearchTerm(selected ? resultLabel(selected) : "");
+
+								if (onBlur) {
+									onBlur({ setSearchTerm, setSelected, setResults });
+								}
 							}, 0);
 						}}
 						onFocus={() => setIsOpen(true)}

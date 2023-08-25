@@ -72,7 +72,6 @@ const bookings = mysqlTable("bookings", {
 		.onUpdateNow()
 		.notNull(),
 	dogId: char("dog_id", { length: 24 }).notNull(),
-	createdById: char("created_by_id", { length: 24 }),
 	assignedToId: char("assigned_to_id", { length: 24 }),
 	date: timestamp("date").notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
@@ -85,10 +84,7 @@ const bookingsRelations = relations(bookings, ({ one }) => ({
 		fields: [bookings.dogId],
 		references: [dogs.id],
 	}),
-	createdBy: one(users, {
-		fields: [bookings.createdById],
-		references: [users.id],
-	}),
+
 	assignedTo: one(users, {
 		fields: [bookings.assignedToId],
 		references: [users.id],

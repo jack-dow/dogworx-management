@@ -13,6 +13,7 @@ import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { actions, type BookingById } from "~/actions";
+import { useUser } from "~/app/(dashboard)/providers";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
@@ -83,6 +84,7 @@ function secondsToHumanReadable(seconds: number): string {
 function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById["dog"] }) {
 	const router = useRouter();
 
+	const user = useUser();
 	const form = useFormContext<ManageBookingFormSchemaType>();
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
@@ -333,6 +335,14 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 									}
 
 									return result.data;
+								}}
+								onBlur={({ setSearchTerm, setSelected, setResults }) => {
+									if (!form.getValues("assignedToId")) {
+										field.onChange(user?.id);
+										setSearchTerm(`${user.givenName} ${user.familyName}`);
+										setSelected(user);
+										setResults([user]);
+									}
 								}}
 								resultLabel={(result) => `${result.givenName} ${result.familyName}`}
 								onSelectChange={(result) => {

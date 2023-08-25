@@ -49,10 +49,10 @@ function Booking({
 
 				<div className="relative flex items-start space-x-3">
 					<div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-8 ring-white">
-						{booking.createdBy ? (
-							booking.createdBy.profileImageUrl ? (
+						{booking.assignedTo ? (
+							booking.assignedTo.profileImageUrl ? (
 								<Image
-									src={booking.createdBy.profileImageUrl}
+									src={booking.assignedTo.profileImageUrl}
 									alt="User's profile image"
 									width={128}
 									height={128}
@@ -60,8 +60,8 @@ function Booking({
 								/>
 							) : (
 								<>
-									{booking.createdBy.givenName[0]}
-									{booking.createdBy.familyName?.[0]}
+									{booking.assignedTo.givenName[0]}
+									{booking.assignedTo.familyName?.[0]}
 								</>
 							)
 						) : (
@@ -72,8 +72,8 @@ function Booking({
 						<div>
 							<div className="text-sm">
 								<p className="font-medium text-slate-900">
-									{booking.createdBy
-										? `${booking.createdBy.givenName} ${booking.createdBy.familyName}`
+									{booking.assignedTo
+										? `${booking.assignedTo.givenName} ${booking.assignedTo.familyName}`
 										: "Deleted User"}
 								</p>
 							</div>

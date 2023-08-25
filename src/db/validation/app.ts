@@ -100,7 +100,7 @@ export const InsertBookingSchema = createInsertSchema(bookings)
 	.extend({
 		id: IdSchema,
 		dogId: IdSchema,
-		duration: z.number().int().positive().default(0),
+		duration: z.number().int().nonnegative().default(0),
 	});
 export type InsertBookingSchema = z.infer<typeof InsertBookingSchema>;
 

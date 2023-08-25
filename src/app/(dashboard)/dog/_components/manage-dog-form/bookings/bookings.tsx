@@ -141,9 +141,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 												createdAt: new Date(),
 												updatedAt: new Date(),
 												organizationId: user.organizationId,
-												createdById: user.id,
 												assignedToId: booking.assignedToId ?? user.id,
-												createdBy: user,
 												assignedTo: booking.assignedTo ?? user,
 											},
 										};

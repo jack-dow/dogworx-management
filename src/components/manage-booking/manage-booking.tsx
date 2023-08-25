@@ -36,18 +36,10 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		.number({
 			required_error: "Must provide a duration for this booking",
 		})
-		.positive({
+		.nonnegative({
 			message: "Duration must be a positive number",
 		}),
-	createdBy: SelectUserSchema.pick({
-		id: true,
-		givenName: true,
-		familyName: true,
-		emailAddress: true,
-		organizationId: true,
-		organizationRole: true,
-		profileImageUrl: true,
-	}).nullish(),
+
 	assignedTo: SelectUserSchema.pick({
 		id: true,
 		givenName: true,
@@ -96,8 +88,8 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
 			id: props.booking?.id || generateId(),
-			createdById: user.id,
-			createdBy: user,
+			assignedToId: user.id,
+			assignedTo: user,
 			details: "",
 			...props.booking,
 			dogId: props.booking?.dogId || props.dog?.id || undefined,

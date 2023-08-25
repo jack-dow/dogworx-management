@@ -142,7 +142,7 @@ const getDogById = createServerAction(async (id: string) => {
 					where: (bookings) => lte(bookings.date, new Date()),
 					orderBy: (bookings, { asc }) => [desc(bookings.date), asc(bookings.id)],
 					with: {
-						createdBy: {
+						assignedTo: {
 							columns: {
 								id: true,
 								givenName: true,
