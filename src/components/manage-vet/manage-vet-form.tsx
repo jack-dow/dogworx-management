@@ -11,6 +11,7 @@ import { type VetById } from "~/actions";
 import { generateId, hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { FormSection } from "../ui/form";
+import { useToast } from "../ui/use-toast";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetDeleteDialog } from "./vet-delete-dialog";
@@ -30,6 +31,7 @@ type ManageVetFormProps = {
 function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 	const isNew = !vet;
 
+	const { toast } = useToast();
 	const router = useRouter();
 
 	const form = useFormContext<ManageVetFormSchemaType>();
@@ -111,7 +113,22 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} vet
 					</Button>

@@ -19,6 +19,7 @@ import {
 import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
 import { generateId, hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
+import { useToast } from "../ui/use-toast";
 import { type ManageVetFormSchemaType } from "./manage-vet";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetDeleteDialog } from "./vet-delete-dialog";
@@ -48,6 +49,8 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 	vet,
 }: ManageVetSheetProps<VetProp>) {
 	const isNew = !vet;
+
+	const { toast } = useToast();
 
 	const [_open, _setOpen] = React.useState(open || false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
@@ -160,7 +163,22 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>
-							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+							<Button
+								type="submit"
+								disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+								onClick={() => {
+									const numOfErrors = Object.keys(form.formState.errors).length;
+									if (numOfErrors > 0) {
+										toast({
+											title: `Form submission errors`,
+											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+												numOfErrors > 1 ? "s" : ""
+											} with your submission. Please fix them and resubmit.`,
+											variant: "destructive",
+										});
+									}
+								}}
+							>
 								{form.formState.isSubmitting && <Loader size="sm" />}
 								{isNew ? "Create" : "Update"} vet
 							</Button>

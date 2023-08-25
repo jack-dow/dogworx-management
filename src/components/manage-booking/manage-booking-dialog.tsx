@@ -17,6 +17,7 @@ import { generateId } from "~/utils";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Loader } from "../ui/loader";
+import { useToast } from "../ui/use-toast";
 import { BookingFields } from "./booking-fields";
 import { type ManageBookingFormSchemaType } from "./manage-booking";
 
@@ -47,6 +48,8 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 	dog,
 }: ManageBookingDialogProps<BookingProp>) {
 	const isNew = !booking;
+
+	const { toast } = useToast();
 
 	const [_open, _setOpen] = React.useState(open);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
@@ -143,7 +146,22 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 							>
 								Cancel
 							</Button>
-							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}>
+							<Button
+								type="submit"
+								disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
+								onClick={() => {
+									const numOfErrors = Object.keys(form.formState.errors).length;
+									if (numOfErrors > 0) {
+										toast({
+											title: `Form submission errors`,
+											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+												numOfErrors > 1 ? "s" : ""
+											} with your submission. Please fix them and resubmit.`,
+											variant: "destructive",
+										});
+									}
+								}}
+							>
 								{form.formState.isSubmitting && <Loader size="sm" />}
 								{!isNew ? "Update booking" : "Create booking"}
 							</Button>

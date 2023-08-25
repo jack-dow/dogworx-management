@@ -255,7 +255,22 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 						>
 							Back
 						</Button>
-						<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+						<Button
+							type="submit"
+							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+							onClick={() => {
+								const numOfErrors = Object.keys(form.formState.errors).length;
+								if (numOfErrors > 0) {
+									toast({
+										title: `Form submission errors`,
+										description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+											numOfErrors > 1 ? "s" : ""
+										} with your submission. Please fix them and resubmit.`,
+										variant: "destructive",
+									});
+								}
+							}}
+						>
 							{form.formState.isSubmitting && <Loader size="sm" />}
 							{isNew ? "Create" : "Update"} dog
 						</Button>

@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button";
 import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
+import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationById } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { generateId, hasTrueValue } from "~/utils";
@@ -28,6 +29,8 @@ type ManageOrganizationFormProps = {
 
 function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFormProps) {
 	const isNew = !organization;
+
+	const { toast } = useToast();
 
 	const user = useUser();
 	const router = useRouter();
@@ -99,7 +102,22 @@ function ManageOrganizationForm({ organization, onSubmit }: ManageOrganizationFo
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} organization
 					</Button>

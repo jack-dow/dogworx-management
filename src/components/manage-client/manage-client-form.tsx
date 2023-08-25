@@ -11,6 +11,7 @@ import { Separator } from "~/components/ui/separator";
 import { type ClientById } from "~/actions";
 import { generateId, hasTrueValue } from "~/utils";
 import { FormSection } from "../ui/form";
+import { useToast } from "../ui/use-toast";
 import { ClientDeleteDialog } from "./client-delete-dialog";
 import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
@@ -29,6 +30,7 @@ type ManageClientFormProps = {
 function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 	const isNew = !client;
 
+	const { toast } = useToast();
 	const router = useRouter();
 
 	const form = useFormContext<ManageClientFormSchema>();
@@ -98,7 +100,22 @@ function ManageClientForm({ client, onSubmit }: ManageClientFormProps) {
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} client
 					</Button>

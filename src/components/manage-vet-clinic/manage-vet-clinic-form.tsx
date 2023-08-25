@@ -11,6 +11,7 @@ import { Separator } from "~/components/ui/separator";
 import { type VetClinicById } from "~/actions";
 import { generateId, hasTrueValue } from "~/utils";
 import { FormSection } from "../ui/form";
+import { useToast } from "../ui/use-toast";
 import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicDeleteDialog } from "./vet-clinic-delete-dialog";
@@ -28,6 +29,8 @@ type ManageVetClinicFormProps = {
 
 function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) {
 	const isNew = !vetClinic;
+
+	const { toast } = useToast();
 
 	const router = useRouter();
 
@@ -98,7 +101,22 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: ManageVetClinicFormProps) 
 					>
 						Back
 					</Button>
-					<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
 						{form.formState.isSubmitting && <Loader size="sm" />}
 						{isNew ? "Create" : "Update"} vet clinic
 					</Button>

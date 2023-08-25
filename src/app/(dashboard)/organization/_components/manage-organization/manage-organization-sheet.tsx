@@ -18,6 +18,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "~/components/ui/sheet";
+import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { generateId, hasTrueValue } from "~/utils";
@@ -58,6 +59,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 	const internalOpen = open ?? _open;
 	const setInternalOpen = setOpen ?? _setOpen;
 
+	const { toast } = useToast();
 	const router = useRouter();
 	const user = useUser();
 	const form = useFormContext<ManageOrganizationFormSchema>();
@@ -153,7 +155,22 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 							<SheetClose asChild>
 								<Button variant="outline">Cancel</Button>
 							</SheetClose>
-							<Button type="submit" disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}>
+							<Button
+								type="submit"
+								disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+								onClick={() => {
+									const numOfErrors = Object.keys(form.formState.errors).length;
+									if (numOfErrors > 0) {
+										toast({
+											title: `Form submission errors`,
+											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+												numOfErrors > 1 ? "s" : ""
+											} with your submission. Please fix them and resubmit.`,
+											variant: "destructive",
+										});
+									}
+								}}
+							>
 								{form.formState.isSubmitting && <Loader size="sm" />}
 								{isNew ? "Create" : "Update"} organization
 							</Button>
