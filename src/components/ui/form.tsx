@@ -175,12 +175,12 @@ type FormSectionProps = {
 
 function FormSection({ title, description, children }: FormSectionProps) {
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 xl:gap-8 xl:gap-x-4 ">
+		<div className="grid grid-cols-1 gap-4 sm:gap-6 2xl:grid-cols-3 2xl:gap-8 2xl:gap-x-4 ">
 			<div>
 				<h2 className={formTitleClasses}>{title}</h2>
 				<p className={formDescriptionClasses}>{description}</p>
 			</div>
-			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 xl:col-span-2">
+			<div className="sm:rounded-xl sm:bg-white sm:shadow-sm sm:ring-1 sm:ring-slate-900/5 2xl:col-span-2">
 				<div className="sm:p-8">{children}</div>
 			</div>
 		</div>

@@ -30,7 +30,10 @@ function VetContactInformation({
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
 
 	return (
-		<SectionWrapper title="Contact Information" description="The name and basic contact information for this vet.">
+		<SectionWrapper
+			title="Contact Information"
+			description="This information will be used throughout the app to identify this vet. Add any other relevant information about this vet in the notes section."
+		>
 			<FieldsWrapper>
 				<div className="sm:col-span-3">
 					<FormField

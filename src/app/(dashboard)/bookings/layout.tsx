@@ -2,7 +2,7 @@ function Layout(props: { children: React.ReactNode; dialogs: React.ReactNode }) 
 	return (
 		<div>
 			{props.children}
-			{props.dialogs}
+			{/* {props.dialogs} */}
 		</div>
 	);
 }

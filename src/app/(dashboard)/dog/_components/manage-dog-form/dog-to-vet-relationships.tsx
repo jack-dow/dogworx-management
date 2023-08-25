@@ -273,29 +273,31 @@ function DogToVetRelationship({
 			key={dogToVetRelationship.id}
 			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
-			<div className="flex items-center gap-x-2">
+			<div className="flex shrink items-center gap-x-2 truncate">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
 				</div>
 
-				<div className="min-w-0 flex-auto truncate">
+				<div className="min-w-0 flex-auto">
 					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
 						{dogToVetRelationship.vet.givenName} {dogToVetRelationship.vet.familyName}
 					</p>
-					<div className="flex items-center space-x-2 truncate px-2">
+					<div className="flex flex-col gap-y-2 truncate px-2 pt-1 md:flex-row md:items-center md:space-x-2 md:pt-0">
 						{dogToVetRelationship.vet.emailAddress && (
 							<ClickToCopy text={dogToVetRelationship.vet.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
-								{dogToVetRelationship.vet.emailAddress}
+								<span className="truncate">{dogToVetRelationship.vet.emailAddress}</span>
 							</ClickToCopy>
 						)}
 						{dogToVetRelationship.vet.emailAddress && dogToVetRelationship.vet.phoneNumber && (
-							<span aria-hidden="true">&middot;</span>
+							<span aria-hidden="true" className="hidden md:inline">
+								&middot;
+							</span>
 						)}
 						{dogToVetRelationship.vet.phoneNumber && (
 							<ClickToCopy text={dogToVetRelationship.vet.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
-								{dogToVetRelationship.vet.phoneNumber}
+								<span className="truncate">{dogToVetRelationship.vet.phoneNumber}</span>
 							</ClickToCopy>
 						)}
 					</div>

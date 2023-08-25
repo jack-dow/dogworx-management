@@ -105,6 +105,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 
 					if (value === false) {
 						handleClose();
+						return;
 					}
 
 					setInternalOpen(value);
@@ -115,7 +116,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>({
 						<Button>Create vet</Button>
 					</SheetTrigger>
 				)}
-				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
+				<SheetContent className="w-full sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Vet</SheetTitle>
 						<SheetDescription>

@@ -238,7 +238,6 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 
 		revalidatePath("/bookings");
 		revalidatePath("/booking/[id]");
-		revalidatePath("/dog/[id]");
 
 		return { success: true, data: booking };
 	} catch {
@@ -283,7 +282,6 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 
 		revalidatePath("/bookings");
 		revalidatePath("/booking/[id]");
-		revalidatePath("/dog/[id]");
 
 		return { success: true, data: booking };
 	} catch {

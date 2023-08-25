@@ -86,6 +86,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 
 					if (value === false) {
 						handleClose();
+						return;
 					}
 
 					setInternalOpen(value);
@@ -93,7 +94,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 			>
 				{!withoutTrigger && <DialogTrigger asChild>{trigger ?? <Button>Create booking</Button>}</DialogTrigger>}
 
-				<DialogContent>
+				<DialogContent className="xl:max-w-2xl 2xl:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>Manage Booking</DialogTitle>
 						<DialogDescription>

@@ -80,24 +80,7 @@ function RootPage() {
 								<Checkbox checked />
 							</div>
 
-							<div className="flex flex-col gap-y-6">
-								<Button>Button Text</Button>
-								<Button variant="destructive">Button Text</Button>
-								<Button variant="ghost">Button Text</Button>
-								<Button variant="link">Button Text</Button>
-								<Button variant="outline">Button Text</Button>
-								<Button variant="secondary">Button Text</Button>
-							</div>
-							<div className="flex flex-col gap-y-6">
-								<Input placeholder="Search..." />
-							</div>
-							<div className="min-w-[400px]">
-								<RichTextEditor />
-							</div>
-							<div className="flex flex-col gap-y-6">
-								<Checkbox />
-								<Checkbox checked />
-							</div>
+							
 						</>
 					)}
 				</div>

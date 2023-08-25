@@ -212,14 +212,14 @@ function VetToDogRelationship({
 			key={dogToVetRelationship.id}
 			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
-			<div className="flex items-center gap-x-4">
+			<div className="flex shrink items-center gap-x-2 truncate">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 					<DogIcon className="h-5 w-5" />
 				</div>
 
 				<div className="min-w-0 flex-auto">
-					<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
-						{dogToVetRelationship.dog.givenName}
+					<p className="truncate text-sm font-semibold capitalize leading-6 text-slate-900">
+						{dogToVetRelationship.dog.givenName} {dogToVetRelationship.dog.familyName}
 					</p>
 					<p className="truncate text-xs capitalize leading-5 text-slate-500">
 						{dogToVetRelationship.dog.color} {dogToVetRelationship.dog.breed}
@@ -264,7 +264,7 @@ function VetToDogRelationship({
 								<FormControl>
 									<SelectTrigger>
 										<SelectValue placeholder="Select relation">
-											<span className="capitalize">{field.value?.split("-").join(" ")} Vet</span>
+											<span className="whitespace-nowrap capitalize">{field.value?.split("-").join(" ")} Vet</span>
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>

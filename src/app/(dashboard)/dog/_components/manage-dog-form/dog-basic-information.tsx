@@ -26,7 +26,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 	return (
 		<FormSection
 			title="Basic Information"
-			description="The information you provide here will be used to create your dog's profile."
+			description="This information will be used throughout the app to identify this dog. Add any other relevant information about this dog in the notes section."
 		>
 			<FormGroup>
 				<div className="sm:col-span-3 md:col-span-2">
@@ -226,7 +226,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 				name="age"
 				render={({ field }) => (
 					<FormItem>
-						<div className="flex justify-between gap-x-2">
+						<div className="inline-flex w-full justify-between gap-x-2">
 							<FormLabel>Birthday</FormLabel>
 							{ageInWords && <span className="truncate text-xs text-muted-foreground">{ageInWords}</span>}
 						</div>

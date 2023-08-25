@@ -212,13 +212,13 @@ function ClientToDogRelationship({
 			key={dogToClientRelationship.id}
 			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
-			<div className="flex items-center gap-x-4">
+			<div className="flex shrink items-center gap-x-2 truncate">
 				<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 					<DogIcon className="h-5 w-5" />
 				</div>
 				<div className="min-w-0 flex-auto">
-					<p className="text-sm font-semibold capitalize leading-6 text-slate-900">
-						{dogToClientRelationship.dog.givenName}
+					<p className="truncate text-sm font-semibold capitalize leading-6 text-slate-900">
+						{dogToClientRelationship.dog.givenName} {dogToClientRelationship.dog.familyName}
 					</p>
 					<p className="truncate text-xs capitalize leading-5 text-slate-500">{dogToClientRelationship.dog.color}</p>
 				</div>
@@ -263,7 +263,7 @@ function ClientToDogRelationship({
 								<FormControl>
 									<SelectTrigger>
 										<SelectValue placeholder="Select relation">
-											<span className="capitalize">{field.value?.split("-").join(" ")}</span>
+											<span className="whitespace-nowrap capitalize">{field.value?.split("-").join(" ")}</span>
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
@@ -271,7 +271,7 @@ function ClientToDogRelationship({
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (
-											<SelectItem key={relation} value={relation} className="capitalize">
+											<SelectItem key={relation} value={relation} className=" capitalize">
 												{relation.split("-").join(" ")}
 											</SelectItem>
 										))}

@@ -107,6 +107,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 
 					if (value === false) {
 						handleClose();
+						return;
 					}
 
 					setInternalOpen(value);
@@ -117,7 +118,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 						<Button>Create organization</Button>
 					</SheetTrigger>
 				)}
-				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
+				<SheetContent className="w-full sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Organization</SheetTitle>
 						<SheetDescription>

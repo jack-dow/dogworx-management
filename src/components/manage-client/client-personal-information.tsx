@@ -31,7 +31,10 @@ function ClientPersonalInformation({
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
 
 	return (
-		<SectionWrapper title="Personal Information" description="The name and basic contact information for this client">
+		<SectionWrapper
+			title="Personal Information"
+			description="This information will be used throughout the app to identify this client. Add any other relevant information about this client in the notes section."
+		>
 			<FieldsWrapper>
 				<div className="sm:col-span-3">
 					<FormField

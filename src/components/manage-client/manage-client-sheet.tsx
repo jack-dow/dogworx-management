@@ -104,6 +104,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 
 					if (value === false) {
 						handleClose();
+						return;
 					}
 
 					setInternalOpen(value);
@@ -114,7 +115,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>({
 						<Button>Create client</Button>
 					</SheetTrigger>
 				)}
-				<SheetContent className="w-full sm:max-w-md md:max-w-lg xl:max-w-xl">
+				<SheetContent className="w-full sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Client</SheetTitle>
 						<SheetDescription>

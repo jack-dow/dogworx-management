@@ -28,7 +28,7 @@ const ClickToCopy = React.forwardRef<HTMLButtonElement, ButtonProps & { text: st
 				<TooltipTrigger asChild>
 					<Button
 						variant="link"
-						className={cn("p-0 text-muted-foreground h-auto ", className)}
+						className={cn("p-0 text-muted-foreground h-auto justify-start truncate", className)}
 						size="sm"
 						{...props}
 						ref={ref}

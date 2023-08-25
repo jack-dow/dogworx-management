@@ -240,6 +240,7 @@ function VetToVetClinicRelationships({
 										setEditingVetClinic(vetClinic);
 									}}
 									onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+									variant={variant}
 								/>
 							))}
 						</ul>
@@ -255,11 +256,13 @@ function VetToVetClinicRelationship({
 	index,
 	onEdit,
 	onDelete,
+	variant,
 }: {
 	vetToVetClinicRelationship: ManageVetFormSchemaType["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vetClinic: VetClinicById) => void;
 	onDelete: (vetClinic: VetClinicsSearch[number]) => void;
+	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchemaType>();
@@ -267,29 +270,38 @@ function VetToVetClinicRelationship({
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
 	return (
 		<li className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}>
-			<div className="flex items-center gap-x-2">
+			<div className="flex shrink items-center gap-x-2 truncate">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
 				</div>
 
-				<div className="min-w-0 flex-auto truncate">
+				<div className="min-w-0 flex-auto">
 					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
 						{vetToVetClinicRelationship.vetClinic.name}
 					</p>
-					<div className="flex items-center space-x-2 truncate px-2">
+					<div
+						className={cn(
+							"flex flex-col gap-y-2 truncate px-2 pt-1",
+							variant === "sheet"
+								? " xl:flex-row xl:items-center xl:space-x-2 xl:pt-0"
+								: " md:flex-row md:items-center md:space-x-2 md:pt-0",
+						)}
+					>
 						{vetToVetClinicRelationship.vetClinic.emailAddress && (
 							<ClickToCopy text={vetToVetClinicRelationship.vetClinic.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
-								{vetToVetClinicRelationship.vetClinic.emailAddress}
+								<span className="truncate">{vetToVetClinicRelationship.vetClinic.emailAddress}</span>
 							</ClickToCopy>
 						)}
 						{vetToVetClinicRelationship.vetClinic.emailAddress && vetToVetClinicRelationship.vetClinic.phoneNumber && (
-							<span aria-hidden="true">&middot;</span>
+							<span aria-hidden="true" className={cn("hidden", variant === "sheet" ? "xl:inline" : "md:inline")}>
+								&middot;
+							</span>
 						)}
 						{vetToVetClinicRelationship.vetClinic.phoneNumber && (
 							<ClickToCopy text={vetToVetClinicRelationship.vetClinic.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
-								{vetToVetClinicRelationship.vetClinic.phoneNumber}
+								<span className="truncate">{vetToVetClinicRelationship.vetClinic.phoneNumber}</span>
 							</ClickToCopy>
 						)}
 					</div>

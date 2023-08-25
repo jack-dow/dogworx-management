@@ -32,7 +32,7 @@ function VetClinicContactInformation({
 	return (
 		<SectionWrapper
 			title="Contact Information"
-			description="The name and basic contact information for this vet clinic"
+			description="This information will be used throughout the app to identify this vet clinic. Add any other relevant information about this vet clinic in the notes section."
 		>
 			<FieldsWrapper>
 				<div className="sm:col-span-6">

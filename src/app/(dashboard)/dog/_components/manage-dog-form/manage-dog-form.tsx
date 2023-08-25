@@ -36,7 +36,6 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	breed: z.string().max(50).nonempty({ message: "Required" }),
 	color: z.string().max(25).nonempty({ message: "Required" }),
 	notes: z.string().max(100000).nullish(),
-	age: InsertDogSchema.shape.age,
 	dogToVetRelationships: z.array(
 		InsertDogToVetRelationshipSchema.extend({
 			vet: SelectVetSchema.pick({

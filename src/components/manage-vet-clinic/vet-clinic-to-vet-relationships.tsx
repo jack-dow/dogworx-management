@@ -251,6 +251,7 @@ function VetClinicToVetRelationships({
 										setEditingVet(vetClinic);
 									}}
 									onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+									variant={variant}
 								/>
 							))}
 						</ul>
@@ -266,11 +267,13 @@ function VetClinicToVetRelationship({
 	index,
 	onEdit,
 	onDelete,
+	variant,
 }: {
 	vetToVetClinicRelationship: ManageVetClinicFormSchemaType["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vet: VetById) => void;
 	onDelete: (vet: VetsSearch[number]) => void;
+	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetClinicFormSchemaType>();
@@ -281,29 +284,38 @@ function VetClinicToVetRelationship({
 			key={vetToVetClinicRelationship.id}
 			className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}
 		>
-			<div className="flex items-center gap-x-2">
+			<div className="flex shrink items-center gap-x-2 truncate">
 				<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
 					<UserCircleIcon className="h-5 w-5" />
 				</div>
 
-				<div className="min-w-0 flex-auto truncate">
+				<div className="min-w-0 flex-auto ">
 					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
 						{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
 					</p>
-					<div className="flex items-center space-x-2 truncate px-2">
+					<div
+						className={cn(
+							"flex flex-col gap-y-2 truncate px-2 pt-1",
+							variant === "sheet"
+								? " xl:flex-row xl:items-center xl:space-x-2 xl:pt-0"
+								: " md:flex-row md:items-center md:space-x-2 md:pt-0",
+						)}
+					>
 						{vetToVetClinicRelationship.vet.emailAddress && (
 							<ClickToCopy text={vetToVetClinicRelationship.vet.emailAddress}>
 								<EnvelopeIcon className="mr-1 h-3 w-3" />
-								{vetToVetClinicRelationship.vet.emailAddress}
+								<span className="truncate">{vetToVetClinicRelationship.vet.emailAddress}</span>
 							</ClickToCopy>
 						)}
 						{vetToVetClinicRelationship.vet.emailAddress && vetToVetClinicRelationship.vet.phoneNumber && (
-							<span aria-hidden="true">&middot;</span>
+							<span aria-hidden="true" className={cn("hidden", variant === "sheet" ? "xl:inline" : "md:inline")}>
+								&middot;
+							</span>
 						)}
 						{vetToVetClinicRelationship.vet.phoneNumber && (
 							<ClickToCopy text={vetToVetClinicRelationship.vet.phoneNumber}>
 								<PhoneIcon className="mr-1 h-3 w-3" />
-								{vetToVetClinicRelationship.vet.phoneNumber}
+								<span className="truncate">{vetToVetClinicRelationship.vet.phoneNumber}</span>
 							</ClickToCopy>
 						)}
 					</div>
