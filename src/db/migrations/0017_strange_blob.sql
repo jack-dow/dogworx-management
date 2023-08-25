@@ -1,1 +1,0 @@
-ALTER TABLE `dogs` MODIFY COLUMN `sex` enum('male','female','unknown') NOT NULL;

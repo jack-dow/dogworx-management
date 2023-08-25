@@ -1,1 +1,0 @@
-ALTER TABLE `clients` ADD `first_name` varchar(50) NOT NULL;

@@ -40,6 +40,9 @@ import {
 	BuildingStorefrontIcon as VetClinicIcon,
 	UserGroupIcon as VetsIcon,
 } from "@heroicons/react/24/solid";
+import {
+	ExclamationTriangleIcon
+}from "@heroicons/react/24/outline";
 import { DotFilledIcon } from "@radix-ui/react-icons";
 
 import { cn } from "~/utils";

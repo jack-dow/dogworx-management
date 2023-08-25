@@ -226,7 +226,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 				name="age"
 				render={({ field }) => (
 					<FormItem>
-						<div className="inline-flex w-full justify-between gap-x-2">
+						<div className="flex justify-between gap-x-2">
 							<FormLabel>Birthday</FormLabel>
 							{ageInWords && <span className="truncate text-xs text-muted-foreground">{ageInWords}</span>}
 						</div>

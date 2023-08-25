@@ -1,1 +1,0 @@
-ALTER TABLE `dogs` MODIFY COLUMN `age` varchar(64) NOT NULL;

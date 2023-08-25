@@ -1,1 +1,0 @@
-ALTER TABLE `auth_sessions` MODIFY COLUMN `session_token` varchar(255) NOT NULL;

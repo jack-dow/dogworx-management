@@ -107,6 +107,24 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 						setIsLoading(false);
 					});
 			});
+			startTransition(() => {
+				onSearch(debouncedSearchTerm)
+					.then((data) => {
+						if (searchTerm) {
+							setResults(data);
+						}
+					})
+					.catch(() => {
+						toast({
+							title: "Failed to search",
+							description: "Something went wrong while searching. Please try again.",
+							variant: "destructive",
+						});
+					})
+					.finally(() => {
+						setIsLoading(false);
+					});
+			});
 		}, [debouncedSearchTerm]);
 
 		return (
