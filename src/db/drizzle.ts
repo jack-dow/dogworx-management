@@ -34,7 +34,6 @@ class MyLogger implements Logger {
 }
 
 export const drizzle = createDrizzle(connection, {
-	logger: false,
-	schema,
 	logger: process.env.NODE_ENV === "development" ? new MyLogger() : false,
+	schema,
 });

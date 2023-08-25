@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { EditorContent, useEditor, type Editor, type PureEditorContent } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import sanitizeHtml from "sanitize-html";
 
 import { cn } from "~/utils";
@@ -17,7 +17,7 @@ type RichEditorProps = {
 	autofocus?: boolean;
 };
 
-const RichTextEditor = React.forwardRef<PureEditorContent, RichEditorProps>(
+const RichTextEditor = React.forwardRef<HTMLDivElement, RichEditorProps>(
 	({ className, onEditorChange, onValueChange, id, content, autofocus = false }, ref) => {
 		const editor = useEditor({
 			extensions: TiptapExtensions,

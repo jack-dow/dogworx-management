@@ -37,7 +37,7 @@ function VerifyEmailAddressAlertDialog({
 	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(60);
 
 	React.useEffect(() => {
-		let timer: NodeJS.Timer;
+		let timer: NodeJS.Timeout;
 
 		if (open && resendCodeCountdown > 0) {
 			timer = setInterval(() => {

@@ -6,7 +6,7 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingsList } from "~/actions";
-import { DOG_SESSIONS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
+import { BOOKINGS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { createBookingsTableColumns } from "./bookings-table-columns";
 
 function BookingsTable({ result }: { result: BookingsList }) {
@@ -50,7 +50,7 @@ function BookingsTable({ result }: { result: BookingsList }) {
 				columns={createBookingsTableColumns((booking) => {
 					setConfirmBookingDelete(booking);
 				})}
-				sortableColumns={DOG_SESSIONS_SORTABLE_COLUMNS}
+				sortableColumns={BOOKINGS_SORTABLE_COLUMNS}
 				{...result}
 			/>
 		</>

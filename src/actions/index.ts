@@ -14,7 +14,6 @@ import {
 	searchClients,
 	updateClient,
 } from "./app/clients-actions";
-import { deleteDogSession, insertDogSession, searchDogSessions, updateDogSession } from "./app/dog-sessions-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./app/dogs-actions";
 import { getUserById, listUsers, searchUsers } from "./app/users-actions";
 import {

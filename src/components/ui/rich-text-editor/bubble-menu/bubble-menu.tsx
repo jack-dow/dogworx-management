@@ -9,7 +9,7 @@ import { NodeSelector } from "./node-selector";
 
 interface BubbleMenuItem {
 	name: string;
-	isActive: () => boolean;
+	isActive: () => boolean | undefined;
 	command: () => void;
 	icon: typeof BoldIcon;
 }
@@ -17,35 +17,41 @@ interface BubbleMenuItem {
 type BubbleMenuProps = Omit<TipTapBubbleMenuProps, "children">;
 
 const BubbleMenu: FC<BubbleMenuProps> = (props) => {
+	const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
+	const [isColorSelectorOpen, setIsColorSelectorOpen] = useState(false);
+	// const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
+	
+	if(!props.editor) return null;
+
 	const items: BubbleMenuItem[] = [
 		{
 			name: "bold",
-			isActive: () => props.editor.isActive("bold"),
-			command: () => props.editor.chain().focus().toggleBold().run(),
+			isActive: () => props.editor?.isActive("bold"),
+			command: () => props.editor?.chain().focus().toggleBold().run(),
 			icon: BoldIcon,
 		},
 		{
 			name: "italic",
-			isActive: () => props.editor.isActive("italic"),
-			command: () => props.editor.chain().focus().toggleItalic().run(),
+			isActive: () => props.editor?.isActive("italic"),
+			command: () => props.editor?.chain().focus().toggleItalic().run(),
 			icon: ItalicIcon,
 		},
 		{
 			name: "underline",
-			isActive: () => props.editor.isActive("underline"),
-			command: () => props.editor.chain().focus().toggleUnderline().run(),
+			isActive: () => props.editor?.isActive("underline"),
+			command: () => props.editor?.chain().focus().toggleUnderline().run(),
 			icon: UnderlineIcon,
 		},
 		{
 			name: "strike",
-			isActive: () => props.editor.isActive("strike"),
-			command: () => props.editor.chain().focus().toggleStrike().run(),
+			isActive: () => props.editor?.isActive("strike"),
+			command: () => props.editor?.chain().focus().toggleStrike().run(),
 			icon: StrikethroughIcon,
 		},
 		// {
 		// 	name: "code",
-		// 	isActive: () => props.editor.isActive("code"),
-		// 	command: () => props.editor.chain().focus().toggleCode().run(),
+		// 	isActive: () => props.editor>.isActive("code"),
+		// 	command: () => props.editor?.chain().focus().toggleCode().run(),
 		// 	icon: CodeIcon,
 		// },
 	];
@@ -54,7 +60,7 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 		...props,
 		shouldShow: ({ editor }) => {
 			// don't show if not editable
-			if (!props.editor.isEditable) {
+			if (!props.editor?.isEditable) {
 				return false;
 			}
 			// don't show if image is selected
@@ -73,9 +79,7 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 		},
 	};
 
-	const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
-	const [isColorSelectorOpen, setIsColorSelectorOpen] = useState(false);
-	// const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
+
 
 	return (
 		<TipTapBubbleMenu

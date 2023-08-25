@@ -31,7 +31,7 @@ function AccountVerifyNewEmailAddressDialog({
 	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(0);
 
 	React.useEffect(() => {
-		let timer: NodeJS.Timer;
+		let timer: NodeJS.Timeout;
 
 		if (resendCodeCountdown > 0) {
 			timer = setInterval(() => {

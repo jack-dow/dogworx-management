@@ -7,7 +7,7 @@ import { z } from "zod";
 import { drizzle } from "~/db/drizzle";
 import { bookings } from "~/db/schema";
 import { InsertBookingSchema, UpdateBookingSchema } from "~/db/validation";
-import { DOG_SESSIONS_SORTABLE_COLUMNS } from "../sortable-columns";
+import { BOOKINGS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
 	createServerAction,
 	getServerUser,
@@ -30,7 +30,7 @@ const listBookings = createServerAction(async (options: PaginationSearchParams) 
 		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
 			...options,
 			count: countQuery?.[0]?.count ?? 0,
-			sortableColumns: DOG_SESSIONS_SORTABLE_COLUMNS,
+			sortableColumns: BOOKINGS_SORTABLE_COLUMNS,
 		});
 
 		const data = await drizzle.query.bookings.findMany({
