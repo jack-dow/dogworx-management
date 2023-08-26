@@ -7,15 +7,12 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Form } from "~/components/ui/form";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingById, type BookingInsert, type BookingUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { InsertBookingSchema, SelectDogSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue } from "~/utils";
-import { ManageBookingDialog, type ManageBookingDialogProps } from "./manage-booking-dialog";
-import { ManageBookingForm, type ManageBookingFormProps } from "./manage-booking-form";
 
 dayjs.extend(customParseFormat);
 
@@ -63,28 +60,24 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 });
 
 // Had to add `Type` suffix because was getting "Cannot access before initialization" error
-type ManageBookingFormSchemaType = z.infer<typeof ManageBookingFormSchema>;
+type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
 
-type ManageBookingProps<
-	VariantType extends "dialog" | "form",
-	BookingProp extends BookingById | undefined,
-> = VariantType extends "dialog"
-	? Omit<ManageBookingDialogProps<BookingProp>, "onSubmit"> & {
-			variant: VariantType;
-			onSubmit?: ManageBookingDialogProps<BookingProp>["onSubmit"];
-	  }
-	: Omit<ManageBookingFormProps, "onSubmit"> & { variant: VariantType };
+type UseManageBookingFormProps = {
+	booking?: BookingById;
+	defaultValues?: Partial<ManageBookingFormSchema>;
+	onSubmit?: (
+		data: ManageBookingFormSchema,
+	) => Promise<{ success: boolean; data: BookingInsert | BookingUpdate | null | undefined }>;
+};
 
-function ManageBooking<VariantType extends "dialog" | "form", BookingProp extends BookingById | undefined>(
-	props: ManageBookingProps<VariantType, BookingProp>,
-) {
+function useManageBookingForm(props: UseManageBookingFormProps) {
 	const isNew = !props.booking;
 
 	const user = useUser();
 
 	const { toast } = useToast();
 
-	const form = useForm<ManageBookingFormSchemaType>({
+	const form = useForm<ManageBookingFormSchema>({
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
 			id: props.booking?.id || generateId(),
@@ -92,8 +85,7 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 			assignedTo: user,
 			details: "",
 			...props.booking,
-			dogId: props.booking?.dogId || props.dog?.id || undefined,
-			dog: props.dog,
+			...props.defaultValues,
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -122,11 +114,15 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 		}
 	}, [props.defaultValues, form]);
 
-	async function onSubmit(data: ManageBookingFormSchemaType) {
+	async function onSubmit(data: ManageBookingFormSchema) {
 		let success = false;
 		let newBooking: BookingInsert | BookingUpdate | null | undefined;
 
-		if (props.booking) {
+		if (props.onSubmit) {
+			const result = await props.onSubmit(data);
+			success = result.success;
+			newBooking = result.data;
+		} else if (props.booking) {
 			const response = await actions.app.bookings.update(data);
 			success = response.success && !!response.data;
 			newBooking = response.data;
@@ -152,15 +148,7 @@ function ManageBooking<VariantType extends "dialog" | "form", BookingProp extend
 		return { success, data: newBooking };
 	}
 
-	return (
-		<Form {...form}>
-			{props.variant === "dialog" ? (
-				<ManageBookingDialog {...props} onSubmit={props.onSubmit ?? onSubmit} />
-			) : (
-				<ManageBookingForm {...props} onSubmit={onSubmit} />
-			)}
-		</Form>
-	);
+	return { form, onSubmit };
 }
 
-export { type ManageBookingFormSchemaType, ManageBooking };
+export { type ManageBookingFormSchema, type UseManageBookingFormProps, useManageBookingForm };

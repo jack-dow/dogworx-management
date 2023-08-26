@@ -2,31 +2,22 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { type BookingById } from "~/actions";
-import { generateId, hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
-import { type ManageBookingFormSchemaType } from "./manage-booking";
+import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-type ManageBookingFormProps = {
+interface ManageBookingFormProps extends UseManageBookingFormProps {
 	dog?: BookingById["dog"];
-	onSubmit: (data: ManageBookingFormSchemaType) => Promise<{ success: boolean }>;
-	booking?: BookingById;
-	open?: undefined;
-	setOpen?: undefined;
-	onSuccessfulSubmit?: undefined;
-	withoutTrigger?: undefined;
-	trigger?: undefined;
-	defaultValues?: undefined;
-};
+}
 
 function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 	const isNew = !booking;
@@ -34,24 +25,10 @@ function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const form = useFormContext<ManageBookingFormSchemaType>();
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit });
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
-
-	async function handleSubmit(data: ManageBookingFormSchemaType) {
-		const result = await onSubmit(data);
-
-		if (result.success) {
-			if (isNew) {
-				router.replace(`/booking/${data.id}`);
-			} else {
-				router.push("/bookings");
-			}
-
-			form.setValue("id", generateId());
-		}
-	}
 
 	return (
 		<>
@@ -69,7 +46,17 @@ function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					void form.handleSubmit(handleSubmit)(e);
+					void form.handleSubmit(async (data) => {
+						const result = await _onSubmit(data);
+
+						if (result.success) {
+							if (isNew) {
+								router.replace(`/booking/${data.id}`);
+							} else {
+								router.push("/bookings");
+							}
+						}
+					})(e);
 				}}
 				className="space-y-6 lg:space-y-10"
 			>
@@ -93,9 +80,10 @@ function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 						onClick={() => {
 							if (isFormDirty) {
 								setIsConfirmNavigationDialogOpen(true);
-							} else {
-								router.back();
+								return;
 							}
+
+							router.back();
 						}}
 						variant="outline"
 					>

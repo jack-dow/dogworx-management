@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useFormContext } from "react-hook-form";
 
-import { ManageBooking } from "~/components/manage-booking";
+import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
 import { Button } from "~/components/ui/button";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { ChevronLeftIcon, ChevronRightIcon } from "~/components/ui/icons";
@@ -165,7 +165,7 @@ function BookingsList({
 				}}
 			/>
 
-			<ManageBooking
+			<ManageBookingDialog
 				open={isManageBookingDialogOpen}
 				setOpen={(value) => {
 					if (value === false) {
@@ -176,7 +176,6 @@ function BookingsList({
 						}, 205);
 					}
 				}}
-				variant="dialog"
 				withoutTrigger
 				booking={
 					editingBooking

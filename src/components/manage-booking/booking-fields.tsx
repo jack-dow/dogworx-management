@@ -14,6 +14,7 @@ import { useFormContext } from "react-hook-form";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { actions, type BookingById } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
+import { secondsToHumanReadable } from "~/utils";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
@@ -23,7 +24,7 @@ import { Label } from "../ui/label";
 import { RichTextEditor } from "../ui/rich-text-editor";
 import { SearchCombobox, SearchComboboxAction } from "../ui/search-combobox";
 import { TimeInput } from "../ui/time-input";
-import { type ManageBookingFormSchemaType } from "./manage-booking";
+import { type ManageBookingFormSchema } from "./use-manage-booking-form";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(duration);
@@ -59,33 +60,11 @@ function roundDateToNearest15Minutes(date: Date) {
 	return roundedDate.toDate();
 }
 
-function secondsToHumanReadable(seconds: number): string {
-	if (seconds === 86400) {
-		return "1 day";
-	}
-	const hours = Math.floor(seconds / 3600);
-	const minutes = Math.floor((seconds % 3600) / 60);
-	const remainingSeconds = seconds % 60;
-
-	const formattedTime = [];
-	if (hours > 0) {
-		formattedTime.push(`${hours} hour${hours > 1 ? "s" : ""}`);
-	}
-	if (minutes > 0) {
-		formattedTime.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
-	}
-	if (remainingSeconds > 0 || formattedTime.length === 0) {
-		formattedTime.push(`${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`);
-	}
-
-	return formattedTime.join(", ");
-}
-
 function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById["dog"] }) {
 	const router = useRouter();
 
 	const user = useUser();
-	const form = useFormContext<ManageBookingFormSchemaType>();
+	const form = useFormContext<ManageBookingFormSchema>();
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);

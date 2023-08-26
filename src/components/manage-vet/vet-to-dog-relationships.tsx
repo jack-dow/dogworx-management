@@ -302,6 +302,7 @@ function VetToDogRelationship({
 										router.push(`/dog/${dogToVetRelationship.dogId}`);
 										setIsLoadingDogPage(true);
 									}}
+									className="hover:cursor-pointer"
 								>
 									<EditIcon className="mr-2 h-4 w-4" />
 									<span className="flex-1">Edit</span>

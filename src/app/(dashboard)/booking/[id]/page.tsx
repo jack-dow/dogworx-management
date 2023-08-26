@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageBooking } from "~/components/manage-booking";
+import { ManageBookingForm } from "~/components/manage-booking/manage-booking-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
@@ -16,7 +16,7 @@ async function UpdateBookingPage({ params }: { params: { id: string } }) {
 		<>
 			<PageHeader title="Update Booking" back={{ href: "/bookings" }} />
 
-			{result.data ? <ManageBooking variant="form" booking={result.data} /> : <NotFound />}
+			{result.data ? <ManageBookingForm booking={result.data} /> : <NotFound />}
 		</>
 	);
 }

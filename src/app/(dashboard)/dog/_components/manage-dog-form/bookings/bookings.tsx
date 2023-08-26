@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useFormContext } from "react-hook-form";
 
-import { ManageBooking } from "~/components/manage-booking";
+import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
 import { Button } from "~/components/ui/button";
 import { FormSection } from "~/components/ui/form";
 import { PlusIcon } from "~/components/ui/icons";
@@ -98,8 +98,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 								</TabsTrigger>
 							</TabsList>
 
-							<ManageBooking
-								variant="dialog"
+							<ManageBookingDialog
 								dog={{
 									id: form.getValues("id"),
 									givenName: form.getValues("givenName") ?? "Unnamed new dog",

@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageBooking } from "~/components/manage-booking";
+import { ManageBookingForm } from "~/components/manage-booking/manage-booking-form";
 import { PageHeader } from "~/components/page-header";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ function NewBookingPage() {
 		<>
 			<PageHeader title="Create New Booking" back={{ href: "/bookings" }} />
 
-			<ManageBooking variant="form" />
+			<ManageBookingForm />
 		</>
 	);
 }

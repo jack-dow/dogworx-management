@@ -1,6 +1,7 @@
 import {
 	deleteBooking,
 	getBookingById,
+	getBookingsByWeek,
 	insertBooking,
 	listBookings,
 	searchBookings,
@@ -59,6 +60,7 @@ const actions = {
 		bookings: {
 			list: listBookings,
 			search: searchBookings,
+			week: getBookingsByWeek,
 			byId: getBookingById,
 			insert: insertBooking,
 			update: updateBooking,

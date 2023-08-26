@@ -36,7 +36,11 @@ function DesktopSidebar() {
 			{/* Sidebar component, swap this element with another sidebar if you like */}
 			<div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 shadow-sm">
 				<div className="flex shrink-0 items-center pb-3 pt-6">
-					<Link href="/" shallow>
+					<Link
+						href="/"
+						shallow
+						className="rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>
 						<Image src={DogworxPawLogoGradient as string} priority alt="Dogworx Paw Logo (Gradient Version)" />
 					</Link>
 				</div>

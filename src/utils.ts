@@ -132,3 +132,25 @@ export const shareRef =
 			refB.current = instance;
 		}
 	};
+
+export function secondsToHumanReadable(seconds: number): string {
+	if (seconds === 86400) {
+		return "1 day";
+	}
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = seconds % 60;
+
+	const formattedTime = [];
+	if (hours > 0) {
+		formattedTime.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+	}
+	if (minutes > 0) {
+		formattedTime.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+	}
+	if (remainingSeconds > 0 || formattedTime.length === 0) {
+		formattedTime.push(`${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`);
+	}
+
+	return formattedTime.join(", ");
+}

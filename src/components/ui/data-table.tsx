@@ -186,7 +186,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 
 					{isLoading && <Loader variant="black" size="sm" />}
 				</div>
-				<div className="flex flex-1 items-center justify-end space-x-3 md:space-x-5">
+				<div className="flex flex-1 items-center justify-end gap-x-3 md:gap-x-5">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant="outline" size="sm" className="flex h-8 gap-1">
@@ -200,15 +200,15 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 							<DropdownMenuSeparator />
 							{Object.values(sortableColumns).map((column) => {
 								return (
-									<Link
-										key={column.id}
-										href={`${pathname}?${constructPaginationSearchParams(searchParams, {
-											sortBy: column.id,
-											sortDirection: column.id === sortBy ? (sortDirection === "asc" ? "desc" : "asc") : "asc",
-										}).toString()}`}
-										onClick={() => setIsLoading(true)}
-									>
-										<DropdownMenuItem className="justify-between">
+									<DropdownMenuItem asChild key={column.id}>
+										<Link
+											href={`${pathname}?${constructPaginationSearchParams(searchParams, {
+												sortBy: column.id,
+												sortDirection: column.id === sortBy ? (sortDirection === "asc" ? "desc" : "asc") : "asc",
+											}).toString()}`}
+											onClick={() => setIsLoading(true)}
+											className="justify-between hover:cursor-pointer"
+										>
 											{column.label}
 											{column.id === sortBy ? (
 												sortDirection === "asc" ? (
@@ -217,16 +217,18 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 													<SortDescIcon className="h-4 w-4" />
 												)
 											) : null}
-										</DropdownMenuItem>
-									</Link>
+										</Link>
+									</DropdownMenuItem>
 								);
 							})}
 						</DropdownMenuContent>
 					</DropdownMenu>
 					<Separator orientation="vertical" className="h-4" />
-					<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
-						<Button size="sm">Create {name}</Button>
-					</Link>
+					<Button size="sm" asChild>
+						<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
+							Create {name}
+						</Link>
+					</Button>
 				</div>
 			</div>
 			<div className="rounded-md border">
@@ -295,20 +297,20 @@ function PaginationLink({
 	disabled: boolean;
 	children: React.ReactNode;
 }) {
-	const ButtonComp = (
-		<Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex" disabled={disabled}>
-			{children}
-		</Button>
-	);
-
 	if (disabled) {
-		return ButtonComp;
+		return (
+			<Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex" disabled={disabled}>
+				{children}
+			</Button>
+		);
 	}
 
 	return (
-		<Link href={href} onClick={onClick}>
-			{ButtonComp}
-		</Link>
+		<Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex" disabled={disabled} asChild>
+			<Link href={href} onClick={onClick}>
+				{children}
+			</Link>
+		</Button>
 	);
 }
 
@@ -337,16 +339,18 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 							const newPage = Math.floor(currentOffset / Number(pageSize)) + 1;
 
 							return (
-								<Link
-									key={pageSize}
-									href={`${pathname}?${constructPaginationSearchParams(params, {
-										page: newPage,
-										limit: pageSize,
-									}).toString()}`}
-									onClick={() => setIsLoading(true)}
-								>
-									<SelectItem value={`${pageSize}`}>{pageSize}</SelectItem>
-								</Link>
+								<SelectItem value={`${pageSize}`} key={pageSize} asChild>
+									<Link
+										href={`${pathname}?${constructPaginationSearchParams(params, {
+											page: newPage,
+											limit: pageSize,
+										}).toString()}`}
+										onClick={() => setIsLoading(true)}
+										className="hover:cursor-pointer"
+									>
+										{pageSize}
+									</Link>
+								</SelectItem>
 							);
 						})}
 					</SelectContent>

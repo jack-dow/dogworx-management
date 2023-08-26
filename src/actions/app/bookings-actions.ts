@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import dayjs from "dayjs";
+import updateLocale from "dayjs/plugin/updateLocale";
 import { and, desc, eq, gt, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -15,6 +17,11 @@ import {
 	type ExtractServerActionData,
 	type PaginationSearchParams,
 } from "../utils";
+
+dayjs.extend(updateLocale);
+dayjs.updateLocale("en", {
+	weekStart: 1,
+});
 
 const listBookings = createServerAction(async (options: PaginationSearchParams) => {
 	try {
@@ -157,6 +164,59 @@ const searchBookings = createServerAction(async (options: SearchBookingsOptions)
 });
 type BookingsSearch = ExtractServerActionData<typeof searchBookings>;
 
+const getBookingsByWeek = createServerAction(async (options?: { date?: string }) => {
+	const validation = z.object({ date: z.string().optional() }).optional().safeParse(options);
+
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues, data: null };
+	}
+
+	try {
+		const user = await getServerUser();
+
+		const date = dayjs(validation?.data?.date);
+
+		if (!date.isValid) {
+			return { success: false, error: "Invalid date", data: null };
+		}
+
+		const data = await drizzle.query.bookings.findMany({
+			where: and(
+				eq(bookings.organizationId, user.organizationId),
+				gte(bookings.date, date.startOf("week").toDate()),
+				lt(bookings.date, date.endOf("week").toDate()),
+			),
+			with: {
+				dog: {
+					columns: {
+						id: true,
+						givenName: true,
+						familyName: true,
+						color: true,
+						breed: true,
+					},
+				},
+				assignedTo: {
+					columns: {
+						id: true,
+						givenName: true,
+						familyName: true,
+						emailAddress: true,
+						organizationId: true,
+						organizationRole: true,
+						profileImageUrl: true,
+					},
+				},
+			},
+		});
+
+		return { success: true, data };
+	} catch {
+		return { success: false, error: "Failed to get bookings by week", data: null };
+	}
+});
+type BookingsByWeek = ExtractServerActionData<typeof getBookingsByWeek>;
+
 const getBookingById = createServerAction(async (id: string) => {
 	const validId = z.string().safeParse(id);
 
@@ -238,6 +298,7 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 
 		revalidatePath("/bookings");
 		revalidatePath("/booking/[id]");
+		revalidatePath("/calendar/week/[...date]");
 
 		return { success: true, data: booking };
 	} catch {
@@ -282,6 +343,7 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 
 		revalidatePath("/bookings");
 		revalidatePath("/booking/[id]");
+		revalidatePath("/calendar/week/[...date]");
 
 		return { success: true, data: booking };
 	} catch {
@@ -328,6 +390,8 @@ export {
 	type BookingsList,
 	searchBookings,
 	type BookingsSearch,
+	getBookingsByWeek,
+	type BookingsByWeek,
 	getBookingById,
 	type BookingById,
 	insertBooking,

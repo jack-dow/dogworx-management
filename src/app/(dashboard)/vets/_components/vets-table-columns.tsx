@@ -1,5 +1,6 @@
 "use vet";
 
+import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "~/components/ui/button";
@@ -83,9 +84,11 @@ function createVetsTableColumns(
 							<DropdownMenuContent align="end" className="w-[160px]">
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-									Edit
+								<DropdownMenuItem asChild>
+									<Link href={`/vet/${row.original.id}`} className="hover:cursor-pointer">
+										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+										Edit
+									</Link>
 								</DropdownMenuItem>
 
 								<DropdownMenuItem

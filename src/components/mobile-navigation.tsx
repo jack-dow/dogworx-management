@@ -41,7 +41,11 @@ function MobileNavigation() {
 				</Button>
 			</SheetTrigger>
 			<SheetContent className="flex flex-col sm:max-w-md md:max-w-lg lg:hidden" side="left">
-				<Link href="/" shallow>
+				<Link
+					href="/"
+					shallow
+					className="rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
 					<Image src={DogworxPawLogoGradient as string} alt="Dogworx Paw Logo (Gradient Version)" />
 				</Link>
 				<SheetHeader>

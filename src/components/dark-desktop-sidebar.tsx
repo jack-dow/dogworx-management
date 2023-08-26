@@ -41,7 +41,7 @@ type Navigation = {
 };
 
 export const navigation: Array<Navigation> = [
-	{ name: "Calendar", href: "/test", icon: CalendarDaysIcon, disabled: true },
+	{ name: "Calendar", href: "/calendar/week", icon: CalendarDaysIcon, disabled: false },
 	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
 	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
@@ -64,7 +64,7 @@ function DarkDesktopSidebar() {
 					<Link
 						href="/"
 						shallow
-						className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						className="rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>
 						<Image src={DogworxLogoWhite as string} alt="Dogworx Logo (White Version)" priority width={150} />
 					</Link>
@@ -74,7 +74,10 @@ function DarkDesktopSidebar() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+									const current =
+										item.href === pathname ||
+										pathname.startsWith(item.href) ||
+										pathname.startsWith(`${item.href.slice(0, -1)}/`);
 
 									return (
 										<li key={item.name}>

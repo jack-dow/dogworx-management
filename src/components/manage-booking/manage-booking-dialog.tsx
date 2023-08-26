@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
 
 import {
 	Dialog,
@@ -13,59 +12,33 @@ import {
 	DialogTrigger,
 } from "~/components/ui/dialog";
 import { type BookingById, type BookingInsert, type BookingUpdate } from "~/actions";
-import { generateId } from "~/utils";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
+import { Form } from "../ui/form";
 import { Loader } from "../ui/loader";
 import { useToast } from "../ui/use-toast";
 import { BookingFields } from "./booking-fields";
-import { type ManageBookingFormSchemaType } from "./manage-booking";
+import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-type DefaultValues = Partial<ManageBookingFormSchemaType>;
-
-type ManageBookingDialogProps<BookingProp extends BookingById | undefined> = {
-	dog?: BookingById["dog"];
+interface ManageBookingDialogProps<BookingProp extends BookingById | undefined>
+	extends Omit<ManageBookingDialogFormProps<BookingProp>, "setOpen" | "onCancel" | "setIsDirty"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	trigger?: React.ReactNode;
-	onSubmit: (
-		data: ManageBookingFormSchemaType,
-	) => Promise<{ success: boolean; data: BookingInsert | BookingUpdate | null | undefined }>;
-	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
-	booking?: BookingProp;
-	defaultValues?: DefaultValues;
-};
+}
 
-function ManageBookingDialog<BookingProp extends BookingById | undefined>({
-	open,
-	setOpen,
-	withoutTrigger,
-	trigger,
-	onSubmit,
-	onSuccessfulSubmit,
-	booking,
-	dog,
-}: ManageBookingDialogProps<BookingProp>) {
-	const isNew = !booking;
+function ManageBookingDialog<BookingProp extends BookingById | undefined>(
+	props: ManageBookingDialogProps<BookingProp>,
+) {
+	const isNew = !props.booking;
 
-	const { toast } = useToast();
-
-	const [_open, _setOpen] = React.useState(open);
+	const [_open, _setOpen] = React.useState(props.open);
+	const [isDirty, setIsDirty] = React.useState(false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
 
-	const internalOpen = open ?? _open;
-	const setInternalOpen = setOpen ?? _setOpen;
-
-	const form = useFormContext<ManageBookingFormSchemaType>();
-
-	function handleClose() {
-		setInternalOpen(false);
-		setTimeout(() => {
-			form.reset();
-			form.setValue("id", generateId());
-		}, 205);
-	}
+	const internalOpen = props.open ?? _open;
+	const setInternalOpen = props.setOpen ?? _setOpen;
 
 	return (
 		<>
@@ -73,7 +46,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					handleClose();
+					setInternalOpen(false);
 					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
@@ -81,95 +54,129 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>({
 			<Dialog
 				open={internalOpen}
 				onOpenChange={(value) => {
-					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (form.formState.isDirty && value === false) {
+					if (isDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
-						return;
-					}
-
-					if (value === false) {
-						handleClose();
 						return;
 					}
 
 					setInternalOpen(value);
 				}}
 			>
-				{!withoutTrigger && <DialogTrigger asChild>{trigger ?? <Button>Create booking</Button>}</DialogTrigger>}
+				{!props.withoutTrigger && (
+					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking</Button>}</DialogTrigger>
+				)}
 
 				<DialogContent className="xl:max-w-2xl 2xl:max-w-3xl">
 					<DialogHeader>
-						<DialogTitle>Manage Booking</DialogTitle>
+						<DialogTitle>{isNew ? "Create" : "Manage"} Booking</DialogTitle>
 						<DialogDescription>
 							Use this dialog to {isNew ? "create" : "update"} a booking. Click {isNew ? "create" : "update"} booking
 							when you&apos;re finished.
 						</DialogDescription>
 					</DialogHeader>
 
-					<form
-						className="grid gap-4"
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-
-							void form.handleSubmit(async (data) => {
-								const result = await onSubmit(data);
-
-								if (result.success) {
-									if (result.data && onSuccessfulSubmit) {
-										onSuccessfulSubmit(result.data);
-									}
-
-									setInternalOpen(false);
-
-									setTimeout(() => {
-										form.reset();
-										form.setValue("id", generateId());
-									}, 205);
-								}
-							})(e);
+					{/* Put actual form in a separate component inside DialogContent so that it gets unmounted when the dialog is hidden, therefore resetting the form state */}
+					<ManageBookingDialogForm
+						{...props}
+						setOpen={setInternalOpen}
+						onCancel={() => {
+							setIsConfirmCloseDialogOpen(true);
 						}}
-					>
-						<BookingFields variant="dialog" dog={dog} />
-
-						<DialogFooter className="mt-2">
-							<Button
-								variant="outline"
-								onClick={() => {
-									if (form.formState.isDirty) {
-										setIsConfirmCloseDialogOpen(true);
-										return;
-									}
-
-									handleClose();
-								}}
-							>
-								Cancel
-							</Button>
-							<Button
-								type="submit"
-								disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
-								onClick={() => {
-									const numOfErrors = Object.keys(form.formState.errors).length;
-									if (numOfErrors > 0) {
-										toast({
-											title: `Form submission errors`,
-											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-												numOfErrors > 1 ? "s" : ""
-											} with your submission. Please fix them and resubmit.`,
-											variant: "destructive",
-										});
-									}
-								}}
-							>
-								{form.formState.isSubmitting && <Loader size="sm" />}
-								{!isNew ? "Update booking" : "Create booking"}
-							</Button>
-						</DialogFooter>
-					</form>
+						setIsDirty={setIsDirty}
+					/>
 				</DialogContent>
 			</Dialog>
 		</>
+	);
+}
+
+interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefined> extends UseManageBookingFormProps {
+	setOpen: (open: boolean) => void;
+	setIsDirty: (isDirty: boolean) => void;
+	onCancel: () => void;
+	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
+	dog?: BookingById["dog"];
+}
+
+function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
+	setOpen,
+	setIsDirty,
+	onCancel,
+	onSubmit,
+	onSuccessfulSubmit,
+	booking,
+	dog,
+	defaultValues,
+}: ManageBookingDialogFormProps<BookingProp>) {
+	const isNew = !booking;
+
+	const { toast } = useToast();
+
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, defaultValues, onSubmit });
+
+	React.useEffect(() => {
+		setIsDirty(form.formState.isDirty);
+	}, [form.formState.isDirty, setIsDirty]);
+
+	return (
+		<Form {...form}>
+			<form
+				className="grid gap-4"
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+
+					void form.handleSubmit(async (data) => {
+						const result = await _onSubmit(data);
+
+						if (result.success) {
+							if (result.data && onSuccessfulSubmit) {
+								onSuccessfulSubmit(result.data);
+							}
+
+							setOpen(false);
+						}
+					})(e);
+				}}
+			>
+				<BookingFields variant="dialog" dog={dog} />
+
+				<DialogFooter className="mt-2">
+					<Button
+						variant="outline"
+						onClick={() => {
+							if (form.formState.isDirty) {
+								onCancel();
+								return;
+							}
+
+							setOpen(false);
+						}}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
+						{form.formState.isSubmitting && <Loader size="sm" />}
+						{!isNew ? "Update booking" : "Create booking"}
+					</Button>
+				</DialogFooter>
+			</form>
+		</Form>
 	);
 }
 
