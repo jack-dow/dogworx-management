@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { ManageOrganization } from "../_components/manage-organization";
+import { ManageOrganizationForm } from "../_components/manage-organization/manage-organization-form";
 
 export const metadata: Metadata = {
 	title: "Create New Organization | Dogworx Management",
@@ -12,7 +12,7 @@ function NewOrganizationPage() {
 		<>
 			<PageHeader title="Create New Organization" back={{ href: "/organizations" }} />
 
-			<ManageOrganization variant="form" />
+			<ManageOrganizationForm />
 		</>
 	);
 }

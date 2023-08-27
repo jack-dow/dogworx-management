@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext, type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import {
 	FormControl,
@@ -15,16 +15,10 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { RichTextEditor } from "../ui/rich-text-editor";
-import { type ManageVetFormSchemaType } from "./manage-vet";
+import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
-function VetContactInformation({
-	control,
-	variant,
-}: {
-	control: Control<ManageVetFormSchemaType>;
-	variant: "sheet" | "form";
-}) {
-	const form = useFormContext<ManageVetFormSchemaType>();
+function VetContactInformation({ variant }: { variant: "sheet" | "form" }) {
+	const form = useFormContext<ManageVetFormSchema>();
 
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
@@ -37,7 +31,7 @@ function VetContactInformation({
 			<FieldsWrapper>
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="givenName"
 						render={({ field }) => (
 							<FormItem>
@@ -53,7 +47,7 @@ function VetContactInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="familyName"
 						render={({ field }) => (
 							<FormItem>
@@ -69,7 +63,7 @@ function VetContactInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="emailAddress"
 						render={({ field }) => (
 							<FormItem>
@@ -95,7 +89,7 @@ function VetContactInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="phoneNumber"
 						render={({ field }) => (
 							<FormItem>
@@ -121,7 +115,7 @@ function VetContactInformation({
 
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="notes"
 						render={({ field }) => (
 							<FormItem>

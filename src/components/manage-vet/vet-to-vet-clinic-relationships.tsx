@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
@@ -34,26 +34,24 @@ import {
 import { actions, type VetById, type VetClinicById, type VetClinicsSearch } from "~/actions";
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
 import { cn, generateId } from "~/utils";
-import { ManageVetClinic } from "../manage-vet-clinic";
+import { ManageVetClinicSheet } from "../manage-vet-clinic/manage-vet-clinic-sheet";
 import { ClickToCopy } from "../ui/click-to-copy";
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetFormSchemaType } from "./manage-vet";
+import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
 function VetToVetClinicRelationships({
-	control,
 	existingVetToVetClinicRelationships,
 	variant,
 }: {
-	control: Control<ManageVetFormSchemaType>;
 	existingVetToVetClinicRelationships: VetById["vetToVetClinicRelationships"] | undefined;
 	variant: "sheet" | "form";
 }) {
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const form = useFormContext<ManageVetFormSchema>();
 
 	const vetToVetClinicRelationships = useFieldArray({
-		control,
+		control: form.control,
 		name: "vetToVetClinicRelationships",
 		keyName: "rhf-id",
 	});
@@ -133,8 +131,7 @@ function VetToVetClinicRelationships({
 
 	return (
 		<>
-			<ManageVetClinic
-				variant="sheet"
+			<ManageVetClinicSheet
 				vetClinic={editingVetClinic ?? undefined}
 				open={!!editingVetClinic}
 				setOpen={(value) => {
@@ -170,8 +167,7 @@ function VetToVetClinicRelationships({
 			/>
 
 			<FieldsWrapper title="Vet Clinics" description="Manage the relationships between this vet and their vet clinics.">
-				<ManageVetClinic
-					variant="sheet"
+				<ManageVetClinicSheet
 					open={!!isCreateVetClinicSheetOpen}
 					setOpen={(value) => {
 						if (value === false) {
@@ -258,14 +254,14 @@ function VetToVetClinicRelationship({
 	onDelete,
 	variant,
 }: {
-	vetToVetClinicRelationship: ManageVetFormSchemaType["vetToVetClinicRelationships"][number];
+	vetToVetClinicRelationship: ManageVetFormSchema["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vetClinic: VetClinicById) => void;
 	onDelete: (vetClinic: VetClinicsSearch[number]) => void;
 	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const form = useFormContext<ManageVetFormSchema>();
 
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
 	return (

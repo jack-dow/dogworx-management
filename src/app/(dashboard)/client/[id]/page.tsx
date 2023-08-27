@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageClient } from "~/components/manage-client";
+import { ManageClientForm } from "~/components/manage-client/manage-client-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
@@ -19,7 +19,7 @@ async function UpdateClientPage({ params }: { params: { id: string } }) {
 				back={{ href: "/clients" }}
 			/>
 
-			{client.data ? <ManageClient variant="form" client={client.data} /> : <NotFound />}
+			{client.data ? <ManageClientForm client={client.data} /> : <NotFound />}
 		</>
 	);
 }

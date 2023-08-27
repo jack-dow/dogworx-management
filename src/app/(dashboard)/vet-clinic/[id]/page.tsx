@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageVetClinic } from "~/components/manage-vet-clinic";
+import { ManageVetClinicForm } from "~/components/manage-vet-clinic/manage-vet-clinic-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
@@ -19,7 +19,7 @@ async function UpdateVetClinicPage({ params }: { params: { id: string } }) {
 				back={{ href: "/vet-clinics" }}
 			/>
 
-			{result.data ? <ManageVetClinic variant="form" vetClinic={result.data} /> : <NotFound />}
+			{result.data ? <ManageVetClinicForm vetClinic={result.data} /> : <NotFound />}
 		</>
 	);
 }

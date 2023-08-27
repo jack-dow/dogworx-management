@@ -21,7 +21,7 @@ import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
 interface ManageBookingDialogProps<BookingProp extends BookingById | undefined>
-	extends Omit<ManageBookingDialogFormProps<BookingProp>, "setOpen" | "onCancel" | "setIsDirty"> {
+	extends Omit<ManageBookingDialogFormProps<BookingProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -79,7 +79,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 					<ManageBookingDialogForm
 						{...props}
 						setOpen={setInternalOpen}
-						onCancel={() => {
+						onConfirmCancel={() => {
 							setIsConfirmCloseDialogOpen(true);
 						}}
 						setIsDirty={setIsDirty}
@@ -93,7 +93,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefined> extends UseManageBookingFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onCancel: () => void;
+	onConfirmCancel: () => void;
 	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
 	dog?: BookingById["dog"];
 }
@@ -101,7 +101,7 @@ interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefin
 function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 	setOpen,
 	setIsDirty,
-	onCancel,
+	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	booking,
@@ -146,7 +146,7 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 						variant="outline"
 						onClick={() => {
 							if (form.formState.isDirty) {
-								onCancel();
+								onConfirmCancel();
 								return;
 							}
 

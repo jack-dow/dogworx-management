@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext, type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import {
 	FormControl,
@@ -15,16 +15,10 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
-import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchema } from "./use-manage-vet-clinic-form";
 
-function VetClinicContactInformation({
-	control,
-	variant,
-}: {
-	control: Control<ManageVetClinicFormSchemaType>;
-	variant: "sheet" | "form";
-}) {
-	const form = useFormContext<ManageVetClinicFormSchemaType>();
+function VetClinicContactInformation({ variant }: { variant: "sheet" | "form" }) {
+	const form = useFormContext<ManageVetClinicFormSchema>();
 
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
@@ -37,7 +31,7 @@ function VetClinicContactInformation({
 			<FieldsWrapper>
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="name"
 						render={({ field }) => (
 							<FormItem>
@@ -53,7 +47,7 @@ function VetClinicContactInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="emailAddress"
 						render={({ field }) => (
 							<FormItem>
@@ -79,7 +73,7 @@ function VetClinicContactInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="phoneNumber"
 						render={({ field }) => (
 							<FormItem>
@@ -105,7 +99,7 @@ function VetClinicContactInformation({
 
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="notes"
 						render={({ field }) => (
 							<FormItem>

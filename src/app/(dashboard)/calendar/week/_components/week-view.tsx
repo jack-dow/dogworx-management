@@ -103,7 +103,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 							className="rounded-none border-x-0 focus:relative focus-visible:rounded-md focus-visible:outline-offset-0"
 							asChild
 						>
-							<Link href={`/calendar/week/${dayjs().year()}/${dayjs().month() + 1}/${dayjs().date()}`}>Today</Link>
+							<Link href={`/calendar/week`}>Today</Link>
 						</Button>
 						<span className="relative -mx-px h-5 w-px bg-gray-300 md:hidden" />
 						<Button
@@ -160,21 +160,6 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											{date.date()}
 										</span>
 									</button>
-									// <div key={day} className={cn("flex items-center justify-center py-3")}>
-									// 	<span
-									// 		className={cn(date.isToday() ? "bg-primary text-primary-foreground rounded-md px-3 py-1" : "")}
-									// 	>
-									// 		{day}{" "}
-									// 		<span
-									// 			className={cn(
-									// 				"items-center justify-center font-semibold",
-									// 				date.isToday() ? "text-white" : "text-primary",
-									// 			)}
-									// 		>
-									// 			{date.date()}
-									// 		</span>
-									// 	</span>
-									// </div>
 								);
 							})}
 						</div>
@@ -323,6 +308,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 										"sm:col-start-6",
 										"sm:col-start-7",
 									];
+
 									return (
 										<li
 											key={booking.id}
@@ -346,18 +332,20 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											>
 												<p className="text-violet-500 group-hover:text-violet-700">
 													<time dateTime="2022-01-15T10:00">{bookingDate.format("h:mmA")}</time>
-													<span className={cn(booking.duration < 2700 ? "hidden" : "hidden 2xl:inline")}> - </span>
-													<span className={cn(booking.duration < 2700 ? "sr-only" : "sr-only 2xl:not-sr-only")}>
+													<span className={cn(booking.duration < 2700 ? "sm:hidden" : "hidden 2xl:inline")}> - </span>
+													<span className={cn(booking.duration < 2700 ? "sm:sr-only" : "sr-only 2xl:not-sr-only")}>
 														{secondsToHumanReadable(booking.duration)}
 													</span>
-													{booking.duration < 2700 && (
-														<>
-															<span className="hidden xl:inline"> - </span>
-															<span className="hidden xl:inline">
-																{booking.dog.givenName} {booking.dog.familyName}
-															</span>
-														</>
-													)}
+													<span className={cn(booking.duration < 2700 ? "hidden xl:inline" : "hidden")}> - </span>
+													<span
+														className={cn(
+															booking.duration < 2700
+																? "sm:hidden pl-1 sm:pl-0 font-semibold text-violet-700 xl:inline"
+																: "hidden",
+														)}
+													>
+														{booking.dog.givenName} {booking.dog.familyName}
+													</span>
 												</p>
 												{booking.duration >= 2700 && (
 													<p className="text-left font-semibold text-violet-700">

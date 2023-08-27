@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext, type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import { cn } from "~/utils";
 import {
@@ -16,15 +16,9 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { RichTextEditor } from "../ui/rich-text-editor";
-import { type ManageClientFormSchema } from "./manage-client";
+import { type ManageClientFormSchema } from "./use-manage-client-form";
 
-function ClientPersonalInformation({
-	control,
-	variant,
-}: {
-	control: Control<ManageClientFormSchema>;
-	variant: "sheet" | "form";
-}) {
+function ClientPersonalInformation({ variant }: { variant: "sheet" | "form" }) {
 	const form = useFormContext<ManageClientFormSchema>();
 
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
@@ -38,7 +32,7 @@ function ClientPersonalInformation({
 			<FieldsWrapper>
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="givenName"
 						render={({ field }) => (
 							<FormItem>
@@ -54,7 +48,7 @@ function ClientPersonalInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="familyName"
 						render={({ field }) => (
 							<FormItem>
@@ -70,7 +64,7 @@ function ClientPersonalInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="emailAddress"
 						render={({ field }) => (
 							<FormItem>
@@ -96,7 +90,7 @@ function ClientPersonalInformation({
 
 				<div className="sm:col-span-3">
 					<FormField
-						control={control}
+						control={form.control}
 						name="phoneNumber"
 						render={({ field }) => (
 							<FormItem>
@@ -122,7 +116,7 @@ function ClientPersonalInformation({
 
 				<div className={cn(variant === "sheet" ? "col-span-full" : "col-span-3")}>
 					<FormField
-						control={control}
+						control={form.control}
 						name="streetAddress"
 						render={({ field }) => (
 							<FormItem>
@@ -138,7 +132,7 @@ function ClientPersonalInformation({
 
 				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
-						control={control}
+						control={form.control}
 						name="city"
 						render={({ field }) => (
 							<FormItem>
@@ -154,7 +148,7 @@ function ClientPersonalInformation({
 
 				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
-						control={control}
+						control={form.control}
 						name="state"
 						render={({ field }) => (
 							<FormItem>
@@ -170,7 +164,7 @@ function ClientPersonalInformation({
 
 				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
 					<FormField
-						control={control}
+						control={form.control}
 						name="postalCode"
 						render={({ field }) => (
 							<FormItem>
@@ -186,7 +180,7 @@ function ClientPersonalInformation({
 
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="notes"
 						render={({ field }) => (
 							<FormItem>

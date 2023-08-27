@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
 import {
@@ -30,15 +30,13 @@ import {
 import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGroup } from "../ui/form";
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
-import { type ManageClientFormSchema } from "./manage-client";
+import { type ManageClientFormSchema } from "./use-manage-client-form";
 
 function ClientToDogRelationships({
-	control,
 	existingDogToClientRelationships,
 	variant,
 	setOpen,
 }: {
-	control: Control<ManageClientFormSchema>;
 	existingDogToClientRelationships: ClientById["dogToClientRelationships"] | undefined;
 	variant: "sheet" | "form";
 	setOpen?: (open: boolean) => void;
@@ -47,7 +45,7 @@ function ClientToDogRelationships({
 	const form = useFormContext<ManageClientFormSchema>();
 
 	const dogToClientRelationships = useFieldArray({
-		control,
+		control: form.control,
 		name: "dogToClientRelationships",
 		keyName: "rhf-id",
 	});

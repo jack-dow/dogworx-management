@@ -12,9 +12,6 @@ import { InsertClientSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
-import { Form } from "../ui/form";
-import { ManageClientForm, type ManageClientFormProps } from "./manage-client-form";
-import { ManageClientSheet, type ManageClientSheetProps } from "./manage-client-sheet";
 
 const ManageClientFormSchema = z.intersection(
 	InsertClientSchema.extend({
@@ -30,19 +27,19 @@ const ManageClientFormSchema = z.intersection(
 );
 type ManageClientFormSchema = z.infer<typeof ManageClientFormSchema>;
 
-type ManageClientProps<
-	VariantType extends "sheet" | "form",
-	ClientProp extends ClientById | undefined,
-> = VariantType extends "sheet"
-	? Omit<ManageClientSheetProps<ClientProp>, "onSubmit"> & { variant: VariantType }
-	: Omit<ManageClientFormProps, "onSubmit"> & { variant: VariantType };
+type UseManageClientFormProps = {
+	client?: ClientById;
+	defaultValues?: Partial<ManageClientFormSchema>;
+	onSubmit?: (
+		data: ManageClientFormSchema,
+	) => Promise<{ success: boolean; data: ClientInsert | ClientUpdate | null | undefined }>;
+};
 
-function ManageClient<VariantType extends "sheet" | "form", ClientProp extends ClientById | undefined>(
-	props: ManageClientProps<VariantType, ClientProp>,
-) {
+function useManageClientForm(props: UseManageClientFormProps) {
+	const isNew = !props.client;
+
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const isNew = !props.client;
 
 	const { toast } = useToast();
 
@@ -51,7 +48,7 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 	const form = useForm<ManageClientFormSchema>({
 		resolver: zodResolver(ManageClientFormSchema),
 		defaultValues: {
-			id: props.client?.id || props.defaultValues?.id || generateId(),
+			id: generateId(),
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			...props.client,
@@ -95,21 +92,16 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 		}
 	}, [props.client, form, toast]);
 
-	React.useEffect(() => {
-		if (props.defaultValues) {
-			form.reset({
-				...form.getValues(),
-				...props.defaultValues,
-				id: generateId(),
-			});
-		}
-	}, [props.defaultValues, form]);
-
 	async function onSubmit(data: ManageClientFormSchema) {
 		let success = false;
 		let newClient: ClientUpdate | ClientInsert | null | undefined;
 
-		if (props.client) {
+		if (props.onSubmit) {
+			const response = await props.onSubmit(data);
+			success = response.success;
+			newClient = response.data;
+			return { success, data: newClient };
+		} else if (props.client) {
 			const response = await actions.app.clients.update(data);
 			success = response.success && !!response.data;
 			newClient = response.data;
@@ -139,15 +131,7 @@ function ManageClient<VariantType extends "sheet" | "form", ClientProp extends C
 		return { success, data: newClient };
 	}
 
-	return (
-		<Form {...form}>
-			{props.variant === "sheet" ? (
-				<ManageClientSheet {...props} onSubmit={onSubmit} />
-			) : (
-				<ManageClientForm {...props} onSubmit={onSubmit} />
-			)}
-		</Form>
-	);
+	return { form, onSubmit };
 }
 
-export { ManageClient, ManageClientFormSchema };
+export { type ManageClientFormSchema, type UseManageClientFormProps, useManageClientForm };

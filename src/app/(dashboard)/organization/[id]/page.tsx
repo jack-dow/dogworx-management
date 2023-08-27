@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
-import { ManageOrganization } from "../_components/manage-organization";
+import { ManageOrganizationForm } from "../_components/manage-organization/manage-organization-form";
 
 export const metadata: Metadata = {
 	title: "Update Organization | Dogworx Management",
@@ -19,7 +19,7 @@ async function UpdateOrganizationPage({ params }: { params: { id: string } }) {
 				back={{ href: "/organizations" }}
 			/>
 
-			{result.data ? <ManageOrganization variant="form" organization={result.data} /> : <NotFound />}
+			{result.data ? <ManageOrganizationForm organization={result.data} /> : <NotFound />}
 		</>
 	);
 }

@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
+import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -21,71 +20,31 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
-import { generateId, hasTrueValue } from "~/utils";
-import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { hasTrueValue } from "~/utils";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
+import { useManageOrganizationForm, type UseManageOrganizationFormProps } from "./use-manage-organization-form";
 
-type DefaultValues = Partial<ManageOrganizationFormSchema>;
-
-type ManageOrganizationSheetProps<OrganizationProp extends OrganizationById | undefined> = {
+interface ManageOrganizationSheetProps<OrganizationProp extends OrganizationById | undefined>
+	extends Omit<ManageOrganizationSheetFormProps<OrganizationProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
-	onSubmit: (
-		data: ManageOrganizationFormSchema,
-	) => Promise<{ success: boolean; data: OrganizationUpdate | OrganizationInsert | null | undefined }>;
-	onSuccessfulSubmit?: (
-		organization: OrganizationProp extends OrganizationById ? OrganizationUpdate : OrganizationInsert,
-	) => void;
-	organization?: OrganizationProp;
-	defaultValues?: DefaultValues;
-};
+	trigger?: React.ReactNode;
+}
 
-function ManageOrganizationSheet<OrganizationProp extends OrganizationById | undefined>({
-	open,
-	setOpen,
-	onSubmit,
-	onSuccessfulSubmit,
-	withoutTrigger = false,
-	organization,
-}: ManageOrganizationSheetProps<OrganizationProp>) {
-	const isNew = !organization;
+function ManageOrganizationSheet<OrganizationProp extends OrganizationById | undefined>(
+	props: ManageOrganizationSheetProps<OrganizationProp>,
+) {
+	const isNew = !props.organization;
 
-	const [_open, _setOpen] = React.useState(open || false);
+	const [_open, _setOpen] = React.useState(props.open || false);
+	const [isDirty, setIsDirty] = React.useState(false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
 
-	const internalOpen = open ?? _open;
-	const setInternalOpen = setOpen ?? _setOpen;
-
-	const { toast } = useToast();
-	const router = useRouter();
-	const user = useUser();
-	const form = useFormContext<ManageOrganizationFormSchema>();
-	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
-
-	async function handleSubmit(data: ManageOrganizationFormSchema) {
-		const result = await onSubmit(data);
-
-		if (result.success) {
-			if (result.data && onSuccessfulSubmit) {
-				onSuccessfulSubmit(result.data);
-			}
-
-			router.push("/organizations");
-
-			form.reset();
-		}
-	}
-
-	function handleClose() {
-		setInternalOpen(false);
-		setTimeout(() => {
-			form.reset();
-			form.setValue("id", generateId());
-		}, 205);
-	}
+	const internalOpen = props.open ?? _open;
+	const setInternalOpen = props.setOpen ?? _setOpen;
 
 	return (
 		<>
@@ -93,7 +52,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					handleClose();
+					setInternalOpen(false);
 					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
@@ -101,25 +60,18 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 			<Sheet
 				open={internalOpen}
 				onOpenChange={(value) => {
-					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (isFormDirty && value === false) {
+					if (isDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
-						return;
-					}
-
-					if (value === false) {
-						handleClose();
 						return;
 					}
 
 					setInternalOpen(value);
 				}}
 			>
-				{!withoutTrigger && (
-					<SheetTrigger asChild>
-						<Button>Create organization</Button>
-					</SheetTrigger>
+				{!props.withoutTrigger && (
+					<SheetTrigger asChild>{props.trigger ?? <Button>Create organization</Button>}</SheetTrigger>
 				)}
+
 				<SheetContent className="w-full sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
 					<SheetHeader>
 						<SheetTitle>{isNew ? "Create" : "Update"} Organization</SheetTitle>
@@ -131,54 +83,120 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 
 					<Separator className="my-4" />
 
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							void form.handleSubmit(handleSubmit)(e);
+					<ManageOrganizationSheetForm
+						{...props}
+						setOpen={setInternalOpen}
+						onConfirmCancel={() => {
+							setIsConfirmCloseDialogOpen(true);
 						}}
-					>
-						<OrganizationInformation control={form.control} variant="sheet" />
-
-						<Separator className="my-4" />
-
-						<OrganizationInviteLinks
-							control={form.control}
-							existingInviteLinks={organization?.organizationInviteLinks ?? []}
-							variant="sheet"
-						/>
-
-						<Separator className="my-4" />
-
-						<SheetFooter>
-							{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}
-							<SheetClose asChild>
-								<Button variant="outline">Cancel</Button>
-							</SheetClose>
-							<Button
-								type="submit"
-								disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
-								onClick={() => {
-									const numOfErrors = Object.keys(form.formState.errors).length;
-									if (numOfErrors > 0) {
-										toast({
-											title: `Form submission errors`,
-											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-												numOfErrors > 1 ? "s" : ""
-											} with your submission. Please fix them and resubmit.`,
-											variant: "destructive",
-										});
-									}
-								}}
-							>
-								{form.formState.isSubmitting && <Loader size="sm" />}
-								{isNew ? "Create" : "Update"} organization
-							</Button>
-						</SheetFooter>
-					</form>
+						setIsDirty={setIsDirty}
+					/>
 				</SheetContent>
 			</Sheet>
 		</>
+	);
+}
+
+interface ManageOrganizationSheetFormProps<OrganizationProp extends OrganizationById | undefined>
+	extends UseManageOrganizationFormProps {
+	setOpen: (open: boolean) => void;
+	setIsDirty: (isDirty: boolean) => void;
+	onConfirmCancel: () => void;
+	onSuccessfulSubmit?: (
+		client: OrganizationProp extends OrganizationById ? OrganizationUpdate : OrganizationInsert,
+	) => void;
+}
+
+function ManageOrganizationSheetForm<OrganizationProp extends OrganizationById | undefined>({
+	setOpen,
+	setIsDirty,
+	onConfirmCancel,
+	onSubmit,
+	onSuccessfulSubmit,
+	organization,
+	defaultValues,
+}: ManageOrganizationSheetFormProps<OrganizationProp>) {
+	const isNew = !organization;
+
+	const user = useUser();
+
+	const { toast } = useToast();
+
+	const { form, onSubmit: _onSubmit } = useManageOrganizationForm({ organization, defaultValues, onSubmit });
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+
+	React.useEffect(() => {
+		setIsDirty(isFormDirty);
+	}, [isFormDirty, setIsDirty]);
+
+	return (
+		<Form {...form}>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					void form.handleSubmit(async (data) => {
+						const result = await _onSubmit(data);
+
+						if (result.success) {
+							if (result.data && onSuccessfulSubmit) {
+								onSuccessfulSubmit(result.data);
+							}
+
+							setOpen(false);
+						}
+					})(e);
+				}}
+			>
+				<OrganizationInformation variant="sheet" />
+
+				<Separator className="my-4" />
+
+				<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} variant="sheet" />
+
+				<Separator className="my-4" />
+
+				<SheetFooter>
+					{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}
+					<SheetClose asChild>
+						<Button
+							variant="outline"
+							onClick={(e) => {
+								e.preventDefault();
+								if (isFormDirty) {
+									onConfirmCancel();
+									return;
+								}
+
+								setOpen(false);
+							}}
+						>
+							Cancel
+						</Button>
+					</SheetClose>
+
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
+						{form.formState.isSubmitting && <Loader size="sm" />}
+						{isNew ? "Create" : "Update"} organization
+					</Button>
+				</SheetFooter>
+			</form>
+		</Form>
 	);
 }
 

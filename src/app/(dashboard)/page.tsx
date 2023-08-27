@@ -24,6 +24,10 @@ function RootPage() {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const router = useRouter();
 
+	if (process.env.NODE_ENV !== "development") {
+		router.replace("/calendar/week");
+	}
+
 	return (
 		<>
 			<PageHeader title="Dashboard" />

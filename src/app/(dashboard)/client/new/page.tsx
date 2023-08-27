@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageClient } from "~/components/manage-client";
+import { ManageClientForm } from "~/components/manage-client/manage-client-form";
 import { PageHeader } from "~/components/page-header";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ function NewClientPage() {
 		<>
 			<PageHeader title="Create New Client" back={{ href: "/clients" }} />
 
-			<ManageClient variant="form" />
+			<ManageClientForm />
 		</>
 	);
 }

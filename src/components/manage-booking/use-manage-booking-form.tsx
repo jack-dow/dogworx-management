@@ -80,7 +80,7 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const form = useForm<ManageBookingFormSchema>({
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
-			id: props.booking?.id || generateId(),
+			id: generateId(),
 			assignedToId: user.id,
 			assignedTo: user,
 			details: "",
@@ -104,24 +104,15 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 		}
 	}, [props.booking, form]);
 
-	React.useEffect(() => {
-		if (props.defaultValues) {
-			form.reset({
-				...form.getValues(),
-				...props.defaultValues,
-				id: generateId(),
-			});
-		}
-	}, [props.defaultValues, form]);
-
 	async function onSubmit(data: ManageBookingFormSchema) {
 		let success = false;
 		let newBooking: BookingInsert | BookingUpdate | null | undefined;
 
 		if (props.onSubmit) {
-			const result = await props.onSubmit(data);
-			success = result.success;
-			newBooking = result.data;
+			const response = await props.onSubmit(data);
+			success = response.success;
+			newBooking = response.data;
+			return { success, data: newBooking };
 		} else if (props.booking) {
 			const response = await actions.app.bookings.update(data);
 			success = response.success && !!response.data;

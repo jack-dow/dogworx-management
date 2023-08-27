@@ -6,7 +6,7 @@ import { useFormContext } from "react-hook-form";
 import { actions } from "~/actions";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
-import { type ManageClientFormSchema } from "./manage-client";
+import { type ManageClientFormSchema } from "./use-manage-client-form";
 
 function ClientDeleteDialog() {
 	const form = useFormContext<ManageClientFormSchema>();

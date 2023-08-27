@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { ManageVet } from "~/components/manage-vet";
+import { ManageVetSheet } from "~/components/manage-vet/manage-vet-sheet";
 import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
@@ -129,8 +129,7 @@ function DogToVetRelationships({
 
 	return (
 		<>
-			<ManageVet
-				variant="sheet"
+			<ManageVetSheet
 				vet={editingVet ?? undefined}
 				open={!!editingVet}
 				setOpen={(value) => {
@@ -166,8 +165,7 @@ function DogToVetRelationships({
 			/>
 
 			<FormGroup title="Vets" description="Manage the relationships between this dog and vets.">
-				<ManageVet
-					variant="sheet"
+				<ManageVetSheet
 					open={!!isCreateVetSheetOpen}
 					setOpen={(value) => {
 						if (value === false) {

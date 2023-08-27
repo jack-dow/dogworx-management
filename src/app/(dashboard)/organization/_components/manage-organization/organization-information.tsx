@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import {
 	FormControl,
@@ -15,15 +15,11 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
-import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
 
-function OrganizationInformation({
-	control,
-	variant,
-}: {
-	control: Control<ManageOrganizationFormSchema>;
-	variant: "sheet" | "form";
-}) {
+function OrganizationInformation({ variant }: { variant: "sheet" | "form" }) {
+	const form = useFormContext<ManageOrganizationFormSchema>();
+
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
 	const FieldsWrapper = variant === "sheet" ? React.Fragment : FormGroup;
 
@@ -32,7 +28,7 @@ function OrganizationInformation({
 			<FieldsWrapper>
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="name"
 						render={({ field }) => (
 							<FormItem>
@@ -48,7 +44,7 @@ function OrganizationInformation({
 
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="notes"
 						render={({ field }) => (
 							<FormItem>

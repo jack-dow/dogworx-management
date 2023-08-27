@@ -2,56 +2,30 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { type VetById } from "~/actions";
-import { generateId, hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetFormSchemaType } from "./manage-vet";
+import { useManageVetForm, type UseManageVetFormProps } from "./use-manage-vet-form";
 import { VetContactInformation } from "./vet-contact-information";
 import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-type ManageVetFormProps = {
-	open?: never;
-	setOpen?: never;
-	onSuccessfulSubmit?: never;
-	defaultValues?: never;
-	withoutTrigger?: never;
-	vet?: VetById;
-	onSubmit: (data: ManageVetFormSchemaType) => Promise<{ success: boolean }>;
-};
-
-function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
+function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
 	const isNew = !vet;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const { form, onSubmit: _onSubmit } = useManageVetForm({ vet, onSubmit });
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
-
-	async function handleSubmit(data: ManageVetFormSchemaType) {
-		const result = await onSubmit(data);
-
-		if (result.success) {
-			if (isNew) {
-				router.replace(`/vet/${data.id}`);
-			} else {
-				router.push("/vets");
-			}
-
-			form.setValue("id", generateId());
-		}
-	}
 
 	return (
 		<>
@@ -69,11 +43,22 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					void form.handleSubmit(handleSubmit)(e);
+					void form.handleSubmit(async (data) => {
+						const result = await _onSubmit(data);
+
+						if (result.success) {
+							if (isNew) {
+								router.replace(`/vet/${data.id}`);
+								return;
+							}
+
+							router.push("/vets");
+						}
+					})(e);
 				}}
 				className="space-y-6 lg:space-y-10"
 			>
-				<VetContactInformation control={form.control} variant="form" />
+				<VetContactInformation variant="form" />
 
 				<Separator />
 
@@ -82,18 +67,13 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 					description="Manage the relationships of this vet clinic between other vets within the system."
 				>
 					<VetToVetClinicRelationships
-						control={form.control}
 						existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
 						variant="form"
 					/>
 
 					<Separator className="my-4" />
 
-					<VetToDogRelationships
-						control={form.control}
-						existingDogToVetRelationships={vet?.dogToVetRelationships}
-						variant="form"
-					/>
+					<VetToDogRelationships existingDogToVetRelationships={vet?.dogToVetRelationships} variant="form" />
 				</FormSection>
 
 				<Separator />
@@ -138,4 +118,4 @@ function ManageVetForm({ vet, onSubmit }: ManageVetFormProps) {
 	);
 }
 
-export { type ManageVetFormProps, ManageVetForm };
+export { ManageVetForm };

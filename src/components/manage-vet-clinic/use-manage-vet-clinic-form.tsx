@@ -6,15 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Form } from "~/components/ui/form";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
 import { InsertVetClinicSchema, InsertVetToVetClinicRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
-import { ManageVetClinicForm, type ManageVetClinicFormProps } from "./manage-vet-clinic-form";
-import { ManageVetClinicSheet, type ManageVetClinicSheetProps } from "./manage-vet-clinic-sheet";
 
 const ManageVetClinicFormSchema = z.intersection(
 	InsertVetClinicSchema.extend({
@@ -35,30 +32,30 @@ const ManageVetClinicFormSchema = z.intersection(
 	EmailOrPhoneNumberSchema,
 );
 // Had to add `Type` suffix because was getting "Cannot access before initialization" error
-type ManageVetClinicFormSchemaType = z.infer<typeof ManageVetClinicFormSchema>;
+type ManageVetClinicFormSchema = z.infer<typeof ManageVetClinicFormSchema>;
 
-type ManageVetClinicProps<
-	VariantType extends "sheet" | "form",
-	VetClinicProp extends VetClinicById | undefined,
-> = VariantType extends "sheet"
-	? Omit<ManageVetClinicSheetProps<VetClinicProp>, "onSubmit"> & { variant: VariantType }
-	: Omit<ManageVetClinicFormProps, "onSubmit"> & { variant: VariantType };
+type UseManageVetClinicFormProps = {
+	vetClinic?: VetClinicById;
+	defaultValues?: Partial<ManageVetClinicFormSchema>;
+	onSubmit?: (
+		data: ManageVetClinicFormSchema,
+	) => Promise<{ success: boolean; data: VetClinicInsert | VetClinicUpdate | null | undefined }>;
+};
 
-function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp extends VetClinicById | undefined>(
-	props: ManageVetClinicProps<VariantType, VetClinicProp>,
-) {
+function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
+	const isNew = !props.vetClinic;
+
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const isNew = !props.vetClinic;
 
 	const { toast } = useToast();
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
-	const form = useForm<ManageVetClinicFormSchemaType>({
+	const form = useForm<ManageVetClinicFormSchema>({
 		resolver: zodResolver(ManageVetClinicFormSchema),
 		defaultValues: {
-			id: props.vetClinic?.id || props.defaultValues?.id || generateId(),
+			id: generateId(),
 			name: searchTerm,
 			...props.vetClinic,
 			...props.defaultValues,
@@ -101,21 +98,16 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 		}
 	}, [props.vetClinic, form]);
 
-	React.useEffect(() => {
-		if (props.defaultValues) {
-			form.reset({
-				...form.getValues(),
-				...props.defaultValues,
-				id: generateId(),
-			});
-		}
-	}, [props.defaultValues, form]);
-
-	async function onSubmit(data: ManageVetClinicFormSchemaType) {
+	async function onSubmit(data: ManageVetClinicFormSchema) {
 		let success = false;
 		let newVetClinic: VetClinicUpdate | VetClinicInsert | null | undefined;
 
-		if (props.vetClinic) {
+		if (props.onSubmit) {
+			const response = await props.onSubmit(data);
+			success = response.success;
+			newVetClinic = response.data;
+			return { success, data: newVetClinic };
+		} else if (props.vetClinic) {
 			const response = await actions.app.vetClinics.update(data);
 			success = response.success && !!response.data;
 			newVetClinic = response.data;
@@ -143,15 +135,7 @@ function ManageVetClinic<VariantType extends "sheet" | "form", VetClinicProp ext
 		return { success, data: newVetClinic };
 	}
 
-	return (
-		<Form {...form}>
-			{props.variant === "sheet" ? (
-				<ManageVetClinicSheet {...props} onSubmit={onSubmit} />
-			) : (
-				<ManageVetClinicForm {...props} onSubmit={onSubmit} />
-			)}
-		</Form>
-	);
+	return { form, onSubmit };
 }
 
-export { type ManageVetClinicFormSchemaType, ManageVetClinic };
+export { type ManageVetClinicFormSchema, type UseManageVetClinicFormProps, useManageVetClinicForm };

@@ -6,12 +6,15 @@ import { useFormContext } from "react-hook-form";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
-import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
 
 function OrganizationDeleteDialog() {
-	const form = useFormContext<ManageOrganizationFormSchema>();
-	const router = useRouter();
 	const { toast } = useToast();
+
+	const router = useRouter();
+
+	const form = useFormContext<ManageOrganizationFormSchema>();
+
 	return (
 		<DestructiveActionDialog
 			name="organization"

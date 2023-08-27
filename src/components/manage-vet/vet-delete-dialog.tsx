@@ -6,10 +6,10 @@ import { useFormContext } from "react-hook-form";
 import { actions } from "~/actions";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetFormSchemaType } from "./manage-vet";
+import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
 function VetDeleteDialog() {
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const form = useFormContext<ManageVetFormSchema>();
 	const router = useRouter();
 	const { toast } = useToast();
 	return (

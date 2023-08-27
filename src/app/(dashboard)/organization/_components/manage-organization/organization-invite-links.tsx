@@ -4,7 +4,7 @@ import * as React from "react";
 import { init } from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
@@ -19,7 +19,7 @@ import {
 import { FormGroup, FormSection, FormSheetGroup } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { useUser } from "~/app/(dashboard)/providers";
-import { type ManageOrganizationFormSchema } from "./manage-organization";
+import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
 
 dayjs.extend(relativeTime);
 
@@ -28,18 +28,16 @@ const createInviteLinkCode = init({
 });
 
 function OrganizationInviteLinks({
-	control,
 	existingInviteLinks,
 	variant,
 }: {
-	control: Control<ManageOrganizationFormSchema>;
 	existingInviteLinks: ManageOrganizationFormSchema["organizationInviteLinks"];
 	variant: "sheet" | "form";
 }) {
 	const user = useUser();
 	const form = useFormContext<ManageOrganizationFormSchema>();
 	const organizationInviteLinks = useFieldArray({
-		control,
+		control: form.control,
 		name: "organizationInviteLinks",
 		keyName: "rhf-id",
 	});

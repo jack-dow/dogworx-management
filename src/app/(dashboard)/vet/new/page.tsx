@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 
-import { ManageVet } from "~/components/manage-vet";
+import { ManageVetForm } from "~/components/manage-vet/manage-vet-form";
 import { PageHeader } from "~/components/page-header";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ function NewVetPage() {
 		<>
 			<PageHeader title="Create New Vet" back={{ href: "/vets" }} />
 
-			<ManageVet variant="form" />
+			<ManageVetForm />
 		</>
 	);
 }

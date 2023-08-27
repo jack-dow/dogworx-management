@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
 import {
@@ -30,26 +30,24 @@ import {
 import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGroup } from "../ui/form";
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
-import { type ManageVetFormSchemaType } from "./manage-vet";
+import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
 function VetToDogRelationships({
-	control,
 	existingDogToVetRelationships,
 	variant,
 	setOpen,
 }: {
-	control: Control<ManageVetFormSchemaType>;
 	existingDogToVetRelationships: VetById["dogToVetRelationships"] | undefined;
 	variant: "sheet" | "form";
 	setOpen?: (open: boolean) => void;
 }) {
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const form = useFormContext<ManageVetFormSchema>();
 	const router = useRouter();
 
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 
 	const dogToVetRelationships = useFieldArray({
-		control,
+		control: form.control,
 		name: "dogToVetRelationships",
 		keyName: "rhf-id",
 	});
@@ -199,11 +197,11 @@ function VetToDogRelationship({
 	index,
 	onDelete,
 }: {
-	dogToVetRelationship: ManageVetFormSchemaType["dogToVetRelationships"][number];
+	dogToVetRelationship: ManageVetFormSchema["dogToVetRelationships"][number];
 	index: number;
 	onDelete: () => void;
 }) {
-	const form = useFormContext<ManageVetFormSchemaType>();
+	const form = useFormContext<ManageVetFormSchema>();
 	const router = useRouter();
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);

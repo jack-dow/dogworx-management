@@ -6,12 +6,15 @@ import { useFormContext } from "react-hook-form";
 import { actions } from "~/actions";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
+import { type ManageVetClinicFormSchema } from "./use-manage-vet-clinic-form";
 
 function VetClinicDeleteDialog() {
-	const form = useFormContext<ManageVetClinicFormSchemaType>();
-	const router = useRouter();
 	const { toast } = useToast();
+
+	const router = useRouter();
+
+	const form = useFormContext<ManageVetClinicFormSchema>();
+
 	return (
 		<DestructiveActionDialog
 			name="vet clinic"

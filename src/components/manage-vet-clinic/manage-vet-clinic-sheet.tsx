@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
@@ -17,73 +16,34 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { type VetClinicById, type VetClinicInsert, type VetClinicUpdate } from "~/actions";
-import { generateId, hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
+import { Form } from "../ui/form";
 import { useToast } from "../ui/use-toast";
-import { type ManageVetClinicFormSchemaType } from "./manage-vet-clinic";
+import { useManageVetClinicForm, type UseManageVetClinicFormProps } from "./use-manage-vet-clinic-form";
 import { VetClinicContactInformation } from "./vet-clinic-contact-information";
 import { VetClinicDeleteDialog } from "./vet-clinic-delete-dialog";
 import { VetClinicToVetRelationships } from "./vet-clinic-to-vet-relationships";
 
-type DefaultValues = Partial<ManageVetClinicFormSchemaType>;
-
-type ManageVetClinicSheetProps<VetClinicProp extends VetClinicById | undefined> = {
+interface ManageVetClinicSheetProps<VetClinicProp extends VetClinicById | undefined>
+	extends Omit<ManageVetClinicSheetFormProps<VetClinicProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
-	onSubmit: (
-		data: ManageVetClinicFormSchemaType,
-	) => Promise<{ success: boolean; data: VetClinicUpdate | VetClinicInsert | null | undefined }>;
-	onSuccessfulSubmit?: (vetClinic: VetClinicProp extends VetClinicById ? VetClinicUpdate : VetClinicInsert) => void;
-	vetClinic?: VetClinicProp;
-	defaultValues?: DefaultValues;
-};
+	trigger?: React.ReactNode;
+}
 
-function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
-	open,
-	setOpen,
-	withoutTrigger = false,
-	onSubmit,
-	onSuccessfulSubmit,
-	vetClinic,
-}: ManageVetClinicSheetProps<VetClinicProp>) {
-	const isNew = !vetClinic;
+function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>(
+	props: ManageVetClinicSheetProps<VetClinicProp>,
+) {
+	const isNew = !props.vetClinic;
 
-	const { toast } = useToast();
-
-	const [_open, _setOpen] = React.useState(open || false);
+	const [_open, _setOpen] = React.useState(props.open || false);
+	const [isDirty, setIsDirty] = React.useState(false);
 	const [isConfirmCloseDialogOpen, setIsConfirmCloseDialogOpen] = React.useState(false);
 
-	const internalOpen = open ?? _open;
-	const setInternalOpen = setOpen ?? _setOpen;
-
-	const form = useFormContext<ManageVetClinicFormSchemaType>();
-	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
-
-	async function handleSubmit(data: ManageVetClinicFormSchemaType) {
-		const result = await onSubmit(data);
-
-		if (result.success) {
-			if (result.data && onSuccessfulSubmit) {
-				onSuccessfulSubmit(result.data);
-			}
-
-			setInternalOpen(false);
-
-			setTimeout(() => {
-				form.reset();
-				form.setValue("id", generateId());
-			}, 205);
-		}
-	}
-
-	function handleClose() {
-		setInternalOpen(false);
-		setTimeout(() => {
-			form.reset();
-			form.setValue("id", generateId());
-		}, 205);
-	}
+	const internalOpen = props.open ?? _open;
+	const setInternalOpen = props.setOpen ?? _setOpen;
 
 	return (
 		<>
@@ -91,7 +51,7 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 				open={isConfirmCloseDialogOpen}
 				onOpenChange={setIsConfirmCloseDialogOpen}
 				onConfirm={() => {
-					handleClose();
+					setInternalOpen(false);
 					setIsConfirmCloseDialogOpen(false);
 				}}
 			/>
@@ -99,24 +59,16 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 			<Sheet
 				open={internalOpen}
 				onOpenChange={(value) => {
-					// Form state check **MUST** be first otherwise a bug occurs where it is always false on the first close
-					if (isFormDirty && value === false) {
+					if (isDirty && value === false) {
 						setIsConfirmCloseDialogOpen(true);
-						return;
-					}
-
-					if (value === false) {
-						handleClose();
 						return;
 					}
 
 					setInternalOpen(value);
 				}}
 			>
-				{!withoutTrigger && (
-					<SheetTrigger asChild>
-						<Button>Create vet clinic</Button>
-					</SheetTrigger>
+				{!props.withoutTrigger && (
+					<SheetTrigger asChild>{props.trigger ?? <Button>Create vet clinic</Button>}</SheetTrigger>
 				)}
 				<SheetContent className="w-full sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
 					<SheetHeader>
@@ -129,54 +81,119 @@ function ManageVetClinicSheet<VetClinicProp extends VetClinicById | undefined>({
 
 					<Separator className="my-4" />
 
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							void form.handleSubmit(handleSubmit)(e);
+					<ManageVetClinicSheetForm
+						{...props}
+						setOpen={setInternalOpen}
+						onConfirmCancel={() => {
+							setIsConfirmCloseDialogOpen(true);
 						}}
-					>
-						<VetClinicContactInformation control={form.control} variant="sheet" />
-
-						<Separator className="my-4" />
-
-						<VetClinicToVetRelationships
-							control={form.control}
-							existingVetToVetClinicRelationships={vetClinic?.vetToVetClinicRelationships}
-							variant="sheet"
-						/>
-
-						<Separator className="my-4" />
-
-						<SheetFooter>
-							{!isNew && <VetClinicDeleteDialog />}
-							<SheetClose asChild>
-								<Button variant="outline">Cancel</Button>
-							</SheetClose>
-							<Button
-								type="submit"
-								disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
-								onClick={() => {
-									const numOfErrors = Object.keys(form.formState.errors).length;
-									if (numOfErrors > 0) {
-										toast({
-											title: `Form submission errors`,
-											description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-												numOfErrors > 1 ? "s" : ""
-											} with your submission. Please fix them and resubmit.`,
-											variant: "destructive",
-										});
-									}
-								}}
-							>
-								{form.formState.isSubmitting && <Loader size="sm" />}
-								{isNew ? "Create" : "Update"} vet clinic
-							</Button>
-						</SheetFooter>
-					</form>
+						setIsDirty={setIsDirty}
+					/>
 				</SheetContent>
 			</Sheet>
 		</>
+	);
+}
+
+interface ManageVetClinicSheetFormProps<VetClinicProp extends VetClinicById | undefined>
+	extends UseManageVetClinicFormProps {
+	setOpen: (open: boolean) => void;
+	setIsDirty: (isDirty: boolean) => void;
+	onConfirmCancel: () => void;
+	onSuccessfulSubmit?: (vetClinic: VetClinicProp extends VetClinicById ? VetClinicUpdate : VetClinicInsert) => void;
+}
+
+function ManageVetClinicSheetForm<VetClinicProp extends VetClinicById | undefined>({
+	setOpen,
+	setIsDirty,
+	onConfirmCancel,
+	onSubmit,
+	onSuccessfulSubmit,
+	vetClinic,
+	defaultValues,
+}: ManageVetClinicSheetFormProps<VetClinicProp>) {
+	const isNew = !vetClinic;
+
+	const { toast } = useToast();
+
+	const { form, onSubmit: _onSubmit } = useManageVetClinicForm({ vetClinic, defaultValues, onSubmit });
+	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
+
+	React.useEffect(() => {
+		setIsDirty(isFormDirty);
+	}, [isFormDirty, setIsDirty]);
+
+	return (
+		<Form {...form}>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					void form.handleSubmit(async (data) => {
+						const result = await _onSubmit(data);
+
+						if (result.success) {
+							if (result.data && onSuccessfulSubmit) {
+								onSuccessfulSubmit(result.data);
+							}
+
+							setOpen(false);
+						}
+					})(e);
+				}}
+			>
+				<VetClinicContactInformation variant="sheet" />
+
+				<Separator className="my-4" />
+
+				<VetClinicToVetRelationships
+					existingVetToVetClinicRelationships={vetClinic?.vetToVetClinicRelationships}
+					variant="sheet"
+				/>
+
+				<Separator className="my-4" />
+
+				<SheetFooter>
+					{!isNew && <VetClinicDeleteDialog />}
+					<SheetClose asChild>
+						<Button
+							variant="outline"
+							onClick={(e) => {
+								e.preventDefault();
+								if (isFormDirty) {
+									onConfirmCancel();
+									return;
+								}
+
+								setOpen(false);
+							}}
+						>
+							Cancel
+						</Button>
+					</SheetClose>
+
+					<Button
+						type="submit"
+						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+						onClick={() => {
+							const numOfErrors = Object.keys(form.formState.errors).length;
+							if (numOfErrors > 0) {
+								toast({
+									title: `Form submission errors`,
+									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+										numOfErrors > 1 ? "s" : ""
+									} with your submission. Please fix them and resubmit.`,
+									variant: "destructive",
+								});
+							}
+						}}
+					>
+						{form.formState.isSubmitting && <Loader size="sm" />}
+						{isNew ? "Create" : "Update"} vet clinic
+					</Button>
+				</SheetFooter>
+			</form>
+		</Form>
 	);
 }
 

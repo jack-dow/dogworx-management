@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Form } from "~/components/ui/form";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type VetById, type VetInsert, type VetUpdate } from "~/actions";
 import {
@@ -19,8 +18,6 @@ import {
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
 import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
-import { ManageVetForm, type ManageVetFormProps } from "./manage-vet-form";
-import { ManageVetSheet, type ManageVetSheetProps } from "./manage-vet-sheet";
 
 const ManageVetFormSchema = z.intersection(
 	InsertVetSchema.extend({
@@ -51,31 +48,30 @@ const ManageVetFormSchema = z.intersection(
 	}),
 	EmailOrPhoneNumberSchema,
 );
-// Had to add `Type` suffix because was getting "Cannot access before initialization" error
-type ManageVetFormSchemaType = z.infer<typeof ManageVetFormSchema>;
+type ManageVetFormSchema = z.infer<typeof ManageVetFormSchema>;
 
-type ManageVetProps<
-	VariantType extends "sheet" | "form",
-	VetProp extends VetById | undefined,
-> = VariantType extends "sheet"
-	? Omit<ManageVetSheetProps<VetProp>, "onSubmit"> & { variant: VariantType }
-	: Omit<ManageVetFormProps, "onSubmit"> & { variant: VariantType };
+type UseManageVetFormProps = {
+	vet?: VetById;
+	defaultValues?: Partial<ManageVetFormSchema>;
+	onSubmit?: (
+		data: ManageVetFormSchema,
+	) => Promise<{ success: boolean; data: VetInsert | VetUpdate | null | undefined }>;
+};
 
-function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById | undefined>(
-	props: ManageVetProps<VariantType, VetProp>,
-) {
+function useManageVetForm(props: UseManageVetFormProps) {
+	const isNew = !props.vet;
+
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const isNew = !props.vet;
 
 	const { toast } = useToast();
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
-	const form = useForm<ManageVetFormSchemaType>({
+	const form = useForm<ManageVetFormSchema>({
 		resolver: zodResolver(ManageVetFormSchema),
 		defaultValues: {
-			id: props.vet?.id || props.defaultValues?.id || generateId(),
+			id: generateId(),
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			dogToVetRelationships: props.vet?.dogToVetRelationships,
@@ -123,21 +119,16 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 		}
 	}, [props.vet, form]);
 
-	React.useEffect(() => {
-		if (props.defaultValues) {
-			form.reset({
-				...form.getValues(),
-				...props.defaultValues,
-				id: generateId(),
-			});
-		}
-	}, [props.defaultValues, form]);
-
-	async function onSubmit(data: ManageVetFormSchemaType) {
+	async function onSubmit(data: ManageVetFormSchema) {
 		let success = false;
 		let newVet: VetUpdate | VetInsert | null | undefined;
 
-		if (props.vet) {
+		if (props.onSubmit) {
+			const response = await props.onSubmit(data);
+			success = response.success;
+			newVet = response.data;
+			return { success, data: newVet };
+		} else if (props.vet) {
 			const response = await actions.app.vets.update(data);
 			success = response.success && !!response.data;
 			newVet = response.data;
@@ -167,15 +158,10 @@ function ManageVet<VariantType extends "sheet" | "form", VetProp extends VetById
 		return { success, data: newVet };
 	}
 
-	return (
-		<Form {...form}>
-			{props.variant === "sheet" ? (
-				<ManageVetSheet {...props} onSubmit={onSubmit} />
-			) : (
-				<ManageVetForm {...props} onSubmit={onSubmit} />
-			)}
-		</Form>
-	);
+	return {
+		form,
+		onSubmit,
+	};
 }
 
-export { type ManageVetFormSchemaType, ManageVet };
+export { type ManageVetFormSchema, type UseManageVetFormProps, useManageVetForm };

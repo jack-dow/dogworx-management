@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFieldArray, useFormContext, type Control } from "react-hook-form";
 
-import { ManageClient } from "~/components/manage-client";
+import { ManageClientSheet } from "~/components/manage-client/manage-client-sheet";
 import { ClickToCopy } from "~/components/ui/click-to-copy";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import {
@@ -126,8 +126,7 @@ function DogToClientRelationships({
 
 	return (
 		<>
-			<ManageClient
-				variant="sheet"
+			<ManageClientSheet
 				client={editingClient ?? undefined}
 				open={!!editingClient}
 				setOpen={(value) => {
@@ -165,8 +164,7 @@ function DogToClientRelationships({
 			/>
 
 			<FormGroup title="Clients" description="Manage the relationships between this dog and clients.">
-				<ManageClient
-					variant="sheet"
+				<ManageClientSheet
 					open={!!isCreateClientSheetOpen}
 					setOpen={(value) => {
 						if (value === false) {
