@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
@@ -17,6 +17,7 @@ import {
 } from "~/components/ui/select";
 import { actions, type DogsSearch, type VetById } from "~/actions";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { cn, generateId } from "~/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
@@ -43,6 +44,8 @@ function VetToDogRelationships({
 }) {
 	const form = useFormContext<ManageVetFormSchema>();
 	const router = useRouter();
+
+	const pathname = usePathname();
 
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 
@@ -116,6 +119,12 @@ function VetToDogRelationships({
 			},
 		});
 	}
+
+	useDidUpdate(() => {
+		if (setOpen) {
+			setOpen(false);
+		}
+	}, [pathname]);
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
@@ -202,7 +211,7 @@ function VetToDogRelationship({
 	onDelete: () => void;
 }) {
 	const form = useFormContext<ManageVetFormSchema>();
-	const router = useRouter();
+	const pathname = usePathname();
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
 	return (
@@ -292,21 +301,21 @@ function VetToDogRelationship({
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
-							<DropdownMenuItem asChild>
-								<Link
-									href={`/dog/${dogToVetRelationship.dogId}`}
-									onClick={(e) => {
-										e.preventDefault();
-										router.push(`/dog/${dogToVetRelationship.dogId}`);
-										setIsLoadingDogPage(true);
-									}}
-									className="hover:cursor-pointer"
-								>
-									<EditIcon className="mr-2 h-4 w-4" />
-									<span className="flex-1">Edit</span>
-									{isLoadingDogPage && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
-								</Link>
-							</DropdownMenuItem>
+							{`/dog/${dogToVetRelationship.dogId}` !== pathname && (
+								<DropdownMenuItem asChild>
+									<Link
+										href={`/dog/${dogToVetRelationship.dogId}`}
+										onClick={() => {
+											setIsLoadingDogPage(true);
+										}}
+										className="hover:cursor-pointer"
+									>
+										<EditIcon className="mr-2 h-4 w-4" />
+										<span className="flex-1">Edit</span>
+										{isLoadingDogPage && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
+									</Link>
+								</DropdownMenuItem>
+							)}
 							<DropdownMenuItem
 								onSelect={(e) => {
 									e.preventDefault();

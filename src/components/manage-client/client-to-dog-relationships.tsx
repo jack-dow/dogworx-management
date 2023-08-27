@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { DogIcon, EditIcon, EllipsisVerticalIcon, PlusIcon, TrashIcon } from "~/components/ui/icons";
@@ -31,6 +31,7 @@ import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGrou
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
+import {useDidUpdate} from "~/hooks/use-did-update";
 
 function ClientToDogRelationships({
 	existingDogToClientRelationships,
@@ -42,6 +43,9 @@ function ClientToDogRelationships({
 	setOpen?: (open: boolean) => void;
 }) {
 	const router = useRouter();
+
+	const pathname = usePathname();
+
 	const form = useFormContext<ManageClientFormSchema>();
 
 	const dogToClientRelationships = useFieldArray({
@@ -117,6 +121,12 @@ function ClientToDogRelationships({
 		});
 	}
 
+	useDidUpdate(() => {
+		if(setOpen) {
+			setOpen(false);
+		}
+	}, [pathname])
+
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
 	return (
@@ -163,6 +173,7 @@ function ClientToDogRelationships({
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
 									router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+
 									if (setOpen) {
 										setOpen(false);
 									}
@@ -202,7 +213,7 @@ function ClientToDogRelationship({
 	onDelete: () => void;
 }) {
 	const form = useFormContext<ManageClientFormSchema>();
-	const router = useRouter();
+	const pathname = usePathname();
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
 	return (
@@ -291,21 +302,22 @@ function ClientToDogRelationship({
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
-							<DropdownMenuItem asChild>
-								<Link
-									href={`/dog/${dogToClientRelationship.dogId}`}
-									onClick={(e) => {
-										e.preventDefault();
-										router.push(`/dog/${dogToClientRelationship.dogId}`);
-										setIsLoadingDogPage(true);
-									}}
-									className="hover:cursor-pointer"
-								>
-									<EditIcon className="mr-2 h-4 w-4" />
-									<span className="flex-1">Edit</span>
-									{isLoadingDogPage && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
-								</Link>
-							</DropdownMenuItem>
+							{`/dog/${dogToClientRelationship.dogId}` !== pathname && (
+								<DropdownMenuItem asChild>
+									<Link
+										href={`/dog/${dogToClientRelationship.dogId}`}
+										onClick={() => {
+											setIsLoadingDogPage(true);
+										}}
+										className="hover:cursor-pointer"
+									>
+										<EditIcon className="mr-2 h-4 w-4" />
+										<span className="flex-1">Edit</span>
+										{isLoadingDogPage && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
+									</Link>
+								</DropdownMenuItem>
+							)}
+
 							<DropdownMenuItem
 								onSelect={(e) => {
 									e.preventDefault();

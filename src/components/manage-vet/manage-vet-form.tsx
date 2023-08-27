@@ -8,7 +8,7 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
-import { FormSection } from "../ui/form";
+import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
 import { useManageVetForm, type UseManageVetFormProps } from "./use-manage-vet-form";
 import { VetContactInformation } from "./vet-contact-information";
@@ -39,81 +39,83 @@ function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
 				}}
 			/>
 
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					void form.handleSubmit(async (data) => {
-						const result = await _onSubmit(data);
+			<Form {...form}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit(async (data) => {
+							const result = await _onSubmit(data);
 
-						if (result.success) {
-							if (isNew) {
-								router.replace(`/vet/${data.id}`);
-								return;
+							if (result.success) {
+								if (isNew) {
+									router.replace(`/vet/${data.id}`);
+									return;
+								}
+
+								router.push("/vets");
 							}
-
-							router.push("/vets");
-						}
-					})(e);
-				}}
-				className="space-y-6 lg:space-y-10"
-			>
-				<VetContactInformation variant="form" />
-
-				<Separator />
-
-				<FormSection
-					title="Manage Relationships"
-					description="Manage the relationships of this vet clinic between other vets within the system."
+						})(e);
+					}}
+					className="space-y-6 lg:space-y-10"
 				>
-					<VetToVetClinicRelationships
-						existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
-						variant="form"
-					/>
+					<VetContactInformation variant="form" />
 
-					<Separator className="my-4" />
+					<Separator />
 
-					<VetToDogRelationships existingDogToVetRelationships={vet?.dogToVetRelationships} variant="form" />
-				</FormSection>
-
-				<Separator />
-
-				<div className="flex justify-end space-x-4">
-					{!isNew && <VetDeleteDialog />}
-					<Button
-						type="button"
-						onClick={() => {
-							if (isFormDirty) {
-								setIsConfirmNavigationDialogOpen(true);
-							} else {
-								router.back();
-							}
-						}}
-						variant="outline"
+					<FormSection
+						title="Manage Relationships"
+						description="Manage the relationships of this vet clinic between other vets within the system."
 					>
-						Back
-					</Button>
-					<Button
-						type="submit"
-						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
-						onClick={() => {
-							const numOfErrors = Object.keys(form.formState.errors).length;
-							if (numOfErrors > 0) {
-								toast({
-									title: `Form submission errors`,
-									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-										numOfErrors > 1 ? "s" : ""
-									} with your submission. Please fix them and resubmit.`,
-									variant: "destructive",
-								});
-							}
-						}}
-					>
-						{form.formState.isSubmitting && <Loader size="sm" />}
-						{isNew ? "Create" : "Update"} vet
-					</Button>
-				</div>
-			</form>
+						<VetToVetClinicRelationships
+							existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
+							variant="form"
+						/>
+
+						<Separator className="my-4" />
+
+						<VetToDogRelationships existingDogToVetRelationships={vet?.dogToVetRelationships} variant="form" />
+					</FormSection>
+
+					<Separator />
+
+					<div className="flex justify-end space-x-4">
+						{!isNew && <VetDeleteDialog />}
+						<Button
+							type="button"
+							onClick={() => {
+								if (isFormDirty) {
+									setIsConfirmNavigationDialogOpen(true);
+								} else {
+									router.back();
+								}
+							}}
+							variant="outline"
+						>
+							Back
+						</Button>
+						<Button
+							type="submit"
+							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+							onClick={() => {
+								const numOfErrors = Object.keys(form.formState.errors).length;
+								if (numOfErrors > 0) {
+									toast({
+										title: `Form submission errors`,
+										description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+											numOfErrors > 1 ? "s" : ""
+										} with your submission. Please fix them and resubmit.`,
+										variant: "destructive",
+									});
+								}
+							}}
+						>
+							{form.formState.isSubmitting && <Loader size="sm" />}
+							{isNew ? "Create" : "Update"} vet
+						</Button>
+					</div>
+				</form>
+			</Form>
 		</>
 	);
 }

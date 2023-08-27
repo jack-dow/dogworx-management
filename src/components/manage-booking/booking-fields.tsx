@@ -55,7 +55,7 @@ function roundDateToNearest15Minutes(date: Date) {
 	const minutesToNext15 = currentMinute % 15 <= 7.5 ? -(currentMinute % 15) : 15 - (currentMinute % 15);
 
 	// Adjust the date by adding or subtracting the calculated minutes
-	const roundedDate = originalDate.add(minutesToNext15, "minute");
+	const roundedDate = originalDate.add(minutesToNext15, "minute").set("second", 0);
 
 	return roundedDate.toDate();
 }
@@ -158,8 +158,15 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 															form.clearErrors("details");
 														}
 
-														field.onChange(value);
-														setTimeInputValue(dayjs(value).format("HH:mm"));
+														const date = dayjs(value);
+														const now = dayjs();
+
+														const val = roundDateToNearest15Minutes(
+															date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
+														);
+
+														field.onChange(val);
+														setTimeInputValue(dayjs(val).format("HH:mm"));
 													}
 													setIsDatePickerOpen(false);
 													setDateInputValue("");
