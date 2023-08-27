@@ -34,6 +34,9 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 	const prevWeek = dayjs(date).subtract(7, "days");
 	const nextWeek = dayjs(date).add(7, "days");
 
+	// Visible day on mobile device
+	const [visibleDay, setVisibleDay] = React.useState(dayjs().day());
+
 	const [isManageBookingDialogOpen, setIsManageBookingDialogOpen] = React.useState(false);
 	const [selectedBooking, setSelectedBooking] = React.useState<BookingsByWeek[number] | undefined>(undefined);
 	const [lastSelectedDate, setLastSelectedDate] = React.useState<dayjs.Dayjs | undefined>(undefined);
@@ -116,38 +119,64 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 						</Button>
 					</div>
 
-					<Separator orientation="vertical" className="h-4" />
-					<ManageBookingDialog trigger={<Button size="sm">Create Booking</Button>} />
+					<Separator orientation="vertical" className="hidden h-4 sm:block" />
+
+					<ManageBookingDialog
+						trigger={
+							<Button size="sm" className="hidden sm:flex">
+								Create Booking
+							</Button>
+						}
+					/>
 				</div>
 			</header>
 			<div ref={container} className="isolate flex flex-auto flex-col overflow-auto bg-white">
 				<div style={{ width: "165%" }} className="flex max-w-full flex-none flex-col sm:max-w-none md:max-w-full">
 					<div ref={containerNav} className="sticky top-0 z-30 flex-none bg-white shadow ring-1 ring-black/5  sm:pr-8">
-						<div className="grid grid-cols-7 text-sm leading-6 text-gray-500 sm:hidden">
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								M <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">10</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								T <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">11</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								W{" "}
-								<span className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">
-									12
-								</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								T <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">13</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								F <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">14</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								S <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">15</span>
-							</button>
-							<button type="button" className="flex flex-col items-center pb-3 pt-2">
-								S <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">16</span>
-							</button>
+						<div className="m-1 grid grid-cols-7 text-sm leading-6 text-gray-500 sm:hidden">
+							{["M", "T", "W", "Th", "F", "S", "Su"].map((day, index) => {
+								const date = startOfWeek.add(index, "day");
+								return (
+									<button
+										key={day}
+										type="button"
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											setVisibleDay(date.day());
+										}}
+										className={cn(
+											"flex flex-col items-center pb-3 pt-2 rounded-md focus-visible:relative focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+											date.day() === visibleDay && "bg-primary text-primary-foreground ",
+										)}
+									>
+										{day}
+										<span
+											className={cn(
+												"mt-1 flex h-8 w-8 items-center justify-center font-semibold",
+												date.day() === visibleDay ? "text-white" : "text-primary",
+											)}
+										>
+											{date.date()}
+										</span>
+									</button>
+									// <div key={day} className={cn("flex items-center justify-center py-3")}>
+									// 	<span
+									// 		className={cn(date.isToday() ? "bg-primary text-primary-foreground rounded-md px-3 py-1" : "")}
+									// 	>
+									// 		{day}{" "}
+									// 		<span
+									// 			className={cn(
+									// 				"items-center justify-center font-semibold",
+									// 				date.isToday() ? "text-white" : "text-primary",
+									// 			)}
+									// 		>
+									// 			{date.date()}
+									// 		</span>
+									// 	</span>
+									// </div>
+								);
+							})}
 						</div>
 
 						<div className="-mr-px hidden grid-cols-7 divide-x divide-gray-100 border-r border-gray-100 text-sm leading-6 text-gray-500 sm:grid">
@@ -284,13 +313,26 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 									const bookingDate = dayjs(booking.date);
 									// Convert time to fraction. e.g. 10:30 AM => 10.5
 									const bookingTime = bookingDate.hour() + bookingDate.minute() / 60;
+
+									const colStartClasses = [
+										"sm:col-start-1",
+										"sm:col-start-2",
+										"sm:col-start-3",
+										"sm:col-start-4",
+										"sm:col-start-5",
+										"sm:col-start-6",
+										"sm:col-start-7",
+									];
 									return (
 										<li
 											key={booking.id}
-											className="relative mt-px hidden sm:col-start-6 sm:flex"
+											className={cn(
+												bookingDate.day() === visibleDay ? "flex" : "hidden",
+												"relative mt-px sm:col-start-6 sm:flex",
+											)}
 											style={{
 												gridRow: `${Math.floor((288 / 24) * bookingTime + 1)} / span ${(booking.duration / 60) * 0.2}`,
-												gridColumnStart: bookingDate.day(),
+												gridColumnStart: colStartClasses[bookingDate.day()],
 											}}
 										>
 											<button
@@ -304,21 +346,21 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											>
 												<p className="text-violet-500 group-hover:text-violet-700">
 													<time dateTime="2022-01-15T10:00">{bookingDate.format("h:mmA")}</time>
-													<span className={cn(booking.duration < 2700 ? "hidden" : "inline")}> - </span>
-													<span className={cn(booking.duration < 2700 ? "sr-only" : "inline")}>
+													<span className={cn(booking.duration < 2700 ? "hidden" : "hidden 2xl:inline")}> - </span>
+													<span className={cn(booking.duration < 2700 ? "sr-only" : "sr-only 2xl:not-sr-only")}>
 														{secondsToHumanReadable(booking.duration)}
 													</span>
 													{booking.duration < 2700 && (
 														<>
-															<span> - </span>
-															<span>
+															<span className="hidden xl:inline"> - </span>
+															<span className="hidden xl:inline">
 																{booking.dog.givenName} {booking.dog.familyName}
 															</span>
 														</>
 													)}
 												</p>
 												{booking.duration >= 2700 && (
-													<p className="font-semibold text-violet-700">
+													<p className="text-left font-semibold text-violet-700">
 														{booking.dog.givenName} {booking.dog.familyName}
 													</p>
 												)}

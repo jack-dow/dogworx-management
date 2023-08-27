@@ -9,7 +9,6 @@ const sessionCookieOptions = {
 	httpOnly: true,
 	maxAge: ms("30d"),
 	path: "/",
-	// Disables cookies so we can view the site on mible in development
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
 } satisfies Partial<ResponseCookie>;
