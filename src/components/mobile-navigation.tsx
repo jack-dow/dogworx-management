@@ -98,7 +98,7 @@ function MobileNavigation() {
 								<DropdownMenuTrigger asChild>
 									<Button
 										variant="ghost"
-										className="mb-2 flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3"
+										className="-mb-3 flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3"
 									>
 										{session.user.profileImageUrl ? (
 											<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-gray-100">

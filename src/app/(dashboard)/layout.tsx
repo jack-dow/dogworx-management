@@ -61,7 +61,7 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 						{!prefersDarkMode && <BackgroundGradients.GradientTop />}
 						<div
 							className={cn(
-								"mx-auto w-full max-w-screen-2xl rounded-md  ",
+								"mx-auto w-full max-w-screen-2xl rounded-md overflow-auto",
 								prefersDarkMode
 									? "bg-white"
 									: "bg-white/80 py-6 px-4 sm:px-6 sm:py-8 md:px-8 lg:p-10 shadow backdrop-blur-3xl",

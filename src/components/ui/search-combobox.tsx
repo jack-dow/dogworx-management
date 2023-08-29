@@ -169,7 +169,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 						onFocus={() => setIsOpen(true)}
 						placeholder={placeholder}
 						disabled={disabled}
-						className={cn(classNames?.input, className)}
+						className={cn("bg-white", classNames?.input, className)}
 					/>
 				</div>
 

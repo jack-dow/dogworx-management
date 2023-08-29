@@ -14,7 +14,7 @@ type PageHeaderProps = {
 
 function PageHeader({ title, back }: PageHeaderProps) {
 	return (
-		<div className="flex shrink-0 flex-col pb-4 lg:pb-6">
+		<div className="flex shrink-0 flex-col pb-4">
 			{back && (
 				<div className="mb-2">
 					<nav aria-label="Back" className="flex">

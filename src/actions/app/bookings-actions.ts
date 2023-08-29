@@ -23,16 +23,34 @@ dayjs.updateLocale("en", {
 	weekStart: 1,
 });
 
-const listBookings = createServerAction(async (options: PaginationSearchParams) => {
+const listBookings = createServerAction(async (options: PaginationSearchParams & { from?: string; to?: string }) => {
 	try {
 		const user = await getServerUser();
+
+		let fromDate = options?.from ? dayjs(options.from) : undefined;
+
+		if (!fromDate?.isValid()) {
+			fromDate = undefined;
+		}
+
+		let toDate = options?.to ? dayjs(options.to) : undefined;
+
+		if (!toDate?.isValid()) {
+			toDate = undefined;
+		}
 
 		const countQuery = await drizzle
 			.select({
 				count: sql<number>`count(*)`.mapWith(Number),
 			})
 			.from(bookings)
-			.where(eq(bookings.organizationId, user.organizationId));
+			.where(
+				and(
+					eq(bookings.organizationId, user.organizationId),
+					fromDate ? gte(bookings.date, fromDate.subtract(12, "hours").toDate()) : undefined,
+					toDate ? lt(bookings.date, toDate.add(14, "hours").toDate()) : undefined,
+				),
+			);
 
 		const { count, page, limit, maxPage, sortBy, sortDirection, orderBy } = validatePaginationSearchParams({
 			...options,
@@ -58,7 +76,11 @@ const listBookings = createServerAction(async (options: PaginationSearchParams) 
 			},
 			limit: limit,
 			offset: (page - 1) * limit,
-			where: eq(bookings.organizationId, user.organizationId),
+			where: and(
+				eq(bookings.organizationId, user.organizationId),
+				fromDate ? gte(bookings.date, fromDate.subtract(12, "hours").toDate()) : undefined,
+				toDate ? lt(bookings.date, toDate.add(14, "hours").toDate()) : undefined,
+			),
 			orderBy: (bookings, { asc }) => (orderBy ? [...orderBy, asc(bookings.id)] : [asc(bookings.id)]),
 		});
 

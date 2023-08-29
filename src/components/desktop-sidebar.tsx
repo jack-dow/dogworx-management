@@ -88,7 +88,10 @@ function DesktopSidebar() {
 						<li className="-mx-2 mt-auto">
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" className="flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3">
+									<Button
+										variant="ghost"
+										className="mb-2 flex h-auto w-full items-center justify-start gap-x-4 px-2 py-3"
+									>
 										{session.user.profileImageUrl ? (
 											<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-gray-100">
 												<Image

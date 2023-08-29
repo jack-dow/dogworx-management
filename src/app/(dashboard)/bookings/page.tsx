@@ -14,6 +14,8 @@ async function BookingsPage({ searchParams }: { searchParams?: { [key: string]: 
 		limit: Number(searchParams?.limit) ?? undefined,
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
 		sortDirection: typeof searchParams?.sortDirection === "string" ? searchParams?.sortDirection : "desc",
+		from: typeof searchParams?.from === "string" ? searchParams?.from : undefined,
+		to: typeof searchParams?.to === "string" ? searchParams?.to : undefined,
 	});
 
 	return (

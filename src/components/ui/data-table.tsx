@@ -23,12 +23,12 @@ import {
 	ChevronRightIcon,
 	SortAscIcon,
 	SortDescIcon,
-	SortIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
 import { type SortableColumns } from "~/actions/sortable-columns";
 import { type PaginationSearchParams } from "~/actions/utils";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { useViewportSize } from "~/hooks/use-viewport-size";
 import { Button } from "./button";
 import { Label } from "./label";
 import { Loader } from "./loader";
@@ -44,26 +44,16 @@ declare module "@tanstack/table-core" {
 	}
 }
 
-function constructPaginationSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
-	const searchParams = new URLSearchParams();
+function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
+	const searchParams = new URLSearchParams(currentParams);
 
-	const page = newParams.page ?? currentParams.get("page") ?? undefined;
-	const limit = newParams.limit ?? currentParams.get("limit") ?? undefined;
-	const sortBy = newParams.sortBy ?? currentParams.get("sortBy") ?? undefined;
-	const sortDirection = newParams.sortDirection ?? currentParams.get("sortDirection") ?? undefined;
-
-	if (page && String(page) !== "1") {
-		searchParams.append("page", page.toString());
-	}
-	if (limit) {
-		searchParams.append("limit", limit.toString());
-	}
-	if (sortBy) {
-		searchParams.append("sortBy", sortBy);
-	}
-	if (sortDirection) {
-		searchParams.append("sortDirection", sortDirection);
-	}
+	Object.entries(newParams).forEach(([key, value]) => {
+		if (value) {
+			searchParams.set(key, value.toString());
+		} else {
+			searchParams.delete(key);
+		}
+	});
 
 	return searchParams;
 }
@@ -79,7 +69,9 @@ interface DataTableProps<TData, TValue, SearchResultType extends { id: string }>
 	columns: ColumnDef<TData, TValue>[];
 	sortableColumns: SortableColumns;
 	data: TData[];
-	search?: Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel">;
+	search:
+		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & { component?: undefined })
+		| { component: ({ setIsLoading }: { setIsLoading?: (isLoading: boolean) => void }) => JSX.Element };
 }
 
 function DataTable<TData extends { id: string }, TValue, SearchResultType extends { id: string }>({
@@ -92,6 +84,8 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+
+	const windowSize = useViewportSize();
 
 	const [rowSelection, setRowSelection] = React.useState({});
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -128,10 +122,10 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 
 	return (
 		<div className="space-y-4">
-			<header className="flex items-center gap-4">
+			<header className="flex flex-col gap-4 md:flex-row md:items-center">
 				<div className="flex flex-1 items-center space-x-3">
-					<div className="relative w-full max-w-[288px]">
-						{search ? (
+					{!search.component ? (
+						<div className="relative w-full md:max-w-[288px]">
 							<SearchCombobox
 								{...search}
 								onSelectChange={(result) => {
@@ -164,42 +158,37 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									</SearchComboboxAction>
 								)}
 							/>
-						) : (
-							<SearchCombobox
-								disabled
-								resultLabel={() => ""}
-								// eslint-disable-next-line @typescript-eslint/require-await
-								onSearch={async () => {
-									return [{ id: "" }];
-								}}
-							/>
-						)}
-					</div>
+						</div>
+					) : (
+						<search.component setIsLoading={setIsLoading} />
+					)}
 
 					{isLoading && <Loader variant="black" size="sm" />}
 				</div>
 
-				<div className="flex flex-1 items-center justify-end gap-x-3 md:gap-x-5">
-					<div className="flex items-center space-x-2">
-						<Label htmlFor="sort-by-select-trigger" className="sr-only">
-							Sort by
-						</Label>
+				<div className="flex flex-1 items-center justify-end gap-x-3 md:flex-none md:gap-x-5">
+					<div className="flex flex-1 items-center space-x-2">
 						<Select>
-							<SelectTrigger id="sort-by-select-trigger" className="flex h-8 gap-1 space-x-0 text-xs">
-								<SortIcon className="h-4 w-4 sm:hidden" />
-								<span className="sr-only sm:not-sr-only">Sort by</span>
+							<SelectTrigger className="flex h-8 gap-1 space-x-0 bg-white text-xs">
+								<span>Sort by</span>
 							</SelectTrigger>
-							<SelectContent className="pointer-events-none w-[150px]" align="end">
+							<SelectContent
+								className="pointer-events-none w-[150px]"
+								align={windowSize.width >= 768 ? "end" : "start"}
+							>
 								<SelectGroup>
 									{Object.values(sortableColumns).map((column) => {
 										return (
-											<SelectItem value={column.id} asChild key={column.id} className="pr-2">
+											<SelectItem value={column.id} asChild key={column.id} className="max-w-[150px] pr-2">
 												<Link
-													href={`${pathname}?${constructPaginationSearchParams(searchParams, {
+													href={`${pathname}?${setSearchParams(searchParams, {
 														sortBy: column.id,
 														sortDirection: column.id === sortBy ? (sortDirection === "asc" ? "desc" : "asc") : "asc",
 													}).toString()}`}
-													onClick={() => setIsLoading(true)}
+													onClick={(e) => {
+														e.stopPropagation();
+														setIsLoading(true);
+													}}
 													className="justify-between hover:cursor-pointer"
 												>
 													{column.label}
@@ -219,7 +208,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 						</Select>
 					</div>
 					<Separator orientation="vertical" className="h-4" />
-					<Button size="sm" asChild>
+					<Button size="sm" asChild className="flex-1 md:flex-none">
 						<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
 							Create {name}
 						</Link>
@@ -336,7 +325,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 							return (
 								<SelectItem value={`${pageSize}`} key={pageSize} asChild>
 									<Link
-										href={`${pathname}?${constructPaginationSearchParams(params, {
+										href={`${pathname}?${setSearchParams(params, {
 											page: newPage,
 											limit: pageSize,
 										}).toString()}`}
@@ -357,7 +346,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 				</div>
 				<div className="flex items-center space-x-2">
 					<PaginationLink
-						href={`${pathname}?${constructPaginationSearchParams(params, {
+						href={`${pathname}?${setSearchParams(params, {
 							page: 1,
 						})}`}
 						onClick={() => setIsLoading(true)}
@@ -367,7 +356,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 						<ChevronDoubleLeftIcon className="h-4 w-4" />
 					</PaginationLink>
 					<PaginationLink
-						href={`${pathname}?${constructPaginationSearchParams(params, {
+						href={`${pathname}?${setSearchParams(params, {
 							page: page === 1 ? 1 : page - 1,
 						})}`}
 						onClick={() => setIsLoading(true)}
@@ -378,7 +367,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 					</PaginationLink>
 
 					<PaginationLink
-						href={`${pathname}?${constructPaginationSearchParams(params, {
+						href={`${pathname}?${setSearchParams(params, {
 							page: page === maxPage ? maxPage : page + 1,
 						})}`}
 						onClick={() => setIsLoading(true)}
@@ -388,7 +377,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 						<ChevronRightIcon className="h-4 w-4" />
 					</PaginationLink>
 					<PaginationLink
-						href={`${pathname}?${constructPaginationSearchParams(params, {
+						href={`${pathname}?${setSearchParams(params, {
 							page: maxPage,
 						})}`}
 						onClick={() => setIsLoading(true)}
