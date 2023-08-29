@@ -183,8 +183,9 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 		const data = await drizzle.query.bookings.findMany({
 			where: and(
 				eq(bookings.organizationId, user.organizationId),
-				gte(bookings.date, date.startOf("week").toDate()),
-				lt(bookings.date, date.endOf("week").toDate()),
+				// -12 hours to +14 hours to account for timezone differences
+				gte(bookings.date, date.startOf("week").subtract(12, "hours").toDate()),
+				lt(bookings.date, date.endOf("week").add(14, "hours").toDate()),
 			),
 			with: {
 				dog: {

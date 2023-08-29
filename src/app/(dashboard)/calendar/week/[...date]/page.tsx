@@ -1,6 +1,5 @@
 import { type Metadata } from "next";
 
-import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
 import { WeekView } from "../_components/week-view";
 
@@ -17,7 +16,7 @@ async function WeeklyCalendar({ params }: { params: { [key: string]: string | st
 
 	return (
 		<>
-			<PageHeader title="Weekly Calendar" back={{ href: "/" }} />
+			{/* <PageHeader title="Weekly Calendar" back={{ href: "/" }} /> */}
 
 			<WeekView date={date} bookings={bookings.data} />
 		</>

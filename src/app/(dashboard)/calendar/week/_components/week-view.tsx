@@ -81,7 +81,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 				className={cn(
 					prefersDarkMode
 						? "absolute -ml-6 h-[calc(100vh-96px)] w-screen sm:h-[calc(100vh-104px)] lg:-ml-0 lg:h-[calc(100vh-128px)] lg:w-full"
-						: "w-full h-[calc(100vh-120px)] sm:h-[calc(100vh-176px)] md:h-[calc(100vh-192px)] lg:h-[calc(100vh-216px)]",
+						: "w-full h-[calc(100vh-120px)] sm:h-[calc(100vh-176px)] md:h-[calc(100vh-104px)] lg:h-[calc(100vh-128px)]",
 				)}
 			>
 				<div className="flex h-full flex-col space-y-4">
@@ -195,7 +195,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 									{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, index) => {
 										const date = startOfWeek.add(index, "day");
 										return (
-											<div key={day} className={cn("flex items-center justify-center py-3")}>
+											<div key={day} className={cn("flex items-center justify-center py-2 xl:py-3")}>
 												<span
 													className={cn(
 														date.isToday() ? "bg-primary text-primary-foreground rounded-md px-3 py-1" : "",
@@ -222,7 +222,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 									{/* Horizontal lines */}
 									<div
 										className="col-start-1 col-end-2 row-start-1 grid divide-y divide-gray-100"
-										style={{ gridTemplateRows: "repeat(48, minmax(2.5rem, 1fr))" }}
+										style={{ gridTemplateRows: "repeat(48, minmax(3.5rem, 1fr))" }}
 									>
 										<div ref={containerOffset} className="row-end-1 h-4" />
 
@@ -318,7 +318,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											}
 
 											const day = Math.floor(offsetX / (rect.width / 7));
-											const timeRounded = Math.floor(((offsetY - 16) / 80) * 2) / 2;
+											const timeRounded = Math.floor(((offsetY - 16) / 112) * 2) / 2;
 
 											const date = startOfWeek.startOf("day").add(day, "day").add(timeRounded, "hour");
 
@@ -326,18 +326,24 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											setLastSelectedDate(date);
 										}}
 									>
-										{bookings?.map((booking) => (
-											<BookingCard
-												key={booking.id}
-												booking={booking}
-												visibleDay={visibleDay}
-												onEditClick={(booking) => {
-													setIsManageBookingDialogOpen(true);
-													setSelectedBooking(booking);
-												}}
-												setIsPreviewCardOpen={setIsPreviewCardOpen}
-											/>
-										))}
+										{bookings?.map((booking) => {
+											if (dayjs(booking.date).isBefore(startOfWeek) || dayjs(booking.date).isAfter(endOfWeek)) {
+												return;
+											}
+
+											return (
+												<BookingCard
+													key={booking.id}
+													booking={booking}
+													visibleDay={visibleDay}
+													onEditClick={(booking) => {
+														setIsManageBookingDialogOpen(true);
+														setSelectedBooking(booking);
+													}}
+													setIsPreviewCardOpen={setIsPreviewCardOpen}
+												/>
+											);
+										})}
 									</ol>
 								</div>
 							</div>
@@ -382,6 +388,7 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			)}
 			style={{
 				gridRow: `${Math.floor((288 / 24) * time + 1)} / span ${(booking.duration / 60) * 0.2}`,
+				zIndex: Math.floor((288 / 24) * time + 1),
 			}}
 		>
 			<Popover
@@ -397,24 +404,22 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			>
 				<PopoverTrigger asChild>
 					<button
-						className="group absolute inset-1 flex flex-col overflow-hidden rounded-lg bg-violet-50 px-2 py-1.5 text-xs leading-5 hover:bg-violet-100 "
+						className="group absolute inset-1 flex flex-col overflow-hidden rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs leading-5 hover:bg-violet-100 "
 						onClick={(e) => {
 							e.stopPropagation();
 						}}
 					>
-						<p className="truncate text-left text-violet-500 group-hover:text-violet-700">
-							<time dateTime="2022-01-15T10:00">{date.format("h:mmA")}</time>
-							<span className={cn(booking.duration < 2700 ? "sm:hidden" : "hidden 2xl:inline")}> - </span>
-							<span className={cn(booking.duration < 2700 ? "sm:sr-only" : "sr-only 2xl:not-sr-only")}>
-								{secondsToHumanReadable(booking.duration)}
-							</span>
-							<span className={cn(booking.duration < 2700 ? "hidden xl:inline" : "hidden")}> - </span>
+						<p className="max-w-full truncate text-left text-violet-500 group-hover:text-violet-700">
 							<span
 								className={cn(
 									booking.duration < 2700 ? "sm:hidden pl-1 sm:pl-0 font-semibold text-violet-700 xl:inline" : "hidden",
 								)}
 							>
 								{booking.dog.givenName} {booking.dog.familyName}
+							</span>
+							<span className={cn(booking.duration < 2700 ? "sm:hidden" : "hidden 2xl:inline")}> - </span>
+							<span className={cn(booking.duration < 2700 ? "sm:sr-only" : "sr-only 2xl:not-sr-only")}>
+								{secondsToHumanReadable(booking.duration)}
 							</span>
 						</p>
 						{booking.duration >= 2700 && (
@@ -426,7 +431,7 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 				</PopoverTrigger>
 				<PopoverContent className="w-80">
 					<div className="grid gap-4">
-						<div className="flex items-start justify-between">
+						<div className="flex w-[286px] items-start justify-between">
 							<div className="space-y-1">
 								<h4 className="text-sm font-medium leading-none">
 									{date.day() !== end.day() ? (
@@ -464,9 +469,9 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 						<div className="grid gap-4">
 							<div className="grid gap-y-2">
 								<Label htmlFor="dog">Dog</Label>
-								<Button variant="ghost" asChild className="-ml-4 h-auto w-[calc(100%+32px)] justify-between">
+								<Button variant="ghost" asChild className="-ml-4 h-auto w-[318px] justify-between">
 									<Link href={`/dog/${booking.dog.id}`}>
-										<div className="flex shrink items-center gap-x-2 truncate">
+										<div className="flex max-w-full shrink items-center gap-x-2 truncate">
 											<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 												<DogIcon className="h-5 w-5" />
 											</div>
@@ -488,11 +493,11 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 								<Label htmlFor="details">Details</Label>
 								{booking.details ? (
 									<div
-										className="prose prose-sm max-w-none whitespace-pre-wrap"
+										className="prose prose-sm w-[286px] whitespace-pre-wrap"
 										dangerouslySetInnerHTML={{ __html: booking.details }}
 									/>
 								) : (
-									<div className="prose prose-sm max-w-none whitespace-pre-wrap">
+									<div className="prose prose-sm whitespace-pre-wrap">
 										<p className="italic text-slate-500">No details provided.</p>
 									</div>
 								)}
