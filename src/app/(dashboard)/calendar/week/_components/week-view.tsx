@@ -154,7 +154,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 							prefersDarkMode ? "md:rounded-md" : "rounded-md",
 						)}
 					>
-						<div style={{ width: "165%" }} className="flex max-w-full flex-none flex-col sm:max-w-none md:max-w-full">
+						<div style={{ width: "165%" }} className="flex max-w-full flex-none flex-col sm:max-w-none lg:max-w-full">
 							<div
 								ref={containerNav}
 								className="sticky top-0 z-30 flex-none bg-white shadow ring-1 ring-black/5  sm:pr-8"
@@ -198,7 +198,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 											<div key={day} className={cn("flex items-center justify-center py-2 xl:py-3")}>
 												<span
 													className={cn(
-														date.isToday() ? "bg-primary text-primary-foreground rounded-md px-3 py-1" : "",
+														date.isToday() ? "bg-primary text-primary-foreground rounded-md text-center px-3 py-1" : "",
 													)}
 												>
 													{day}{" "}
@@ -388,7 +388,6 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			)}
 			style={{
 				gridRow: `${Math.floor((288 / 24) * time + 1)} / span ${(booking.duration / 60) * 0.2}`,
-				zIndex: Math.floor((288 / 24) * time + 1),
 			}}
 		>
 			<Popover
@@ -404,29 +403,17 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			>
 				<PopoverTrigger asChild>
 					<button
-						className="group absolute inset-1 flex flex-col overflow-hidden rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs leading-5 hover:bg-violet-100 "
+						className="group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs leading-5 hover:bg-violet-100 "
 						onClick={(e) => {
 							e.stopPropagation();
 						}}
 					>
-						<p className="max-w-full truncate text-left text-violet-500 group-hover:text-violet-700">
-							<span
-								className={cn(
-									booking.duration < 2700 ? "sm:hidden pl-1 sm:pl-0 font-semibold text-violet-700 xl:inline" : "hidden",
-								)}
-							>
-								{booking.dog.givenName} {booking.dog.familyName}
-							</span>
-							<span className={cn(booking.duration < 2700 ? "sm:hidden" : "hidden 2xl:inline")}> - </span>
-							<span className={cn(booking.duration < 2700 ? "sm:sr-only" : "sr-only 2xl:not-sr-only")}>
-								{secondsToHumanReadable(booking.duration)}
-							</span>
+						<p className="max-w-full truncate whitespace-normal text-left font-semibold text-violet-700">
+							{booking.dog.givenName} {booking.dog.familyName}
 						</p>
-						{booking.duration >= 2700 && (
-							<p className="text-left font-semibold text-violet-700">
-								{booking.dog.givenName} {booking.dog.familyName}
-							</p>
-						)}
+						<p className="max-w-full truncate whitespace-normal text-left text-violet-700">
+							{secondsToHumanReadable(booking.duration)}
+						</p>
 					</button>
 				</PopoverTrigger>
 				<PopoverContent className="w-80">
