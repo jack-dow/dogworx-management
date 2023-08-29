@@ -19,7 +19,7 @@ const BackgroundSVGs = {
 
 	GridTop() {
 		return (
-			<div className="absolute inset-0 text-slate-900/[0.07] [mask-image:linear-gradient(to_bottom_left,white,transparent,transparent)]">
+			<div className="absolute inset-0 text-primary/[0.07] [mask-image:linear-gradient(to_bottom_left,white,transparent,transparent)]">
 				<svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
 					<defs>
 						<pattern

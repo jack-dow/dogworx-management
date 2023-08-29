@@ -129,6 +129,8 @@ function VetToVetClinicRelationships({
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
+	console.log({ vetToVetClinicRelationships: vetToVetClinicRelationships.fields });
+
 	return (
 		<>
 			<ManageVetClinicSheet
@@ -141,11 +143,18 @@ function VetToVetClinicRelationships({
 				}}
 				withoutTrigger
 				onSuccessfulSubmit={(vetClinic) => {
-					vetToVetClinicRelationships.fields.forEach((field, index) => {
+					const newVetToVetClinicRelationships = [...vetToVetClinicRelationships.fields].map((field) => {
 						if (field.vetClinicId === vetClinic.id) {
-							form.setValue(`vetToVetClinicRelationships.${index}.vetClinic`, vetClinic, { shouldDirty: true });
+							return {
+								...field,
+								vetClinic,
+							};
 						}
+
+						return field;
 					});
+
+					form.setValue("vetToVetClinicRelationships", newVetToVetClinicRelationships, { shouldDirty: false });
 				}}
 			/>
 
@@ -263,6 +272,8 @@ function VetToVetClinicRelationship({
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchema>();
 
+	console.log(vetToVetClinicRelationship.vetClinic);
+
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
 	return (
 		<li className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}>
@@ -272,7 +283,7 @@ function VetToVetClinicRelationship({
 				</div>
 
 				<div className="min-w-0 flex-auto">
-					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-primary">
 						{vetToVetClinicRelationship.vetClinic.name}
 					</p>
 					<div
@@ -348,7 +359,7 @@ function VetToVetClinicRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal>
+								<SelectContent withoutPortal align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map((relation) => (

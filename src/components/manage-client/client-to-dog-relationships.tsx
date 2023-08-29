@@ -17,6 +17,7 @@ import {
 } from "~/components/ui/select";
 import { actions, type ClientById, type DogsSearch } from "~/actions";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { cn, generateId } from "~/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
@@ -31,7 +32,6 @@ import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGrou
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
-import {useDidUpdate} from "~/hooks/use-did-update";
 
 function ClientToDogRelationships({
 	existingDogToClientRelationships,
@@ -122,10 +122,10 @@ function ClientToDogRelationships({
 	}
 
 	useDidUpdate(() => {
-		if(setOpen) {
+		if (setOpen) {
 			setOpen(false);
 		}
-	}, [pathname])
+	}, [pathname]);
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
@@ -226,7 +226,7 @@ function ClientToDogRelationship({
 					<DogIcon className="h-5 w-5" />
 				</div>
 				<div className="min-w-0 flex-auto">
-					<p className="truncate text-sm font-semibold capitalize leading-6 text-slate-900">
+					<p className="truncate text-sm font-semibold capitalize leading-6 text-primary">
 						{dogToClientRelationship.dog.givenName} {dogToClientRelationship.dog.familyName}
 					</p>
 					<p className="truncate text-xs capitalize leading-5 text-slate-500">{dogToClientRelationship.dog.color}</p>
@@ -276,7 +276,7 @@ function ClientToDogRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal>
+								<SelectContent withoutPortal align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (

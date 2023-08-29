@@ -143,11 +143,18 @@ function VetClinicToVetRelationships({
 				}}
 				withoutTrigger
 				onSuccessfulSubmit={(vet) => {
-					vetToVetClinicRelationships.fields.forEach((field, index) => {
+					const newVetToVetClinicRelationships = [...vetToVetClinicRelationships.fields].map((field) => {
 						if (field.vetId === vet.id) {
-							form.setValue(`vetToVetClinicRelationships.${index}.vet`, vet);
+							return {
+								...field,
+								vet,
+							};
 						}
+
+						return field;
 					});
+
+					form.setValue("vetToVetClinicRelationships", newVetToVetClinicRelationships, { shouldDirty: false });
 				}}
 			/>
 
@@ -287,7 +294,7 @@ function VetClinicToVetRelationship({
 				</div>
 
 				<div className="min-w-0 flex-auto ">
-					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-primary">
 						{vetToVetClinicRelationship.vet.givenName} {vetToVetClinicRelationship.vet.familyName}
 					</p>
 					<div
@@ -363,7 +370,7 @@ function VetClinicToVetRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal>
+								<SelectContent withoutPortal align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map((relation) => (

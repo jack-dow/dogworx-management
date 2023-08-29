@@ -136,11 +136,18 @@ function DogToClientRelationships({
 				}}
 				withoutTrigger
 				onSuccessfulSubmit={(client) => {
-					dogToClientRelationships.fields.forEach((field, index) => {
+					const newDogToClientRelationships = [...dogToClientRelationships.fields].map((field) => {
 						if (field.clientId === client.id) {
-							form.setValue(`dogToClientRelationships.${index}.client`, client);
+							return {
+								...field,
+								client,
+							};
 						}
+
+						return field;
 					});
+
+					form.setValue("dogToClientRelationships", newDogToClientRelationships, { shouldDirty: false });
 				}}
 			/>
 
@@ -276,7 +283,7 @@ function DogToClientRelationship({
 				</div>
 
 				<div className="min-w-0 flex-auto">
-					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-primary">
 						{dogToClientRelationship.client.givenName} {dogToClientRelationship.client.familyName}
 					</p>
 					<div className="flex flex-col gap-y-2 truncate px-2 pt-1 md:flex-row md:items-center md:space-x-2 md:pt-0">
@@ -345,7 +352,7 @@ function DogToClientRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent>
+								<SelectContent align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (

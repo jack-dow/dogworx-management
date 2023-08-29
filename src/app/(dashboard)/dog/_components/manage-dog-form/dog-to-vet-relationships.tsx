@@ -139,11 +139,18 @@ function DogToVetRelationships({
 				}}
 				withoutTrigger
 				onSuccessfulSubmit={(vet) => {
-					dogToVetRelationships.fields.forEach((field, index) => {
+					const newDogToVetRelationships = [...dogToVetRelationships.fields].map((field) => {
 						if (field.vetId === vet.id) {
-							form.setValue(`dogToVetRelationships.${index}.vet`, vet);
+							return {
+								...field,
+								vet,
+							};
 						}
+
+						return field;
 					});
+
+					form.setValue("dogToVetRelationships", newDogToVetRelationships, { shouldDirty: false });
 				}}
 			/>
 
@@ -277,7 +284,7 @@ function DogToVetRelationship({
 				</div>
 
 				<div className="min-w-0 flex-auto">
-					<p className="px-2 text-sm font-semibold leading-6 text-slate-900">
+					<p className="px-2 text-sm font-semibold leading-6 text-primary">
 						{dogToVetRelationship.vet.givenName} {dogToVetRelationship.vet.familyName}
 					</p>
 					<div className="flex flex-col gap-y-2 truncate px-2 pt-1 md:flex-row md:items-center md:space-x-2 md:pt-0">
@@ -344,7 +351,7 @@ function DogToVetRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent>
+								<SelectContent align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map((relation) => (

@@ -19,7 +19,6 @@ import {
 import {
 	ChevronDoubleLeftIcon,
 	ChevronDoubleRightIcon,
-	ChevronDownIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	SortAscIcon,
@@ -31,17 +30,10 @@ import { type SortableColumns } from "~/actions/sortable-columns";
 import { type PaginationSearchParams } from "~/actions/utils";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { Button } from "./button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "./dropdown-menu";
+import { Label } from "./label";
 import { Loader } from "./loader";
 import { SearchCombobox, SearchComboboxAction, type SearchComboboxProps } from "./search-combobox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { Separator } from "./separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
@@ -136,7 +128,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center gap-4">
+			<header className="flex items-center gap-4">
 				<div className="flex flex-1 items-center space-x-3">
 					<div className="relative w-full max-w-[288px]">
 						{search ? (
@@ -186,43 +178,46 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 
 					{isLoading && <Loader variant="black" size="sm" />}
 				</div>
+
 				<div className="flex flex-1 items-center justify-end gap-x-3 md:gap-x-5">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="outline" size="sm" className="flex h-8 gap-1">
+					<div className="flex items-center space-x-2">
+						<Label htmlFor="sort-by-select-trigger" className="sr-only">
+							Sort by
+						</Label>
+						<Select>
+							<SelectTrigger id="sort-by-select-trigger" className="flex h-8 gap-1 space-x-0 text-xs">
 								<SortIcon className="h-4 w-4 sm:hidden" />
 								<span className="sr-only sm:not-sr-only">Sort by</span>
-								<ChevronDownIcon className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-[150px]">
-							<DropdownMenuLabel>Sort columns</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							{Object.values(sortableColumns).map((column) => {
-								return (
-									<DropdownMenuItem asChild key={column.id}>
-										<Link
-											href={`${pathname}?${constructPaginationSearchParams(searchParams, {
-												sortBy: column.id,
-												sortDirection: column.id === sortBy ? (sortDirection === "asc" ? "desc" : "asc") : "asc",
-											}).toString()}`}
-											onClick={() => setIsLoading(true)}
-											className="justify-between hover:cursor-pointer"
-										>
-											{column.label}
-											{column.id === sortBy ? (
-												sortDirection === "asc" ? (
-													<SortAscIcon className="h-4 w-4" />
-												) : (
-													<SortDescIcon className="h-4 w-4" />
-												)
-											) : null}
-										</Link>
-									</DropdownMenuItem>
-								);
-							})}
-						</DropdownMenuContent>
-					</DropdownMenu>
+							</SelectTrigger>
+							<SelectContent className="pointer-events-none w-[150px]" align="end">
+								<SelectGroup>
+									{Object.values(sortableColumns).map((column) => {
+										return (
+											<SelectItem value={column.id} asChild key={column.id} className="pr-2">
+												<Link
+													href={`${pathname}?${constructPaginationSearchParams(searchParams, {
+														sortBy: column.id,
+														sortDirection: column.id === sortBy ? (sortDirection === "asc" ? "desc" : "asc") : "asc",
+													}).toString()}`}
+													onClick={() => setIsLoading(true)}
+													className="justify-between hover:cursor-pointer"
+												>
+													{column.label}
+													{column.id === sortBy ? (
+														sortDirection === "asc" ? (
+															<SortAscIcon className="h-4 w-4" />
+														) : (
+															<SortDescIcon className="h-4 w-4" />
+														)
+													) : null}
+												</Link>
+											</SelectItem>
+										);
+									})}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+					</div>
 					<Separator orientation="vertical" className="h-4" />
 					<Button size="sm" asChild>
 						<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
@@ -230,8 +225,8 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 						</Link>
 					</Button>
 				</div>
-			</div>
-			<div className="rounded-md border">
+			</header>
+			<main className="rounded-md border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -280,7 +275,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 						)}
 					</TableBody>
 				</Table>
-			</div>
+			</main>
 			<DataTablePagination page={page} maxPage={maxPage} limit={limit} setIsLoading={setIsLoading} />
 		</div>
 	);
@@ -328,9 +323,9 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 	return (
 		<div className="flex w-full items-center justify-between space-x-6 lg:space-x-8">
 			<div className="flex items-center space-x-2">
-				<p className="text-sm font-medium">Rows per page</p>
+				<Label htmlFor="pagination-limit-select-trigger">Rows per page</Label>
 				<Select>
-					<SelectTrigger className="h-8 w-[70px]">
+					<SelectTrigger id="pagination-limit-select-trigger" className="h-8 w-[70px]">
 						<SelectValue>{limit}</SelectValue>
 					</SelectTrigger>
 					<SelectContent className="pointer-events-none">

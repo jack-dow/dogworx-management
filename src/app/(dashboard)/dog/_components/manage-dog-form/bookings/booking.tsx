@@ -3,8 +3,8 @@
 import * as React from "react";
 import Image from "next/image";
 import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import advancedFormat from "dayjs/plugin/advancedFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -37,7 +37,7 @@ function Booking({
 }) {
 	const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);
 
- 	const date = dayjs(booking.date);
+	const date = dayjs(booking.date);
 	const end = date.add(booking.duration, "seconds");
 
 	return (
@@ -71,7 +71,7 @@ function Booking({
 					<div className="min-w-0 flex-1">
 						<div>
 							<div className="text-sm">
-								<p className="font-medium text-slate-900">
+								<p className="font-medium text-primary">
 									{booking.assignedTo
 										? `${booking.assignedTo.givenName} ${booking.assignedTo.familyName}`
 										: "Deleted User"}

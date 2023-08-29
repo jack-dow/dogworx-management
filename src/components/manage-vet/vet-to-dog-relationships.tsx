@@ -225,7 +225,7 @@ function VetToDogRelationship({
 				</div>
 
 				<div className="min-w-0 flex-auto">
-					<p className="truncate text-sm font-semibold capitalize leading-6 text-slate-900">
+					<p className="truncate text-sm font-semibold capitalize leading-6 text-primary">
 						{dogToVetRelationship.dog.givenName} {dogToVetRelationship.dog.familyName}
 					</p>
 					<p className="truncate text-xs capitalize leading-5 text-slate-500">
@@ -275,7 +275,7 @@ function VetToDogRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal>
+								<SelectContent withoutPortal align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map((relation) => (
