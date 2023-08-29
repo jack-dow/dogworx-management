@@ -17,7 +17,7 @@ async function VetsPage({ searchParams }: { searchParams?: { [key: string]: stri
 	});
 	return (
 		<>
-			<PageHeader title="Manage Vets Clinics" back={{ href: "/vet-clinics" }} />
+			<PageHeader title="Manage Vets Clinics" back={{ href: "/" }} />
 
 			<VetClinicsTable result={response.data} />
 		</>

@@ -26,6 +26,7 @@ function RootPage() {
 
 	if (process.env.NODE_ENV !== "development") {
 		router.replace("/calendar/week");
+		return <></>;
 	}
 
 	return (

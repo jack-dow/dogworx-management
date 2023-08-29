@@ -18,7 +18,10 @@ const config = {
 		serverActions: true,
 	},
 	images: {
-		domains: ["dogworx-management-dev.s3.ap-southeast-2.amazonaws.com"],
+		domains: [
+			"dogworx-management-dev.s3.ap-southeast-2.amazonaws.com",
+			"dogworx-management.s3.ap-southeast-2.amazonaws.com",
+		],
 	},
 };
 export default withBundleAnalyzer(config);
