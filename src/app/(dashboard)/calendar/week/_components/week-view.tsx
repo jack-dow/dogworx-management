@@ -81,7 +81,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 				className={cn(
 					prefersDarkMode
 						? "absolute -ml-6 h-[calc(100vh-96px)] w-screen sm:h-[calc(100vh-104px)] lg:-ml-0 lg:h-[calc(100vh-128px)] lg:w-full"
-						: "w-full h-[calc(100vh-120px)] sm:h-[calc(100vh-176px)] md:h-[calc(100vh-104px)] lg:h-[calc(100vh-128px)]",
+						: "w-full h-[calc(100vh-48px)] sm:h-[calc(100vh-96px)] md:h-[calc(100vh-112px)] lg:h-[calc(100vh-128px)]",
 				)}
 			>
 				<div className="flex h-full flex-col space-y-4">
