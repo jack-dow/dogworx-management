@@ -50,11 +50,11 @@ function useManageOrganizationForm(props: UseManageOrganizationFormProps) {
 	const form = useForm<ManageOrganizationFormSchema>({
 		resolver: zodResolver(ManageOrganizationFormSchema),
 		defaultValues: {
-			id: generateId(),
 			name: searchTerm,
 			maxUsers: 5,
 			...props.organization,
 			...props.defaultValues,
+			id: props.organization?.id ?? generateId(),
 			actions: {
 				organizationInviteLinks: {},
 			},

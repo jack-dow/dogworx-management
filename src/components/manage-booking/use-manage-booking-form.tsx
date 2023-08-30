@@ -80,12 +80,12 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const form = useForm<ManageBookingFormSchema>({
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
-			id: generateId(),
 			assignedToId: user.id,
 			assignedTo: user,
 			details: "",
 			...props.booking,
 			...props.defaultValues,
+			id: props.booking?.id ?? generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);

@@ -71,13 +71,13 @@ function useManageVetForm(props: UseManageVetFormProps) {
 	const form = useForm<ManageVetFormSchema>({
 		resolver: zodResolver(ManageVetFormSchema),
 		defaultValues: {
-			id: generateId(),
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			dogToVetRelationships: props.vet?.dogToVetRelationships,
 			vetToVetClinicRelationships: props.vet?.vetToVetClinicRelationships ?? [],
 			...props.vet,
 			...props.defaultValues,
+			id: props.vet?.id ?? generateId(),
 			actions: {
 				dogToVetRelationships: {},
 				vetToVetClinicRelationships: {},

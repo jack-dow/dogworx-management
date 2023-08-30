@@ -55,10 +55,10 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 	const form = useForm<ManageVetClinicFormSchema>({
 		resolver: zodResolver(ManageVetClinicFormSchema),
 		defaultValues: {
-			id: generateId(),
 			name: searchTerm,
 			...props.vetClinic,
 			...props.defaultValues,
+			id: props.vetClinic?.id ?? generateId(),
 			actions: {
 				vetToVetClinicRelationships: {},
 			},
