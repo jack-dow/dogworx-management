@@ -1,6 +1,6 @@
 import { type AnyColumn } from "drizzle-orm";
 
-import { bookings, clients, dogs, organizations, users, vetClinics, vets } from "~/db/schema";
+import { bookings, bookingTypes, clients, dogs, organizations, users, vetClinics, vets } from "~/db/schema";
 
 type SortableColumns = {
 	[key: string]: {
@@ -211,6 +211,29 @@ const BOOKINGS_SORTABLE_COLUMNS = {
 	},
 } satisfies SortableColumns;
 
+const BOOKING_TYPES_SORTABLE_COLUMNS = {
+	name: {
+		id: "name",
+		label: "Name",
+		columns: [bookingTypes.name],
+	},
+	duration: {
+		id: "duration",
+		label: "Duration",
+		columns: [bookingTypes.duration],
+	},
+	createdAt: {
+		id: "createdAt",
+		label: "Created at",
+		columns: [bookingTypes.createdAt],
+	},
+	updatedAt: {
+		id: "updatedAt",
+		label: "Last updated at",
+		columns: [bookingTypes.updatedAt],
+	},
+} satisfies SortableColumns;
+
 export {
 	type SortableColumns,
 	CLIENTS_SORTABLE_COLUMNS,
@@ -220,4 +243,5 @@ export {
 	ORGANIZATIONS_SORTABLE_COLUMNS,
 	USERS_SORTABLE_COLUMNS,
 	BOOKINGS_SORTABLE_COLUMNS,
+	BOOKING_TYPES_SORTABLE_COLUMNS,
 };

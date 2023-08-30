@@ -1,4 +1,12 @@
 import {
+	deleteBookingType,
+	getBookingTypeById,
+	insertBookingType,
+	listBookingTypes,
+	searchBookingTypes,
+	updateBookingType,
+} from "./app/booking-types-actions";
+import {
 	deleteBooking,
 	getBookingById,
 	getBookingsByWeek,
@@ -66,6 +74,14 @@ const actions = {
 			update: updateBooking,
 			delete: deleteBooking,
 		},
+		bookingTypes: {
+			list: listBookingTypes,
+			search: searchBookingTypes,
+			byId: getBookingTypeById,
+			insert: insertBookingType,
+			update: updateBookingType,
+			delete: deleteBookingType,
+		},
 		vetClinics: {
 			list: listVetClinics,
 			search: searchVetClinics,
@@ -115,6 +131,7 @@ export { actions };
 export type * from "./app/clients-actions";
 export type * from "./app/dogs-actions";
 export type * from "./app/bookings-actions";
+export type * from "./app/booking-types-actions";
 export type * from "./app/users-actions";
 export type * from "./app/vet-clinics-actions";
 export type * from "./app/vets-actions";

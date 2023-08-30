@@ -309,7 +309,7 @@ function BookingsList({
 
 								actions.app.bookings
 									.search({
-										dogId: cursor.dogId,
+										dogId: form.getValues("id"),
 										cursor,
 										after: tab === "past" ? undefined : dayjs().startOf("day").toDate(),
 										sortDirection: tab === "past" ? "desc" : "asc",

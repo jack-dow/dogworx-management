@@ -295,11 +295,9 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 
 		const data = validation.data;
 
-		await drizzle.transaction(async (trx) => {
-			await trx.insert(bookings).values({
-				...data,
-				organizationId: user.organizationId,
-			});
+		await drizzle.insert(bookings).values({
+			...data,
+			organizationId: user.organizationId,
 		});
 
 		const booking = await drizzle.query.bookings.findFirst({
@@ -375,8 +373,8 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 });
 type BookingUpdate = ExtractServerActionData<typeof updateBooking>;
 
-const deleteBooking = createServerAction(async (booking: { id: string; dogId: string }) => {
-	const validation = z.object({ id: z.string(), dogId: z.string() }).safeParse(booking);
+const deleteBooking = createServerAction(async (booking: { id: string; dogId?: string | null }) => {
+	const validation = z.object({ id: z.string(), dogId: z.string().nullish() }).safeParse(booking);
 
 	if (!validation.success) {
 		return { success: false, error: validation.error.issues, data: null };
@@ -394,7 +392,12 @@ const deleteBooking = createServerAction(async (booking: { id: string; dogId: st
 				count: sql<number>`count(*)`.mapWith(Number),
 			})
 			.from(bookings)
-			.where(and(eq(bookings.organizationId, user.organizationId), eq(bookings.dogId, booking.dogId)));
+			.where(
+				and(
+					eq(bookings.organizationId, user.organizationId),
+					validation.data.dogId ? eq(bookings.dogId, validation.data.dogId) : undefined,
+				),
+			);
 
 		return {
 			success: true,

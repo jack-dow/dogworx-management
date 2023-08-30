@@ -83,6 +83,7 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 			details: "",
 			...props.booking,
 			...props.defaultValues,
+			id: props.booking?.id ?? generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);

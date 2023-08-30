@@ -37,6 +37,7 @@ import {
 	CalendarDaysIcon,
 	UsersIcon as ClientsIcon,
 	ReceiptPercentIcon as InvoiceIcon,
+	Cog6ToothIcon as SettingsIcon,
 	BuildingStorefrontIcon as VetClinicIcon,
 	UserGroupIcon as VetsIcon,
 } from "@heroicons/react/24/solid";
@@ -681,6 +682,7 @@ export {
 	UserIcon,
 	PackageIcon,
 	VetsIcon,
+	SettingsIcon,
 	VetClinicIcon,
 	XMarkIcon as XIcon,
 };

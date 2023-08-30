@@ -6,7 +6,7 @@ import { useFormContext } from "react-hook-form";
 import { actions } from "~/actions";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
-import { type ManageBookingFormSchema } from "./use-manage-booking-form";
+import { type ManageBookingFormSchema } from "./use-manage-booking-types-form";
 
 function BookingDeleteDialog() {
 	const form = useFormContext<ManageBookingFormSchema>();

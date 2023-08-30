@@ -66,7 +66,6 @@ function BookingsTable({ result }: { result: BookingsList }) {
 
 					const result = await actions.app.bookings.delete({
 						id: confirmBookingDelete.id,
-						dogId: confirmBookingDelete.dogId,
 					});
 
 					if (result.success) {

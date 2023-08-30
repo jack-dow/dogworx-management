@@ -71,12 +71,13 @@ const bookings = mysqlTable("bookings", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }).notNull(),
-	assignedToId: char("assigned_to_id", { length: 24 }),
+	dogId: char("dog_id", { length: 24 }),
+	assignedToId: char("assigned_to_id", { length: 24 }).notNull(),
 	date: timestamp("date").notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
 	details: text("details"),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
+	bookingTypeId: char("booking_type_id", { length: 24 }),
 });
 
 const bookingsRelations = relations(bookings, ({ one }) => ({
@@ -84,7 +85,6 @@ const bookingsRelations = relations(bookings, ({ one }) => ({
 		fields: [bookings.dogId],
 		references: [dogs.id],
 	}),
-
 	assignedTo: one(users, {
 		fields: [bookings.assignedToId],
 		references: [users.id],
@@ -93,6 +93,37 @@ const bookingsRelations = relations(bookings, ({ one }) => ({
 		fields: [bookings.organizationId],
 		references: [organizations.id],
 	}),
+	bookingType: one(bookingTypes, {
+		fields: [bookings.bookingTypeId],
+		references: [bookingTypes.id],
+	}),
+}));
+
+// -----------------------------------------------------------------------------
+// Booking Types
+// -----------------------------------------------------------------------------
+const bookingTypes = mysqlTable("booking_types", {
+	id: char("id", { length: 24 }).notNull().primaryKey(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
+	name: varchar("name", { length: 100 }).notNull(),
+	duration: unsignedMediumInt("duration_in_seconds").notNull(),
+	details: text("details"),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
+	color: varchar("color", { length: 7 }).notNull(),
+});
+
+const bookingTypesRelations = relations(bookingTypes, ({ one, many }) => ({
+	organization: one(organizations, {
+		fields: [bookingTypes.organizationId],
+		references: [organizations.id],
+	}),
+	bookings: many(bookings),
 }));
 
 // -----------------------------------------------------------------------------
@@ -287,6 +318,8 @@ export {
 	dogsRelations,
 	bookings,
 	bookingsRelations,
+	bookingTypes,
+	bookingTypesRelations,
 	clients,
 	clientsRelations,
 	vets,

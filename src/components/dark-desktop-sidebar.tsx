@@ -25,6 +25,7 @@ import {
 	ClientsIcon,
 	DogIcon,
 	LogOutIcon,
+	SettingsIcon,
 	UserIcon,
 	VetClinicIcon,
 	VetsIcon,
@@ -38,16 +39,36 @@ type Navigation = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	icon: (...args: any[]) => JSX.Element | React.ReactNode;
 	disabled: boolean;
+	subNavigation?: Array<{
+		name: string;
+		href: string;
+	}>;
 };
 
-export const navigation: Array<Navigation> = [
+export const navigation = [
 	{ name: "Calendar", href: "/calendar/week", icon: CalendarDaysIcon, disabled: false },
 	{ name: "Dogs", href: "/dogs", icon: DogIcon, disabled: false },
 	{ name: "Clients", href: "/clients", icon: ClientsIcon, disabled: false },
 	{ name: "Vets", href: "/vets", icon: VetsIcon, disabled: false },
 	{ name: "Vet Clinics", href: "/vet-clinics", icon: VetClinicIcon, disabled: false },
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: false },
-];
+	{
+		name: "Settings",
+		href: "/settings",
+		icon: SettingsIcon,
+		disabled: false,
+		subNavigation: [
+			// {
+			// 	name: "General",
+			// 	href: "/settings/general",
+			// },
+			{
+				name: "Booking types",
+				href: "/settings/booking-types",
+			},
+		],
+	},
+] satisfies Array<Navigation>;
 
 function DarkDesktopSidebar() {
 	const session = useSession();
@@ -81,7 +102,7 @@ function DarkDesktopSidebar() {
 
 									return (
 										<li key={item.name}>
-											<a
+											<Link
 												aria-disabled={item.disabled}
 												href={item.disabled ? "#" : item.href}
 												className={cn(
@@ -107,7 +128,7 @@ function DarkDesktopSidebar() {
 													aria-hidden="true"
 												/>
 												{item.name}
-											</a>
+											</Link>
 										</li>
 									);
 								})}

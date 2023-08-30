@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
 	bookings,
+	bookingTypes,
 	clients,
 	dogs,
 	dogToClientRelationships,
@@ -99,7 +100,8 @@ export const InsertBookingSchema = createInsertSchema(bookings)
 	.omit({ createdAt: true, updatedAt: true, organizationId: true })
 	.extend({
 		id: IdSchema,
-		dogId: IdSchema,
+		dogId: IdSchema.nullable(),
+		bookingTypeId: IdSchema.nullable(),
 		duration: z.number().int().nonnegative().default(0),
 	});
 export type InsertBookingSchema = z.infer<typeof InsertBookingSchema>;
@@ -110,6 +112,24 @@ export const UpdateBookingSchema = InsertBookingSchema.partial().extend({
 export type UpdateBookingSchema = z.infer<typeof UpdateBookingSchema>;
 
 export const BookingActionsLogSchema = createActionsLogSchema(InsertBookingSchema, UpdateBookingSchema);
+
+// -----------------------------------------------------------------------------
+// Booking Types
+// -----------------------------------------------------------------------------
+export const SelectBookingTypeSchema = createSelectSchema(bookingTypes);
+
+export const InsertBookingTypeSchema = createInsertSchema(bookingTypes)
+	.omit({ createdAt: true, updatedAt: true, organizationId: true })
+	.extend({
+		id: IdSchema,
+		duration: z.number().int().nonnegative().default(0),
+	});
+export type InsertBookingTypeSchema = z.infer<typeof InsertBookingTypeSchema>;
+
+export const UpdateBookingTypeSchema = InsertBookingTypeSchema.partial().extend({
+	id: IdSchema,
+});
+export type UpdateBookingTypeSchema = z.infer<typeof UpdateBookingTypeSchema>;
 
 // -----------------------------------------------------------------------------
 // Clients

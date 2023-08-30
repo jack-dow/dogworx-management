@@ -65,7 +65,7 @@ const listVetClinics = createServerAction(async (options: PaginationSearchParams
 	} catch {
 		return {
 			success: false,
-			error: "Failed to list vetClinics",
+			error: "Failed to list vet clinics",
 			data: {
 				pagination: {
 					count: 0,
@@ -113,7 +113,7 @@ const searchVetClinics = createServerAction(async (searchTerm: string) => {
 
 		return { success: true, data };
 	} catch {
-		return { success: false, error: "Failed to search vetClinics", data: null };
+		return { success: false, error: "Failed to search vet clinics", data: null };
 	}
 });
 type VetClinicsSearch = ExtractServerActionData<typeof searchVetClinics>;
