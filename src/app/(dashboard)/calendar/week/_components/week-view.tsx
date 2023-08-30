@@ -403,12 +403,12 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			>
 				<PopoverTrigger asChild>
 					<button
-						className="group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs leading-5 hover:bg-violet-100 "
+						className="group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border border-violet-200 bg-violet-50 p-2 text-xs leading-5 hover:bg-violet-100 "
 						onClick={(e) => {
 							e.stopPropagation();
 						}}
 					>
-						<p className="max-w-full shrink-0 truncate whitespace-normal text-left font-semibold text-violet-700">
+						<p className="max-w-full shrink-0 truncate whitespace-normal text-left font-semibold leading-none text-violet-700">
 							{booking.dog.givenName} {booking.dog.familyName}
 						</p>
 						<p className="max-w-full truncate whitespace-normal text-left text-violet-700">
