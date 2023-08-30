@@ -408,7 +408,7 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 							e.stopPropagation();
 						}}
 					>
-						<p className="max-w-full truncate whitespace-normal text-left font-semibold text-violet-700">
+						<p className="max-w-full shrink-0 truncate whitespace-normal text-left font-semibold text-violet-700">
 							{booking.dog.givenName} {booking.dog.familyName}
 						</p>
 						<p className="max-w-full truncate whitespace-normal text-left text-violet-700">
