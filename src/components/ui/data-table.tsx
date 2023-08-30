@@ -172,14 +172,11 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 							<SelectTrigger className="flex h-8 gap-1 space-x-0 bg-white text-xs">
 								<span>Sort by</span>
 							</SelectTrigger>
-							<SelectContent
-								className="pointer-events-none w-[150px]"
-								align={windowSize.width >= 768 ? "end" : "start"}
-							>
+							<SelectContent className="pointer-events-none w-44" align={windowSize.width >= 768 ? "end" : "start"}>
 								<SelectGroup>
 									{Object.values(sortableColumns).map((column) => {
 										return (
-											<SelectItem value={column.id} asChild key={column.id} className="max-w-[150px] pr-2">
+											<SelectItem value={column.id} asChild key={column.id} className="">
 												<Link
 													href={`${pathname}?${setSearchParams(searchParams, {
 														sortBy: column.id,
@@ -189,16 +186,18 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 														e.stopPropagation();
 														setIsLoading(true);
 													}}
-													className="justify-between hover:cursor-pointer"
+													className="hover:cursor-pointer"
 												>
 													{column.label}
-													{column.id === sortBy ? (
-														sortDirection === "asc" ? (
-															<SortAscIcon className="h-4 w-4" />
-														) : (
-															<SortDescIcon className="h-4 w-4" />
-														)
-													) : null}
+													<span className="absolute right-2 flex h-4 w-4 items-center justify-center">
+														{column.id === sortBy ? (
+															sortDirection === "asc" ? (
+																<SortAscIcon className="h-4 w-4" />
+															) : (
+																<SortDescIcon className="h-4 w-4" />
+															)
+														) : null}
+													</span>
 												</Link>
 											</SelectItem>
 										);

@@ -34,7 +34,7 @@ function MobileNavigation() {
 
 	return (
 		<Sheet>
-			<SheetTrigger asChild className="fixed bottom-10 left-4 z-50 shadow-md lg:hidden">
+			<SheetTrigger asChild className="fixed bottom-6 left-4 z-50 shadow-md lg:hidden">
 				<Button variant="outline" size="icon" className="h-14 w-14 rounded-full">
 					<MobileMenuIcon className="h-5 w-5" />
 					<span className="sr-only">Open mobile navigation</span>
