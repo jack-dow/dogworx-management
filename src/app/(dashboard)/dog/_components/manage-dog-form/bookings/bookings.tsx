@@ -34,7 +34,19 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 
 	function handleAddOrUpdateBooking(booking: DogById["bookings"][number]) {
 		if (dayjs(booking.date).isBefore(dayjs())) {
+			// Remove booking if dog has been changed
+			if (booking.dogId !== form.getValues("id")) {
+				setPastBookings((prev) => [...prev.filter((f) => f.id !== booking.id)]);
+				return;
+			}
+
 			setPastBookings((prev) => [...prev.filter((f) => f.id !== booking.id), booking]);
+			return;
+		}
+
+		// Remove booking if dog has been changed
+		if (booking.dogId !== form.getValues("id")) {
+			setFutureBookings((prev) => [...prev.filter((f) => f.id !== booking.id)]);
 			return;
 		}
 
