@@ -66,7 +66,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="xl:max-w-2xl 2xl:max-w-3xl">
+				<DialogContent className="my-4 max-h-screen overflow-y-auto xl:max-w-2xl 2xl:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Booking</DialogTitle>
 						<DialogDescription>
@@ -95,7 +95,6 @@ interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefin
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
-	dog?: BookingById["dog"];
 }
 
 function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
@@ -105,7 +104,6 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 	onSubmit,
 	onSuccessfulSubmit,
 	booking,
-	dog,
 	defaultValues,
 }: ManageBookingDialogFormProps<BookingProp>) {
 	const isNew = !booking;
@@ -139,7 +137,7 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 					})(e);
 				}}
 			>
-				<BookingFields variant="dialog" dog={dog} />
+				<BookingFields variant="dialog" />
 
 				<DialogFooter className="mt-2">
 					<Button

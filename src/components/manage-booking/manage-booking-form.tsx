@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { type BookingById } from "~/actions";
 import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
@@ -15,11 +14,7 @@ import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-interface ManageBookingFormProps extends UseManageBookingFormProps {
-	dog?: BookingById["dog"];
-}
-
-function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
+function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
 	const isNew = !booking;
 
 	const { toast } = useToast();
@@ -69,7 +64,7 @@ function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 				`}
 					>
 						<div className="grid gap-y-4">
-							<BookingFields variant="form" dog={dog} />
+							<BookingFields variant="form" />
 						</div>
 					</FormSection>
 
@@ -117,4 +112,4 @@ function ManageBookingForm({ booking, onSubmit, dog }: ManageBookingFormProps) {
 	);
 }
 
-export { type ManageBookingFormProps, ManageBookingForm };
+export { ManageBookingForm };

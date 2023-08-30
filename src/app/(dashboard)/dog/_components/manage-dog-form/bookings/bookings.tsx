@@ -99,13 +99,6 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 							</TabsList>
 
 							<ManageBookingDialog
-								dog={{
-									id: form.getValues("id"),
-									givenName: form.getValues("givenName") ?? "Unnamed new dog",
-									familyName: form.getValues("familyName") ?? "",
-									color: form.getValues("color"),
-									breed: form.getValues("breed"),
-								}}
 								trigger={
 									<Button variant="outline" size="icon">
 										<span className="sr-only">Create booking</span>

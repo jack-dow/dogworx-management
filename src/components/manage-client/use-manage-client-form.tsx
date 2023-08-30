@@ -48,11 +48,11 @@ function useManageClientForm(props: UseManageClientFormProps) {
 	const form = useForm<ManageClientFormSchema>({
 		resolver: zodResolver(ManageClientFormSchema),
 		defaultValues: {
-			id: generateId(),
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			...props.client,
 			...props.defaultValues,
+			id: props.client?.id ?? generateId(),
 			actions: {
 				dogToClientRelationships: {},
 			},

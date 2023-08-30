@@ -191,13 +191,6 @@ function BookingsList({
 						  }
 						: undefined
 				}
-				dog={{
-					id: form.getValues("id"),
-					givenName: form.getValues("givenName") ?? "Unnamed new dog",
-					familyName: form.getValues("familyName") ?? "",
-					color: form.getValues("color"),
-					breed: form.getValues("breed"),
-				}}
 				defaultValues={copiedBooking ?? undefined}
 				onSuccessfulSubmit={onAddOrUpdateBooking}
 				onSubmit={

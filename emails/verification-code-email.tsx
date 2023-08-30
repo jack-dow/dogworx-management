@@ -21,7 +21,7 @@ interface VerificationCodeEmailProps {
 	requestedFromLocation: string | undefined;
 }
 
-const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const VerificationCodeEmail = ({ code, requestedFromIp, requestedFromLocation }: VerificationCodeEmailProps) => {
 	const previewText = `This code will only be valid for the next 5 minutes. Do not share it with anyone.`;

@@ -114,7 +114,11 @@ function ClientPersonalInformation({ variant }: { variant: "sheet" | "form" }) {
 					/>
 				</div>
 
-				<div className={cn(variant === "sheet" ? "col-span-full" : "col-span-3")}>
+				<div
+					className={cn(
+						variant === "sheet" ? "sm:col-span-full" : "sm:col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3",
+					)}
+				>
 					<FormField
 						control={form.control}
 						name="streetAddress"
@@ -130,7 +134,11 @@ function ClientPersonalInformation({ variant }: { variant: "sheet" | "form" }) {
 					/>
 				</div>
 
-				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div
+					className={cn(
+						variant === "sheet" ? "sm:col-span-2" : "sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1",
+					)}
+				>
 					<FormField
 						control={form.control}
 						name="city"
@@ -146,7 +154,11 @@ function ClientPersonalInformation({ variant }: { variant: "sheet" | "form" }) {
 					/>
 				</div>
 
-				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div
+					className={cn(
+						variant === "sheet" ? "sm:col-span-2" : "sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1",
+					)}
+				>
 					<FormField
 						control={form.control}
 						name="state"
@@ -162,7 +174,11 @@ function ClientPersonalInformation({ variant }: { variant: "sheet" | "form" }) {
 					/>
 				</div>
 
-				<div className={cn(variant === "sheet" ? "sm:col-span-2" : "sm:col-span-1")}>
+				<div
+					className={cn(
+						variant === "sheet" ? "sm:col-span-2" : "sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1",
+					)}
+				>
 					<FormField
 						control={form.control}
 						name="postalCode"

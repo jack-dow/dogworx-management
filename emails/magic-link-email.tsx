@@ -23,7 +23,7 @@ interface MagicLinkEmailProps {
 	requestedFromLocation: string | undefined;
 }
 
-const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const MagicLinkEmail = ({ code = "123456", token, requestedFromIp, requestedFromLocation }: MagicLinkEmailProps) => {
 	const previewText = `This link and code will only be valid for the next 5 minutes. Do not share it with anyone.`;
