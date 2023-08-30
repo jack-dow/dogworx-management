@@ -191,7 +191,18 @@ function BookingsList({
 						  }
 						: undefined
 				}
-				defaultValues={copiedBooking ?? undefined}
+				defaultValues={
+					copiedBooking
+						? {
+								...copiedBooking,
+								dog: {
+									id: form.getValues("id"),
+									givenName: form.getValues("givenName") ?? "Unnamed new dog",
+									familyName: form.getValues("familyName") ?? "",
+								},
+						  }
+						: undefined
+				}
 				onSuccessfulSubmit={onAddOrUpdateBooking}
 				onSubmit={
 					isNew
