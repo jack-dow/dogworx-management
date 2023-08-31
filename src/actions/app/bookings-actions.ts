@@ -405,6 +405,9 @@ const deleteBooking = createServerAction(async (booking: { id: string; dogId?: s
 				),
 			);
 
+		revalidatePath("/bookings");
+		revalidatePath("/calendar/week/[...date]");
+
 		return {
 			success: true,
 			data: {

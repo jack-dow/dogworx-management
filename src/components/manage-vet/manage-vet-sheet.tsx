@@ -168,7 +168,7 @@ function ManageVetSheetForm<VetProp extends VetById | undefined>({
 				<Separator className="my-4" />
 
 				<SheetFooter>
-					{!isNew && <VetDeleteDialog />}
+					{!isNew && <VetDeleteDialog setOpen={setOpen} />}
 					<SheetClose asChild>
 						<Button
 							variant="outline"

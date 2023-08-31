@@ -109,6 +109,7 @@ interface ManageClientSheetFormProps<ClientProp extends ClientById | undefined> 
 	onConfirmCancel: () => void;
 	isNew: boolean;
 	onSuccessfulSubmit?: (client: ClientProp extends ClientById ? ClientUpdate : ClientInsert) => void;
+	onClientDelete?: (id: string) => void;
 }
 
 function ManageClientSheetForm<ClientProp extends ClientById | undefined>({
@@ -117,6 +118,7 @@ function ManageClientSheetForm<ClientProp extends ClientById | undefined>({
 	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
+	onClientDelete,
 	client,
 	defaultValues,
 	isNew,
@@ -162,7 +164,14 @@ function ManageClientSheetForm<ClientProp extends ClientById | undefined>({
 				<Separator className="my-4" />
 
 				<SheetFooter>
-					{!isNew && <ClientDeleteDialog />}
+					{!isNew && (
+						<ClientDeleteDialog
+							setOpen={(value) => {
+								setOpen(value);
+								onClientDelete?.(form.getValues("id"));
+							}}
+						/>
+					)}
 					<SheetClose asChild>
 						<Button
 							variant="outline"

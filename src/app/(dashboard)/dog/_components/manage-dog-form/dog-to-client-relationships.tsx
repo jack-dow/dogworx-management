@@ -149,6 +149,13 @@ function DogToClientRelationships({
 
 					form.setValue("dogToClientRelationships", newDogToClientRelationships, { shouldDirty: false });
 				}}
+				onClientDelete={(id) => {
+					form.setValue(
+						"dogToClientRelationships",
+						dogToClientRelationships.fields.filter((relationship) => relationship.clientId !== id),
+						{ shouldDirty: false },
+					);
+				}}
 			/>
 
 			<DestructiveActionDialog

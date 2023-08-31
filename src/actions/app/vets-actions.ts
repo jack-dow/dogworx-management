@@ -204,6 +204,7 @@ const insertVet = createServerAction(async (values: InsertVetSchema) => {
 		});
 
 		revalidatePath("/vets");
+		
 
 		const vet = await drizzle.query.vets.findFirst({
 			columns: {

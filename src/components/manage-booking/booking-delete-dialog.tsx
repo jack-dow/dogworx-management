@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
 import { actions } from "~/actions";
@@ -8,9 +8,11 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageBookingFormSchema } from "./use-manage-booking-form";
 
-function BookingDeleteDialog() {
-	const form = useFormContext<ManageBookingFormSchema>();
+function BookingDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
 	const router = useRouter();
+	const pathname = usePathname();
+	
+	const form = useFormContext<ManageBookingFormSchema>();
 	const { toast } = useToast();
 
 	return (
@@ -26,7 +28,15 @@ function BookingDeleteDialog() {
 						title: `Booking deleted`,
 						description: `Successfully deleted booking.`,
 					});
-					router.push("/vets");
+
+					if (pathname.startsWith("/booking/")) {
+						router.push("/bookings");
+						return;
+					}
+
+					if (setOpen) {
+						setOpen(false);
+					}
 				} else {
 					toast({
 						title: `Booking deletion failed`,

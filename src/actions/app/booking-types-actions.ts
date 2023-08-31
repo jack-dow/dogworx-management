@@ -152,6 +152,8 @@ const insertBookingType = createServerAction(async (values: InsertBookingTypeSch
 		});
 
 		revalidatePath("/settings/booking-types");
+		revalidatePath("/settings/booking-types/[id]");
+		revalidatePath("/calendar/week/[...date]");
 
 		const bookingType = await drizzle.query.bookingTypes.findFirst({
 			where: and(eq(bookingTypes.organizationId, user.organizationId), eq(bookingTypes.id, data.id)),
@@ -187,7 +189,9 @@ const updateBookingType = createServerAction(async (values: UpdateBookingTypeSch
 			.set(data)
 			.where(and(eq(bookingTypes.organizationId, user.organizationId), eq(bookingTypes.id, id)));
 
-		revalidatePath("/bookingTypes");
+		revalidatePath("/settings/booking-types");
+		revalidatePath("/settings/booking-types/[id]");
+		revalidatePath("/calendar/week/[...date]");
 
 		const bookingType = await drizzle.query.bookingTypes.findFirst({
 			columns: {
@@ -227,7 +231,8 @@ const deleteBookingType = createServerAction(async (id: string) => {
 			await drizzle.delete(bookingTypes).where(eq(bookingTypes.id, id));
 		}
 
-		revalidatePath("/bookingTypes");
+		revalidatePath("/settings/booking-types");
+		revalidatePath("/calendar/week/[...date]");
 
 		return { success: true, data: validId.data };
 	} catch {

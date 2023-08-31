@@ -169,7 +169,7 @@ function ManageOrganizationSheetForm<OrganizationProp extends OrganizationById |
 				<Separator className="my-4" />
 
 				<SheetFooter>
-					{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog />}
+					{!isNew && user.organizationId !== form.getValues("id") && <OrganizationDeleteDialog setOpen={setOpen} />}
 					<SheetClose asChild>
 						<Button
 							variant="outline"

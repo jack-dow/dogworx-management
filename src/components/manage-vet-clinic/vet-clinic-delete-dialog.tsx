@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
 import { actions } from "~/actions";
@@ -8,11 +8,11 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetClinicFormSchema } from "./use-manage-vet-clinic-form";
 
-function VetClinicDeleteDialog() {
-	const { toast } = useToast();
-
+function VetClinicDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
 	const router = useRouter();
+	const pathname = usePathname();
 
+	const { toast } = useToast();
 	const form = useFormContext<ManageVetClinicFormSchema>();
 
 	return (
@@ -26,7 +26,15 @@ function VetClinicDeleteDialog() {
 						title: `Vet clinic deleted`,
 						description: `Successfully deleted vet clinic "${form.getValues("name")}".`,
 					});
-					router.push("/vetClinics");
+
+					if (pathname.startsWith("/vet-clinic/")) {
+						router.push("/vet-clinics");
+						return;
+					}
+
+					if (setOpen) {
+						setOpen(false);
+					}
 				} else {
 					toast({
 						title: `Vet clinic deletion failed`,

@@ -163,7 +163,7 @@ function ManageVetClinicSheetForm<VetClinicProp extends VetClinicById | undefine
 				<Separator className="my-4" />
 
 				<SheetFooter>
-					{!isNew && <VetClinicDeleteDialog />}
+					{!isNew && <VetClinicDeleteDialog setOpen={setOpen} />}
 					<SheetClose asChild>
 						<Button
 							variant="outline"

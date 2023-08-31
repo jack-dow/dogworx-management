@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
 import { actions } from "~/actions";
@@ -8,9 +8,11 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
-function VetDeleteDialog() {
-	const form = useFormContext<ManageVetFormSchema>();
+function VetDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
 	const router = useRouter();
+	const pathname = usePathname();
+
+	const form = useFormContext<ManageVetFormSchema>();
 	const { toast } = useToast();
 	return (
 		<DestructiveActionDialog
@@ -25,7 +27,15 @@ function VetDeleteDialog() {
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
 						}".`,
 					});
-					router.push("/vets");
+
+					if (pathname.startsWith("/vet/")) {
+						router.push("/vets");
+						return;
+					}
+
+					if (setOpen) {
+						setOpen(false);
+					}
 				} else {
 					toast({
 						title: `Vet deletion failed`,

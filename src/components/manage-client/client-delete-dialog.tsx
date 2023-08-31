@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
 import { actions } from "~/actions";
@@ -8,9 +8,11 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
 
-function ClientDeleteDialog() {
-	const form = useFormContext<ManageClientFormSchema>();
+function ClientDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
 	const router = useRouter();
+	const pathname = usePathname();
+
+	const form = useFormContext<ManageClientFormSchema>();
 	const { toast } = useToast();
 	return (
 		<DestructiveActionDialog
@@ -25,7 +27,15 @@ function ClientDeleteDialog() {
 							form.getValues("familyName") ? " " + form.getValues("familyName") : ""
 						}".`,
 					});
-					router.push("/clients");
+
+					if (pathname.startsWith("/client/")) {
+						router.push("/clients");
+						return;
+					}
+
+					if (setOpen) {
+						setOpen(false);
+					}
 				} else {
 					toast({
 						title: `Client deletion failed`,
