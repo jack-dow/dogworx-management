@@ -37,7 +37,6 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		profileImageUrl: true,
 	}).nullish(),
 }).superRefine((val, ctx) => {
-	console.log({ val: val.dogId });
 	if (!val.bookingTypeId) {
 		if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
 			ctx.addIssue({

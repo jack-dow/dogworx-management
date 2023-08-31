@@ -129,8 +129,6 @@ function VetToVetClinicRelationships({
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
-	console.log({ vetToVetClinicRelationships: vetToVetClinicRelationships.fields });
-
 	return (
 		<>
 			<ManageVetClinicSheet
@@ -271,8 +269,6 @@ function VetToVetClinicRelationship({
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchema>();
-
-	console.log(vetToVetClinicRelationship.vetClinic);
 
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
 	return (
