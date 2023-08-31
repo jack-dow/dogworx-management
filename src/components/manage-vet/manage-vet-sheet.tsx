@@ -108,6 +108,7 @@ interface ManageVetSheetFormProps<VetProp extends VetById | undefined> extends U
 	onConfirmCancel: () => void;
 	isNew: boolean;
 	onSuccessfulSubmit?: (client: VetProp extends VetById ? VetUpdate : VetInsert) => void;
+	onVetDelete?: (id: string) => void;
 }
 
 function ManageVetSheetForm<VetProp extends VetById | undefined>({
@@ -116,6 +117,7 @@ function ManageVetSheetForm<VetProp extends VetById | undefined>({
 	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
+	onVetDelete,
 	vet,
 	defaultValues,
 	isNew,
@@ -168,7 +170,14 @@ function ManageVetSheetForm<VetProp extends VetById | undefined>({
 				<Separator className="my-4" />
 
 				<SheetFooter>
-					{!isNew && <VetDeleteDialog setOpen={setOpen} />}
+					{!isNew && (
+						<VetDeleteDialog
+							onSuccessfulDelete={() => {
+								setOpen(false);
+								onVetDelete?.(form.getValues("id"));
+							}}
+						/>
+					)}
 					<SheetClose asChild>
 						<Button
 							variant="outline"

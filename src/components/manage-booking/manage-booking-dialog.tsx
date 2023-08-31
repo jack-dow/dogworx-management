@@ -152,7 +152,13 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 				<BookingFields variant="dialog" bookingTypes={bookingTypes} />
 
 				<DialogFooter className="mt-2">
-					{!isNew && <BookingDeleteDialog setOpen={setOpen} />}
+					{!isNew && (
+						<BookingDeleteDialog
+							onSuccessfulDelete={() => {
+								setOpen(false);
+							}}
+						/>
+					)}
 					<Button
 						variant="outline"
 						onClick={() => {

@@ -8,7 +8,7 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageBookingTypeFormSchema } from "./use-manage-booking-types-form";
 
-function BookingTypeDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
+function BookingTypeDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => void }) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -34,9 +34,7 @@ function BookingTypeDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => voi
 						return;
 					}
 
-					if (setOpen) {
-						setOpen(false);
-					}
+					onSuccessfulDelete?.();
 				} else {
 					toast({
 						title: `Booking type deletion failed`,

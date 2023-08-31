@@ -8,7 +8,7 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetClinicFormSchema } from "./use-manage-vet-clinic-form";
 
-function VetClinicDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
+function VetClinicDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => void }) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -32,9 +32,7 @@ function VetClinicDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void 
 						return;
 					}
 
-					if (setOpen) {
-						setOpen(false);
-					}
+					onSuccessfulDelete?.();
 				} else {
 					toast({
 						title: `Vet clinic deletion failed`,

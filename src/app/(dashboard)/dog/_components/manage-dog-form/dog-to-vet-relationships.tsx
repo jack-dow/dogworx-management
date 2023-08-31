@@ -152,6 +152,13 @@ function DogToVetRelationships({
 
 					form.setValue("dogToVetRelationships", newDogToVetRelationships, { shouldDirty: false });
 				}}
+				onVetDelete={(id) => {
+					form.setValue(
+						"dogToVetRelationships",
+						dogToVetRelationships.fields.filter((relationship) => relationship.vetId !== id),
+						{ shouldDirty: false },
+					);
+				}}
 			/>
 
 			<DestructiveActionDialog
@@ -173,6 +180,7 @@ function DogToVetRelationships({
 
 			<FormGroup title="Vets" description="Manage the relationships between this dog and vets.">
 				<ManageVetSheet
+					withoutTrigger
 					open={!!isCreateVetSheetOpen}
 					setOpen={(value) => {
 						if (value === false) {
@@ -202,7 +210,6 @@ function DogToVetRelationships({
 						toggleDogToVetRelationship(vet);
 						searchVetsInputRef?.current?.focus();
 					}}
-					withoutTrigger
 				/>
 
 				<div className="sm:col-span-6">

@@ -8,7 +8,7 @@ import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
 
-function ClientDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
+function ClientDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => void }) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -33,9 +33,7 @@ function ClientDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) 
 						return;
 					}
 
-					if (setOpen) {
-						setOpen(false);
-					}
+					onSuccessfulDelete?.();
 				} else {
 					toast({
 						title: `Client deletion failed`,

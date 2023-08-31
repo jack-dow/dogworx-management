@@ -166,8 +166,8 @@ function ManageClientSheetForm<ClientProp extends ClientById | undefined>({
 				<SheetFooter>
 					{!isNew && (
 						<ClientDeleteDialog
-							setOpen={(value) => {
-								setOpen(value);
+							onSuccessfulDelete={() => {
+								setOpen(false);
 								onClientDelete?.(form.getValues("id"));
 							}}
 						/>

@@ -8,7 +8,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
 import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
 
-function OrganizationDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => void }) {
+function OrganizationDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => void }) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -32,9 +32,7 @@ function OrganizationDeleteDialog({ setOpen }: { setOpen?: (open: boolean) => vo
 						return;
 					}
 
-					if (setOpen) {
-						setOpen(false);
-					}
+					onSuccessfulDelete?.();
 				} else {
 					toast({
 						title: `Organization deletion failed`,

@@ -154,6 +154,13 @@ function VetToVetClinicRelationships({
 
 					form.setValue("vetToVetClinicRelationships", newVetToVetClinicRelationships, { shouldDirty: false });
 				}}
+				onVetClinicDelete={(id) => {
+					form.setValue(
+						"vetToVetClinicRelationships",
+						vetToVetClinicRelationships.fields.filter((relationship) => relationship.vetClinicId !== id),
+						{ shouldDirty: false },
+					);
+				}}
 			/>
 
 			<DestructiveActionDialog

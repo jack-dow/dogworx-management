@@ -401,7 +401,32 @@ const deleteClient = createServerAction(async (id: string) => {
 				id: true,
 			},
 			with: {
-				dogToClientRelationships: true,
+				dogToClientRelationships: {
+					columns: {
+						id: true,
+						relationship: true,
+					},
+					with: {
+						dog: {
+							with: {
+								dogToClientRelationships: {
+									columns: {
+										id: true,
+										relationship: true,
+									},
+									with: {
+										client: {
+											columns: {
+												id: true,
+												familyName: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		});
 
@@ -413,6 +438,20 @@ const deleteClient = createServerAction(async (id: string) => {
 			await trx.delete(clients).where(eq(clients.id, id));
 
 			if (client.dogToClientRelationships.length > 0) {
+				for (const relationship of client.dogToClientRelationships.filter(
+					(relationship) => relationship.relationship === "owner",
+				)) {
+					await drizzle
+						.update(dogs)
+						.set({
+							// Ensure if there are two owners with the same family name and one owners family name is changed, the other family name still exists
+							familyName: constructFamilyName(
+								relationship.dog.dogToClientRelationships.filter((relationship) => relationship.client.id !== id),
+							),
+						})
+						.where(eq(dogs.id, relationship.dog.id));
+				}
+
 				await trx.delete(dogToClientRelationships).where(
 					inArray(
 						dogToClientRelationships.id,
