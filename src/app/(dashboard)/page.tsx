@@ -4,7 +4,7 @@ import * as React from "react";
 // import { type Metadata } from "next";
 import { useRouter } from "next/navigation";
 
-import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
+import { ManageBookingTypeDialog } from "~/components/manage-booking-types/manage-booking-types-dialog";
 import { PageHeader } from "~/components/page-header";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -36,7 +36,7 @@ function RootPage() {
 				<div className="flex shrink-0 gap-4 pb-3 pt-6">
 					{process.env.NODE_ENV === "development" && (
 						<>
-							<ManageBookingDialog />
+							<ManageBookingTypeDialog />
 
 							<Button
 								disabled={isLoading}

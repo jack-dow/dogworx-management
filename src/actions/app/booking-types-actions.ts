@@ -17,7 +17,7 @@ import {
 	type PaginationSearchParams,
 } from "../utils";
 
-const listBookingTypes = createServerAction(async (options: PaginationSearchParams) => {
+const listBookingTypes = createServerAction(async (options?: PaginationSearchParams) => {
 	try {
 		const user = await getServerUser();
 

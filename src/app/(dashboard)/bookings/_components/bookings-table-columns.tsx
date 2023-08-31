@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
+import { BOOKING_TYPES_COLORS } from "~/components/manage-booking-types/booking-types-fields";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,
@@ -18,6 +19,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { type BookingsList } from "~/actions";
+import { cn } from "~/utils";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(advancedFormat);
@@ -27,10 +29,34 @@ function createBookingsTableColumns(
 ): ColumnDef<BookingsList["data"][number]>[] {
 	return [
 		{
-			accessorKey: "dogsFullName",
+			accessorKey: "bookingType",
 			header: () => (
 				<div className="text-xs">
-					<span className="truncate">Dog&apos;s full name</span>
+					<span className="truncate">Booking Type</span>
+				</div>
+			),
+			cell: ({ row }) => {
+				const bookingType = row.original.bookingType;
+				return (
+					<div className="relative flex select-none space-x-2">
+						<div
+							className={cn(
+								"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+								bookingType && bookingType?.color in BOOKING_TYPES_COLORS
+									? BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS]
+									: "bg-violet-200",
+							)}
+						/>
+						<span className="truncate pl-6 font-medium capitalize">{bookingType?.name ?? "Default Booking"}</span>
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "dogsName",
+			header: () => (
+				<div className="text-xs">
+					<span className="truncate">Dog</span>
 				</div>
 			),
 			cell: ({ row }) => {

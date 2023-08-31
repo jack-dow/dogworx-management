@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingById, type BookingInsert, type BookingUpdate } from "~/actions";
+import { actions, type BookingById, type BookingInsert, type BookingTypesList, type BookingUpdate } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { InsertBookingSchema, SelectDogSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
@@ -23,17 +23,10 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		givenName: true,
 		familyName: true,
 	}).nullish(),
-	date: z.date({
-		required_error: "Must select a date for this booking",
+	date: z.date(),
+	duration: z.number().nonnegative({
+		message: "Duration must be a positive number",
 	}),
-	duration: z
-		.number({
-			required_error: "Must provide a duration for this booking",
-		})
-		.nonnegative({
-			message: "Duration must be a positive number",
-		}),
-
 	assignedTo: SelectUserSchema.pick({
 		id: true,
 		givenName: true,
@@ -44,15 +37,18 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		profileImageUrl: true,
 	}).nullish(),
 }).superRefine((val, ctx) => {
-	if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
-		ctx.addIssue({
-			code: z.ZodIssueCode.too_small,
-			minimum: 1,
-			type: "string",
-			inclusive: true,
-			message: "Details must be provided for past bookings",
-			path: ["details"],
-		});
+	console.log({ val: val.dogId });
+	if (!val.bookingTypeId) {
+		if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.too_small,
+				minimum: 1,
+				type: "string",
+				inclusive: true,
+				message: "Details must be provided for past bookings",
+				path: ["details"],
+			});
+		}
 	}
 });
 
@@ -60,6 +56,7 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
 
 type UseManageBookingFormProps = {
+	bookingTypes: BookingTypesList["data"];
 	booking?: BookingById;
 	defaultValues?: Partial<ManageBookingFormSchema>;
 	onSubmit?: (
@@ -77,7 +74,10 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const form = useForm<ManageBookingFormSchema>({
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
-			duration: 1800,
+			duration:
+				props.bookingTypes.find(
+					(bt) => bt.id === props.booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
+				)?.duration ?? 1800,
 			assignedToId: user.id,
 			assignedTo: user,
 			details: "",

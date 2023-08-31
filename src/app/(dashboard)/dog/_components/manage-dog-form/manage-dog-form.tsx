@@ -21,7 +21,7 @@ import { Form, FormSection } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type DogById } from "~/actions";
+import { actions, type BookingTypesList, type DogById } from "~/actions";
 import { InsertDogSchema, InsertDogToVetRelationshipSchema, SelectVetSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
@@ -52,7 +52,7 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
 
-function ManageDogForm({ dog }: { dog?: DogById }) {
+function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: BookingTypesList["data"] }) {
 	const searchParams = useSearchParams();
 	const params = useParams();
 	const isNew = !params.id;
@@ -196,7 +196,7 @@ function ManageDogForm({ dog }: { dog?: DogById }) {
 
 					<Separator />
 
-					<Bookings isNew={isNew} bookings={dog?.bookings} />
+					<Bookings isNew={isNew} bookings={dog?.bookings} bookingTypes={bookingTypes} />
 
 					<Separator />
 

@@ -12,9 +12,10 @@ import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { actions, type BookingById } from "~/actions";
+import { actions, type BookingById, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
-import { secondsToHumanReadable } from "~/utils";
+import { cn, secondsToHumanReadable } from "~/utils";
+import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
@@ -23,6 +24,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { RichTextEditor } from "../ui/rich-text-editor";
 import { SearchCombobox, SearchComboboxAction } from "../ui/search-combobox";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { TimeInput } from "../ui/time-input";
 import { type ManageBookingFormSchema } from "./use-manage-booking-form";
 
@@ -60,7 +62,14 @@ function roundDateToNearest15Minutes(date: Date) {
 	return roundedDate.toDate();
 }
 
-function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById["dog"] }) {
+function BookingFields({
+	dog,
+	bookingTypes,
+}: {
+	variant: "dialog" | "form";
+	dog?: BookingById["dog"];
+	bookingTypes: BookingTypesList["data"];
+}) {
 	const router = useRouter();
 
 	const user = useUser();
@@ -82,275 +91,344 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 		<>
 			<FormField
 				control={form.control}
-				name="date"
-				render={({ field }) => {
-					const date = dayjs(field.value);
-					return (
-						<div className="grid grid-cols-3 gap-4">
-							<FormItem className="col-span-2">
-								<FormLabel>Date</FormLabel>
-								<FormControl>
-									<Popover
-										open={isDatePickerOpen}
-										onOpenChange={(value) => {
-											setIsDatePickerOpen(value);
-											if (value === false) {
-												// Wait for popover to animate out before resetting
-												setTimeout(() => {
-													setMonth(new Date());
-													setDateInputValue("");
-												}, 150);
-											}
-										}}
-									>
-										<PopoverTrigger asChild>
-											<Button
-												variant="outline"
-												className="h-10 w-full focus-visible:outline-1 focus-visible:outline-offset-0"
-											>
-												<CalendarIcon className="mr-2 h-4 w-4" />
-												<span className="mr-2 truncate">
-													{field.value ? date.format("MMMM Do, YYYY") : "Select date"}
-												</span>
-												<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-											</Button>
-										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" withoutPortal>
-											<div className="space-y-2 p-3 pb-1">
-												<Label htmlFor="booking-date-input">Date</Label>
-												<Input
-													id="booking-date-input"
-													autoComplete="off"
-													value={dateInputValue}
-													onChange={(e) => {
-														const val = e.target.value;
-														setDateInputValue(val);
-
-														const today = dayjs().toDate();
-														const parsedValue = parseDate(val);
-														const newDate = roundDateToNearest15Minutes(parsedValue ?? today);
-
-														if (form.formState.errors.details && newDate >= today) {
-															form.clearErrors("details");
-														}
-
-														field.onChange(newDate);
-														setTimeInputValue(newDate ? dayjs(newDate).format("HH:mm") : "");
-														setMonth(newDate);
-													}}
-													onKeyDown={(e) => {
-														if (e.key === "Enter") {
-															e.preventDefault();
-															e.stopPropagation();
-															setIsDatePickerOpen(false);
-														}
-													}}
-												/>
-											</div>
-											<Calendar
-												mode="single"
-												selected={dayjs(field.value).toDate() ?? undefined}
-												month={month}
-												onMonthChange={setMonth}
-												onSelect={(value) => {
-													if (value) {
-														if (form.formState.errors.details && value >= new Date()) {
-															form.clearErrors("details");
-														}
-
-														const date = dayjs(value);
-														const now = dayjs();
-
-														const val = roundDateToNearest15Minutes(
-															date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
-														);
-
-														field.onChange(val);
-														setTimeInputValue(dayjs(val).format("HH:mm"));
-													}
-													setIsDatePickerOpen(false);
-													setDateInputValue("");
-												}}
-												initialFocus={false}
-											/>
-										</PopoverContent>
-									</Popover>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-
-							<FormItem className="flex-1">
-								<FormLabel>Start Time</FormLabel>
-								<FormControl>
-									<TimeInput
-										className="h-10"
-										step={900}
-										value={timeInputValue}
-										onChange={(value) => {
-											setTimeInputValue(value);
-
-											if (value) {
-												const date = dayjs(form.getValues("date"));
-												const time = dayjs(value, "HH:mm");
-												const newDate = date.set("hour", time.hour()).set("minute", time.minute());
-												field.onChange(newDate.toDate());
-											}
-										}}
-									/>
-								</FormControl>
-							</FormItem>
-						</div>
-					);
-				}}
-			/>
-
-			<FormField
-				control={form.control}
-				name="duration"
+				name="bookingTypeId"
 				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Duration</FormLabel>
-						<FormControl>
-							<Input
-								autoComplete="off"
-								value={durationInputValue}
-								onChange={(e) => {
-									setDurationInputValue(e.target.value);
+					<FormItem className="w-full">
+						<FormLabel>Booking Type</FormLabel>
+						<Select
+							onValueChange={(value) => {
+								field.onChange(value);
+							}}
+							value={field.value ?? undefined}
+						>
+							<FormControl>
+								<SelectTrigger className={cn("relative")}>
+									<SelectValue placeholder="Default Booking">
+										<span className="truncate capitalize">
+											{!field.value
+												? "Default Booking"
+												: bookingTypes.find((bookingType) => bookingType.id === field.value)!.name}
+										</span>
+									</SelectValue>
+								</SelectTrigger>
+							</FormControl>
+							<SelectContent align="start" className="max-w-[350px]">
+								<SelectGroup>
+									<SelectLabel>Booking types</SelectLabel>
+									<SelectItem value="" className={"pl-8 capitalize"}>
+										<div
+											className={cn(
+												"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
+											)}
+										/>
+										Default Booking
+									</SelectItem>
 
-									const value = convertToNumber(e.target.value) ?? e.target.value;
-
-									if (value) {
-										// If value is just a number, assume it is in minutes
-										if (typeof value === "number") {
-											field.onChange(value * 60, { shouldValidate: true });
-										} else {
-											// Otherwise see if it is a valid time
-											let parsed = ms(value);
-
-											if (parsed > 86400000) {
-												parsed = 86400000;
-											}
-
-											// If it's a valid time, convert it to seconds and set it
-											if (parsed) {
-												field.onChange(parsed / 1000, { shouldValidate: true });
-											}
-										}
-									}
-								}}
-								onBlur={() => {
-									if (!durationInputValue) {
-										field.onChange(undefined);
-										return;
-									}
-
-									const duration = form.getValues("duration");
-
-									if (duration) {
-										setDurationInputValue(secondsToHumanReadable(duration));
-										return;
-									}
-
-									setDurationInputValue("");
-								}}
-							/>
-						</FormControl>
+									{bookingTypes?.map((bookingType) => (
+										<SelectItem
+											key={bookingType.id}
+											value={bookingType.id}
+											className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+											onClick={() => {
+												if (form.getValues("duration") !== bookingType.duration) {
+													form.setValue("duration", bookingType.duration, { shouldDirty: true });
+													setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
+												}
+											}}
+										>
+											<div
+												className={cn(
+													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+													bookingType.color in BOOKING_TYPES_COLORS &&
+														BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+												)}
+											/>
+											{bookingType.name}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
 						<FormMessage />
 					</FormItem>
 				)}
 			/>
 
-			<FormField
-				control={form.control}
-				name="dogId"
-				render={({ field }) => {
-					const defaultSelected = dog ?? form.getValues("dog");
-					return (
+			<div className="grid grid-cols-3 gap-4 xl:grid-cols-4">
+				<FormField
+					control={form.control}
+					name="date"
+					render={({ field }) => {
+						const date = dayjs(field.value);
+						return (
+							<>
+								<FormItem className="col-span-2">
+									<FormLabel>Date</FormLabel>
+									<FormControl>
+										<Popover
+											open={isDatePickerOpen}
+											onOpenChange={(value) => {
+												setIsDatePickerOpen(value);
+												if (value === false) {
+													// Wait for popover to animate out before resetting
+													setTimeout(() => {
+														setMonth(new Date());
+														setDateInputValue("");
+													}, 150);
+												}
+											}}
+										>
+											<PopoverTrigger asChild>
+												<Button
+													variant="outline"
+													className="h-10 w-full focus-visible:outline-1 focus-visible:outline-offset-0"
+												>
+													<CalendarIcon className="mr-2 h-4 w-4" />
+													<span className="mr-2 truncate">
+														{field.value ? date.format("MMMM Do, YYYY") : "Select date"}
+													</span>
+													<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+												</Button>
+											</PopoverTrigger>
+											<PopoverContent className="w-auto p-0" withoutPortal>
+												<div className="space-y-2 p-3 pb-1">
+													<Label htmlFor="booking-date-input">Date</Label>
+													<Input
+														id="booking-date-input"
+														autoComplete="off"
+														value={dateInputValue}
+														onChange={(e) => {
+															const val = e.target.value;
+															setDateInputValue(val);
+
+															const today = dayjs().toDate();
+															const parsedValue = parseDate(val);
+															const newDate = roundDateToNearest15Minutes(parsedValue ?? today);
+
+															if (form.formState.errors.details && newDate >= today) {
+																form.clearErrors("details");
+															}
+
+															field.onChange(newDate);
+															setTimeInputValue(newDate ? dayjs(newDate).format("HH:mm") : "");
+															setMonth(newDate);
+														}}
+														onKeyDown={(e) => {
+															if (e.key === "Enter") {
+																e.preventDefault();
+																e.stopPropagation();
+																setIsDatePickerOpen(false);
+															}
+														}}
+													/>
+												</div>
+												<Calendar
+													mode="single"
+													selected={dayjs(field.value).toDate() ?? undefined}
+													month={month}
+													onMonthChange={setMonth}
+													onSelect={(value) => {
+														if (value) {
+															if (form.formState.errors.details && value >= new Date()) {
+																form.clearErrors("details");
+															}
+
+															const date = dayjs(value);
+															const now = dayjs();
+
+															const val = roundDateToNearest15Minutes(
+																date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
+															);
+
+															field.onChange(val);
+															setTimeInputValue(dayjs(val).format("HH:mm"));
+														}
+														setIsDatePickerOpen(false);
+														setDateInputValue("");
+													}}
+													initialFocus={false}
+												/>
+											</PopoverContent>
+										</Popover>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+
+								<FormItem className="flex-1">
+									<FormLabel>Start Time</FormLabel>
+									<FormControl>
+										<TimeInput
+											className="h-10"
+											step={900}
+											value={timeInputValue}
+											onChange={(value) => {
+												setTimeInputValue(value);
+
+												if (value) {
+													const date = dayjs(form.getValues("date"));
+													const time = dayjs(value, "HH:mm");
+													const newDate = date.set("hour", time.hour()).set("minute", time.minute());
+													field.onChange(newDate.toDate());
+												}
+											}}
+										/>
+									</FormControl>
+								</FormItem>
+							</>
+						);
+					}}
+				/>
+
+				<FormField
+					control={form.control}
+					name="duration"
+					render={({ field }) => (
+						<FormItem className="col-span-3 xl:col-span-1">
+							<FormLabel>Duration</FormLabel>
+							<FormControl>
+								<Input
+									autoComplete="off"
+									value={durationInputValue}
+									onChange={(e) => {
+										setDurationInputValue(e.target.value);
+
+										const value = convertToNumber(e.target.value) ?? e.target.value;
+
+										if (value) {
+											// If value is just a number, assume it is in minutes
+											if (typeof value === "number") {
+												field.onChange(value * 60, { shouldValidate: true });
+											} else {
+												// Otherwise see if it is a valid time
+												let parsed = ms(value);
+
+												if (parsed > 86400000) {
+													parsed = 86400000;
+												}
+
+												// If it's a valid time, convert it to seconds and set it
+												if (parsed) {
+													field.onChange(parsed / 1000, { shouldValidate: true });
+												}
+											}
+										}
+									}}
+									onBlur={() => {
+										if (!durationInputValue) {
+											field.onChange(undefined);
+											return;
+										}
+
+										const duration = form.getValues("duration");
+
+										if (duration) {
+											setDurationInputValue(secondsToHumanReadable(duration));
+											return;
+										}
+
+										setDurationInputValue("");
+									}}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+			</div>
+
+			<div className="grid gap-4 xl:grid-cols-2">
+				<FormField
+					control={form.control}
+					name="dogId"
+					render={({ field }) => {
+						const defaultSelected = dog ?? form.getValues("dog");
+
+						return (
+							<FormItem>
+								<FormLabel>Dog</FormLabel>
+								<FormControl>
+									<SearchCombobox
+										disabled={dog !== undefined}
+										placeholder="Select dog"
+										onSearch={async (searchTerm) => {
+											const result = await actions.app.dogs.search(searchTerm);
+
+											if (!result.success) {
+												throw new Error("Failed to search dogs");
+											}
+
+											return result.data;
+										}}
+										resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+										onSelectChange={(result) => {
+											field.onChange(result?.id ?? "");
+										}}
+										renderActions={({ searchTerm }) => (
+											<SearchComboboxAction
+												onSelect={() => {
+													router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+												}}
+											>
+												<PlusIcon className="mr-1 h-4 w-4" />
+												<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
+											</SearchComboboxAction>
+										)}
+										defaultSelected={defaultSelected}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						);
+					}}
+				/>
+
+				<FormField
+					control={form.control}
+					name="assignedToId"
+					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Dog</FormLabel>
+							<FormLabel>Assigned to</FormLabel>
 							<FormControl>
 								<SearchCombobox
-									disabled={dog !== undefined}
-									placeholder="Select dog"
+									placeholder="Select user"
 									onSearch={async (searchTerm) => {
-										const result = await actions.app.dogs.search(searchTerm);
+										const result = await actions.app.users.search(searchTerm);
 
 										if (!result.success) {
-											throw new Error("Failed to search dogs");
+											throw new Error("Failed to search users");
 										}
 
 										return result.data;
+									}}
+									onBlur={({ setSearchTerm, setSelected, setResults }) => {
+										if (!form.getValues("assignedToId")) {
+											field.onChange(user?.id);
+											setSearchTerm(`${user.givenName} ${user.familyName}`);
+											setSelected(user);
+											setResults([user]);
+										}
 									}}
 									resultLabel={(result) => `${result.givenName} ${result.familyName}`}
 									onSelectChange={(result) => {
 										field.onChange(result?.id);
 									}}
-									renderActions={({ searchTerm }) => (
-										<SearchComboboxAction
-											onSelect={() => {
-												router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
-											}}
-										>
-											<PlusIcon className="mr-1 h-4 w-4" />
-											<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
-										</SearchComboboxAction>
-									)}
-									defaultSelected={defaultSelected}
+									defaultSelected={form.getValues("assignedTo")}
 								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
-					);
-				}}
-			/>
-
-			<FormField
-				control={form.control}
-				name="assignedToId"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Assigned to</FormLabel>
-						<FormControl>
-							<SearchCombobox
-								placeholder="Select user"
-								onSearch={async (searchTerm) => {
-									const result = await actions.app.users.search(searchTerm);
-
-									if (!result.success) {
-										throw new Error("Failed to search users");
-									}
-
-									return result.data;
-								}}
-								onBlur={({ setSearchTerm, setSelected, setResults }) => {
-									if (!form.getValues("assignedToId")) {
-										field.onChange(user?.id);
-										setSearchTerm(`${user.givenName} ${user.familyName}`);
-										setSelected(user);
-										setResults([user]);
-									}
-								}}
-								resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-								onSelectChange={(result) => {
-									field.onChange(result?.id);
-								}}
-								defaultSelected={form.getValues("assignedTo")}
-							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+					)}
+				/>
+			</div>
 
 			<FormField
 				control={form.control}
 				name="details"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>Session details</FormLabel>
+						<FormLabel>Booking details</FormLabel>
 						<FormControl>
 							<RichTextEditor
-								id="booking-details"
 								content={field.value ?? undefined}
 								onValueChange={({ html, text }) => {
 									if (text === "") {

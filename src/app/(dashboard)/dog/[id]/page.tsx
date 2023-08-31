@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 async function UpdateDogPage({ params }: { params: { id: string } }) {
-	const dog = await actions.app.dogs.byId(params.id);
+	const [dog, bookingTypes] = await Promise.all([
+		await actions.app.dogs.byId(params.id),
+		await actions.app.bookingTypes.list(),
+	]);
 
 	return (
 		<>
@@ -19,7 +22,7 @@ async function UpdateDogPage({ params }: { params: { id: string } }) {
 				back={{ href: "/dogs" }}
 			/>
 
-			{dog.data ? <ManageDogForm dog={dog.data} /> : <NotFound />}
+			{dog.data ? <ManageDogForm dog={dog.data} bookingTypes={bookingTypes.data.data} /> : <NotFound />}
 		</>
 	);
 }

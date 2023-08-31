@@ -26,7 +26,7 @@ import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { useManageClientForm, type UseManageClientFormProps } from "./use-manage-client-form";
 
 interface ManageClientSheetProps<ClientProp extends ClientById | undefined>
-	extends Omit<ManageClientSheetFormProps<ClientProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
+	extends Omit<ManageClientSheetFormProps<ClientProp>, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -34,7 +34,8 @@ interface ManageClientSheetProps<ClientProp extends ClientById | undefined>
 }
 
 function ManageClientSheet<ClientProp extends ClientById | undefined>(props: ManageClientSheetProps<ClientProp>) {
-	const isNew = !props.client;
+	// This is in state so that we can use the client prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
+	const [isNew, setIsNew] = React.useState(!props.client);
 
 	const [_open, _setOpen] = React.useState(props.open || false);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -42,6 +43,13 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>(props: Man
 
 	const internalOpen = props.open ?? _open;
 	const setInternalOpen = props.setOpen ?? _setOpen;
+
+	React.useEffect(() => {
+		if (internalOpen) {
+			setIsNew(!props.client);
+			return;
+		}
+	}, [internalOpen, props.client]);
 
 	return (
 		<>
@@ -87,6 +95,7 @@ function ManageClientSheet<ClientProp extends ClientById | undefined>(props: Man
 							setIsConfirmCloseDialogOpen(true);
 						}}
 						setIsDirty={setIsDirty}
+						isNew={isNew}
 					/>
 				</SheetContent>
 			</Sheet>
@@ -98,6 +107,7 @@ interface ManageClientSheetFormProps<ClientProp extends ClientById | undefined> 
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
+	isNew: boolean;
 	onSuccessfulSubmit?: (client: ClientProp extends ClientById ? ClientUpdate : ClientInsert) => void;
 }
 
@@ -109,9 +119,8 @@ function ManageClientSheetForm<ClientProp extends ClientById | undefined>({
 	onSuccessfulSubmit,
 	client,
 	defaultValues,
+	isNew,
 }: ManageClientSheetFormProps<ClientProp>) {
-	const isNew = !client;
-
 	const { toast } = useToast();
 
 	const { form, onSubmit: _onSubmit } = useManageClientForm({ client, defaultValues, onSubmit });

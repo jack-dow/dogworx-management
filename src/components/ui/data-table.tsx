@@ -69,17 +69,20 @@ interface DataTableProps<TData, TValue, SearchResultType extends { id: string }>
 	columns: ColumnDef<TData, TValue>[];
 	sortableColumns: SortableColumns;
 	data: TData[];
+	/** Allow for passing of custom base path. E.g. want to redirect to /settings/booking-type instead of just /booking-type */
+	basePath?: string;
 	search:
 		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & { component?: undefined })
 		| { component: ({ setIsLoading }: { setIsLoading?: (isLoading: boolean) => void }) => JSX.Element };
 }
 
 function DataTable<TData extends { id: string }, TValue, SearchResultType extends { id: string }>({
-	search,
 	pagination: { count, sortBy, sortDirection, page, maxPage, limit },
 	columns,
 	sortableColumns,
 	data,
+	basePath,
+	search,
 }: DataTableProps<TData, TValue, SearchResultType>) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -116,7 +119,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 		}
 	}, [pathname, searchParams]);
 
-	let name = pathname.split("/")[1];
+	let name = pathname.split("/").filter((path) => path !== "" && path !== "/" && path !== basePath?.slice(1))[0];
 	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
 	name = name?.split("-").join(" ");
 
@@ -214,7 +217,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 					</Button>
 				</div>
 			</header>
-			<main className="rounded-md border">
+			<main className="rounded-md border bg-white">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -236,7 +239,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									onClick={(event) => {
 										setIsLoading(true);
 										if (event.metaKey || event.ctrlKey) {
-											window.open(`${pathname.slice(0, -1)}/${row.original.id}`, "_blank");
+											window.open(`/${pathname.slice(0, -1)}/${row.original.id}`, "_blank");
 										} else {
 											router.push(`${pathname.slice(0, -1)}/${row.original.id}`, {
 												scroll: false,

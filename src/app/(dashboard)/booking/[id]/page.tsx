@@ -10,13 +10,16 @@ export const metadata: Metadata = {
 };
 
 async function UpdateBookingPage({ params }: { params: { id: string } }) {
-	const result = await actions.app.bookings.byId(params.id);
+	const [booking, bookingTypes] = await Promise.all([
+		actions.app.bookings.byId(params.id),
+		actions.app.bookingTypes.list(),
+	]);
 
 	return (
 		<>
 			<PageHeader title="Update Booking" back={{ href: "/bookings" }} />
 
-			{result.data ? <ManageBookingForm booking={result.data} /> : <NotFound />}
+			{booking.data ? <ManageBookingForm booking={booking.data} bookingTypes={bookingTypes.data.data} /> : <NotFound />}
 		</>
 	);
 }

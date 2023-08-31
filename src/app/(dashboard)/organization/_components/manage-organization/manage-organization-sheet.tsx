@@ -27,7 +27,10 @@ import { OrganizationInviteLinks } from "./organization-invite-links";
 import { useManageOrganizationForm, type UseManageOrganizationFormProps } from "./use-manage-organization-form";
 
 interface ManageOrganizationSheetProps<OrganizationProp extends OrganizationById | undefined>
-	extends Omit<ManageOrganizationSheetFormProps<OrganizationProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
+	extends Omit<
+		ManageOrganizationSheetFormProps<OrganizationProp>,
+		"setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"
+	> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -37,7 +40,8 @@ interface ManageOrganizationSheetProps<OrganizationProp extends OrganizationById
 function ManageOrganizationSheet<OrganizationProp extends OrganizationById | undefined>(
 	props: ManageOrganizationSheetProps<OrganizationProp>,
 ) {
-	const isNew = !props.organization;
+	// This is in state so that we can use the organization prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
+	const [isNew, setIsNew] = React.useState(!props.organization);
 
 	const [_open, _setOpen] = React.useState(props.open || false);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -45,6 +49,13 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 
 	const internalOpen = props.open ?? _open;
 	const setInternalOpen = props.setOpen ?? _setOpen;
+
+	React.useEffect(() => {
+		if (internalOpen) {
+			setIsNew(!props.organization);
+			return;
+		}
+	}, [internalOpen, props.organization]);
 
 	return (
 		<>
@@ -90,6 +101,7 @@ function ManageOrganizationSheet<OrganizationProp extends OrganizationById | und
 							setIsConfirmCloseDialogOpen(true);
 						}}
 						setIsDirty={setIsDirty}
+						isNew={isNew}
 					/>
 				</SheetContent>
 			</Sheet>
@@ -102,6 +114,7 @@ interface ManageOrganizationSheetFormProps<OrganizationProp extends Organization
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
+	isNew: boolean;
 	onSuccessfulSubmit?: (
 		client: OrganizationProp extends OrganizationById ? OrganizationUpdate : OrganizationInsert,
 	) => void;
@@ -115,9 +128,8 @@ function ManageOrganizationSheetForm<OrganizationProp extends OrganizationById |
 	onSuccessfulSubmit,
 	organization,
 	defaultValues,
+	isNew,
 }: ManageOrganizationSheetFormProps<OrganizationProp>) {
-	const isNew = !organization;
-
 	const user = useUser();
 
 	const { toast } = useToast();

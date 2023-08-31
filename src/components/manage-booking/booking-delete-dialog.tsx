@@ -29,8 +29,8 @@ function BookingDeleteDialog() {
 					router.push("/vets");
 				} else {
 					toast({
-						title: `Vet deletion failed`,
-						description: `There was an error deleting booking. Please try again.`,
+						title: `Booking deletion failed`,
+						description: `There was an error deleting this booking. Please try again.`,
 						variant: "destructive",
 					});
 				}

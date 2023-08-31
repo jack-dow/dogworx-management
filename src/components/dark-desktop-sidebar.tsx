@@ -54,7 +54,7 @@ export const navigation = [
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: false },
 	{
 		name: "Settings",
-		href: "/settings",
+		href: "/settings/booking-types",
 		icon: SettingsIcon,
 		disabled: false,
 		subNavigation: [
@@ -101,35 +101,83 @@ function DarkDesktopSidebar() {
 										pathname.startsWith(`${item.href.slice(0, -1)}/`);
 
 									return (
-										<li key={item.name}>
-											<Link
-												aria-disabled={item.disabled}
-												href={item.disabled ? "#" : item.href}
-												className={cn(
-													current
-														? "bg-slate-900 text-white"
-														: !item.disabled
-														? "text-slate-300 hover:text-slate-50 hover:bg-slate-900"
-														: "opacity-50 cursor-not-allowed text-slate-300 hover:bg-transparent hover:text-slate-300",
-													"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
-													"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-												)}
-											>
-												<item.icon
+										<React.Fragment key={"desktop-" + item.name}>
+											<li>
+												<Link
+													aria-disabled={item.disabled}
+													href={item.disabled ? "#" : item.href}
 													className={cn(
 														current
-															? "text-slate-50"
+															? "bg-slate-900 text-white"
 															: !item.disabled
-															? "text-slate-300 group-hover:text-slate-50"
-															: "cursor-not-allowed text-slate-300 hover:text-slate-300",
-
-														"h-5 w-5 shrink-0",
+															? "text-slate-300 hover:text-slate-50 hover:bg-slate-900"
+															: "opacity-50 cursor-not-allowed text-slate-300 hover:bg-transparent hover:text-slate-300",
+														"group flex gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
+														"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 													)}
-													aria-hidden="true"
-												/>
-												{item.name}
-											</Link>
-										</li>
+												>
+													<item.icon
+														className={cn(
+															current
+																? "text-slate-50"
+																: !item.disabled
+																? "text-slate-300 group-hover:text-slate-50"
+																: "cursor-not-allowed text-slate-300 hover:text-slate-300",
+
+															"h-5 w-5 shrink-0",
+														)}
+														aria-hidden="true"
+													/>
+													{item.name}
+												</Link>
+											</li>
+											{current && item.subNavigation && (
+												<ul role="list" className="flex flex-1 flex-col gap-y-2">
+													{Object.values(item.subNavigation).map((subItem, index) => {
+														const current =
+															subItem.href === pathname || pathname.startsWith(`${subItem.href.slice(0, -1)}/`);
+
+														const isLast = index === item.subNavigation.length - 1;
+
+														return (
+															<li key={"desktop-" + subItem.name}>
+																<div className={cn("relative flex justify-between")}>
+																	{!isLast ? (
+																		<span
+																			className="absolute left-[18px] top-6 -ml-px h-full w-0.5 bg-slate-700"
+																			aria-hidden="true"
+																		/>
+																	) : null}
+
+																	<Link
+																		href={subItem.href}
+																		className={cn(
+																			current
+																				? "bg-slate-900 text-white"
+																				: "text-slate-300 hover:text-slate-50 hover:bg-slate-900",
+																			"group flex w-full gap-x-4 font-medium rounded-md p-2 text-base leading-6 items-center",
+																			"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+																		)}
+																	>
+																		<div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+																			<div className="flex h-3 w-3 items-center justify-center rounded-full border border-input bg-slate-300 shadow">
+																				<div
+																					className={cn(
+																						"h-1.5 w-1.5 rounded-full transition-colors",
+																						current ? "bg-primary" : "bg-muted group-hover:bg-primary",
+																					)}
+																				/>
+																			</div>
+																		</div>
+																		{subItem.name}
+																	</Link>
+																</div>
+															</li>
+														);
+													})}
+												</ul>
+											)}
+										</React.Fragment>
 									);
 								})}
 								{session.user.emailAddress === "jack.dowww@gmail.com" && (

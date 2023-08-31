@@ -73,6 +73,12 @@ const listBookings = createServerAction(async (options: PaginationSearchParams &
 						familyName: true,
 					},
 				},
+				bookingType: {
+					columns: {
+						color: true,
+						name: true,
+					},
+				},
 			},
 			limit: limit,
 			offset: (page - 1) * limit,

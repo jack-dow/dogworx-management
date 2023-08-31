@@ -11,7 +11,7 @@ import { DestructiveActionDialog } from "~/components/ui/destructive-action-dial
 import { ChevronLeftIcon, ChevronRightIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type DogById } from "~/actions";
+import { actions, type BookingTypesList, type DogById } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { Booking } from "./booking";
@@ -64,12 +64,14 @@ function BookingsList({
 	setBookings,
 	onAddOrUpdateBooking,
 	tab,
+	bookingTypes,
 }: {
 	isNew: boolean;
 	bookings: DogById["bookings"];
 	setBookings: React.Dispatch<React.SetStateAction<DogById["bookings"]>>;
 	onAddOrUpdateBooking: (booking: DogById["bookings"][number]) => void;
 	tab: "past" | "future";
+	bookingTypes: BookingTypesList["data"];
 }) {
 	const user = useUser();
 	const { toast } = useToast();
@@ -166,6 +168,7 @@ function BookingsList({
 			/>
 
 			<ManageBookingDialog
+				bookingTypes={bookingTypes}
 				open={isManageBookingDialogOpen}
 				setOpen={(value) => {
 					if (value === false) {

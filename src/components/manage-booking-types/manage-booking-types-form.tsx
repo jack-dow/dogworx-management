@@ -10,17 +10,17 @@ import { hasTrueValue } from "~/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
-import { BookingDeleteDialog } from "./booking-types-delete-dialog";
-import { BookingFields } from "./booking-types-fields";
-import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-types-form";
+import { BookingTypeDeleteDialog } from "./booking-types-delete-dialog";
+import { BookingTypeFields } from "./booking-types-fields";
+import { useManageBookingTypeForm, type UseManageBookingTypeFormProps } from "./use-manage-booking-types-form";
 
-function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
-	const isNew = !booking;
+function ManageBookingTypeForm({ bookingType, onSubmit }: UseManageBookingTypeFormProps) {
+	const isNew = !bookingType;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageBookingTypeForm({ bookingType, onSubmit });
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -47,31 +47,31 @@ function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
 
 							if (result.success) {
 								if (isNew) {
-									router.replace(`/booking/${data.id}`);
+									router.replace(`/settings/booking-type/${data.id}`);
 									return;
 								}
 
-								router.push("/bookings");
+								router.push("/settings/booking-types");
 							}
 						})(e);
 					}}
 					className="space-y-6 lg:space-y-10"
 				>
 					<FormSection
-						title="Booking Information"
+						title="Booking type Information"
 						description={`
-					Enter the booking information. Remember to click ${isNew ? "create" : "update"} booking when you're finished.
+					Enter the booking type information. Remember to click ${isNew ? "create" : "update"} booking type when you're finished.
 				`}
 					>
 						<div className="grid gap-y-4">
-							<BookingFields variant="form" />
+							<BookingTypeFields variant="form" />
 						</div>
 					</FormSection>
 
 					<Separator />
 
 					<div className="flex justify-end space-x-4">
-						{!isNew && <BookingDeleteDialog />}
+						{!isNew && <BookingTypeDeleteDialog />}
 						<Button
 							type="button"
 							onClick={() => {
@@ -103,7 +103,7 @@ function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
 							}}
 						>
 							{form.formState.isSubmitting && <Loader size="sm" />}
-							{isNew ? "Create" : "Update"} booking
+							{isNew ? "Create" : "Update"} booking type
 						</Button>
 					</div>
 				</form>
@@ -112,4 +112,4 @@ function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
 	);
 }
 
-export { ManageBookingForm };
+export { ManageBookingTypeForm };

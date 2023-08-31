@@ -30,7 +30,7 @@ function VetClinicDeleteDialog() {
 				} else {
 					toast({
 						title: `Vet clinic deletion failed`,
-						description: `There was an error deleting vetClinic "${form.getValues("name")}". Please try again.`,
+						description: `There was an error deleting vet clinic "${form.getValues("name")}". Please try again.`,
 						variant: "destructive",
 					});
 				}

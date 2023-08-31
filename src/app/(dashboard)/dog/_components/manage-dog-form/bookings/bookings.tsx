@@ -12,14 +12,22 @@ import { PlusIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type DogById } from "~/actions";
+import { actions, type BookingTypesList, type DogById } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { BookingsList } from "./bookings-list";
 
 dayjs.extend(customParseFormat);
 
-function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["bookings"] }) {
+function Bookings({
+	isNew,
+	bookings,
+	bookingTypes,
+}: {
+	isNew: boolean;
+	bookings?: DogById["bookings"];
+	bookingTypes: BookingTypesList["data"];
+}) {
 	const user = useUser();
 	const { toast } = useToast();
 
@@ -111,6 +119,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 							</TabsList>
 
 							<ManageBookingDialog
+								bookingTypes={bookingTypes}
 								trigger={
 									<Button variant="outline" size="icon">
 										<span className="sr-only">Create booking</span>
@@ -189,6 +198,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 								setBookings={setPastBookings}
 								tab="past"
 								onAddOrUpdateBooking={handleAddOrUpdateBooking}
+								bookingTypes={bookingTypes}
 							/>
 						</TabsContent>
 
@@ -199,6 +209,7 @@ function Bookings({ isNew, bookings }: { isNew: boolean; bookings?: DogById["boo
 								setBookings={setFutureBookings}
 								tab="future"
 								onAddOrUpdateBooking={handleAddOrUpdateBooking}
+								bookingTypes={bookingTypes}
 							/>
 						</TabsContent>
 					</Tabs>

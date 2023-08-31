@@ -27,7 +27,7 @@ import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
 interface ManageVetSheetProps<VetProp extends VetById | undefined>
-	extends Omit<ManageVetSheetFormProps<VetProp>, "setOpen" | "onConfirmCancel" | "setIsDirty"> {
+	extends Omit<ManageVetSheetFormProps<VetProp>, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -35,7 +35,8 @@ interface ManageVetSheetProps<VetProp extends VetById | undefined>
 }
 
 function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetSheetProps<VetProp>) {
-	const isNew = !props.vet;
+	// This is in state so that we can use the vet prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
+	const [isNew, setIsNew] = React.useState(!props.vet);
 
 	const [_open, _setOpen] = React.useState(props.open || false);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -43,6 +44,13 @@ function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetShe
 
 	const internalOpen = props.open ?? _open;
 	const setInternalOpen = props.setOpen ?? _setOpen;
+
+	React.useEffect(() => {
+		if (internalOpen) {
+			setIsNew(!props.vet);
+			return;
+		}
+	}, [internalOpen, props.vet]);
 
 	return (
 		<>
@@ -86,6 +94,7 @@ function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetShe
 							setIsConfirmCloseDialogOpen(true);
 						}}
 						setIsDirty={setIsDirty}
+						isNew={isNew}
 					/>
 				</SheetContent>
 			</Sheet>
@@ -97,6 +106,7 @@ interface ManageVetSheetFormProps<VetProp extends VetById | undefined> extends U
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
+	isNew: boolean;
 	onSuccessfulSubmit?: (client: VetProp extends VetById ? VetUpdate : VetInsert) => void;
 }
 
@@ -108,9 +118,8 @@ function ManageVetSheetForm<VetProp extends VetById | undefined>({
 	onSuccessfulSubmit,
 	vet,
 	defaultValues,
+	isNew,
 }: ManageVetSheetFormProps<VetProp>) {
-	const isNew = !vet;
-
 	const { toast } = useToast();
 
 	const { form, onSubmit: _onSubmit } = useManageVetForm({ vet, defaultValues, onSubmit });

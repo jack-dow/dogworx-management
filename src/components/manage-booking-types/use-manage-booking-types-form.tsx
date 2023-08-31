@@ -8,136 +8,98 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingById, type BookingInsert, type BookingUpdate } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
-import { InsertBookingSchema, SelectDogSchema, SelectUserSchema } from "~/db/validation";
+import { actions, type BookingTypeById, type BookingTypeInsert, type BookingTypeUpdate } from "~/actions";
+import { InsertBookingTypeSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue } from "~/utils";
 
 dayjs.extend(customParseFormat);
 
-const ManageBookingFormSchema = InsertBookingSchema.extend({
+const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
+	name: z.string().max(100).nonempty({ message: "Required" }),
 	details: z.string().max(100000, { message: "Details must be less than 100,000 characters long." }).nullable(),
-	dog: SelectDogSchema.pick({
-		id: true,
-		givenName: true,
-		familyName: true,
-	}).nullish(),
-	date: z.date({
-		required_error: "Must select a date for this booking",
+	duration: z.number().nonnegative({
+		message: "Duration must be a positive number",
 	}),
-	duration: z
-		.number({
-			required_error: "Must provide a duration for this booking",
-		})
-		.nonnegative({
-			message: "Duration must be a positive number",
-		}),
-
-	assignedTo: SelectUserSchema.pick({
-		id: true,
-		givenName: true,
-		familyName: true,
-		emailAddress: true,
-		organizationId: true,
-		organizationRole: true,
-		profileImageUrl: true,
-	}).nullish(),
-}).superRefine((val, ctx) => {
-	if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
-		ctx.addIssue({
-			code: z.ZodIssueCode.too_small,
-			minimum: 1,
-			type: "string",
-			inclusive: true,
-			message: "Details must be provided for past bookings",
-			path: ["details"],
-		});
-	}
 });
 
 // Had to add `Type` suffix because was getting "Cannot access before initialization" error
-type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
+type ManageBookingTypeFormSchema = z.infer<typeof ManageBookingTypeFormSchema>;
 
-type UseManageBookingFormProps = {
-	booking?: BookingById;
-	defaultValues?: Partial<ManageBookingFormSchema>;
+type UseManageBookingTypeFormProps = {
+	bookingType?: BookingTypeById;
+	defaultValues?: Partial<ManageBookingTypeFormSchema>;
 	onSubmit?: (
-		data: ManageBookingFormSchema,
-	) => Promise<{ success: boolean; data: BookingInsert | BookingUpdate | null | undefined }>;
+		data: ManageBookingTypeFormSchema,
+	) => Promise<{ success: boolean; data: BookingTypeInsert | BookingTypeUpdate | null | undefined }>;
 };
 
-function useManageBookingForm(props: UseManageBookingFormProps) {
-	const isNew = !props.booking;
-
-	const user = useUser();
+function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
+	const isNew = !props.bookingType;
 
 	const { toast } = useToast();
 
-	const form = useForm<ManageBookingFormSchema>({
-		resolver: zodResolver(ManageBookingFormSchema),
+	const form = useForm<ManageBookingTypeFormSchema>({
+		resolver: zodResolver(ManageBookingTypeFormSchema),
 		defaultValues: {
-			duration: 1800,
-			assignedToId: user.id,
-			assignedTo: user,
 			details: "",
-			...props.booking,
+			...props.bookingType,
 			...props.defaultValues,
-			id: props.booking?.id ?? generateId(),
+			id: props.bookingType?.id ?? generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
-		function syncBooking(booking: BookingById) {
+		function syncBookingType(booking: BookingTypeById) {
 			form.reset(booking, {
 				keepDirty: true,
 				keepDirtyValues: true,
 			});
 		}
 
-		if (props.booking) {
-			syncBooking(props.booking);
+		if (props.bookingType) {
+			syncBookingType(props.bookingType);
 		}
-	}, [props.booking, form]);
+	}, [props.bookingType, form]);
 
-	async function onSubmit(data: ManageBookingFormSchema) {
+	async function onSubmit(data: ManageBookingTypeFormSchema) {
 		let success = false;
-		let newBooking: BookingInsert | BookingUpdate | null | undefined;
+		let newBookingType: BookingTypeInsert | BookingTypeUpdate | null | undefined;
 
 		if (props.onSubmit) {
 			const response = await props.onSubmit(data);
 			success = response.success;
-			newBooking = response.data;
-			return { success, data: newBooking };
-		} else if (props.booking) {
-			const response = await actions.app.bookings.update(data);
+			newBookingType = response.data;
+			return { success, data: newBookingType };
+		} else if (props.bookingType) {
+			const response = await actions.app.bookingTypes.update(data);
 			success = response.success && !!response.data;
-			newBooking = response.data;
+			newBookingType = response.data;
 		} else {
-			const response = await actions.app.bookings.insert(data);
+			const response = await actions.app.bookingTypes.insert(data);
 			success = response.success;
-			newBooking = response.data;
+			newBookingType = response.data;
 		}
 
 		if (success) {
 			toast({
-				title: `Booking ${isNew ? "Created" : "Updated"}`,
+				title: `Booking type ${isNew ? "Created" : "Updated"}`,
 				description: `Successfully ${isNew ? "created" : "updated"} booking.`,
 			});
 		} else {
 			toast({
-				title: `Booking ${isNew ? "Creation" : "Update"} Failed`,
+				title: `Booking type ${isNew ? "Creation" : "Update"} Failed`,
 				description: `There was an error ${isNew ? "creating" : "updating"} the booking. Please try again.`,
 				variant: "destructive",
 			});
 		}
 
-		return { success, data: newBooking };
+		return { success, data: newBookingType };
 	}
 
 	return { form, onSubmit };
 }
 
-export { type ManageBookingFormSchema, type UseManageBookingFormProps, useManageBookingForm };
+export { type ManageBookingTypeFormSchema, type UseManageBookingTypeFormProps, useManageBookingTypeForm };

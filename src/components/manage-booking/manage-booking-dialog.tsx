@@ -83,6 +83,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 							setIsConfirmCloseDialogOpen(true);
 						}}
 						setIsDirty={setIsDirty}
+						bookingTypes={props.bookingTypes}
 					/>
 				</DialogContent>
 			</Dialog>
@@ -105,12 +106,13 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 	onSuccessfulSubmit,
 	booking,
 	defaultValues,
+	bookingTypes,
 }: ManageBookingDialogFormProps<BookingProp>) {
 	const isNew = !booking;
 
 	const { toast } = useToast();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, defaultValues, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, defaultValues, onSubmit, bookingTypes });
 
 	React.useEffect(() => {
 		setIsDirty(form.formState.isDirty);
@@ -137,7 +139,7 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 					})(e);
 				}}
 			>
-				<BookingFields variant="dialog" />
+				<BookingFields variant="dialog" bookingTypes={bookingTypes} />
 
 				<DialogFooter className="mt-2">
 					<Button

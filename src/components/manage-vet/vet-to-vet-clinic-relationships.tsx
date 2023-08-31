@@ -58,7 +58,7 @@ function VetToVetClinicRelationships({
 
 	const [editingVetClinic, setEditingVetClinic] = React.useState<VetClinicById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateVetClinicSheetOpen, setIsCreateVetClinicSheetOpen] = React.useState<string | null>(null);
+	const [isCreateVetClinicSheetOpen, setIsCreateVetClinicSheetOpen] = React.useState<true | string | null>(null);
 
 	const searchVetClinicsInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -189,7 +189,7 @@ function VetToVetClinicRelationships({
 						}
 					}}
 					defaultValues={{
-						name: isCreateVetClinicSheetOpen ?? undefined,
+						name: typeof isCreateVetClinicSheetOpen === "string" ? isCreateVetClinicSheetOpen : undefined,
 					}}
 					onSuccessfulSubmit={(vetClinic) => {
 						toggleVetToVetClinicRelationship(vetClinic);
@@ -223,7 +223,7 @@ function VetToVetClinicRelationships({
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
-									setIsCreateVetClinicSheetOpen(searchTerm);
+									setIsCreateVetClinicSheetOpen(searchTerm || true);
 								}}
 							>
 								<UserPlusIcon className="mr-2 h-4 w-4" />

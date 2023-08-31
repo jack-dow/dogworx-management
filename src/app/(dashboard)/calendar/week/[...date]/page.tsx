@@ -10,15 +10,18 @@ export const metadata: Metadata = {
 async function WeeklyCalendar({ params }: { params: { [key: string]: string | string[] | undefined } }) {
 	const date = Array.isArray(params.date) ? params?.date?.join("-") : undefined;
 
-	const bookings = await actions.app.bookings.week({
-		date,
-	});
+	const [bookingTypes, bookings] = await Promise.all([
+		actions.app.bookingTypes.list(),
+		actions.app.bookings.week({
+			date,
+		}),
+	]);
 
 	return (
 		<>
 			{/* <PageHeader title="Weekly Calendar" back={{ href: "/" }} /> */}
 
-			<WeekView date={date} bookings={bookings.data} />
+			<WeekView date={date} bookings={bookings.data} bookingTypes={bookingTypes.data.data} />
 		</>
 	);
 }

@@ -61,7 +61,7 @@ function DogToClientRelationships({
 
 	const [editingClient, setEditingClient] = React.useState<ClientById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<string | null>(null);
+	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<true | string | null>(null);
 
 	const searchClientsInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -184,16 +184,18 @@ function DogToClientRelationships({
 						}
 					}}
 					defaultValues={{
-						givenName: isCreateClientSheetOpen
-							? isCreateClientSheetOpen?.split(" ").length === 1
-								? isCreateClientSheetOpen
-								: isCreateClientSheetOpen?.split(" ").slice(0, -1).join(" ")
-							: undefined,
-						familyName: isCreateClientSheetOpen
-							? isCreateClientSheetOpen.split(" ").length > 1
-								? isCreateClientSheetOpen.split(" ").pop()
-								: undefined
-							: undefined,
+						givenName:
+							typeof isCreateClientSheetOpen === "string"
+								? isCreateClientSheetOpen?.split(" ").length === 1
+									? isCreateClientSheetOpen
+									: isCreateClientSheetOpen?.split(" ").slice(0, -1).join(" ")
+								: undefined,
+						familyName:
+							typeof isCreateClientSheetOpen === "string"
+								? isCreateClientSheetOpen.split(" ").length > 1
+									? isCreateClientSheetOpen.split(" ").pop()
+									: undefined
+								: undefined,
 					}}
 					onSuccessfulSubmit={(client) => {
 						toggleDogToClientRelationship(client);
@@ -225,7 +227,7 @@ function DogToClientRelationships({
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
-									setIsCreateClientSheetOpen(searchTerm);
+									setIsCreateClientSheetOpen(searchTerm || true);
 								}}
 							>
 								<UserPlusIcon className="mr-2 h-4 w-4" />

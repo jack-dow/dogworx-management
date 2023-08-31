@@ -61,7 +61,7 @@ function DogToVetRelationships({
 
 	const [editingVet, setEditingVet] = React.useState<VetById | null>(null);
 	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
-	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState<string | null>(null);
+	const [isCreateVetSheetOpen, setIsCreateVetSheetOpen] = React.useState<true | string | null>(null);
 
 	const searchVetsInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -185,16 +185,18 @@ function DogToVetRelationships({
 						}
 					}}
 					defaultValues={{
-						givenName: isCreateVetSheetOpen
-							? isCreateVetSheetOpen.split(" ").length === 1
-								? isCreateVetSheetOpen
-								: isCreateVetSheetOpen.split(" ").slice(0, -1).join(" ")
-							: undefined,
-						familyName: isCreateVetSheetOpen
-							? isCreateVetSheetOpen?.split(" ").length > 1
-								? isCreateVetSheetOpen?.split(" ").pop()
-								: undefined
-							: undefined,
+						givenName:
+							typeof isCreateVetSheetOpen === "string"
+								? isCreateVetSheetOpen.split(" ").length === 1
+									? isCreateVetSheetOpen
+									: isCreateVetSheetOpen.split(" ").slice(0, -1).join(" ")
+								: undefined,
+						familyName:
+							typeof isCreateVetSheetOpen === "string"
+								? isCreateVetSheetOpen?.split(" ").length > 1
+									? isCreateVetSheetOpen?.split(" ").pop()
+									: undefined
+								: undefined,
 					}}
 					onSuccessfulSubmit={(vet) => {
 						toggleDogToVetRelationship(vet);
@@ -226,7 +228,7 @@ function DogToVetRelationships({
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
-									setIsCreateVetSheetOpen(searchTerm);
+									setIsCreateVetSheetOpen(searchTerm || true);
 								}}
 							>
 								<UserPlusIcon className="mr-2 h-4 w-4" />

@@ -14,13 +14,13 @@ import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
+function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBookingFormProps) {
 	const isNew = !booking;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit, bookingTypes });
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -64,7 +64,7 @@ function ManageBookingForm({ booking, onSubmit }: UseManageBookingFormProps) {
 				`}
 					>
 						<div className="grid gap-y-4">
-							<BookingFields variant="form" />
+							<BookingFields variant="form" bookingTypes={bookingTypes} />
 						</div>
 					</FormSection>
 

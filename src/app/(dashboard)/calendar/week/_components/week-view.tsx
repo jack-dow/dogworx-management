@@ -7,6 +7,7 @@ import advancedFormat from "dayjs/plugin/advancedFormat";
 import isToday from "dayjs/plugin/isToday";
 import updateLocale from "dayjs/plugin/updateLocale";
 
+import { type BOOKING_TYPES_COLORS } from "~/components/manage-booking-types/booking-types-fields";
 import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
 import { Button } from "~/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon, DogIcon, EditIcon } from "~/components/ui/icons";
@@ -14,7 +15,7 @@ import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { type BookingsByWeek } from "~/actions";
+import { type BookingsByWeek, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/(dashboard)/providers";
 import { cn, secondsToHumanReadable } from "~/utils";
 
@@ -25,7 +26,15 @@ dayjs.updateLocale("en", {
 	weekStart: 1,
 });
 
-function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek | null }) {
+function WeekView({
+	date,
+	bookings,
+	bookingTypes,
+}: {
+	date?: string;
+	bookings: BookingsByWeek | null;
+	bookingTypes: BookingTypesList["data"];
+}) {
 	const { toast } = useToast();
 
 	const container = React.useRef<HTMLDivElement>(null);
@@ -79,18 +88,14 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 		<div className="relative w-full">
 			<div
 				className={cn(
+					"w-full",
 					prefersDarkMode
-						? "absolute -ml-6 h-[calc(100vh-96px)] w-screen sm:h-[calc(100vh-104px)] lg:-ml-0 lg:h-[calc(100vh-128px)] lg:w-full"
-						: "w-full h-[calc(100vh-48px)] sm:h-[calc(100vh-96px)] md:h-[calc(100vh-112px)] lg:h-[calc(100vh-128px)]",
+						? "h-[calc(100vh-48px)] lg:h-[calc(100vh-80px)]"
+						: "h-[calc(100vh-48px)] sm:h-[calc(100vh-96px)] md:h-[calc(100vh-112px)] lg:h-[calc(100vh-128px)]",
 				)}
 			>
 				<div className="flex h-full flex-col space-y-4">
-					<header
-						className={cn(
-							"flex flex-none flex-col justify-between gap-4 sm:items-center sm:flex-row",
-							prefersDarkMode && "px-6 lg:px-0",
-						)}
-					>
+					<header className="flex flex-none flex-col justify-between gap-4 sm:flex-row sm:items-center">
 						<h1 className="text-base font-semibold leading-6 text-gray-900">
 							<span className="sr-only">Week of </span>
 							<span>
@@ -144,7 +149,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 
 							<Separator orientation="vertical" className="hidden h-4 sm:block" />
 
-							<ManageBookingDialog trigger={<Button size="sm">Create Booking</Button>} />
+							<ManageBookingDialog trigger={<Button size="sm">Create Booking</Button>} bookingTypes={bookingTypes} />
 						</div>
 					</header>
 					<div
@@ -296,6 +301,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 												  }
 												: undefined
 										}
+										bookingTypes={bookingTypes}
 									/>
 
 									{/* Events */}
@@ -341,6 +347,7 @@ function WeekView({ date, bookings }: { date?: string; bookings: BookingsByWeek 
 														setSelectedBooking(booking);
 													}}
 													setIsPreviewCardOpen={setIsPreviewCardOpen}
+													bookingTypes={bookingTypes}
 												/>
 											);
 										})}
@@ -365,18 +372,39 @@ const colStartClasses = [
 	"sm:col-start-7",
 ];
 
+const bookingCardColors = {
+	gray: { card: "border-slate-200 bg-slate-50 hover:bg-slate-100", text: "text-slate-700" },
+	red: { card: "border-red-200 bg-red-50 hover:bg-red-100", text: "text-red-700" },
+	amber: { card: "border-amber-200 bg-amber-50 hover:bg-amber-100", text: "text-amber-700" },
+	yellow: { card: "border-yellow-200 bg-yellow-50 hover:bg-yellow-100", text: "text-yellow-700" },
+	lime: { card: "border-lime-200 bg-lime-50 hover:bg-lime-100", text: "text-lime-700" },
+	emerald: { card: "border-emerald-200 bg-emerald-50 hover:bg-emerald-100", text: "text-emerald-700" },
+	teal: { card: "border-teal-200 bg-teal-50 hover:bg-teal-100", text: "text-teal-700" },
+	cyan: { card: "border-cyan-200 bg-cyan-50 hover:bg-cyan-100", text: "text-cyan-700" },
+	sky: { card: "border-sky-200 bg-sky-50 hover:bg-sky-100", text: "text-sky-700" },
+	purple: { card: "border-purple-200 bg-purple-50 hover:bg-purple-100", text: "text-purple-700" },
+	rose: { card: "border-rose-200 bg-rose-50 hover:bg-rose-100", text: "text-rose-700" },
+} satisfies Record<keyof typeof BOOKING_TYPES_COLORS, { card: string; text: string }>;
+
 type BookingCardProps = {
 	booking: BookingsByWeek[number];
 	visibleDay: number;
 	onEditClick: (booking: BookingsByWeek[number]) => void;
 	setIsPreviewCardOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	bookingTypes: BookingTypesList["data"];
 };
 
-function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }: BookingCardProps) {
+function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen, bookingTypes }: BookingCardProps) {
 	const date = dayjs(booking.date);
 	const end = date.add(booking.duration, "seconds");
 	// Convert time to fraction. e.g. 10:30 AM => 10.5
 	const time = date.hour() + date.minute() / 60;
+
+	const bookingType = bookingTypes.find((bookingType) => bookingType.id === booking.bookingTypeId);
+	const colors =
+		bookingType && bookingType?.color in bookingCardColors
+			? bookingCardColors[bookingType.color as keyof typeof bookingCardColors]
+			: { card: "border-violet-200 bg-violet-50 hover:bg-violet-100", text: "text-violet-700" };
 
 	return (
 		<li
@@ -403,15 +431,30 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 			>
 				<PopoverTrigger asChild>
 					<button
-						className="group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border border-violet-200 bg-violet-50 p-2 text-xs leading-5 hover:bg-violet-100 "
+						className={cn(
+							"group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5",
+							colors.card,
+						)}
 						onClick={(e) => {
 							e.stopPropagation();
 						}}
 					>
-						<p className="max-w-full shrink-0 truncate whitespace-normal text-left font-semibold leading-none text-violet-700">
-							{booking.dog.givenName} {booking.dog.familyName}
+						<p
+							className={cn(
+								"max-w-full shrink-0 truncate whitespace-normal text-left font-semibold leading-none ",
+								colors.text,
+							)}
+						>
+							{bookingType && bookingType.name}
+							{bookingType && booking.dog && " - "}
+							{booking.dog && (
+								<>
+									{booking.dog.givenName} {booking.dog.familyName}
+								</>
+							)}
+							{!bookingType && !booking.dog && "Default Booking"}
 						</p>
-						<p className="max-w-full truncate whitespace-normal text-left text-violet-700">
+						<p className={cn("max-w-full truncate whitespace-normal text-left", colors.text)}>
 							{secondsToHumanReadable(booking.duration)}
 						</p>
 					</button>
@@ -454,28 +497,30 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen }:
 							</Button>
 						</div>
 						<div className="grid gap-4">
-							<div className="grid gap-y-2">
-								<Label htmlFor="dog">Dog</Label>
-								<Button variant="ghost" asChild className="-ml-4 h-auto w-[318px] justify-between">
-									<Link href={`/dog/${booking.dog.id}`}>
-										<div className="flex max-w-full shrink items-center gap-x-2 truncate">
-											<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
-												<DogIcon className="h-5 w-5" />
+							{booking.dog && (
+								<div className="grid gap-y-2">
+									<Label htmlFor="dog">Dog</Label>
+									<Button variant="ghost" asChild className="-ml-4 h-auto w-[318px] justify-between">
+										<Link href={`/dog/${booking.dog.id}`}>
+											<div className="flex max-w-full shrink items-center gap-x-2 truncate">
+												<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
+													<DogIcon className="h-5 w-5" />
+												</div>
+												<div className="min-w-0 flex-auto">
+													<p className="truncate text-sm font-semibold capitalize leading-6 text-primary">
+														{booking.dog.givenName} {booking.dog.familyName}
+													</p>
+													<p className="truncate text-xs capitalize leading-5 text-slate-500">{booking.dog.color}</p>
+												</div>
 											</div>
-											<div className="min-w-0 flex-auto">
-												<p className="truncate text-sm font-semibold capitalize leading-6 text-primary">
-													{booking.dog.givenName} {booking.dog.familyName}
-												</p>
-												<p className="truncate text-xs capitalize leading-5 text-slate-500">{booking.dog.color}</p>
+											<div className="flex space-x-4 text-muted-foreground">
+												<span className="sr-only">Edit dog</span>
+												<ChevronRightIcon className="h-4 w-4" />
 											</div>
-										</div>
-										<div className="flex space-x-4 text-muted-foreground">
-											<span className="sr-only">Edit dog</span>
-											<ChevronRightIcon className="h-4 w-4" />
-										</div>
-									</Link>
-								</Button>
-							</div>
+										</Link>
+									</Button>
+								</div>
+							)}
 							<div className="grid gap-y-2">
 								<Label htmlFor="details">Details</Label>
 								{booking.details ? (

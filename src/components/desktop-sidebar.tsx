@@ -52,8 +52,8 @@ function DesktopSidebar() {
 									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
 
 									return (
-										<>
-											<li key={item.name}>
+										<React.Fragment key={`desktop-${item.name}`}>
+											<li>
 												<Link
 													aria-disabled={item.disabled}
 													href={item.disabled ? "#" : item.href}
@@ -81,7 +81,7 @@ function DesktopSidebar() {
 													{item.name}
 												</Link>
 											</li>
-											{item.subNavigation && (
+											{current && item.subNavigation && (
 												<ul role="list" className="flex flex-1 flex-col gap-y-2">
 													{Object.values(item.subNavigation).map((subItem, index) => {
 														const current =
@@ -90,7 +90,7 @@ function DesktopSidebar() {
 														const isLast = index === item.subNavigation.length - 1;
 
 														return (
-															<li key={subItem.name}>
+															<li key={`desktop-${subItem.name}`}>
 																<div className={cn("relative flex justify-between")}>
 																	{!isLast ? (
 																		<span
@@ -126,7 +126,7 @@ function DesktopSidebar() {
 													})}
 												</ul>
 											)}
-										</>
+										</React.Fragment>
 									);
 								})}
 							</ul>

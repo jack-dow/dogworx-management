@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { parseDate } from "chrono-node";
 import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -11,25 +9,31 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { actions, type BookingById } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
-import { secondsToHumanReadable } from "~/utils";
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
+import { cn, secondsToHumanReadable } from "~/utils";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
-import { CalendarIcon, ChevronUpDownIcon, PlusIcon } from "../ui/icons";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { RichTextEditor } from "../ui/rich-text-editor";
-import { SearchCombobox, SearchComboboxAction } from "../ui/search-combobox";
-import { TimeInput } from "../ui/time-input";
-import { type ManageBookingFormSchema } from "./use-manage-booking-types-form";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
+import { type ManageBookingTypeFormSchema } from "./use-manage-booking-types-form";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 dayjs.extend(advancedFormat);
+
+export const BOOKING_TYPES_COLORS = {
+	gray: "bg-slate-200",
+	red: "bg-red-200",
+	amber: "bg-amber-200",
+	yellow: "bg-yellow-200",
+	lime: "bg-lime-200",
+	emerald: "bg-emerald-200",
+	teal: "bg-teal-200",
+	cyan: "bg-cyan-200",
+	sky: "bg-sky-200",
+	purple: "bg-purple-200",
+	rose: "bg-rose-200",
+};
 
 function convertToNumber(input: string): number | null {
 	// Step 1: Remove leading and trailing whitespace
@@ -47,32 +51,8 @@ function convertToNumber(input: string): number | null {
 	return Math.abs(numericValue);
 }
 
-function roundDateToNearest15Minutes(date: Date) {
-	const originalDate = dayjs(date);
-	const currentMinute = originalDate.minute();
-
-	// Calculate the number of minutes needed to round to the nearest 15 minutes
-	const minutesToNext15 = currentMinute % 15 <= 7.5 ? -(currentMinute % 15) : 15 - (currentMinute % 15);
-
-	// Adjust the date by adding or subtracting the calculated minutes
-	const roundedDate = originalDate.add(minutesToNext15, "minute").set("second", 0);
-
-	return roundedDate.toDate();
-}
-
-function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById["dog"] }) {
-	const router = useRouter();
-
-	const user = useUser();
-	const form = useFormContext<ManageBookingFormSchema>();
-
-	const [dateInputValue, setDateInputValue] = React.useState("");
-	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-	const [month, setMonth] = React.useState<Date>(dayjs(form.getValues("date")).toDate());
-
-	const [timeInputValue, setTimeInputValue] = React.useState(
-		form.getValues("date") ? dayjs(form.getValues("date")).format("HH:mm") : "",
-	);
+function BookingTypeFields({}: { variant: "dialog" | "form" }) {
+	const form = useFormContext<ManageBookingTypeFormSchema>();
 
 	const [durationInputValue, setDurationInputValue] = React.useState(
 		form.getValues("duration") ? ms(form.getValues("duration") * 1000, { long: true }) : "",
@@ -80,129 +60,63 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 
 	return (
 		<>
-			<FormField
-				control={form.control}
-				name="date"
-				render={({ field }) => {
-					const date = dayjs(field.value);
-					return (
-						<div className="grid grid-cols-3 gap-4">
-							<FormItem className="col-span-2">
-								<FormLabel>Date</FormLabel>
+			<div className="flex flex-col gap-y-4 md:flex-row md:space-x-4">
+				<FormField
+					control={form.control}
+					name="name"
+					render={({ field }) => (
+						<FormItem className="w-full">
+							<FormLabel>Name</FormLabel>
+							<FormControl>
+								<Input {...field} value={field.value ?? ""} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="color"
+					render={({ field }) => (
+						<FormItem className="w-full md:w-48">
+							<FormLabel>Color</FormLabel>
+							<Select onValueChange={field.onChange} value={field.value}>
 								<FormControl>
-									<Popover
-										open={isDatePickerOpen}
-										onOpenChange={(value) => {
-											setIsDatePickerOpen(value);
-											if (value === false) {
-												// Wait for popover to animate out before resetting
-												setTimeout(() => {
-													setMonth(new Date());
-													setDateInputValue("");
-												}, 150);
-											}
-										}}
-									>
-										<PopoverTrigger asChild>
-											<Button
-												variant="outline"
-												className="h-10 w-full focus-visible:outline-1 focus-visible:outline-offset-0"
-											>
-												<CalendarIcon className="mr-2 h-4 w-4" />
-												<span className="mr-2 truncate">
-													{field.value ? date.format("MMMM Do, YYYY") : "Select date"}
-												</span>
-												<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-											</Button>
-										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" withoutPortal>
-											<div className="space-y-2 p-3 pb-1">
-												<Label htmlFor="booking-date-input">Date</Label>
-												<Input
-													id="booking-date-input"
-													autoComplete="off"
-													value={dateInputValue}
-													onChange={(e) => {
-														const val = e.target.value;
-														setDateInputValue(val);
-
-														const today = dayjs().toDate();
-														const parsedValue = parseDate(val);
-														const newDate = roundDateToNearest15Minutes(parsedValue ?? today);
-
-														if (form.formState.errors.details && newDate >= today) {
-															form.clearErrors("details");
-														}
-
-														field.onChange(newDate);
-														setTimeInputValue(newDate ? dayjs(newDate).format("HH:mm") : "");
-														setMonth(newDate);
-													}}
-													onKeyDown={(e) => {
-														if (e.key === "Enter") {
-															e.preventDefault();
-															e.stopPropagation();
-															setIsDatePickerOpen(false);
-														}
-													}}
-												/>
-											</div>
-											<Calendar
-												mode="single"
-												selected={dayjs(field.value).toDate() ?? undefined}
-												month={month}
-												onMonthChange={setMonth}
-												onSelect={(value) => {
-													if (value) {
-														if (form.formState.errors.details && value >= new Date()) {
-															form.clearErrors("details");
-														}
-
-														const date = dayjs(value);
-														const now = dayjs();
-
-														const val = roundDateToNearest15Minutes(
-															date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
-														);
-
-														field.onChange(val);
-														setTimeInputValue(dayjs(val).format("HH:mm"));
-													}
-													setIsDatePickerOpen(false);
-													setDateInputValue("");
-												}}
-												initialFocus={false}
+									<SelectTrigger className={cn("relative", field.value && "pl-8")}>
+										<SelectValue placeholder="Select color">
+											<div
+												className={cn(
+													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+													BOOKING_TYPES_COLORS[field.value as keyof typeof BOOKING_TYPES_COLORS],
+												)}
 											/>
-										</PopoverContent>
-									</Popover>
+											<span className="truncate  capitalize">{field.value}</span>
+										</SelectValue>
+									</SelectTrigger>
 								</FormControl>
-								<FormMessage />
-							</FormItem>
-
-							<FormItem className="flex-1">
-								<FormLabel>Start Time</FormLabel>
-								<FormControl>
-									<TimeInput
-										className="h-10"
-										step={900}
-										value={timeInputValue}
-										onChange={(value) => {
-											setTimeInputValue(value);
-
-											if (value) {
-												const date = dayjs(form.getValues("date"));
-												const time = dayjs(value, "HH:mm");
-												const newDate = date.set("hour", time.hour()).set("minute", time.minute());
-												field.onChange(newDate.toDate());
-											}
-										}}
-									/>
-								</FormControl>
-							</FormItem>
-						</div>
-					);
-				}}
-			/>
+								<SelectContent align="end">
+									<SelectGroup>
+										<SelectLabel>Colors</SelectLabel>
+										{Object.keys(BOOKING_TYPES_COLORS).map((color) => (
+											<SelectItem key={color} value={color} className="pl-8 capitalize">
+												<div
+													className={cn(
+														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+														BOOKING_TYPES_COLORS[color as keyof typeof BOOKING_TYPES_COLORS],
+													)}
+												/>
+												{color}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+			</div>
 
 			<FormField
 				control={form.control}
@@ -262,95 +176,12 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 
 			<FormField
 				control={form.control}
-				name="dogId"
-				render={({ field }) => {
-					const defaultSelected = dog ?? form.getValues("dog");
-					return (
-						<FormItem>
-							<FormLabel>Dog</FormLabel>
-							<FormControl>
-								<SearchCombobox
-									disabled={dog !== undefined}
-									placeholder="Select dog"
-									onSearch={async (searchTerm) => {
-										const result = await actions.app.dogs.search(searchTerm);
-
-										if (!result.success) {
-											throw new Error("Failed to search dogs");
-										}
-
-										return result.data;
-									}}
-									resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-									onSelectChange={(result) => {
-										field.onChange(result?.id);
-									}}
-									renderActions={({ searchTerm }) => (
-										<SearchComboboxAction
-											onSelect={() => {
-												router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
-											}}
-										>
-											<PlusIcon className="mr-1 h-4 w-4" />
-											<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
-										</SearchComboboxAction>
-									)}
-									defaultSelected={defaultSelected}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					);
-				}}
-			/>
-
-			<FormField
-				control={form.control}
-				name="assignedToId"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Assigned to</FormLabel>
-						<FormControl>
-							<SearchCombobox
-								placeholder="Select user"
-								onSearch={async (searchTerm) => {
-									const result = await actions.app.users.search(searchTerm);
-
-									if (!result.success) {
-										throw new Error("Failed to search users");
-									}
-
-									return result.data;
-								}}
-								onBlur={({ setSearchTerm, setSelected, setResults }) => {
-									if (!form.getValues("assignedToId")) {
-										field.onChange(user?.id);
-										setSearchTerm(`${user.givenName} ${user.familyName}`);
-										setSelected(user);
-										setResults([user]);
-									}
-								}}
-								resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-								onSelectChange={(result) => {
-									field.onChange(result?.id);
-								}}
-								defaultSelected={form.getValues("assignedTo")}
-							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-
-			<FormField
-				control={form.control}
 				name="details"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>Session details</FormLabel>
+						<FormLabel>Default details</FormLabel>
 						<FormControl>
 							<RichTextEditor
-								id="booking-details"
 								content={field.value ?? undefined}
 								onValueChange={({ html, text }) => {
 									if (text === "") {
@@ -369,4 +200,4 @@ function BookingFields({ dog }: { variant: "dialog" | "form"; dog?: BookingById[
 	);
 }
 
-export { BookingFields };
+export { BookingTypeFields };

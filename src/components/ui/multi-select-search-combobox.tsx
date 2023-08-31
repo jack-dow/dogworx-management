@@ -171,7 +171,7 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 					{isOpen && (isLoading || results.length > 0 || renderActions || searchTerm !== "") && (
 						<div
 							className={cn(
-								"absolute top-0 z-10 w-96 rounded-md bg-white shadow-lg outline-none animate-in fade-in-0 zoom-in-95 mt-1",
+								"absolute top-0 z-10 w-80 rounded-md bg-white shadow-lg outline-none animate-in fade-in-0 zoom-in-95 mt-1",
 								classNames?.results,
 							)}
 						>
