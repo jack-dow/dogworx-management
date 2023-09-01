@@ -80,6 +80,7 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 			assignedToId: user.id,
 			assignedTo: user,
 			details: "",
+			bookingTypeId: null,
 			dogId: null,
 			...props.booking,
 			...props.defaultValues,

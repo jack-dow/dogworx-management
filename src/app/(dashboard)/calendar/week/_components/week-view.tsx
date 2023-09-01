@@ -445,13 +445,13 @@ function BookingCard({ booking, visibleDay, onEditClick, setIsPreviewCardOpen, b
 								colors.text,
 							)}
 						>
-							{bookingType && bookingType.name}
-							{bookingType && booking.dog && " - "}
 							{booking.dog && (
 								<>
 									{booking.dog.givenName} {booking.dog.familyName}
 								</>
 							)}
+							{bookingType && booking.dog && " - "}
+							{bookingType && bookingType.name}
 							{!bookingType && !booking.dog && "Default Booking"}
 						</p>
 						<p className={cn("max-w-full truncate whitespace-normal text-left", colors.text)}>
