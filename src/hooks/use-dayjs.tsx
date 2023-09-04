@@ -25,8 +25,6 @@ dayjs.updateLocale("en", {
 export const useDayjs = () => {
 	const timezone = useTimezone();
 
-	dayjs;
-
 	dayjs.tz.setDefault(timezone);
 
 	return { dayjs };

@@ -20,10 +20,10 @@ import { cn, secondsToHumanReadable } from "~/utils";
 type Booking = BookingsByWeek[number];
 
 function areBookingsOverlapping(dayjs: Dayjs, booking1: Booking, booking2: Booking): boolean {
-	const startDateTime1 = dayjs(booking1.date);
+	const startDateTime1 = dayjs.tz(booking1.date);
 	const endDateTime1 = startDateTime1.add(booking1.duration, "second");
 
-	const startDateTime2 = dayjs(booking2.date);
+	const startDateTime2 = dayjs.tz(booking2.date);
 	const endDateTime2 = startDateTime2.add(booking2.duration, "second");
 
 	return startDateTime1.isBefore(endDateTime2) && endDateTime1.isAfter(startDateTime2);
@@ -137,14 +137,14 @@ function WeekView({
 
 	const user = useUser();
 
-	const startOfWeek = dayjs(date).startOf("week");
-	const endOfWeek = dayjs(date).endOf("week");
+	const startOfWeek = dayjs.tz(date).startOf("week");
+	const endOfWeek = dayjs.tz(date).endOf("week");
 
-	const prevWeek = dayjs(date).subtract(7, "days");
-	const nextWeek = dayjs(date).add(7, "days");
+	const prevWeek = dayjs.tz(date).subtract(7, "days");
+	const nextWeek = dayjs.tz(date).add(7, "days");
 
 	// Visible day on mobile device
-	const [visibleDate, setVisibleDate] = React.useState(dayjs(date).date());
+	const [visibleDate, setVisibleDate] = React.useState(dayjs.tz(date).date());
 
 	const [isManageBookingDialogOpen, setIsManageBookingDialogOpen] = React.useState(false);
 	const [selectedBooking, setSelectedBooking] = React.useState<BookingsByWeek[number] | undefined>(undefined);
@@ -185,7 +185,7 @@ function WeekView({
 
 	if (bookings) {
 		for (const booking of bookings) {
-			const date = dayjs(booking.date);
+			const date = dayjs.tz(booking.date);
 
 			if (date.isBefore(startOfWeek) || date.isAfter(endOfWeek)) {
 				continue;
@@ -333,7 +333,7 @@ function WeekView({
 									})}
 									{groupOverlappingBookings(dayjs, bookingsOneDayOrLonger).map((bookings) => {
 										return bookings.map((booking) => {
-											const bookingStart = dayjs(booking.date);
+											const bookingStart = dayjs.tz(booking.date);
 											const bookingEnd = bookingStart.add(booking.duration, "seconds");
 
 											const bookingType = bookingTypes.find((bookingType) => bookingType.id === booking.bookingTypeId);
@@ -527,7 +527,7 @@ function WeekView({
 									>
 										{groupOverlappingBookings(dayjs, bookingsLessThanOneDay).map((bookings) => {
 											return bookings.map((booking, index) => {
-												const bookingStart = dayjs(booking.date);
+												const bookingStart = dayjs.tz(booking.date);
 												// Convert time to fraction. e.g. 10:30 AM => 10.5
 												const time = bookingStart.hour() + bookingStart.minute() / 60;
 
@@ -622,7 +622,7 @@ type BookingPopoverProps = {
 function BookingPopover({ booking, trigger, onEditClick, setIsPreviewCardOpen }: BookingPopoverProps) {
 	const { dayjs } = useDayjs();
 
-	const bookingStart = dayjs(booking.date);
+	const bookingStart = dayjs.tz(booking.date);
 	const bookingEnd = bookingStart.add(booking.duration, "seconds");
 	return (
 		<Popover
