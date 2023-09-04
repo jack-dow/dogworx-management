@@ -19,7 +19,7 @@ import {
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
-import { useSession } from "../../../providers";
+import { useSession } from "../../providers";
 import { type ManageAccountFormSchema } from "./manage-account-form";
 
 dayjs.extend(relativeTime);

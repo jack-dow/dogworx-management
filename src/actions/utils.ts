@@ -85,13 +85,6 @@ async function getServerUser() {
 	return sessionTokenData.user;
 }
 
-function getTimezoneOffset() {
-	const cookieStore = cookies();
-	const timezoneOffsetCookie = cookieStore.get("timezoneOffset");
-
-	return timezoneOffsetCookie?.value ?? null;
-}
-
 type PaginationSearchParams = {
 	page?: number;
 	limit?: number;
@@ -174,7 +167,6 @@ export {
 	separateActionsLogSchema,
 	getServerSession,
 	getServerUser,
-	getTimezoneOffset,
 	type PaginationSearchParams,
 	validatePaginationSearchParams,
 	constructFamilyName,

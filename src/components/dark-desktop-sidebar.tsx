@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { useSession } from "~/app/providers";
+import { useSession } from "~/app/(dashboard)/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { signOut } from "~/lib/auth";
 import { cn } from "~/utils";

@@ -19,7 +19,7 @@ import {
 } from "~/components/ui/sheet";
 import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationById, type OrganizationInsert, type OrganizationUpdate } from "~/actions";
-import { useUser } from "~/app/providers";
+import { useUser } from "~/app/(dashboard)/providers";
 import { hasTrueValue } from "~/utils";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";

@@ -13,7 +13,7 @@ import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { actions, type BookingById, type BookingTypesList } from "~/actions";
-import { useUser } from "~/app/providers";
+import { useUser } from "~/app/(dashboard)/providers";
 import { cn, secondsToHumanReadable } from "~/utils";
 import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";

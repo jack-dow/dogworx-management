@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingById, type BookingInsert, type BookingTypesList, type BookingUpdate } from "~/actions";
-import { useUser } from "~/app/providers";
+import { useUser } from "~/app/(dashboard)/providers";
 import { InsertBookingSchema, SelectDogSchema, SelectUserSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue } from "~/utils";

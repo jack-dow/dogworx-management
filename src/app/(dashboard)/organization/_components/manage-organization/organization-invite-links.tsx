@@ -18,7 +18,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { FormGroup, FormSection, FormSheetGroup } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { useUser } from "~/app/providers";
+import { useUser } from "~/app/(dashboard)/providers";
 import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
 
 dayjs.extend(relativeTime);

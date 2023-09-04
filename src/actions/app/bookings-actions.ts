@@ -13,7 +13,6 @@ import { BOOKINGS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
 	createServerAction,
 	getServerUser,
-	getTimezoneOffset,
 	validatePaginationSearchParams,
 	type ExtractServerActionData,
 	type PaginationSearchParams,
@@ -27,15 +26,14 @@ dayjs.updateLocale("en", {
 const listBookings = createServerAction(async (options: PaginationSearchParams & { from?: string; to?: string }) => {
 	try {
 		const user = await getServerUser();
-		const timezoneOffset = getTimezoneOffset();
 
-		let fromDate = options?.from ? dayjs(options.from).add(Number(timezoneOffset ?? -720), "minutes") : undefined;
+		let fromDate = options?.from ? dayjs(options.from) : undefined;
 
 		if (!fromDate?.isValid()) {
 			fromDate = undefined;
 		}
 
-		let toDate = options?.to ? dayjs(options.to).add(Number(timezoneOffset ?? 840), "minutes") : undefined;
+		let toDate = options?.to ? dayjs(options.to) : undefined;
 
 		if (!toDate?.isValid()) {
 			toDate = undefined;
@@ -49,8 +47,8 @@ const listBookings = createServerAction(async (options: PaginationSearchParams &
 			.where(
 				and(
 					eq(bookings.organizationId, user.organizationId),
-					fromDate ? gte(bookings.date, fromDate.toDate()) : undefined,
-					toDate ? lt(bookings.date, toDate.toDate()) : undefined,
+					fromDate ? gte(bookings.date, fromDate.subtract(12, "hours").toDate()) : undefined,
+					toDate ? lt(bookings.date, toDate.add(14, "hours").toDate()) : undefined,
 				),
 			);
 
@@ -86,8 +84,8 @@ const listBookings = createServerAction(async (options: PaginationSearchParams &
 			offset: (page - 1) * limit,
 			where: and(
 				eq(bookings.organizationId, user.organizationId),
-				fromDate ? gte(bookings.date, fromDate.toDate()) : undefined,
-				toDate ? lt(bookings.date, toDate.toDate()) : undefined,
+				fromDate ? gte(bookings.date, fromDate.subtract(12, "hours").toDate()) : undefined,
+				toDate ? lt(bookings.date, toDate.add(14, "hours").toDate()) : undefined,
 			),
 			orderBy: (bookings, { asc }) => (orderBy ? [...orderBy, asc(bookings.id)] : [asc(bookings.id)]),
 		});
@@ -203,9 +201,8 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 
 	try {
 		const user = await getServerUser();
-		const timezoneOffset = getTimezoneOffset();
 
-		const date = dayjs(validation?.data?.date).add(Number(timezoneOffset), "minutes");
+		const date = dayjs(validation?.data?.date);
 
 		if (!date.isValid) {
 			return { success: false, error: "Invalid date", data: null };
@@ -214,11 +211,9 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 		const data = await drizzle.query.bookings.findMany({
 			where: and(
 				eq(bookings.organizationId, user.organizationId),
-				gte(
-					bookings.date,
-					timezoneOffset ? date.startOf("week").toDate() : date.subtract(7, "days").subtract(12, "hours").toDate(),
-				),
-				lt(bookings.date, timezoneOffset ? date.endOf("week").toDate() : date.add(7, "days").add(14, "hours").toDate()),
+				// -12 hours to +14 hours to account for timezone differences
+				gte(bookings.date, date.startOf("week").subtract(12, "hours").toDate()),
+				lt(bookings.date, date.endOf("week").add(14, "hours").toDate()),
 			),
 			with: {
 				dog: {
