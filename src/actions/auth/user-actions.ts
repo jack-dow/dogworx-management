@@ -73,7 +73,7 @@ const deleteUser = createServerAction(async (id: string) => {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 const setUserTimezone = createServerAction(async (timezone: string) => {
-	if (dayjs().tz(timezone, true).isValid()) {
+	if (!dayjs().tz(timezone, true).isValid()) {
 		return { success: false, error: "Invalid timezone", data: null };
 	}
 

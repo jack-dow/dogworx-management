@@ -21,7 +21,7 @@ const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning className="h-full">
-			<TimezoneProvider timezone={getTimezone() ?? "Australia/Brisbane"}>
+			<TimezoneProvider timezone={getTimezone()}>
 				<TooltipProvider>
 					<body className={cn("min-h-full font-sans antialiased  flex flex-col text-slate-600", fontSans.variable)}>
 						{children}

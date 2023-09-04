@@ -89,7 +89,7 @@ export function useTimezone() {
 	return context.timezone;
 }
 
-export const TimezoneProvider = ({ children, timezone }: ProviderProps<{ timezone: string }>) => {
+export const TimezoneProvider = ({ children, timezone }: ProviderProps<{ timezone: string | null }>) => {
 	const [_timezone, setTimezone] = React.useState(timezone);
 
 	React.useEffect(() => {
@@ -105,5 +105,9 @@ export const TimezoneProvider = ({ children, timezone }: ProviderProps<{ timezon
 		setTimezone(timezone);
 	}, [timezone]);
 
-	return <TimezoneContext.Provider value={{ timezone: _timezone }}>{children}</TimezoneContext.Provider>;
+	return (
+		<TimezoneContext.Provider value={{ timezone: _timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone }}>
+			{children}
+		</TimezoneContext.Provider>
+	);
 };
