@@ -139,6 +139,20 @@ function WeekView({
 }) {
 	const { toast } = useToast();
 
+	console.log(
+		bookings?.sort((a, b) => {
+			if (a.date > b.date) {
+				return 1;
+			}
+
+			if (a.date < b.date) {
+				return -1;
+			}
+
+			return 0;
+		}),
+	);
+
 	const container = React.useRef<HTMLDivElement>(null);
 	const containerNav = React.useRef<HTMLDivElement>(null);
 	const containerOffset = React.useRef<HTMLDivElement>(null);
