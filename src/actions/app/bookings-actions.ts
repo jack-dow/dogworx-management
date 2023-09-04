@@ -202,7 +202,8 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 	try {
 		const user = await getServerUser();
 
-		const date = dayjs(validation?.data?.date);
+		const date = dayjs(validation?.data?.date).startOf("day");
+		const day = date.day();
 
 		if (!date.isValid) {
 			return { success: false, error: "Invalid date", data: null };
@@ -212,8 +213,22 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 			where: and(
 				eq(bookings.organizationId, user.organizationId),
 				// -12 hours to +14 hours to account for timezone differences
-				gte(bookings.date, date.startOf("week").subtract(12, "hours").toDate()),
-				lt(bookings.date, date.endOf("week").add(14, "hours").toDate()),
+				// Not using .startOf week as it can become the wrong week.
+				// E.g. If a user from Brisbane (UTC+10) views the calendar at 8am on Monday, it will show the previous week as it would be 10pm Sunday UTC.
+				gte(
+					bookings.date,
+					date
+						.subtract(day === 0 ? 7 : day - 1, "day")
+						.subtract(12, "hours")
+						.toDate(),
+				),
+				lt(
+					bookings.date,
+					date
+						.add(day === 0 ? 0 : 7 - day, "day")
+						.add(14, "hours")
+						.toDate(),
+				),
 			),
 			with: {
 				dog: {
