@@ -4,7 +4,7 @@ import { DesktopSidebar } from "~/components/desktop-sidebar";
 import { MobileNavigation } from "~/components/mobile-navigation";
 import { actions } from "~/actions";
 import { cn } from "~/utils";
-import { SessionProvider } from "./providers";
+import { SessionProvider } from "../providers";
 
 const BackgroundGradients = {
 	GradientTop() {

@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useFormContext } from "react-hook-form";
 
 import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
@@ -13,11 +11,10 @@ import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingTypesList, type DogById } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
+import { useDayjs } from "~/hooks/use-dayjs";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { BookingsList } from "./bookings-list";
-
-dayjs.extend(customParseFormat);
 
 function Bookings({
 	isNew,
@@ -28,6 +25,7 @@ function Bookings({
 	bookings?: DogById["bookings"];
 	bookingTypes: BookingTypesList["data"];
 }) {
+	const { dayjs } = useDayjs();
 	const user = useUser();
 	const { toast } = useToast();
 
@@ -41,7 +39,7 @@ function Bookings({
 	const [isLoadingInitialFutureSessions, setIsLoadingInitialFutureSessions] = React.useState(false);
 
 	function handleAddOrUpdateBooking(booking: DogById["bookings"][number]) {
-		if (dayjs(booking.date).isBefore(dayjs())) {
+		if (dayjs.tz(booking.date).isBefore(dayjs.tz())) {
 			// Remove booking if dog has been changed
 			if (booking.dogId !== form.getValues("id")) {
 				setPastBookings((prev) => [...prev.filter((f) => f.id !== booking.id)]);
@@ -75,7 +73,7 @@ function Bookings({
 							if (!isNew && value === "future" && !hasFetchedInitialFutureSessions) {
 								setIsLoadingInitialFutureSessions(true);
 								actions.app.bookings
-									.search({ dogId: form.getValues("id"), after: dayjs().startOf("day").toDate(), sortDirection: "asc" })
+									.search({ dogId: form.getValues("id"), after: dayjs.tz().startOf("day").toDate(), sortDirection: "asc" })
 									.then((bookings) => {
 										if (bookings.success) {
 											setFutureBookings(bookings.data);
@@ -143,7 +141,7 @@ function Bookings({
 										toast({
 											title: "Booking added",
 											description: `Successfully added booking to dog's ${
-												dayjs(booking.date).isBefore(dayjs()) ? "past" : "future"
+												dayjs.tz(booking.date).isBefore(dayjs.tz()) ? "past" : "future"
 											} bookings.`,
 										});
 
@@ -183,7 +181,7 @@ function Bookings({
 									}
 								}}
 								onSuccessfulSubmit={(booking) => {
-									if (dayjs(booking.date).isBefore(dayjs())) {
+									if (dayjs.tz(booking.date).isBefore(dayjs.tz())) {
 										setPastBookings([...pastBookings, booking]);
 									} else {
 										setFutureBookings([...futureBookings, booking]);

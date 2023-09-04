@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { parseDate } from "chrono-node";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
 import { useFormContext, type Control } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -17,10 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
 import { cn } from "~/utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
-
-dayjs.extend(advancedFormat);
 
 function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
 	return (
@@ -182,12 +179,12 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 	);
 }
 
-function getAgeInWords(age: Date | null) {
+function getAgeInWords(dayjs: Dayjs, age: Date | null) {
 	if (!age) return null;
-	const now = dayjs();
+	const now = dayjs.tz();
 	const years = now.diff(age, "year");
 	const months = now.diff(age, "month") - years * 12;
-	const days = now.diff(dayjs(age).add(years, "year").add(months, "month"), "day");
+	const days = now.diff(dayjs.tz(age).add(years, "year").add(months, "month"), "day");
 
 	if (years === 0 && months === 0) {
 		if (days < 0) {
@@ -211,13 +208,14 @@ function getAgeInWords(age: Date | null) {
 }
 
 function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSchema> }) {
+	const { dayjs } = useDayjs();
 	const form = useFormContext<ManageDogFormSchema>();
 
 	const [inputValue, setInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
 	const [month, setMonth] = React.useState<Date>(form.getValues("age") ?? new Date());
 
-	const [ageInWords, setAgeInWords] = React.useState<string | null>(getAgeInWords(form.getValues("age")));
+	const [ageInWords, setAgeInWords] = React.useState<string | null>(getAgeInWords(dayjs, form.getValues("age")));
 
 	return (
 		<>
@@ -246,7 +244,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										<span className="mr-2 truncate">
-											{field.value ? dayjs(field.value).format("MMMM Do, YYYY") : "Select date"}
+											{field.value ? dayjs.tz(field.value).format("MMMM Do, YYYY") : "Select date"}
 										</span>
 										<ChevronUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 									</Button>
@@ -266,7 +264,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 
 												field.onChange(date);
 												setMonth(date);
-												setAgeInWords(getAgeInWords(date));
+												setAgeInWords(getAgeInWords(dayjs, date));
 											}}
 											onKeyDown={(e) => {
 												if (e.key === "Enter") {
@@ -283,7 +281,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 										onSelect={(value) => {
 											if (value) {
 												field.onChange(value);
-												setAgeInWords(getAgeInWords(value));
+												setAgeInWords(getAgeInWords(dayjs, value));
 											}
 											setIsDatePickerOpen(false);
 										}}

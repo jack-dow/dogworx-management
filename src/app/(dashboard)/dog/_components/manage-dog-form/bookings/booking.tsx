@@ -2,9 +2,6 @@
 
 import * as React from "react";
 import Image from "next/image";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -17,10 +14,8 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { CopyIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { type DogById } from "~/actions";
+import { useDayjs } from "~/hooks/use-dayjs";
 import { cn } from "~/utils";
-
-dayjs.extend(customParseFormat);
-dayjs.extend(advancedFormat);
 
 function Booking({
 	booking,
@@ -35,9 +30,10 @@ function Booking({
 	onDelete: () => void;
 	onCopy: (booking: DogById["bookings"][number]) => void;
 }) {
+	const { dayjs } = useDayjs();
 	const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);
 
-	const date = dayjs(booking.date);
+	const date = dayjs.tz(booking.date);
 	const end = date.add(booking.duration, "seconds");
 
 	return (

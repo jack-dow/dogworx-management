@@ -45,7 +45,7 @@ import {
 	updateOrganization,
 } from "./auth/organizations-actions";
 import { getCurrentSession, invalidateSession } from "./auth/sessions-actions";
-import { deleteUser, updateUser } from "./auth/user-actions";
+import { deleteUser, setUserTimezone, updateUser } from "./auth/user-actions";
 
 const actions = {
 	app: {
@@ -122,6 +122,7 @@ const actions = {
 		user: {
 			update: updateUser,
 			delete: deleteUser,
+			setTimezone: setUserTimezone,
 		},
 	},
 };

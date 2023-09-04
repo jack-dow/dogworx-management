@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
 import { type DateRange } from "react-day-picker";
 
 import { Button } from "~/components/ui/button";
@@ -15,12 +13,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingsList } from "~/actions";
 import { BOOKINGS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
+import { useDayjs } from "~/hooks/use-dayjs";
 import { cn } from "~/utils";
 import { createBookingsTableColumns } from "./bookings-table-columns";
 
-dayjs.extend(advancedFormat);
-
 function BookingsTable({ result }: { result: BookingsList }) {
+	const { dayjs } = useDayjs();
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
@@ -32,14 +30,14 @@ function BookingsTable({ result }: { result: BookingsList }) {
 		const startingLength = result.data.length;
 
 		result.data = result.data.filter((booking) => {
-			const from = searchParams.get("from") ? dayjs(searchParams.get("from") as string).toDate() : undefined;
-			const to = searchParams.get("to") ? dayjs(searchParams.get("to") as string).toDate() : undefined;
+			const from = searchParams.get("from") ? dayjs.tz(searchParams.get("from") as string).toDate() : undefined;
+			const to = searchParams.get("to") ? dayjs.tz(searchParams.get("to") as string).toDate() : undefined;
 
-			if (from && dayjs(booking.date).isBefore(from)) {
+			if (from && dayjs.tz(booking.date).isBefore(from)) {
 				return false;
 			}
 
-			if (to && dayjs(booking.date).isAfter(to)) {
+			if (to && dayjs.tz(booking.date).isAfter(to)) {
 				return false;
 			}
 
@@ -84,7 +82,7 @@ function BookingsTable({ result }: { result: BookingsList }) {
 			/>
 
 			<DataTable
-				columns={createBookingsTableColumns((booking) => {
+				columns={createBookingsTableColumns(dayjs, (booking) => {
 					setConfirmBookingDelete(booking);
 				})}
 				sortableColumns={BOOKINGS_SORTABLE_COLUMNS}
@@ -98,13 +96,14 @@ function BookingsTable({ result }: { result: BookingsList }) {
 }
 
 function DateRangeSearch({ setIsLoading }: { setIsLoading?: (isLoading: boolean) => void }) {
+	const { dayjs } = useDayjs();
 	const router = useRouter();
 
 	const searchParams = useSearchParams();
 
 	const [date, setDate] = React.useState<DateRange | undefined>({
-		from: searchParams.get("from") ? dayjs(searchParams.get("from") as string).toDate() : undefined,
-		to: searchParams.get("to") ? dayjs(searchParams.get("to") as string).toDate() : undefined,
+		from: searchParams.get("from") ? dayjs.tz(searchParams.get("from") as string).toDate() : undefined,
+		to: searchParams.get("to") ? dayjs.tz(searchParams.get("to") as string).toDate() : undefined,
 	});
 
 	return (
@@ -122,10 +121,10 @@ function DateRangeSearch({ setIsLoading }: { setIsLoading?: (isLoading: boolean)
 							{date?.from ? (
 								date.to ? (
 									<>
-										{dayjs(date.from).format("MMM Do, YYYY")} - {dayjs(date.to).format("MMM Do, YYYY")}
+										{dayjs.tz(date.from).format("MMM Do, YYYY")} - {dayjs.tz(date.to).format("MMM Do, YYYY")}
 									</>
 								) : (
-									dayjs(date.from).format("MMMM Do, YYYY")
+									dayjs.tz(date.from).format("MMMM Do, YYYY")
 								)
 							) : (
 								<>Select date</>
@@ -135,10 +134,10 @@ function DateRangeSearch({ setIsLoading }: { setIsLoading?: (isLoading: boolean)
 							{date?.from ? (
 								date.to ? (
 									<>
-										{dayjs(date.from).format("MMMM Do, YYYY")} - {dayjs(date.to).format("MMMM Do, YYYY")}
+										{dayjs.tz(date.from).format("MMMM Do, YYYY")} - {dayjs.tz(date.to).format("MMMM Do, YYYY")}
 									</>
 								) : (
-									dayjs(date.from).format("MMMM Do, YYYY")
+									dayjs.tz(date.from).format("MMMM Do, YYYY")
 								)
 							) : (
 								<>Select date</>
@@ -157,13 +156,13 @@ function DateRangeSearch({ setIsLoading }: { setIsLoading?: (isLoading: boolean)
 							const newSearchParams = new URLSearchParams(searchParams);
 
 							if (value?.from) {
-								newSearchParams.set("from", dayjs(value.from).format("YYYY-MM-DD"));
+								newSearchParams.set("from", dayjs.tz(value.from).format("YYYY-MM-DD"));
 							} else {
 								newSearchParams.delete("from");
 							}
 
 							if (value?.to) {
-								newSearchParams.set("to", dayjs(value.to).format("YYYY-MM-DD"));
+								newSearchParams.set("to", dayjs.tz(value.to).format("YYYY-MM-DD"));
 							} else {
 								newSearchParams.delete("to");
 							}

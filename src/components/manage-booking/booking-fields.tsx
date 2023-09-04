@@ -3,17 +3,13 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { parseDate } from "chrono-node";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-import duration from "dayjs/plugin/duration";
-import relativeTime from "dayjs/plugin/relativeTime";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { actions, type BookingById, type BookingTypesList } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
+import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
 import { cn, secondsToHumanReadable } from "~/utils";
 import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";
@@ -27,11 +23,6 @@ import { SearchCombobox, SearchComboboxAction } from "../ui/search-combobox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { TimeInput } from "../ui/time-input";
 import { type ManageBookingFormSchema } from "./use-manage-booking-form";
-
-dayjs.extend(customParseFormat);
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
-dayjs.extend(advancedFormat);
 
 function convertToNumber(input: string): number | null {
 	// Step 1: Remove leading and trailing whitespace
@@ -49,8 +40,8 @@ function convertToNumber(input: string): number | null {
 	return Math.abs(numericValue);
 }
 
-function roundDateToNearest15Minutes(date: Date) {
-	const originalDate = dayjs(date);
+function roundDateToNearest15Minutes(dayjs: Dayjs, date: Date) {
+	const originalDate = dayjs.tz(date);
 	const currentMinute = originalDate.minute();
 
 	// Calculate the number of minutes needed to round to the nearest 15 minutes
@@ -70,6 +61,7 @@ function BookingFields({
 	dog?: BookingById["dog"];
 	bookingTypes: BookingTypesList["data"];
 }) {
+	const { dayjs } = useDayjs();
 	const router = useRouter();
 
 	const user = useUser();
@@ -77,10 +69,10 @@ function BookingFields({
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-	const [month, setMonth] = React.useState<Date>(dayjs(form.getValues("date")).toDate());
+	const [month, setMonth] = React.useState<Date>(dayjs.tz(form.getValues("date")).toDate());
 
 	const [timeInputValue, setTimeInputValue] = React.useState(
-		form.getValues("date") ? dayjs(form.getValues("date")).format("HH:mm") : "",
+		form.getValues("date") ? dayjs.tz(form.getValues("date")).format("HH:mm") : "",
 	);
 
 	const [durationInputValue, setDurationInputValue] = React.useState(
@@ -159,7 +151,7 @@ function BookingFields({
 					control={form.control}
 					name="date"
 					render={({ field }) => {
-						const date = dayjs(field.value);
+						const date = dayjs.tz(field.value);
 						return (
 							<>
 								<FormItem className="col-span-2">
@@ -201,16 +193,16 @@ function BookingFields({
 															const val = e.target.value;
 															setDateInputValue(val);
 
-															const today = dayjs().toDate();
+															const today = dayjs.tz().toDate();
 															const parsedValue = parseDate(val);
-															const newDate = roundDateToNearest15Minutes(parsedValue ?? today);
+															const newDate = roundDateToNearest15Minutes(dayjs, parsedValue ?? today);
 
 															if (form.formState.errors.details && newDate >= today) {
 																form.clearErrors("details");
 															}
 
 															field.onChange(newDate);
-															setTimeInputValue(newDate ? dayjs(newDate).format("HH:mm") : "");
+															setTimeInputValue(newDate ? dayjs.tz(newDate).format("HH:mm") : "");
 															setMonth(newDate);
 														}}
 														onKeyDown={(e) => {
@@ -224,7 +216,7 @@ function BookingFields({
 												</div>
 												<Calendar
 													mode="single"
-													selected={dayjs(field.value).toDate() ?? undefined}
+													selected={dayjs.tz(field.value).toDate() ?? undefined}
 													month={month}
 													onMonthChange={setMonth}
 													onSelect={(value) => {
@@ -233,18 +225,19 @@ function BookingFields({
 																form.clearErrors("details");
 															}
 
-															const current = dayjs(field.value);
-															const date = dayjs(value);
-															const now = dayjs();
+															const current = dayjs.tz(field.value);
+															const date = dayjs.tz(value);
+															const now = dayjs.tz();
 
 															const val = roundDateToNearest15Minutes(
+																dayjs,
 																field.value && timeInputValue
 																	? date.set("hour", current.hour()).set("minute", current.minute()).toDate()
 																	: date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
 															);
 
 															field.onChange(val);
-															setTimeInputValue(dayjs(val).format("HH:mm"));
+															setTimeInputValue(dayjs.tz(val).format("HH:mm"));
 														}
 														setIsDatePickerOpen(false);
 														setDateInputValue("");
@@ -268,8 +261,8 @@ function BookingFields({
 												setTimeInputValue(value);
 
 												if (value) {
-													const date = dayjs(form.getValues("date"));
-													const time = dayjs(value, "HH:mm");
+													const date = dayjs.tz(form.getValues("date"));
+													const time = dayjs.tz(value, "HH:mm");
 													const newDate = date.set("hour", time.hour()).set("minute", time.minute());
 													field.onChange(newDate.toDate());
 												}

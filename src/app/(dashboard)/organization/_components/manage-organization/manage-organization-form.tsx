@@ -9,7 +9,7 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
 import { hasTrueValue } from "~/utils";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";

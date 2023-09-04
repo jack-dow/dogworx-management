@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { init } from "@paralleldrive/cuid2";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -18,10 +16,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { FormGroup, FormSection, FormSheetGroup } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
+import { useDayjs } from "~/hooks/use-dayjs";
 import { type ManageOrganizationFormSchema } from "./use-manage-organization-form";
-
-dayjs.extend(relativeTime);
 
 const createInviteLinkCode = init({
 	length: 8,
@@ -34,6 +31,7 @@ function OrganizationInviteLinks({
 	existingInviteLinks: ManageOrganizationFormSchema["organizationInviteLinks"];
 	variant: "sheet" | "form";
 }) {
+	const { dayjs } = useDayjs();
 	const user = useUser();
 	const form = useFormContext<ManageOrganizationFormSchema>();
 	const organizationInviteLinks = useFieldArray({
@@ -114,7 +112,7 @@ function OrganizationInviteLinks({
 									</div>
 
 									<div className="col-span-2 flex items-center justify-center capitalize">
-										<p className="truncate text-sm">{dayjs(inviteLink.expiresAt).fromNow()}</p>
+										<p className="truncate text-sm">{dayjs.tz(inviteLink.expiresAt).fromNow()}</p>
 									</div>
 
 									<div className="col-span-1 flex items-center justify-end space-x-4">
@@ -160,7 +158,7 @@ function OrganizationInviteLinks({
 									const inviteLink = {
 										id: createInviteLinkCode(),
 										uses: 0,
-										expiresAt: dayjs().add(1, "week").toDate(),
+										expiresAt: dayjs.tz().add(1, "week").toDate(),
 										userId: user.id,
 										organizationId: form.getValues("id"),
 										user,

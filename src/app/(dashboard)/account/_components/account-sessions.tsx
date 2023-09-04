@@ -1,6 +1,4 @@
 import * as React from "react";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { useFieldArray, type Control } from "react-hook-form";
 import UAParser from "ua-parser-js";
 
@@ -19,10 +17,9 @@ import {
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
-import { useSession } from "../../providers";
+import { useDayjs } from "~/hooks/use-dayjs";
+import { useSession } from "../../../providers";
 import { type ManageAccountFormSchema } from "./manage-account-form";
-
-dayjs.extend(relativeTime);
 
 function AccountSessions({ control }: { control: Control<ManageAccountFormSchema> }) {
 	const currentSession = useSession();
@@ -89,6 +86,8 @@ function SessionAccordion({
 	isCurrentSession?: boolean;
 	onDelete: (session: ManageAccountFormSchema["sessions"][number]) => void;
 }) {
+	const { dayjs } = useDayjs();
+
 	const [isSignOutConfirmDialogOpen, setIsSignOutConfirmDialogOpen] = React.useState(false);
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
 
@@ -111,7 +110,7 @@ function SessionAccordion({
 								? `(${session.city ?? ""}${session.city && session.country ? ", " : ""}${session.country ?? ""})`
 								: ""}
 						</p>
-						<p className="text-left text-xs text-muted-foreground">{dayjs(session.updatedAt).fromNow(true)} ago</p>
+						<p className="text-left text-xs text-muted-foreground">{dayjs.tz(session.updatedAt).fromNow(true)} ago</p>
 					</div>
 					<div>{isCurrentSession && <Badge>This Session</Badge>}</div>
 				</div>

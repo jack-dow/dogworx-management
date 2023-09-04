@@ -1,11 +1,6 @@
 "use client";
 
 import * as React from "react";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-import duration from "dayjs/plugin/duration";
-import relativeTime from "dayjs/plugin/relativeTime";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
@@ -15,11 +10,6 @@ import { Input } from "../ui/input";
 import { RichTextEditor } from "../ui/rich-text-editor";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { type ManageBookingTypeFormSchema } from "./use-manage-booking-types-form";
-
-dayjs.extend(customParseFormat);
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
-dayjs.extend(advancedFormat);
 
 export const BOOKING_TYPES_COLORS = {
 	gray: "bg-slate-200",

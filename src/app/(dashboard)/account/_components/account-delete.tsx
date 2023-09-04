@@ -18,7 +18,7 @@ import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
-import { useUser } from "../../providers";
+import { useUser } from "../../../providers";
 
 function AccountDelete() {
 	const user = useUser();
