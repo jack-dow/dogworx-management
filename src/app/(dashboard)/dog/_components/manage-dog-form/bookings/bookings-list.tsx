@@ -12,7 +12,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingTypesList, type DogById } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { Booking } from "./booking";
 

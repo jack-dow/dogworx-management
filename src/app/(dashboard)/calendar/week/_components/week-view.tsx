@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { type BookingsByWeek, type BookingTypesList } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
 import { useViewportSize } from "~/hooks/use-viewport-size";
 import { cn, secondsToHumanReadable } from "~/utils";
 
@@ -339,8 +339,8 @@ function WeekView({
 											</div>
 										);
 									})}
-									{groupOverlappingBookings(bookingsOneDayOrLonger).map((bookings) => {
-										return bookings.map((booking) => {
+									{groupOverlappingBookings(bookingsOneDayOrLonger).map((bookingGroup) => {
+										return bookingGroup.map((booking) => {
 											const bookingStart = dayjs(booking.date);
 											const bookingEnd = bookingStart.add(booking.duration, "seconds");
 
@@ -533,8 +533,8 @@ function WeekView({
 											setLastSelectedDate(date);
 										}}
 									>
-										{groupOverlappingBookings(bookingsLessThanOneDay).map((bookings) => {
-											return bookings.map((booking, index) => {
+										{groupOverlappingBookings(bookingsLessThanOneDay).map((bookingGroup) => {
+											return bookingGroup.map((booking, index) => {
 												const bookingStart = dayjs(booking.date);
 												// Convert time to fraction. e.g. 10:30 AM => 10.5
 												const time = bookingStart.hour() + bookingStart.minute() / 60;
@@ -560,11 +560,13 @@ function WeekView({
 																Math.floor((booking.duration / 60) * 0.2) || 1
 															}`,
 															width:
-																bookings.length > 1
-																	? `calc(${100 / bookings.length}% + ${18 * (index || 1)}px)`
+																bookingGroup.length > 1
+																	? `calc(${100 / bookingGroup.length}% + ${18 * (index || 1)}px)`
 																	: undefined,
 															marginLeft:
-																index > 0 ? `calc(${(100 / bookings.length) * index}% - ${18 * index}px)` : undefined,
+																index > 0
+																	? `calc(${(100 / bookingGroup.length) * index}% - ${18 * index}px)`
+																	: undefined,
 														}}
 													>
 														<BookingPopover

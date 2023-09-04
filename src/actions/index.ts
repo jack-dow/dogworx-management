@@ -24,7 +24,7 @@ import {
 	updateClient,
 } from "./app/clients-actions";
 import { deleteDog, getDogById, insertDog, listDogs, searchDogs, updateDog } from "./app/dogs-actions";
-import { getUserById, listUsers, searchUsers } from "./app/users-actions";
+import { getUserById, listUsers, searchUsers, setUserTimezoneOffset } from "./app/users-actions";
 import {
 	deleteVetClinic,
 	getVetClinicById,
@@ -102,6 +102,7 @@ const actions = {
 			list: listUsers,
 			search: searchUsers,
 			byId: getUserById,
+			setTimezoneOffset: setUserTimezoneOffset,
 		},
 	},
 	auth: {

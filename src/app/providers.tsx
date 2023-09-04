@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------------
 import * as React from "react";
 
+import { actions } from "~/actions";
 import { type SessionCookie } from "~/lib/auth-options";
 
 type ProviderProps<Props = undefined> = Props extends undefined
@@ -63,4 +64,12 @@ const SessionProvider = ({ children, session }: ProviderProps<{ session: Session
 	return <SessionContext.Provider value={{ session: _session }}>{children}</SessionContext.Provider>;
 };
 
-export { SessionProvider, useSession, useUser };
+const TimezoneOffsetProvider = ({ children }: ProviderProps) => {
+	React.useEffect(() => {
+		void actions.app.users.setTimezoneOffset(new Date().getTimezoneOffset() * -1);
+	}, []);
+
+	return children;
+};
+
+export { SessionProvider, useSession, useUser, TimezoneOffsetProvider };

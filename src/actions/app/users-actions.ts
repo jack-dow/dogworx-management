@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { eq, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -135,4 +136,28 @@ const getUserById = createServerAction(async (id: string) => {
 });
 type UserById = ExtractServerActionData<typeof getUserById>;
 
-export { listUsers, type UsersList, searchUsers, type UsersSearch, getUserById, type UserById };
+// eslint-disable-next-line @typescript-eslint/require-await
+const setUserTimezoneOffset = createServerAction(async (offset: number) => {
+	const validation = z.number().safeParse(offset);
+
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues, data: null };
+	}
+
+	try {
+		cookies().set({
+			name: "timezoneOffset",
+			httpOnly: true,
+			path: "/",
+			sameSite: "lax",
+			secure: process.env.NODE_ENV === "production",
+			value: String(offset),
+		});
+
+		return { success: true, data: null };
+	} catch {
+		return { success: false, error: `Failed to set timezone offset to ${validation.data}`, data: null };
+	}
+});
+
+export { listUsers, type UsersList, searchUsers, type UsersSearch, getUserById, type UserById, setUserTimezoneOffset };
