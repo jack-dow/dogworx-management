@@ -3,9 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { BOOKING_TYPES_COLORS } from "~/components/manage-booking-types/booking-types-fields";
 import { Button } from "~/components/ui/button";
@@ -19,12 +16,11 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { type BookingsList } from "~/actions";
+import { type Dayjs } from "~/hooks/use-dayjs";
 import { cn } from "~/utils";
 
-dayjs.extend(customParseFormat);
-dayjs.extend(advancedFormat);
-
 function createBookingsTableColumns(
+	dayjs: Dayjs,
 	onDeleteClick: (booking: BookingsList["data"][number]) => void,
 ): ColumnDef<BookingsList["data"][number]>[] {
 	return [
@@ -78,7 +74,7 @@ function createBookingsTableColumns(
 				</div>
 			),
 			cell: ({ row }) => {
-				const date = dayjs(row.getValue("date"));
+				const date = dayjs.tz(row.getValue("date"));
 				const end = date.add(row.original.duration, "seconds");
 
 				return (
@@ -104,7 +100,7 @@ function createBookingsTableColumns(
 				</div>
 			),
 			cell: ({ row }) => {
-				const date = dayjs(row.getValue("date"));
+				const date = dayjs.tz(row.getValue("date"));
 				const end = date.add(row.original.duration, "seconds");
 
 				return (

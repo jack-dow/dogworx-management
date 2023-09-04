@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useFormContext } from "react-hook-form";
 
 import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
@@ -13,10 +11,9 @@ import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingTypesList, type DogById } from "~/actions";
 import { useUser } from "~/app/providers";
+import { useDayjs } from "~/hooks/use-dayjs";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { Booking } from "./booking";
-
-dayjs.extend(customParseFormat);
 
 function sortBookingsAscending(a: DogById["bookings"][number], b: DogById["bookings"][number]) {
 	if (a.date > b.date) {
@@ -73,6 +70,7 @@ function BookingsList({
 	tab: "past" | "future";
 	bookingTypes: BookingTypesList["data"];
 }) {
+	const { dayjs } = useDayjs();
 	const user = useUser();
 	const { toast } = useToast();
 	const form = useFormContext<ManageDogFormSchema>();
@@ -224,7 +222,7 @@ function BookingsList({
 								toast({
 									title: "Booking updated",
 									description: `Successfully updated booking to dog's ${
-										dayjs(booking.date).isBefore(dayjs()) ? "past" : "future"
+										dayjs.tz(booking.date).isBefore(dayjs.tz()) ? "past" : "future"
 									} bookings.`,
 								});
 
@@ -316,7 +314,7 @@ function BookingsList({
 									.search({
 										dogId: form.getValues("id"),
 										cursor,
-										after: tab === "past" ? undefined : dayjs().startOf("day").toDate(),
+										after: tab === "past" ? undefined : dayjs.tz().startOf("day").toDate(),
 										sortDirection: tab === "past" ? "desc" : "asc",
 									})
 									.then((result) => {

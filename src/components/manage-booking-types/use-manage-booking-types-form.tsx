@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -12,8 +10,6 @@ import { actions, type BookingTypeById, type BookingTypeInsert, type BookingType
 import { InsertBookingTypeSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue } from "~/utils";
-
-dayjs.extend(customParseFormat);
 
 const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
 	name: z.string().max(100).nonempty({ message: "Required" }),

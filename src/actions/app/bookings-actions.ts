@@ -219,14 +219,15 @@ const getBookingsByWeek = createServerAction(async (options?: { date?: string })
 					bookings.date,
 					date
 						.subtract(day === 0 ? 7 : day - 1, "day")
-						.subtract(12, "hours")
+						.subtract(14, "hours")
 						.toDate(),
 				),
 				lt(
 					bookings.date,
 					date
+						.endOf("day")
 						.add(day === 0 ? 0 : 7 - day, "day")
-						.add(14, "hours")
+						.add(12, "hours")
 						.toDate(),
 				),
 			),
