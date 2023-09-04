@@ -2,10 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import isToday from "dayjs/plugin/isToday";
-import updateLocale from "dayjs/plugin/updateLocale";
 
 import { type BOOKING_TYPES_COLORS } from "~/components/manage-booking-types/booking-types-fields";
 import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
@@ -16,20 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { type BookingsByWeek, type BookingTypesList } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
+import { useDayjs, type Dayjs, type DayjsDate } from "~/hooks/use-dayjs";
 import { useViewportSize } from "~/hooks/use-viewport-size";
 import { cn, secondsToHumanReadable } from "~/utils";
 
-dayjs.extend(advancedFormat);
-dayjs.extend(updateLocale);
-dayjs.extend(isToday);
-dayjs.updateLocale("en", {
-	weekStart: 1,
-});
-
 type Booking = BookingsByWeek[number];
 
-function areBookingsOverlapping(booking1: Booking, booking2: Booking): boolean {
+function areBookingsOverlapping(dayjs: Dayjs, booking1: Booking, booking2: Booking): boolean {
 	const startDateTime1 = dayjs(booking1.date);
 	const endDateTime1 = startDateTime1.add(booking1.duration, "second");
 
@@ -39,7 +29,7 @@ function areBookingsOverlapping(booking1: Booking, booking2: Booking): boolean {
 	return startDateTime1.isBefore(endDateTime2) && endDateTime1.isAfter(startDateTime2);
 }
 
-function groupOverlappingBookings(bookings: Booking[]) {
+function groupOverlappingBookings(dayjs: Dayjs, bookings: Booking[]) {
 	const groups: Booking[][] = [];
 	const seen = new Set();
 
@@ -80,7 +70,7 @@ function groupOverlappingBookings(bookings: Booking[]) {
 					continue;
 				}
 
-				if (areBookingsOverlapping(currentBooking, otherBooking)) {
+				if (areBookingsOverlapping(dayjs, currentBooking, otherBooking)) {
 					group.push(otherBooking);
 					seen.add(otherBooking.id);
 				}
@@ -139,19 +129,7 @@ function WeekView({
 }) {
 	const { toast } = useToast();
 
-	console.log(
-		bookings?.sort((a, b) => {
-			if (a.date > b.date) {
-				return 1;
-			}
-
-			if (a.date < b.date) {
-				return -1;
-			}
-
-			return 0;
-		}),
-	);
+	const { dayjs } = useDayjs();
 
 	const container = React.useRef<HTMLDivElement>(null);
 	const containerNav = React.useRef<HTMLDivElement>(null);
@@ -170,7 +148,7 @@ function WeekView({
 
 	const [isManageBookingDialogOpen, setIsManageBookingDialogOpen] = React.useState(false);
 	const [selectedBooking, setSelectedBooking] = React.useState<BookingsByWeek[number] | undefined>(undefined);
-	const [lastSelectedDate, setLastSelectedDate] = React.useState<dayjs.Dayjs | undefined>(undefined);
+	const [lastSelectedDate, setLastSelectedDate] = React.useState<DayjsDate | undefined>(undefined);
 
 	const [isPreviewCardOpen, setIsPreviewCardOpen] = React.useState(false);
 
@@ -209,7 +187,7 @@ function WeekView({
 		for (const booking of bookings) {
 			const date = dayjs(booking.date);
 
-			if (dayjs(booking.date).isBefore(startOfWeek) || dayjs(booking.date).isAfter(endOfWeek)) {
+			if (date.isBefore(startOfWeek) || date.isAfter(endOfWeek)) {
 				continue;
 			}
 
@@ -353,7 +331,7 @@ function WeekView({
 											</div>
 										);
 									})}
-									{groupOverlappingBookings(bookingsOneDayOrLonger).map((bookings) => {
+									{groupOverlappingBookings(dayjs, bookingsOneDayOrLonger).map((bookings) => {
 										return bookings.map((booking) => {
 											const bookingStart = dayjs(booking.date);
 											const bookingEnd = bookingStart.add(booking.duration, "seconds");
@@ -547,7 +525,7 @@ function WeekView({
 											setLastSelectedDate(date);
 										}}
 									>
-										{groupOverlappingBookings(bookingsLessThanOneDay).map((bookings) => {
+										{groupOverlappingBookings(dayjs, bookingsLessThanOneDay).map((bookings) => {
 											return bookings.map((booking, index) => {
 												const bookingStart = dayjs(booking.date);
 												// Convert time to fraction. e.g. 10:30 AM => 10.5
@@ -642,6 +620,8 @@ type BookingPopoverProps = {
 };
 
 function BookingPopover({ booking, trigger, onEditClick, setIsPreviewCardOpen }: BookingPopoverProps) {
+	const { dayjs } = useDayjs();
+
 	const bookingStart = dayjs(booking.date);
 	const bookingEnd = bookingStart.add(booking.duration, "seconds");
 	return (

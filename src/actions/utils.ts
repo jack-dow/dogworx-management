@@ -85,6 +85,13 @@ async function getServerUser() {
 	return sessionTokenData.user;
 }
 
+function getTimezone() {
+	const cookieStore = cookies();
+	const timezoneCookie = cookieStore.get("timezone");
+
+	return timezoneCookie?.value ?? null;
+}
+
 type PaginationSearchParams = {
 	page?: number;
 	limit?: number;
@@ -166,6 +173,7 @@ export {
 	SearchTermSchema,
 	separateActionsLogSchema,
 	getServerSession,
+	getTimezone,
 	getServerUser,
 	type PaginationSearchParams,
 	validatePaginationSearchParams,

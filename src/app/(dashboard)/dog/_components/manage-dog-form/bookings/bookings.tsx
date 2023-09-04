@@ -13,7 +13,7 @@ import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type BookingTypesList, type DogById } from "~/actions";
-import { useUser } from "~/app/(dashboard)/providers";
+import { useUser } from "~/app/providers";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { BookingsList } from "./bookings-list";
 
