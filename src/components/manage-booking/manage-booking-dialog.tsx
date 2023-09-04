@@ -75,7 +75,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="my-4 max-h-screen overflow-y-auto xl:max-w-2xl 2xl:max-w-3xl">
+				<DialogContent className="max-h-screen overflow-y-auto xl:max-w-2xl 2xl:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Booking</DialogTitle>
 						<DialogDescription>
@@ -131,7 +131,7 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 	return (
 		<Form {...form}>
 			<form
-				className="grid gap-4"
+				className="flex flex-col gap-4"
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();

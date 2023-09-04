@@ -59,35 +59,82 @@ function MobileNavigation() {
 									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
 
 									return (
-										<li key={item.name}>
-											<a
-												aria-disabled={item.disabled}
-												href={item.disabled ? "#" : item.href}
-												className={cn(
-													current
-														? "bg-slate-50 text-indigo-600"
-														: !item.disabled
-														? "text-slate-700 hover:text-indigo-600 hover:bg-slate-50"
-														: "opacity-25 cursor-not-allowed text-slate-700 hover:bg-transparent hover:text-slate-700",
-													"group flex gap-x-4 rounded-md p-2 font-medium text-base leading-6 items-center",
-													"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-												)}
-											>
-												<item.icon
+										<React.Fragment key={item.name}>
+											<li>
+												<a
+													aria-disabled={item.disabled}
+													href={item.disabled ? "#" : item.href}
 													className={cn(
 														current
-															? "text-indigo-600"
+															? "bg-slate-50 text-indigo-600"
 															: !item.disabled
-															? "text-slate-400 group-hover:text-indigo-600"
-															: "cursor-not-allowed text-slate-700 hover:text-slate-700",
-
-														"h-5 w-5 shrink-0",
+															? "text-slate-700 hover:text-indigo-600 hover:bg-slate-50"
+															: "opacity-25 cursor-not-allowed text-slate-700 hover:bg-transparent hover:text-slate-700",
+														"group flex gap-x-4 rounded-md p-2 font-medium text-base leading-6 items-center",
+														"focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 													)}
-													aria-hidden="true"
-												/>
-												{item.name}
-											</a>
-										</li>
+												>
+													<item.icon
+														className={cn(
+															current
+																? "text-indigo-600"
+																: !item.disabled
+																? "text-slate-400 group-hover:text-indigo-600"
+																: "cursor-not-allowed text-slate-700 hover:text-slate-700",
+
+															"h-5 w-5 shrink-0",
+														)}
+														aria-hidden="true"
+													/>
+													{item.name}
+												</a>
+											</li>
+											{current && item.subNavigation && (
+												<ul role="list" className="flex flex-1 flex-col gap-y-2">
+													{Object.values(item.subNavigation).map((subItem, index) => {
+														const current =
+															subItem.href === pathname || pathname.startsWith(`${subItem.href.slice(0, -1)}/`);
+
+														const isLast = index === item.subNavigation.length - 1;
+
+														return (
+															<li key={subItem.name}>
+																<div className={cn("relative flex justify-between")}>
+																	{!isLast ? (
+																		<span
+																			className="absolute left-[18px] top-6 -ml-px h-full w-0.5 bg-slate-200"
+																			aria-hidden="true"
+																		/>
+																	) : null}
+
+																	<Link
+																		href={subItem.href}
+																		className={cn(
+																			current
+																				? "bg-slate-50 text-indigo-600"
+																				: "text-slate-500 hover:text-indigo-600 hover:bg-slate-50",
+																			"relative w-full group flex gap-x-3 rounded-md p-2 font-normal text-base leading-6 items-center",
+																		)}
+																	>
+																		<div className="flex h-5 w-5 shrink-0 items-center justify-center">
+																			<div className="flex h-3 w-3 items-center justify-center rounded-full border border-input bg-white shadow">
+																				<div
+																					className={cn(
+																						"h-1.5 w-1.5 rounded-full transition-colors",
+																						current ? "bg-primary" : "bg-muted group-hover:bg-indigo-600",
+																					)}
+																				/>
+																			</div>
+																		</div>
+																		{subItem.name}
+																	</Link>
+																</div>
+															</li>
+														);
+													})}
+												</ul>
+											)}
+										</React.Fragment>
 									);
 								})}
 							</ul>

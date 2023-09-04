@@ -154,7 +154,7 @@ function BookingFields({
 				)}
 			/>
 
-			<div className="grid grid-cols-3 gap-4 xl:grid-cols-4">
+			<div className="grid grid-cols-3 gap-4">
 				<FormField
 					control={form.control}
 					name="date"
@@ -233,11 +233,14 @@ function BookingFields({
 																form.clearErrors("details");
 															}
 
+															const current = dayjs(field.value);
 															const date = dayjs(value);
 															const now = dayjs();
 
 															const val = roundDateToNearest15Minutes(
-																date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
+																field.value && timeInputValue
+																	? date.set("hour", current.hour()).set("minute", current.minute()).toDate()
+																	: date.set("hour", now.hour()).set("minute", now.minute()).toDate(),
 															);
 
 															field.onChange(val);
@@ -278,63 +281,62 @@ function BookingFields({
 						);
 					}}
 				/>
+			</div>
+			<FormField
+				control={form.control}
+				name="duration"
+				render={({ field }) => (
+					<FormItem className="col-span-3 xl:col-span-1">
+						<FormLabel>Duration</FormLabel>
+						<FormControl>
+							<Input
+								autoComplete="off"
+								value={durationInputValue}
+								onChange={(e) => {
+									setDurationInputValue(e.target.value);
 
-				<FormField
-					control={form.control}
-					name="duration"
-					render={({ field }) => (
-						<FormItem className="col-span-3 xl:col-span-1">
-							<FormLabel>Duration</FormLabel>
-							<FormControl>
-								<Input
-									autoComplete="off"
-									value={durationInputValue}
-									onChange={(e) => {
-										setDurationInputValue(e.target.value);
+									const value = convertToNumber(e.target.value) ?? e.target.value;
 
-										const value = convertToNumber(e.target.value) ?? e.target.value;
+									if (value) {
+										// If value is just a number, assume it is in minutes
+										if (typeof value === "number") {
+											field.onChange(value * 60, { shouldValidate: true });
+										} else {
+											// Otherwise see if it is a valid time
+											let parsed = ms(value);
 
-										if (value) {
-											// If value is just a number, assume it is in minutes
-											if (typeof value === "number") {
-												field.onChange(value * 60, { shouldValidate: true });
-											} else {
-												// Otherwise see if it is a valid time
-												let parsed = ms(value);
+											if (parsed > 86400000) {
+												parsed = 86400000;
+											}
 
-												if (parsed > 86400000) {
-													parsed = 86400000;
-												}
-
-												// If it's a valid time, convert it to seconds and set it
-												if (parsed) {
-													field.onChange(parsed / 1000, { shouldValidate: true });
-												}
+											// If it's a valid time, convert it to seconds and set it
+											if (parsed) {
+												field.onChange(parsed / 1000, { shouldValidate: true });
 											}
 										}
-									}}
-									onBlur={() => {
-										if (!durationInputValue) {
-											field.onChange(undefined);
-											return;
-										}
+									}
+								}}
+								onBlur={() => {
+									if (!durationInputValue) {
+										field.onChange(undefined);
+										return;
+									}
 
-										const duration = form.getValues("duration");
+									const duration = form.getValues("duration");
 
-										if (duration) {
-											setDurationInputValue(secondsToHumanReadable(duration));
-											return;
-										}
+									if (duration) {
+										setDurationInputValue(secondsToHumanReadable(duration));
+										return;
+									}
 
-										setDurationInputValue("");
-									}}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-			</div>
+									setDurationInputValue("");
+								}}
+							/>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
 
 			<div className="grid gap-4 xl:grid-cols-2">
 				<FormField

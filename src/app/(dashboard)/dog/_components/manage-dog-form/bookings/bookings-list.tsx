@@ -173,10 +173,8 @@ function BookingsList({
 				setOpen={(value) => {
 					if (value === false) {
 						setIsManageBookingDialogOpen(false);
-						setTimeout(() => {
-							setEditingBooking(null);
-							setCopiedBooking(null);
-						}, 205);
+						setEditingBooking(null);
+						setCopiedBooking(null);
 					}
 				}}
 				withoutTrigger

@@ -80,7 +80,7 @@ function Booking({
 							<p className="mt-0.5 text-sm text-slate-500">
 								{date.day() !== end.day() ? (
 									<>
-										{date.format("MMMM Do, YYYY, h:mma")} - {end.format("h:mma, MMMM Do, YYYY")}
+										{date.format("MMMM Do, YYYY, h:mma")} - {end.format("MMMM Do, YYYY, h:mma")}
 									</>
 								) : (
 									<>
