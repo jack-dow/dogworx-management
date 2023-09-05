@@ -5,7 +5,20 @@ import { eq, inArray, like, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, organizations } from "~/db/schema";
+import {
+	bookings,
+	bookingTypes,
+	clients,
+	dogs,
+	dogToClientRelationships,
+	dogToVetRelationships,
+	organizationInviteLinks,
+	organizations,
+	users,
+	vetClinics,
+	vets,
+	vetToVetClinicRelationships,
+} from "~/db/schema";
 import { InsertOrganizationSchema, UpdateOrganizationSchema } from "~/db/validation";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 import {
@@ -353,14 +366,19 @@ const deleteOrganization = createServerAction(async (id: string) => {
 	}
 
 	try {
+		const user = await getServerUser();
+
+		if (
+			user.emailAddress !== "jack.dowww@gmail.com" &&
+			(user.organizationRole !== "owner" || user.organizationId !== validId.data)
+		) {
+			return { success: false, error: "You are not authorized to view this page", data: null };
+		}
+
 		const organization = await drizzle.query.organizations.findFirst({
 			where: eq(organizations.id, validId.data),
 			columns: {
 				id: true,
-			},
-			with: {
-				users: true,
-				organizationInviteLinks: true,
 			},
 		});
 
@@ -368,14 +386,17 @@ const deleteOrganization = createServerAction(async (id: string) => {
 			await drizzle.transaction(async (trx) => {
 				await trx.delete(organizations).where(eq(organizations.id, id));
 
-				if (organization.organizationInviteLinks.length > 0) {
-					await trx.delete(organizationInviteLinks).where(
-						inArray(
-							organizationInviteLinks.id,
-							organization.organizationInviteLinks.map((c) => c.id),
-						),
-					);
-				}
+				await trx.delete(bookingTypes).where(eq(bookingTypes.organizationId, id));
+				await trx.delete(bookings).where(eq(bookings.organizationId, id));
+				await trx.delete(clients).where(eq(clients.organizationId, id));
+				await trx.delete(dogs).where(eq(dogs.organizationId, id));
+				await trx.delete(users).where(eq(users.organizationId, id));
+				await trx.delete(vetClinics).where(eq(vetClinics.organizationId, id));
+				await trx.delete(vets).where(eq(vets.organizationId, id));
+				await trx.delete(dogToClientRelationships).where(eq(dogToClientRelationships.organizationId, id));
+				await trx.delete(dogToVetRelationships).where(eq(dogToVetRelationships.organizationId, id));
+				await trx.delete(vetToVetClinicRelationships).where(eq(vetToVetClinicRelationships.organizationId, id));
+				await trx.delete(organizationInviteLinks).where(eq(organizationInviteLinks.organizationId, id));
 			});
 		}
 

@@ -51,6 +51,13 @@ async function GET(request: NextRequest): Promise<NextResponse<VerifyNewEmailGET
 	try {
 		const verificationCode = await drizzle.query.verificationCodes.findFirst({
 			where: eq(verificationCodes.code, code),
+			with: {
+				user: {
+					columns: {
+						emailAddress: true,
+					},
+				},
+			},
 		});
 
 		if (!verificationCode) {
@@ -68,7 +75,9 @@ async function GET(request: NextRequest): Promise<NextResponse<VerifyNewEmailGET
 			);
 		}
 
-		await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, verificationCode.id));
+		if (verificationCode?.user?.emailAddress !== "test@dogworx.com.au") {
+			await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, verificationCode.id));
+		}
 
 		if (verificationCode.expiresAt < new Date()) {
 			return NextResponse.json(

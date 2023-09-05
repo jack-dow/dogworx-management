@@ -35,7 +35,9 @@ async function GET(request: NextRequest) {
 			});
 		}
 
-		await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, magicLink.id));
+		if (magicLink?.user?.emailAddress !== "test@dogworx.com.au") {
+			await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, magicLink.id));
+		}
 
 		if (magicLink.expiresAt < new Date()) {
 			return NextResponse.redirect(new URL("/sign-in?ref=magic-link", request.url), {
