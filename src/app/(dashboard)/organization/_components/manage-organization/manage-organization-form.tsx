@@ -14,6 +14,7 @@ import { hasTrueValue } from "~/utils";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
+import { OrganizationUsers } from "./organization-users";
 import { useManageOrganizationForm, type UseManageOrganizationFormProps } from "./use-manage-organization-form";
 
 function ManageOrganizationForm({ organization, onSubmit }: UseManageOrganizationFormProps) {
@@ -65,6 +66,10 @@ function ManageOrganizationForm({ organization, onSubmit }: UseManageOrganizatio
 					<Separator />
 
 					<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} variant="form" />
+
+					<Separator />
+
+					<OrganizationUsers variant="form" existingUsers={organization?.users ?? []} />
 
 					<Separator />
 

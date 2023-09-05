@@ -12,20 +12,23 @@ import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUse
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue } from "~/utils";
 
+const OrganizationUserSchema = SelectUserSchema.pick({
+	id: true,
+	givenName: true,
+	familyName: true,
+	emailAddress: true,
+	organizationRole: true,
+	profileImageUrl: true,
+});
+
 const ManageOrganizationFormSchema = InsertOrganizationSchema.extend({
 	name: z.string().max(50).nonempty({ message: "Required" }),
 	organizationInviteLinks: z.array(
 		InsertOrganizationInviteLinkSchema.extend({
-			user: SelectUserSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				organizationRole: true,
-				profileImageUrl: true,
-			}),
+			user: OrganizationUserSchema,
 		}),
 	),
+	users: z.array(OrganizationUserSchema),
 });
 type ManageOrganizationFormSchema = z.infer<typeof ManageOrganizationFormSchema>;
 

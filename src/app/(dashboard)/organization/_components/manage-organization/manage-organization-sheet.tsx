@@ -24,6 +24,7 @@ import { hasTrueValue } from "~/utils";
 import { OrganizationDeleteDialog } from "./organization-delete-dialog";
 import { OrganizationInformation } from "./organization-information";
 import { OrganizationInviteLinks } from "./organization-invite-links";
+import { OrganizationUsers } from "./organization-users";
 import { useManageOrganizationForm, type UseManageOrganizationFormProps } from "./use-manage-organization-form";
 
 interface ManageOrganizationSheetProps<OrganizationProp extends OrganizationById | undefined>
@@ -165,6 +166,10 @@ function ManageOrganizationSheetForm<OrganizationProp extends OrganizationById |
 				<Separator className="my-4" />
 
 				<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} variant="sheet" />
+
+				<Separator className="my-4" />
+
+				<OrganizationUsers variant="form" existingUsers={organization?.users ?? []} />
 
 				<Separator className="my-4" />
 
