@@ -216,7 +216,7 @@ function BookingFields({
 												</div>
 												<Calendar
 													mode="single"
-													selected={dayjs.tz(field.value).toDate() ?? undefined}
+													selected={field.value ? dayjs.tz(field.value).toDate() : undefined}
 													month={month}
 													onMonthChange={setMonth}
 													onSelect={(value) => {
@@ -354,7 +354,7 @@ function BookingFields({
 
 											return result.data;
 										}}
-										resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+										resultLabel={(result) => `${result.givenName ?? "Unnamed Dog"} ${result.familyName}`}
 										onSelectChange={(result) => {
 											field.onChange(result?.id ?? "");
 										}}

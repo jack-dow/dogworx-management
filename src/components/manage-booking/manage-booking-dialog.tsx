@@ -107,6 +107,7 @@ interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefin
 	onConfirmCancel: () => void;
 	isNew: boolean;
 	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
+	dog?: BookingById["dog"];
 }
 
 function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
@@ -119,10 +120,16 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 	defaultValues,
 	bookingTypes,
 	isNew,
+	dog,
 }: ManageBookingDialogFormProps<BookingProp>) {
 	const { toast } = useToast();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, defaultValues, onSubmit, bookingTypes });
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({
+		booking,
+		defaultValues: { ...defaultValues, dogId: defaultValues?.dogId ?? dog?.id },
+		onSubmit,
+		bookingTypes,
+	});
 
 	React.useEffect(() => {
 		setIsDirty(form.formState.isDirty);
@@ -149,7 +156,7 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 					})(e);
 				}}
 			>
-				<BookingFields variant="dialog" bookingTypes={bookingTypes} />
+				<BookingFields variant="dialog" dog={dog} bookingTypes={bookingTypes} />
 
 				<DialogFooter className="mt-2">
 					{!isNew && (

@@ -155,7 +155,7 @@ function DesktopSidebar() {
 												{session.user.familyName?.[0]}
 											</div>
 										)}
-										<div className="flex flex-col items-center justify-start">
+										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
 											<span aria-hidden="true" className="block text-xs text-muted-foreground">
 												Administrator

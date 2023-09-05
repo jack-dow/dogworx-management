@@ -36,19 +36,6 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 		organizationRole: true,
 		profileImageUrl: true,
 	}).nullish(),
-}).superRefine((val, ctx) => {
-	if (!val.bookingTypeId) {
-		if (dayjs(val.date).isBefore(dayjs()) && !val.details) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.too_small,
-				minimum: 1,
-				type: "string",
-				inclusive: true,
-				message: "Details must be provided for past bookings",
-				path: ["details"],
-			});
-		}
-	}
 });
 
 // Had to add `Type` suffix because was getting "Cannot access before initialization" error

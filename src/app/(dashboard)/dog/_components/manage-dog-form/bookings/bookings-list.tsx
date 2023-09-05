@@ -175,6 +175,17 @@ function BookingsList({
 						setCopiedBooking(null);
 					}
 				}}
+				dog={
+					isNew
+						? {
+								id: form.getValues("id"),
+								givenName: form.getValues("givenName"),
+								familyName: form.getValues("familyName") ?? "",
+								breed: form.getValues("breed"),
+								color: form.getValues("color"),
+						  }
+						: undefined
+				}
 				withoutTrigger
 				booking={
 					editingBooking
@@ -258,6 +269,24 @@ function BookingsList({
 								setIsManageBookingDialogOpen(true);
 							}}
 							onDelete={() => {
+								if (isNew) {
+									const bookingsActions = { ...form.getValues("actions.bookings") };
+
+									setBookings((prev) => prev.filter((f) => f.id !== booking.id));
+
+									if (bookingsActions[booking.id]?.type === "INSERT") {
+										delete bookingsActions[booking.id];
+									} else {
+										bookingsActions[booking.id] = {
+											type: "DELETE",
+											payload: booking.id,
+										};
+									}
+
+									form.setValue("actions.bookings", bookingsActions);
+									return;
+								}
+
 								setConfirmBookingDelete(booking.id);
 							}}
 						/>

@@ -261,15 +261,10 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 			with: {
 				// Need to fetch the dogId of all the dogToClientRelationships that are being deleted, so we can update the family name of the dogs
 				dogToClientRelationships: {
-					where: (dogToClientRelationships) =>
-						inArray(
-							dogToClientRelationships.id,
-							dogToClientRelationshipsActionsLog.deletes.length > 0
-								? dogToClientRelationshipsActionsLog.deletes
-								: ["0"],
-						),
 					columns: {
+						id: true,
 						dogId: true,
+						relationship: true,
 					},
 				},
 			},
@@ -290,7 +285,11 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 			if (dogToClientRelationshipsActionsLog.inserts.length > 0) {
 				await trx.insert(dogToClientRelationships).values(dogToClientRelationshipsActionsLog.inserts);
 
-				dogToClientRelationshipsActionsLog.inserts.forEach(({ dogId }) => dogsToUpdateFamilyNameIds.add(dogId));
+				dogToClientRelationshipsActionsLog.inserts.forEach(({ relationship, dogId }) => {
+					if (relationship === "owner") {
+						dogsToUpdateFamilyNameIds.add(dogId);
+					}
+				});
 			}
 
 			if (dogToClientRelationshipsActionsLog.updates.length > 0) {
@@ -304,6 +303,14 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 								eq(dogToClientRelationships.id, relationship.id),
 							),
 						);
+
+					const existingRelationship = existingClient.dogToClientRelationships.find(({ id }) => id === relationship.id);
+					if (
+						existingRelationship &&
+						(relationship.relationship === "owner" || relationship.relationship !== existingRelationship?.relationship)
+					) {
+						dogsToUpdateFamilyNameIds.add(existingRelationship?.dogId);
+					}
 				}
 			}
 
@@ -317,7 +324,11 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 						),
 					);
 
-				existingClient.dogToClientRelationships.forEach(({ dogId }) => dogsToUpdateFamilyNameIds.add(dogId));
+				existingClient.dogToClientRelationships.forEach(({ id, dogId }) => {
+					if (dogToClientRelationshipsActionsLog.deletes.includes(id)) {
+						dogsToUpdateFamilyNameIds.add(dogId);
+					}
+				});
 			}
 
 			// Ensure this clients dogs have the correct family name

@@ -73,7 +73,11 @@ function Bookings({
 							if (!isNew && value === "future" && !hasFetchedInitialFutureSessions) {
 								setIsLoadingInitialFutureSessions(true);
 								actions.app.bookings
-									.search({ dogId: form.getValues("id"), after: dayjs.tz().startOf("day").toDate(), sortDirection: "asc" })
+									.search({
+										dogId: form.getValues("id"),
+										after: dayjs.tz().startOf("day").toDate(),
+										sortDirection: "asc",
+									})
 									.then((bookings) => {
 										if (bookings.success) {
 											setFutureBookings(bookings.data);
@@ -123,6 +127,17 @@ function Bookings({
 										<span className="sr-only">Create booking</span>
 										<PlusIcon className="h-5 w-5" />
 									</Button>
+								}
+								dog={
+									isNew
+										? {
+												id: form.getValues("id"),
+												givenName: form.getValues("givenName"),
+												familyName: form.getValues("familyName") ?? "",
+												breed: form.getValues("breed"),
+												color: form.getValues("color"),
+										  }
+										: undefined
 								}
 								onSubmit={async (booking) => {
 									if (isNew) {
