@@ -93,7 +93,7 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 		);
 	} catch (error) {
 		if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
-			if (error.message.includes("code = AlreadyExists")) {
+			if (error.message.includes("code = AlreadyExists") || error.message.includes("Duplicate")) {
 				return NextResponse.json(
 					{
 						success: false,
