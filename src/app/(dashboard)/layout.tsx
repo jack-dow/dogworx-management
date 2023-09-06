@@ -54,7 +54,7 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 						className={cn(
 							"relative isolate flex h-full flex-col",
 							prefersDarkMode
-								? "flex-1 flex-col lg:rounded-tl-[2rem] bg-background p-6 lg:p-10"
+								? "flex-1 flex-col lg:rounded-tl-[2rem] bg-background p-5 lg:p-9"
 								: " sm:p-4 md:p-6 lg:px-8",
 						)}
 					>
@@ -63,7 +63,7 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 							className={cn(
 								"mx-auto w-full max-w-screen-2xl rounded-md overflow-y-auto overflow-x-hidden",
 								prefersDarkMode
-									? "bg-white"
+									? "bg-white p-1"
 									: "bg-white/80 py-6 px-4 sm:px-6 sm:py-8 md:px-8 lg:p-10 shadow backdrop-blur-3xl",
 							)}
 						>
