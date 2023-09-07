@@ -54,7 +54,8 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 						className={cn(
 							"relative isolate flex h-full flex-col",
 							prefersDarkMode
-								? "flex-1 flex-col lg:rounded-tl-[2rem] bg-background p-5 lg:p-9"
+								? // The border-background fixes a weird bug on safari where you can see the slate background color at the bottom of this element
+								  "flex-1 flex-col lg:rounded-tl-[2rem] bg-background p-5 lg:p-9 border border-background"
 								: " sm:p-4 md:p-6 lg:px-8",
 						)}
 					>

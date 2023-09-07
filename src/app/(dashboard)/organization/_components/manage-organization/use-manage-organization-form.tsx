@@ -60,6 +60,7 @@ function useManageOrganizationForm(props: UseManageOrganizationFormProps) {
 			id: props.organization?.id ?? generateId(),
 			actions: {
 				organizationInviteLinks: {},
+				users: {},
 			},
 		},
 	});

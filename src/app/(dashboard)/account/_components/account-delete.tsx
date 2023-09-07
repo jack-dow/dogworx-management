@@ -67,7 +67,7 @@ function AccountDelete() {
 										e.stopPropagation();
 										setIsDeletingAccount(true);
 										actions.auth.user
-											.delete(user.id)
+											.delete()
 											.then(() => {
 												void router.push("/sign-in");
 												toast({

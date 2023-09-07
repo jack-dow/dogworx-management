@@ -16,6 +16,7 @@ export const InsertUserSchema = createInsertSchema(users).omit({ createdAt: true
 export type InsertUserSchema = z.infer<typeof InsertUserSchema>;
 
 export const UpdateUserSchema = InsertUserSchema.pick({
+	id: true,
 	name: true,
 	givenName: true,
 	familyName: true,
@@ -26,6 +27,8 @@ export const UpdateUserSchema = InsertUserSchema.pick({
 	bannedUntil: true,
 });
 export type UpdateUserSchema = z.infer<typeof UpdateUserSchema>;
+
+const UsersActionsLogSchema = createActionsLogSchema(InsertUserSchema, UpdateUserSchema);
 
 // -----------------------------------------------------------------------------
 // Sessions
@@ -86,6 +89,7 @@ export const InsertOrganizationSchema = createInsertSchema(organizations)
 		maxUsers: z.number().int().positive(),
 		actions: z.object({
 			organizationInviteLinks: OrganizationInviteLinksActionsLogSchema,
+			users: UsersActionsLogSchema,
 		}),
 	});
 export type InsertOrganizationSchema = z.infer<typeof InsertOrganizationSchema>;

@@ -58,10 +58,6 @@ export const navigation = [
 		icon: SettingsIcon,
 		disabled: false,
 		subNavigation: [
-			// {
-			// 	name: "General",
-			// 	href: "/settings/general",
-			// },
 			{
 				name: "Booking types",
 				href: "/settings/booking-types",
@@ -160,11 +156,16 @@ function DarkDesktopSidebar() {
 																		)}
 																	>
 																		<div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
-																			<div className="flex h-3 w-3 items-center justify-center rounded-full border border-input bg-slate-300 shadow">
+																			<div
+																				className={cn(
+																					"flex h-2 w-2 items-center justify-center rounded-full border  shadow",
+																					current ? "bg-input border-input" : "bg-slate-600 border-slate-600",
+																				)}
+																			>
 																				<div
 																					className={cn(
-																						"h-1.5 w-1.5 rounded-full transition-colors",
-																						current ? "bg-primary" : "bg-muted group-hover:bg-primary",
+																						"h-1 w-1 rounded-full transition-colors bg-slate-900",
+																						!current && "group-hover:bg-primary",
 																					)}
 																				/>
 																			</div>

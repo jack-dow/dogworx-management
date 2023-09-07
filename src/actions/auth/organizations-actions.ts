@@ -200,10 +200,36 @@ const getCurrentOrganization = createServerAction(async () => {
 
 		const data = await drizzle.query.organizations.findFirst({
 			where: eq(organizations.id, user.organizationId),
+			with: {
+				organizationInviteLinks: {
+					with: {
+						user: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								emailAddress: true,
+								organizationRole: true,
+								profileImageUrl: true,
+							},
+						},
+					},
+				},
+				users: {
+					columns: {
+						id: true,
+						givenName: true,
+						familyName: true,
+						emailAddress: true,
+						organizationRole: true,
+						profileImageUrl: true,
+					},
+				},
+			},
 		});
 
 		return { success: true, data };
-	} catch {
+	} catch (error) {
 		return { success: false, error: `Failed to get the users current organization`, data: null };
 	}
 });
@@ -248,12 +274,17 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 		const { actions, ...data } = validValues.data;
 
 		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions.organizationInviteLinks, data.id);
+		const usersActionsLog = separateActionsLogSchema(actions.users, data.id);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.insert(organizations).values(data);
 
 			if (organizationInviteLinksActionsLog.inserts.length > 0) {
 				await trx.insert(organizationInviteLinks).values(organizationInviteLinksActionsLog.inserts);
+			}
+
+			if (usersActionsLog.inserts.length > 0) {
+				await trx.insert(users).values(usersActionsLog.inserts);
 			}
 		});
 
@@ -304,10 +335,14 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 		const { id, actions, ...data } = validValues.data;
 
 		const organizationInviteLinksActionsLog = separateActionsLogSchema(actions?.organizationInviteLinks ?? {}, id);
+		const usersActionsLog = separateActionsLogSchema(actions?.users ?? {}, id);
 
 		await drizzle.transaction(async (trx) => {
 			await trx.update(organizations).set(data).where(eq(organizations.id, id));
 
+			//
+			// ## Invite Links
+			//
 			if (organizationInviteLinksActionsLog.inserts.length > 0) {
 				await trx.insert(organizationInviteLinks).values(organizationInviteLinksActionsLog.inserts);
 			}
@@ -325,6 +360,23 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 				await trx
 					.delete(organizationInviteLinks)
 					.where(inArray(organizationInviteLinks.id, organizationInviteLinksActionsLog.deletes));
+			}
+
+			//
+			// ## Users
+			//
+			if (usersActionsLog.inserts.length > 0) {
+				await trx.insert(users).values(usersActionsLog.inserts);
+			}
+
+			if (usersActionsLog.updates.length > 0) {
+				for (const user of usersActionsLog.updates) {
+					await trx.update(users).set(user).where(eq(users.id, user.id));
+				}
+			}
+
+			if (usersActionsLog.deletes.length > 0) {
+				await trx.delete(users).where(inArray(users.id, usersActionsLog.deletes));
 			}
 		});
 

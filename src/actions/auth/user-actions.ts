@@ -4,14 +4,13 @@ import { cookies } from "next/headers";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { and, eq } from "drizzle-orm";
-import { z } from "zod";
+import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
 import { users } from "~/db/schema";
 import { UpdateUserSchema } from "~/db/validation";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { createServerAction, getServerSession, getServerUser } from "../utils";
+import { createServerAction, getServerUser } from "../utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -24,14 +23,17 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 	}
 
 	try {
-		const currentSession = await getServerSession();
+		const user = await getServerUser();
 
-		await drizzle.update(users).set(validation.data).where(eq(users.id, currentSession.user.id));
+		await drizzle
+			.update(users)
+			.set({ ...validation.data, id: user.id })
+			.where(eq(users.id, user.id));
 
 		const newSessionToken = await createSessionJWT({
-			id: currentSession.id,
+			id: user.id,
 			user: {
-				...currentSession.user,
+				...user,
 				...validation.data,
 			},
 		});
@@ -47,23 +49,24 @@ const updateUser = createServerAction(async (data: UpdateUserSchema) => {
 	}
 });
 
-const deleteUser = createServerAction(async (id: string) => {
-	const validation = z.string().safeParse(id);
-
-	if (!validation.success) {
-		return { success: false, error: validation.error.issues, data: null };
-	}
-
+const deleteUser = createServerAction(async () => {
 	try {
 		const user = await getServerUser();
 
-		if (user.organizationRole === "member" && user.id !== validation.data) {
-			return { success: false, error: "You can only delete your own account", data: null };
+		if (user.organizationRole === "owner") {
+			return {
+				success: false,
+				error: "You must transfer ownership of your organization before you can delete your account.",
+				data: null,
+			};
 		}
 
-		await drizzle
-			.delete(users)
-			.where(and(eq(users.organizationId, user.organizationId), eq(users.id, validation.data)));
+		await drizzle.delete(users).where(eq(users.id, user.id));
+
+		cookies().set({
+			...sessionCookieOptions,
+			value: "",
+		});
 
 		return { success: true, data: undefined };
 	} catch {

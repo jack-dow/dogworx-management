@@ -44,6 +44,11 @@ import {
 	searchOrganizations,
 	updateOrganization,
 } from "./auth/organizations-actions";
+import {
+	deleteOrganizationsUser,
+	insertOrganizationsUser,
+	updateOrganizationsUser,
+} from "./auth/organizations-users-actions";
 import { getCurrentSession, invalidateSession } from "./auth/sessions-actions";
 import { deleteUser, setUserTimezone, updateUser } from "./auth/user-actions";
 
@@ -114,6 +119,11 @@ const actions = {
 			update: updateOrganization,
 			delete: deleteOrganization,
 			getInviteLink: getOrganizationInviteLinkById,
+			users: {
+				insert: insertOrganizationsUser,
+				update: updateOrganizationsUser,
+				delete: deleteOrganizationsUser,
+			},
 		},
 		sessions: {
 			current: getCurrentSession,
@@ -138,5 +148,6 @@ export type * from "./app/vet-clinics-actions";
 export type * from "./app/vets-actions";
 
 export type * from "./auth/organizations-actions";
+export type * from "./auth/organizations-users-actions";
 export type * from "./auth/sessions-actions";
 export type * from "./auth/user-actions";

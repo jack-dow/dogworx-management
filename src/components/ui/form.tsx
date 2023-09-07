@@ -169,7 +169,7 @@ const formDescriptionClasses = cn("text-sm leading-6 text-muted-foreground");
 
 type FormSectionProps = {
 	title: string;
-	description: string;
+	description: React.ReactNode;
 	children: React.ReactNode;
 };
 

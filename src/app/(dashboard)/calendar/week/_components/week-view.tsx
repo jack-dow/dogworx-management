@@ -569,7 +569,7 @@ function WeekView({
 															trigger={
 																<button
 																	className={cn(
-																		"group absolute inset-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5",
+																		"group m-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5 flex-1",
 																		colors.card,
 																	)}
 																	onClick={(e) => {

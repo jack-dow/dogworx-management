@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { ClickToCopy } from "~/components/ui/click-to-copy";
@@ -36,8 +37,21 @@ function OrganizationUsers({
 		ManageOrganizationFormSchema["users"][number] | null
 	>(null);
 
-	function handleUserDelete(inviteLinkId: string) {
-		users.remove(users.fields.findIndex((inviteLink) => inviteLink.id === inviteLinkId));
+	function handleUserDelete(userId: string) {
+		const usersActions = { ...form.getValues("actions.users") };
+
+		users.remove(users.fields.findIndex((field) => field.id === userId));
+
+		if (usersActions[userId]?.type === "INSERT") {
+			delete usersActions[userId];
+		} else {
+			usersActions[userId] = {
+				type: "DELETE",
+				payload: userId,
+			};
+		}
+
+		form.setValue("actions.users", usersActions);
 	}
 
 	const SectionWrapper = variant === "sheet" ? FormSheetGroup : FormSection;
@@ -69,7 +83,19 @@ function OrganizationUsers({
 								>
 									<div className="flex shrink items-center gap-x-2 truncate">
 										<div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50 sm:flex">
-											<UserCircleIcon className="h-5 w-5" />
+											{user.profileImageUrl ? (
+												<Image
+													src={user.profileImageUrl}
+													alt="User's profile image"
+													width={128}
+													height={128}
+													className="aspect-square h-8 w-8 rounded-full object-cover"
+												/>
+											) : (
+												<>
+													<UserCircleIcon className="h-5 w-5" />
+												</>
+											)}
 										</div>
 
 										<div className="min-w-0 flex-auto ">
@@ -156,7 +182,13 @@ function OrganizationUsers({
 													<DropdownMenuItem
 														onSelect={(e) => {
 															e.preventDefault();
-															// onDelete(user);
+
+															if (existingUsers.find((u) => u.id === user.id)) {
+																setConfirmUserDelete(user);
+																return;
+															}
+
+															handleUserDelete(user.id);
 														}}
 													>
 														<TrashIcon className="mr-2 h-4 w-4" />

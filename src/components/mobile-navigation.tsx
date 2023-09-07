@@ -117,10 +117,10 @@ function MobileNavigation() {
 																		)}
 																	>
 																		<div className="flex h-5 w-5 shrink-0 items-center justify-center">
-																			<div className="flex h-3 w-3 items-center justify-center rounded-full border border-input bg-white shadow">
+																			<div className="flex h-2 w-2 items-center justify-center rounded-full border border-input bg-white shadow">
 																				<div
 																					className={cn(
-																						"h-1.5 w-1.5 rounded-full transition-colors",
+																						"h-1 w-1 rounded-full transition-colors",
 																						current ? "bg-primary" : "bg-muted group-hover:bg-indigo-600",
 																					)}
 																				/>

@@ -39,9 +39,24 @@ export async function middleware(request: NextRequest) {
 		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry) {
 			const session = await drizzle.query.sessions.findFirst({
 				where: (sessions, { eq }) => eq(sessions.id, sessionTokenData.id),
+				with: {
+					user: {
+						columns: {
+							id: true,
+							bannedAt: true,
+							bannedUntil: true,
+						},
+					},
+				},
 			});
 
-			if (!session || session.expiresAt < new Date()) {
+			if (
+				!session ||
+				session.expiresAt < new Date() ||
+				!session.user ||
+				(session.user.bannedAt && !session.user.bannedUntil) ||
+				(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date())
+			) {
 				if (session) {
 					await drizzle.delete(sessions).where(eq(sessions.id, sessionTokenData.id));
 				}

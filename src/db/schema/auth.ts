@@ -105,6 +105,8 @@ const organizations = mysqlTable("auth_organizations", {
 		.notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
 	maxUsers: unsignedSmallInt("max_users").notNull(),
+	// emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
+	// notifyAdminsAboutEmails: boolean("notify_admins_about_emails").notNull().default(false),
 	notes: text("notes"),
 });
 
