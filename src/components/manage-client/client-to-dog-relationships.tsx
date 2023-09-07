@@ -194,6 +194,7 @@ function ClientToDogRelationships({
 								dogToClientRelationship={dogToClientRelationship}
 								index={index}
 								onDelete={() => toggleDogToClientRelationship(dogToClientRelationship.dog)}
+								variant={variant}
 							/>
 						))}
 					</ul>
@@ -207,10 +208,12 @@ function ClientToDogRelationship({
 	dogToClientRelationship,
 	index,
 	onDelete,
+	variant,
 }: {
 	dogToClientRelationship: ManageClientFormSchema["dogToClientRelationships"][number];
 	index: number;
 	onDelete: () => void;
+	variant: "sheet" | "form";
 }) {
 	const form = useFormContext<ManageClientFormSchema>();
 	const pathname = usePathname();
@@ -276,7 +279,7 @@ function ClientToDogRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal align="end">
+								<SelectContent withoutPortal={variant === "sheet"} align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (
@@ -294,11 +297,11 @@ function ClientToDogRelationship({
 
 				<div className="flex items-center">
 					<DropdownMenu>
-						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent withoutPortal align="end">
+						<DropdownMenuContent withoutPortal={variant === "sheet"} align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
