@@ -71,8 +71,14 @@ export function mergeRelationships<Relationship extends { id: string; relationsh
 	return Object.values(newRelationships);
 }
 
-export function getBaseUrl() {
-	if (typeof window !== "undefined") return ""; // browser should use relative url
+export function getBaseUrl(options?: { absolute?: boolean }) {
+	if (typeof window !== "undefined") {
+		if (options?.absolute) {
+			return process.env.NEXT_PUBLIC_APP_URL ?? "";
+		}
+
+		return ""; // browser should use relative url
+	}
 	if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
 
 	return `http://localhost:3000`; // dev SSR should use localhost

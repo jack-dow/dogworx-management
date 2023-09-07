@@ -54,10 +54,14 @@ export const navigation = [
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: false },
 	{
 		name: "Settings",
-		href: "/settings/booking-types",
+		href: "/settings/organization",
 		icon: SettingsIcon,
 		disabled: false,
 		subNavigation: [
+			{
+				name: "Organization",
+				href: "/settings/organization",
+			},
 			{
 				name: "Booking types",
 				href: "/settings/booking-types",

@@ -18,6 +18,7 @@ import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUse
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { hasTrueValue } from "~/utils";
 import { OrganizationSettings } from "./organization-settings";
+import {OrganizationInviteLinks} from "./organization-invite-links";
 
 const OrganizationUserSchema = SelectUserSchema.pick({
 	id: true,
@@ -129,7 +130,7 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 
 					<Separator />
 
-					{/* <OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} variant="form" /> */}
+					<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} />
 
 					{/* <Separator /> */}
 

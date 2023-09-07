@@ -31,7 +31,6 @@ const ManageVetClinicFormSchema = z.intersection(
 	}),
 	EmailOrPhoneNumberSchema,
 );
-// Had to add `Type` suffix because was getting "Cannot access before initialization" error
 type ManageVetClinicFormSchema = z.infer<typeof ManageVetClinicFormSchema>;
 
 type UseManageVetClinicFormProps = {

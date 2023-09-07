@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 export const unsignedSmallInt = customType<{
 	data: number;
@@ -105,8 +105,8 @@ const organizations = mysqlTable("auth_organizations", {
 		.notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
 	maxUsers: unsignedSmallInt("max_users").notNull(),
-	// emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
-	// notifyAdminsAboutEmails: boolean("notify_admins_about_emails").notNull().default(false),
+	emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
+	notifyAdminsAboutEmails: boolean("notify_admins_about_emails").notNull().default(false),
 	notes: text("notes"),
 });
 

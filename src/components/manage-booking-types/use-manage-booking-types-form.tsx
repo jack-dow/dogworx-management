@@ -19,7 +19,6 @@ const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
 	}),
 });
 
-// Had to add `Type` suffix because was getting "Cannot access before initialization" error
 type ManageBookingTypeFormSchema = z.infer<typeof ManageBookingTypeFormSchema>;
 
 type UseManageBookingTypeFormProps = {

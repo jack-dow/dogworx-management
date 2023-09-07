@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 // import { Checkbox } from "~/components/ui/checkbox";
 import {
 	FormControl,
@@ -54,7 +55,7 @@ function OrganizationSettings() {
 						)}
 					/>
 				</div>
-				{/* 
+
 				<div className="space-y-2 sm:col-span-6">
 					<FormField
 						control={form.control}
@@ -89,7 +90,7 @@ function OrganizationSettings() {
 							</FormItem>
 						)}
 					/>
-				</div> */}
+				</div>
 			</FormGroup>
 		</FormSection>
 	);
