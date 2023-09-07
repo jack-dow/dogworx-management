@@ -157,7 +157,7 @@ function DesktopSidebar() {
 										)}
 										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
-											<span aria-hidden="true" className="block text-xs text-muted-foreground">
+											<span aria-hidden="true" className="block text-left text-xs text-muted-foreground">
 												Administrator
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left">

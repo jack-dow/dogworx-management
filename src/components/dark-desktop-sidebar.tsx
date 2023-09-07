@@ -232,7 +232,7 @@ function DarkDesktopSidebar() {
 										)}
 										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
-											<span aria-hidden="true" className="block text-xs text-muted">
+											<span aria-hidden="true" className="block text-left text-xs text-muted">
 												Administrator
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left text-white">
