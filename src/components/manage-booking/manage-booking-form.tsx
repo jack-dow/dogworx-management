@@ -63,7 +63,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 					Enter the booking information. Remember to click ${isNew ? "create" : "update"} booking when you're finished.
 				`}
 					>
-						<div className="grid gap-y-4">
+						<div className="flex flex-col gap-y-4">
 							<BookingFields variant="form" bookingTypes={bookingTypes} />
 						</div>
 					</FormSection>
