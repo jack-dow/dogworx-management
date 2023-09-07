@@ -52,25 +52,23 @@ function AccountSessions({ control }: { control: Control<ManageAccountFormSchema
 						/>
 					)}
 
-					{sessions.fields
-						.sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
-						.map((session) => {
-							const isCurrentSession = currentSession?.id === session.id;
+					{sessions.fields.map((session) => {
+						const isCurrentSession = currentSession?.id === session.id;
 
-							if (isCurrentSession) {
-								return null;
-							}
+						if (isCurrentSession) {
+							return null;
+						}
 
-							return (
-								<SessionAccordion
-									key={session.id}
-									session={session}
-									onDelete={(session) => {
-										sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
-									}}
-								/>
-							);
-						})}
+						return (
+							<SessionAccordion
+								key={session.id}
+								session={session}
+								onDelete={(session) => {
+									sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
+								}}
+							/>
+						);
+					})}
 				</Accordion>
 			</div>
 		</div>

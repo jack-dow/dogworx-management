@@ -1,5 +1,6 @@
 import * as React from "react";
 import { type Metadata } from "next";
+import { desc } from "drizzle-orm";
 
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
@@ -15,6 +16,7 @@ async function AccountSettingsPage() {
 
 	const userSessions = await drizzle.query.sessions.findMany({
 		where: (sessions, { eq }) => eq(sessions.userId, session.user.id),
+		orderBy: (sessions) => [desc(sessions.updatedAt), desc(sessions.createdAt), desc(sessions.id)],
 	});
 
 	return (

@@ -39,12 +39,7 @@ const invalidateSession = createServerAction(async (id: string) => {
 	try {
 		const user = await getServerUser();
 
-		await drizzle
-			.update(sessions)
-			.set({
-				expiresAt: new Date(),
-			})
-			.where(and(eq(sessions.userId, user.id), eq(sessions.id, validId.data)));
+		await drizzle.delete(sessions).where(and(eq(sessions.userId, user.id), eq(sessions.id, validId.data)));
 
 		return { success: true, data: validId.data };
 	} catch {
