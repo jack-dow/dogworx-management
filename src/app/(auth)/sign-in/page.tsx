@@ -16,7 +16,7 @@ function SignInPage() {
 				<Image src={DogworxLogoGradient as string} alt="Dogworx Logo (Gradient Version)" width={237} height={60} />
 			</div>
 			<Card className="w-full sm:max-w-lg">
-				<CardHeader className="space-y-1">
+				<CardHeader className="space-y-1 pb-4">
 					<CardTitle className="text-2xl">Sign in</CardTitle>
 					<CardDescription>Enter your email address to sign in to your account.</CardDescription>
 				</CardHeader>

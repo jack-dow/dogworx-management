@@ -37,7 +37,7 @@ async function InvitePage({ params }: { params: { id: string } }) {
 					<Image src={DogworxLogoGradient as string} alt="Dogworx Logo (Gradient Version)" width={237} height={60} />
 				</div>
 				<Card className="w-full sm:max-w-lg">
-					<CardHeader className="space-y-1">
+					<CardHeader className="space-y-1 pb-4">
 						<CardTitle className="text-2xl">Invalid Invite</CardTitle>
 						<CardDescription>
 							This invite may have expired or is invalid. Please contact your organization owner for a new invite.
