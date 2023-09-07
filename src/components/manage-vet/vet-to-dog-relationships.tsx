@@ -192,6 +192,7 @@ function VetToDogRelationships({
 								dogToVetRelationship={dogToVetRelationship}
 								index={index}
 								onDelete={() => toggleDogToVetRelationship(dogToVetRelationship.dog)}
+								variant={variant}
 							/>
 						))}
 					</ul>
@@ -205,10 +206,12 @@ function VetToDogRelationship({
 	dogToVetRelationship,
 	index,
 	onDelete,
+	variant,
 }: {
 	dogToVetRelationship: ManageVetFormSchema["dogToVetRelationships"][number];
 	index: number;
 	onDelete: () => void;
+	variant: "sheet" | "form";
 }) {
 	const form = useFormContext<ManageVetFormSchema>();
 	const pathname = usePathname();
@@ -275,7 +278,7 @@ function VetToDogRelationship({
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
-								<SelectContent withoutPortal align="end">
+								<SelectContent withoutPortal={variant === "sheet"} align="end">
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToVetRelationshipSchema.shape.relationship.Values).map((relation) => (
@@ -297,7 +300,7 @@ function VetToDogRelationship({
 							<span className="sr-only">Open options</span>
 							<EllipsisVerticalIcon className="h-5 w-5" />
 						</DropdownMenuTrigger>
-						<DropdownMenuContent withoutPortal align="end">
+						<DropdownMenuContent withoutPortal={variant === "sheet"} align="end">
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 

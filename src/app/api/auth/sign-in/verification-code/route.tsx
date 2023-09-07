@@ -55,7 +55,7 @@ async function GET(request: NextRequest): Promise<NextResponse<SignInWithVerific
 			);
 		}
 
-		if (verificationCode?.user?.emailAddress !== "test@dogworx.com.au") {
+		if (verificationCode?.user?.emailAddress.toLowerCase() !== "test@dogworx.com.au") {
 			await drizzle.delete(verificationCodes).where(eq(verificationCodes.id, verificationCode.id));
 		}
 

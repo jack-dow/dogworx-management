@@ -31,7 +31,7 @@ function SignInForm() {
 	const redirectedFrom = searchParams.get("ref");
 
 	async function onSubmit(data: SignInSchema) {
-		if (process.env.NODE_ENV === "development" || data.emailAddress === "test@dogworx.com.au") {
+		if (process.env.NODE_ENV === "development" || data.emailAddress.toLowerCase() === "test@dogworx.com.au") {
 			setVerifyEmail(data.emailAddress);
 			return;
 		}
