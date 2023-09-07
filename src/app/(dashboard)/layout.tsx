@@ -64,7 +64,8 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 							className={cn(
 								"mx-auto w-full max-w-screen-2xl rounded-md overflow-y-auto overflow-x-hidden",
 								prefersDarkMode
-									? "bg-white p-1"
+									? // Adding the backdrop-blur-none class fixes a weird bug where on mobile tables having overflow-x (e.g. bookings table page) still makes the whole page gain width
+									  "bg-white p-1 backdrop-blur-none"
 									: "bg-white/80 py-6 px-4 sm:px-6 sm:py-8 md:px-8 lg:p-10 shadow backdrop-blur-3xl",
 							)}
 						>
