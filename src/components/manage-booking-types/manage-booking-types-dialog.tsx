@@ -78,7 +78,7 @@ function ManageBookingTypeDialog<BookingTypeProp extends BookingTypeById | undef
 					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking type</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="max-h-screen overflow-y-auto">
+				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Booking type</DialogTitle>
 						<DialogDescription>

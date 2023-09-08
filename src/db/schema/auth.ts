@@ -13,7 +13,7 @@ export const unsignedSmallInt = customType<{
 	},
 });
 
-const organizationRoleOptions = ["owner", "admin", "member"] as const;
+export const organizationRoleOptions = ["owner", "admin", "member"] as const;
 
 // -----------------------------------------------------------------------------
 // Users

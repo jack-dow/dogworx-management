@@ -1,8 +1,5 @@
 "use server";
 
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -10,9 +7,6 @@ import { drizzle } from "~/db/drizzle";
 import { users } from "~/db/schema";
 import { InsertUserSchema, UpdateUserSchema } from "~/db/validation";
 import { createServerAction, getServerUser, type ExtractServerActionData } from "../utils";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const insertOrganizationsUser = createServerAction(async (data: InsertUserSchema) => {
 	const validation = InsertUserSchema.safeParse(data);

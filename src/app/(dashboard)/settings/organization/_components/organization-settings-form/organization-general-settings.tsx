@@ -20,12 +20,12 @@ import {
 import { Input } from "~/components/ui/input";
 import { type OrganizationSettingsFormSchema } from "./organization-settings-form";
 
-function OrganizationSettings() {
+function OrganizationGeneralSettings() {
 	const form = useFormContext<OrganizationSettingsFormSchema>();
 
 	return (
 		<FormSection
-			title="Settings"
+			title="General Settings"
 			description={
 				<>
 					These are the settings for your organization. Visit your{" "}
@@ -96,4 +96,4 @@ function OrganizationSettings() {
 	);
 }
 
-export { OrganizationSettings };
+export { OrganizationGeneralSettings };

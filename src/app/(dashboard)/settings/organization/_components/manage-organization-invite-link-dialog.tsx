@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { init } from "@paralleldrive/cuid2";
 import { useForm } from "react-hook-form";
 import { type z } from "zod";
 
@@ -20,13 +21,19 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { type OrganizationInviteLinkById } from "~/actions";
+import { actions, type OrganizationInviteLinkById } from "~/actions";
 import { useUser } from "~/app/providers";
+import { organizationRoleOptions } from "~/db/schema";
 import { InsertOrganizationInviteLinkSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, generateId, hasTrueValue, secondsToHumanReadable } from "~/utils";
+import { cn, hasTrueValue, secondsToHumanReadable } from "~/utils";
+
+const createInviteLinkCode = init({
+	length: 8,
+});
 
 const ManageOrganizationInviteLinkFormSchema = InsertOrganizationInviteLinkSchema;
 
@@ -84,7 +91,7 @@ function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkD
 					<DialogTrigger asChild>{props.trigger ?? <Button>Generate invite link</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="max-h-screen overflow-y-auto xl:max-w-2xl 2xl:max-w-3xl">
+				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Organization Invite Link</DialogTitle>
 						<DialogDescription>
@@ -110,8 +117,6 @@ function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkD
 }
 
 type ManageOrganizationInviteLinkDialogFormProps = {
-	onSubmit: (data: ManageOrganizationInviteLinkFormSchema) => Promise<void>;
-	onDelete: (id: string) => void;
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
@@ -122,11 +127,9 @@ type ManageOrganizationInviteLinkDialogFormProps = {
 
 function ManageOrganizationInviteLinkDialogForm({
 	setOpen,
-	onDelete,
 	setIsDirty,
 	onConfirmCancel,
 	organizationInviteLink,
-	onSubmit,
 	defaultValues,
 	isNew,
 }: ManageOrganizationInviteLinkDialogFormProps) {
@@ -138,9 +141,13 @@ function ManageOrganizationInviteLinkDialogForm({
 	const form = useForm<ManageOrganizationInviteLinkFormSchema>({
 		resolver: zodResolver(ManageOrganizationInviteLinkFormSchema),
 		defaultValues: {
+			userId: user.id,
+			organizationId: user.organizationId,
+			role: "member",
+			maxUses: null,
 			...organizationInviteLink,
 			...defaultValues,
-			id: organizationInviteLink?.id ?? generateId(),
+			id: organizationInviteLink?.id ?? createInviteLinkCode(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -166,14 +173,38 @@ function ManageOrganizationInviteLinkDialogForm({
 	return (
 		<Form {...form}>
 			<form
-				className="flex flex-col gap-4"
+				className="grid gap-4"
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
 
 					void form.handleSubmit(async (data) => {
 						try {
-							await onSubmit(data);
+							let success = false;
+
+							if (organizationInviteLink) {
+								const response = await actions.auth.organizations.inviteLinks.update(data);
+								success = response.success && !!response.data;
+							} else {
+								const response = await actions.auth.organizations.inviteLinks.insert(data);
+								success = response.success;
+							}
+
+							if (success) {
+								toast({
+									title: `Invite link ${isNew ? "Created" : "Updated"}`,
+									description: `Successfully ${isNew ? "created" : "updated"} invite link.`,
+								});
+							} else {
+								toast({
+									title: `Invite link ${isNew ? "Creation" : "Update"} Failed`,
+									description: `There was an error ${
+										isNew ? "creating" : "updating"
+									} the invite link. Please try again.`,
+									variant: "destructive",
+								});
+							}
+
 							setOpen(false);
 						} catch (error) {
 							if (process.env.NODE_ENV === "development") {
@@ -255,16 +286,66 @@ function ManageOrganizationInviteLinkDialogForm({
 						</FormItem>
 					)}
 				/>
+				<FormField
+					control={form.control}
+					name="role"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Role</FormLabel>
+							<FormControl>
+								<Tabs
+									value={field.value}
+									onValueChange={(value) => {
+										field.onChange(value);
+									}}
+									className="w-full"
+								>
+									<TabsList className="grid w-full grid-cols-2">
+										{organizationRoleOptions.map((option) => {
+											if (option === "owner") {
+												return null;
+											}
+
+											return (
+												<TabsTrigger key={option} value={option} className="capitalize">
+													{option}
+												</TabsTrigger>
+											);
+										})}
+									</TabsList>
+								</Tabs>
+							</FormControl>
+
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 
 				<DialogFooter className="mt-2">
 					{!isNew && (
 						<DestructiveActionDialog
 							name="invite link"
-							onConfirm={() => {
-								onDelete(form.getValues("id"));
+							onConfirm={async () => {
+								const result = await actions.auth.organizations.inviteLinks.delete(form.getValues("id"));
+
+								if (result.success) {
+									toast({
+										title: `Invite link deleted`,
+										description: `Successfully deleted invite link.`,
+									});
+
+									setOpen(false);
+								} else {
+									toast({
+										title: `Invite link deletion failed`,
+										description: "There was an error deleting the invite link. Please try again",
+										variant: "destructive",
+									});
+								}
 							}}
 						/>
 					)}
+
 					<Button
 						variant="outline"
 						onClick={() => {
@@ -303,4 +384,8 @@ function ManageOrganizationInviteLinkDialogForm({
 	);
 }
 
-export { type ManageOrganizationInviteLinkDialogProps, ManageOrganizationInviteLinkDialog };
+export {
+	type ManageOrganizationInviteLinkDialogProps,
+	type ManageOrganizationInviteLinkFormSchema,
+	ManageOrganizationInviteLinkDialog,
+};

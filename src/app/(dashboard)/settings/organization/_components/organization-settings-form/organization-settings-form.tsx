@@ -14,11 +14,17 @@ import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { actions, type OrganizationById } from "~/actions";
 import { useUser } from "~/app/providers";
-import { InsertOrganizationInviteLinkSchema, InsertOrganizationSchema, SelectUserSchema } from "~/db/validation";
+import {
+	InsertOrganizationInviteLinkSchema,
+	InsertOrganizationSchema,
+	SelectSessionSchema,
+	SelectUserSchema,
+} from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { hasTrueValue } from "~/utils";
-import { OrganizationSettings } from "./organization-settings";
-import {OrganizationInviteLinks} from "./organization-invite-links";
+import { OrganizationGeneralSettings } from "./organization-general-settings";
+import { OrganizationInviteLinks } from "./organization-invite-links";
+import { OrganizationUsers } from "./organization-users";
 
 const OrganizationUserSchema = SelectUserSchema.pick({
 	id: true,
@@ -36,7 +42,16 @@ const OrganizationSettingsFormSchema = InsertOrganizationSchema.extend({
 			user: OrganizationUserSchema,
 		}),
 	),
-	users: z.array(OrganizationUserSchema),
+	users: z.array(
+		OrganizationUserSchema.extend({
+			sessions: z.array(
+				SelectSessionSchema.pick({
+					id: true,
+					updatedAt: true,
+				}),
+			),
+		}),
+	),
 });
 type OrganizationSettingsFormSchema = z.infer<typeof OrganizationSettingsFormSchema>;
 
@@ -126,15 +141,15 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 					}}
 					className="space-y-6 lg:space-y-10"
 				>
-					<OrganizationSettings />
+					<OrganizationGeneralSettings />
 
 					<Separator />
 
 					<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} />
 
-					{/* <Separator /> */}
+					<Separator />
 
-					{/* <OrganizationUsers variant="form" existingUsers={organization?.users ?? []} /> */}
+					<OrganizationUsers existingUsers={organization?.users ?? []} />
 
 					{/* <Separator /> */}
 

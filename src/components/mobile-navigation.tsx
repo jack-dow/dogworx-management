@@ -165,8 +165,8 @@ function MobileNavigation() {
 										)}
 										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
-											<span aria-hidden="true" className="block text-left text-xs text-muted-foreground">
-												Administrator
+											<span aria-hidden="true" className="block text-left text-xs capitalize text-muted-foreground">
+												{session.user.organizationRole}
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left">
 												{session.user.givenName} {session.user.familyName}

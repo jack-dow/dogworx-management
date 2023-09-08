@@ -161,6 +161,7 @@ const getOrganizationById = createServerAction(async (id: string) => {
 			where: eq(organizations.id, validId.data),
 			with: {
 				organizationInviteLinks: {
+					orderBy: (organizationInviteLinks, { asc }) => [asc(organizationInviteLinks.expiresAt)],
 					with: {
 						user: {
 							columns: {
@@ -182,6 +183,20 @@ const getOrganizationById = createServerAction(async (id: string) => {
 						emailAddress: true,
 						organizationRole: true,
 						profileImageUrl: true,
+					},
+					with: {
+						sessions: {
+							orderBy: (sessions, { desc }) => [desc(sessions.updatedAt)],
+							columns: {
+								id: true,
+								updatedAt: true,
+								city: true,
+								country: true,
+								expiresAt: true,
+								ipAddress: true,
+								userAgent: true,
+							},
+						},
 					},
 				},
 			},
@@ -202,6 +217,7 @@ const getCurrentOrganization = createServerAction(async () => {
 			where: eq(organizations.id, user.organizationId),
 			with: {
 				organizationInviteLinks: {
+					orderBy: (organizationInviteLinks, { asc }) => [asc(organizationInviteLinks.expiresAt)],
 					with: {
 						user: {
 							columns: {
@@ -224,6 +240,20 @@ const getCurrentOrganization = createServerAction(async () => {
 						organizationRole: true,
 						profileImageUrl: true,
 					},
+					with: {
+						sessions: {
+							orderBy: (sessions, { desc }) => [desc(sessions.updatedAt)],
+							columns: {
+								id: true,
+								updatedAt: true,
+								city: true,
+								country: true,
+								expiresAt: true,
+								ipAddress: true,
+								userAgent: true,
+							},
+						},
+					},
 				},
 			},
 		});
@@ -234,28 +264,6 @@ const getCurrentOrganization = createServerAction(async () => {
 	}
 });
 type CurrentOrganization = ExtractServerActionData<typeof getCurrentOrganization>;
-
-const getOrganizationInviteLinkById = createServerAction(async (id: string) => {
-	const validInviteLink = z.string().safeParse(id);
-
-	if (!validInviteLink.success) {
-		return { success: false, error: validInviteLink.error.issues, data: null };
-	}
-
-	try {
-		const data = await drizzle.query.organizationInviteLinks.findFirst({
-			where: sql`BINARY ${organizationInviteLinks.id} = ${validInviteLink.data}`,
-			with: {
-				organization: true,
-			},
-		});
-
-		return { success: true, data };
-	} catch {
-		return { success: false, error: "Failed to get organization by invite link", data: null };
-	}
-});
-type OrganizationInviteLinkById = ExtractServerActionData<typeof getOrganizationInviteLinkById>;
 
 const insertOrganization = createServerAction(async (values: InsertOrganizationSchema) => {
 	const validValues = InsertOrganizationSchema.safeParse(values);
@@ -295,6 +303,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 			with: {
 				users: true,
 				organizationInviteLinks: {
+					orderBy: (organizationInviteLinks, { asc }) => [asc(organizationInviteLinks.expiresAt)],
 					with: {
 						user: {
 							columns: {
@@ -387,6 +396,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 			with: {
 				users: true,
 				organizationInviteLinks: {
+					orderBy: (organizationInviteLinks, { asc }) => [asc(organizationInviteLinks.expiresAt)],
 					with: {
 						user: {
 							columns: {
@@ -470,8 +480,6 @@ export {
 	type OrganizationById,
 	getCurrentOrganization,
 	type CurrentOrganization,
-	getOrganizationInviteLinkById,
-	type OrganizationInviteLinkById,
 	insertOrganization,
 	type OrganizationInsert,
 	updateOrganization,

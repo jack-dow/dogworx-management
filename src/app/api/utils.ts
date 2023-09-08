@@ -21,7 +21,14 @@ async function verifyAPISession() {
 
 	const sessionTokenData = (await jwt.verify(sessionToken)) as SessionCookie;
 
-	if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry) {
+	if (
+		Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry ||
+		!sessionTokenData.user ||
+		(sessionTokenData.user.bannedAt && !sessionTokenData.user.bannedUntil) ||
+		(sessionTokenData.user.bannedAt &&
+			sessionTokenData.user.bannedUntil &&
+			sessionTokenData.user.bannedUntil < new Date())
+	) {
 		return {
 			success: false,
 			error: {

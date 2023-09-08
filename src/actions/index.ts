@@ -38,12 +38,17 @@ import {
 	deleteOrganization,
 	getCurrentOrganization,
 	getOrganizationById,
-	getOrganizationInviteLinkById,
 	insertOrganization,
 	listOrganizations,
 	searchOrganizations,
 	updateOrganization,
 } from "./auth/organizations-actions";
+import {
+	deleteOrganizationInviteLink,
+	getOrganizationInviteLinkById,
+	insertOrganizationInviteLink,
+	updateOrganizationInviteLink,
+} from "./auth/organizations-invite-links-actions";
 import {
 	deleteOrganizationsUser,
 	insertOrganizationsUser,
@@ -118,7 +123,12 @@ const actions = {
 			insert: insertOrganization,
 			update: updateOrganization,
 			delete: deleteOrganization,
-			getInviteLink: getOrganizationInviteLinkById,
+			inviteLinks: {
+				byId: getOrganizationInviteLinkById,
+				insert: insertOrganizationInviteLink,
+				update: updateOrganizationInviteLink,
+				delete: deleteOrganizationInviteLink,
+			},
 			users: {
 				insert: insertOrganizationsUser,
 				update: updateOrganizationsUser,
@@ -148,6 +158,7 @@ export type * from "./app/vet-clinics-actions";
 export type * from "./app/vets-actions";
 
 export type * from "./auth/organizations-actions";
+export type * from "./auth/organizations-invite-links-actions";
 export type * from "./auth/organizations-users-actions";
 export type * from "./auth/sessions-actions";
 export type * from "./auth/user-actions";
