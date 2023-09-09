@@ -12,7 +12,7 @@ import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { SignInSchema } from "~/lib/validation";
-import { VerifyEmailAddressAlertDialog } from "../../_components/verify-email-address-dialog";
+import { VerifyEmailAddressAlertDialog } from "./verify-email-address-dialog";
 
 function SignInForm() {
 	const router = useRouter();

@@ -11,7 +11,10 @@ export async function middleware(request: NextRequest) {
 
 	const sessionToken = sessionCookie?.value;
 
-	const isAuthPage = request.nextUrl.pathname.startsWith("/sign-in") || request.nextUrl.pathname.startsWith("/invite");
+	const isAuthPage =
+		request.nextUrl.pathname.startsWith("/sign-in") ||
+		request.nextUrl.pathname.startsWith("/invite") ||
+		request.nextUrl.pathname.startsWith("/verification-code");
 
 	let from = request.nextUrl.pathname;
 	if (request.nextUrl.search) {
@@ -35,46 +38,43 @@ export async function middleware(request: NextRequest) {
 			return response;
 		}
 
-		// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
-		if (Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry) {
-			const session = await drizzle.query.sessions.findFirst({
-				where: (sessions, { eq }) => eq(sessions.id, sessionTokenData.id),
-				with: {
-					user: {
-						columns: {
-							id: true,
-							bannedAt: true,
-							bannedUntil: true,
-						},
-					},
-				},
-			});
+		const session = await drizzle.query.sessions.findFirst({
+			where: (sessions, { eq }) => eq(sessions.id, sessionTokenData.id),
+			with: {
+				user: true,
+			},
+		});
 
-			if (
-				!session ||
-				session.expiresAt < new Date() ||
-				!session.user ||
-				(session.user.bannedAt && !session.user.bannedUntil) ||
-				(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date())
-			) {
-				if (session) {
-					await drizzle.delete(sessions).where(eq(sessions.id, sessionTokenData.id));
-				}
-
-				const response = isAuthPage ? NextResponse.next() : NextResponse.redirect(signInUrl);
-
-				response.cookies.delete(sessionCookieOptions.name);
-
-				return response;
+		if (
+			!session ||
+			session.expiresAt < new Date() ||
+			!session.user ||
+			(session.user.bannedAt && !session.user.bannedUntil) ||
+			(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date())
+		) {
+			if (session) {
+				await drizzle.delete(sessions).where(eq(sessions.id, sessionTokenData.id));
 			}
 
-			const response = isAuthPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
-			const requestHeaders = new Headers(request.headers);
+			const response = isAuthPage ? NextResponse.next() : NextResponse.redirect(signInUrl);
 
-			// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
+			response.cookies.delete(sessionCookieOptions.name);
+
+			return response;
+		}
+
+		const response = isAuthPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
+		const requestHeaders = new Headers(request.headers);
+
+		// SEE: ~/lib/jwt.ts for why we don't include exp in the jwt.
+		if (
+			Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry ||
+			session.updatedAt > new Date(sessionTokenData.iat * 1000) ||
+			session.user.updatedAt > new Date(sessionTokenData.iat * 1000)
+		) {
 			const newSessionToken = await createSessionJWT({
-				id: sessionTokenData.id,
-				user: sessionTokenData.user,
+				id: session.id,
+				user: session.user,
 			});
 
 			if (
@@ -93,7 +93,7 @@ export async function middleware(request: NextRequest) {
 					})
 					.where(eq(sessions.id, session.id));
 			} else {
-				await drizzle.update(sessions).set({ updatedAt: new Date() }).where(eq(sessions.id, session.id));
+				await drizzle.update(sessions).set({ lastActiveAt: new Date() }).where(eq(sessions.id, session.id));
 			}
 
 			response.cookies.set({

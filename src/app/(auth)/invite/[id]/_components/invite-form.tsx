@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -10,14 +11,13 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type OrganizationInviteLinkById } from "~/actions";
-import { VerifyEmailAddressAlertDialog } from "~/app/(auth)/_components/verify-email-address-dialog";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { signUp } from "~/lib/auth";
 import { SignUpSchema } from "~/lib/validation";
 
 function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) {
 	const { toast } = useToast();
-	const [verifyEmail, setVerifyEmail] = React.useState<string | null>(null);
+	const router = useRouter();
 
 	const form = useForm<SignUpSchema>({
 		resolver: zodResolver(SignUpSchema),
@@ -70,7 +70,7 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 			const body = (await response.json()) as SendMagicLinkPOSTResponse;
 
 			if (body.success) {
-				setVerifyEmail(data.emailAddress);
+				router.push(`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}`);
 				toast({
 					title: "Verification code sent",
 					description: "Please check your email for the code and magic link.",
@@ -94,17 +94,6 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 
 	return (
 		<>
-			<VerifyEmailAddressAlertDialog
-				emailAddress={verifyEmail}
-				open={!!verifyEmail}
-				setOpen={(open) => {
-					if (!open) {
-						setVerifyEmail(null);
-					}
-				}}
-				type="sign-up"
-			/>
-
 			<Form {...form}>
 				<form
 					className="grid grid-cols-2 gap-4"

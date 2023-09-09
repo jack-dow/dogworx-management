@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 async function InvitePage({ params }: { params: { id: string } }) {
-	const response = await actions.auth.organizations.getInviteLink(params.id);
+	const response = await actions.auth.organizations.inviteLinks.byId(params.id);
 
 	if (
 		!response.data ||

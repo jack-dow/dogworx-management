@@ -35,7 +35,7 @@ const listOrganizations = createServerAction(async (options: PaginationSearchPar
 	try {
 		const user = await getServerUser();
 
-		if (user.emailAddress !== "jack.dowww@gmail.com") {
+		if (user.organizationId !== "1") {
 			return {
 				success: false,
 				error: "You are not authorized to view this page",
@@ -126,7 +126,7 @@ const searchOrganizations = createServerAction(async (searchTerm: string) => {
 	try {
 		const user = await getServerUser();
 
-		if (user.emailAddress !== "jack.dowww@gmail.com") {
+		if (user.organizationId !== "1") {
 			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
@@ -153,7 +153,7 @@ const getOrganizationById = createServerAction(async (id: string) => {
 	try {
 		const user = await getServerUser();
 
-		if (user.emailAddress !== "jack.dowww@gmail.com") {
+		if (user.organizationId !== "1") {
 			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
@@ -171,19 +171,18 @@ const getOrganizationById = createServerAction(async (id: string) => {
 								emailAddress: true,
 								organizationRole: true,
 								profileImageUrl: true,
+								organizationId: true,
 							},
 						},
 					},
 				},
 				users: {
-					columns: {
-						id: true,
-						givenName: true,
-						familyName: true,
-						emailAddress: true,
-						organizationRole: true,
-						profileImageUrl: true,
-					},
+					orderBy: (users, { asc }) => [
+						asc(users.organizationRole),
+						asc(users.givenName),
+						asc(users.familyName),
+						asc(users.id),
+					],
 					with: {
 						sessions: {
 							orderBy: (sessions, { desc }) => [desc(sessions.updatedAt)],
@@ -195,6 +194,7 @@ const getOrganizationById = createServerAction(async (id: string) => {
 								expiresAt: true,
 								ipAddress: true,
 								userAgent: true,
+								lastActiveAt: true,
 							},
 						},
 					},
@@ -232,14 +232,12 @@ const getCurrentOrganization = createServerAction(async () => {
 					},
 				},
 				users: {
-					columns: {
-						id: true,
-						givenName: true,
-						familyName: true,
-						emailAddress: true,
-						organizationRole: true,
-						profileImageUrl: true,
-					},
+					orderBy: (users, { asc }) => [
+						asc(users.organizationRole),
+						asc(users.givenName),
+						asc(users.familyName),
+						asc(users.id),
+					],
 					with: {
 						sessions: {
 							orderBy: (sessions, { desc }) => [desc(sessions.updatedAt)],
@@ -251,6 +249,7 @@ const getCurrentOrganization = createServerAction(async () => {
 								expiresAt: true,
 								ipAddress: true,
 								userAgent: true,
+								lastActiveAt: true,
 							},
 						},
 					},
@@ -275,7 +274,7 @@ const insertOrganization = createServerAction(async (values: InsertOrganizationS
 	try {
 		const user = await getServerUser();
 
-		if (user.emailAddress !== "jack.dowww@gmail.com") {
+		if (user.organizationId !== "1") {
 			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
@@ -337,7 +336,7 @@ const updateOrganization = createServerAction(async (values: UpdateOrganizationS
 	try {
 		const user = await getServerUser();
 
-		if (user.emailAddress !== "jack.dowww@gmail.com") {
+		if (user.organizationId !== "1") {
 			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 
@@ -430,10 +429,7 @@ const deleteOrganization = createServerAction(async (id: string) => {
 	try {
 		const user = await getServerUser();
 
-		if (
-			user.emailAddress !== "jack.dowww@gmail.com" &&
-			(user.organizationRole !== "owner" || user.organizationId !== validId.data)
-		) {
+		if (user.organizationId !== "1" && (user.organizationRole !== "owner" || user.organizationId !== validId.data)) {
 			return { success: false, error: "You are not authorized to view this page", data: null };
 		}
 

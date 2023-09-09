@@ -18,10 +18,14 @@ import {
 	FormSection,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { type OrganizationSettingsFormSchema } from "./organization-settings-form";
+import { useUser } from "~/app/providers";
+import { RichTextEditor } from "../ui/rich-text-editor";
+import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 function OrganizationGeneralSettings() {
-	const form = useFormContext<OrganizationSettingsFormSchema>();
+	const form = useFormContext<ManageOrganizationFormSchema>();
+
+	const user = useUser();
 
 	return (
 		<FormSection
@@ -48,7 +52,7 @@ function OrganizationGeneralSettings() {
 									<FormDescription>This will be displayed publicly on emails, invoices, etc.</FormDescription>
 								</div>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} disabled={user.organizationRole === "member"} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -67,7 +71,7 @@ function OrganizationGeneralSettings() {
 									<FormDescription>This is how customers can contact you.</FormDescription>
 								</div>
 								<FormControl>
-									<Input {...field} value={field.value ?? ""} />
+									<Input {...field} value={field.value ?? ""} disabled={user.organizationRole === "member"} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -84,6 +88,7 @@ function OrganizationGeneralSettings() {
 										onCheckedChange={(checked) => {
 											field.onChange(checked);
 										}}
+										disabled={user.organizationRole === "member"}
 									/>
 								</FormControl>
 								<FormLabel>CC emails to organization owners and administrators.</FormLabel>
@@ -91,6 +96,49 @@ function OrganizationGeneralSettings() {
 						)}
 					/>
 				</div>
+
+				{user.organizationId === "1" && (
+					<>
+						<div className="sm:col-span-6">
+							<FormField
+								control={form.control}
+								name="maxUsers"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Max Users</FormLabel>
+										<FormControl>
+											<Input
+												type="number"
+												{...field}
+												value={field.value ?? ""}
+												onChange={(e) => {
+													field.onChange(e.target.value ? Number(e.target.value) : null);
+												}}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
+						<div className="sm:col-span-6">
+							<FormField
+								control={form.control}
+								name="notes"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Notes</FormLabel>
+										<FormControl>
+											<RichTextEditor content={field.value ?? ""} onValueChange={({ html }) => field.onChange(html)} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+					</>
+				)}
 			</FormGroup>
 		</FormSection>
 	);

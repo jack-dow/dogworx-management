@@ -18,29 +18,37 @@ import { EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { actions } from "~/actions";
+import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { getBaseUrl } from "~/utils";
-import { ManageOrganizationInviteLinkDialog } from "../manage-organization-invite-link-dialog";
-import { type OrganizationSettingsFormSchema } from "./organization-settings-form";
+import { Button } from "../ui/button";
+import { type ManageOrganizationFormSchema } from "./manage-organization-form";
+import { ManageOrganizationInviteLinkDialog } from "./manage-organization-invite-link-dialog";
 
-function OrganizationInviteLinks({
-	existingInviteLinks,
-}: {
-	existingInviteLinks: OrganizationSettingsFormSchema["organizationInviteLinks"];
-}) {
+function OrganizationInviteLinks({ isNew }: { isNew: boolean }) {
 	const { toast } = useToast();
-	const form = useFormContext<OrganizationSettingsFormSchema>();
+	const user = useUser();
+	const form = useFormContext<ManageOrganizationFormSchema>();
 	const organizationInviteLinks = useFieldArray({
 		control: form.control,
 		name: "organizationInviteLinks",
 		keyName: "rhf-id",
 	});
 
-	const [confirmInviteLinkDelete, setConfirmInviteLinkDelete] = React.useState<
-		OrganizationSettingsFormSchema["organizationInviteLinks"][number] | null
-	>(null);
+	const [confirmInviteLinkDelete, setConfirmInviteLinkDelete] = React.useState<string | null>(null);
 
 	async function handleInviteLinkDelete(inviteLinkId: string) {
+		if (isNew) {
+			const inviteLinkActions = form.getValues("actions.organizationInviteLinks");
+
+			delete inviteLinkActions[inviteLinkId];
+
+			form.setValue("actions.organizationInviteLinks", inviteLinkActions);
+
+			organizationInviteLinks.remove(organizationInviteLinks.fields.findIndex((link) => link.id === inviteLinkId));
+			return;
+		}
+
 		const result = await actions.auth.organizations.inviteLinks.delete(inviteLinkId);
 
 		if (result.success) {
@@ -67,7 +75,7 @@ function OrganizationInviteLinks({
 				onOpenChange={() => setConfirmInviteLinkDelete(null)}
 				onConfirm={async () => {
 					if (confirmInviteLinkDelete) {
-						await handleInviteLinkDelete(confirmInviteLinkDelete.id);
+						await handleInviteLinkDelete(confirmInviteLinkDelete);
 					}
 				}}
 			/>
@@ -91,9 +99,6 @@ function OrganizationInviteLinks({
 										>
 											Uses
 										</th>
-										<th scope="col" className="px-3 pb-3.5 text-left text-sm font-semibold text-primary ">
-											Role
-										</th>
 										<th
 											scope="col"
 											className="hidden px-3 pb-3.5 text-left text-sm font-semibold text-primary sm:table-cell"
@@ -111,11 +116,12 @@ function OrganizationInviteLinks({
 											key={inviteLink.id}
 											inviteLink={inviteLink}
 											onDelete={async () => {
-												if (existingInviteLinks.find((link) => link.id === inviteLink.id)) {
-													setConfirmInviteLinkDelete(inviteLink);
-												} else {
+												if (isNew) {
 													await handleInviteLinkDelete(inviteLink.id);
+													return;
 												}
+
+												setConfirmInviteLinkDelete(inviteLink.id);
 											}}
 										/>
 									))}
@@ -123,7 +129,44 @@ function OrganizationInviteLinks({
 							</table>
 						</div>
 						<div className="flex justify-end">
-							{organizationInviteLinks.fields.length < 10 && <ManageOrganizationInviteLinkDialog />}
+							{organizationInviteLinks.fields.length < 20 ? (
+								<ManageOrganizationInviteLinkDialog
+									onSubmit={
+										isNew
+											? (data) => {
+													organizationInviteLinks.append({ ...data, user: user });
+
+													const inviteLinkActions = form.getValues("actions.organizationInviteLinks");
+
+													inviteLinkActions[data.id] = {
+														type: "INSERT",
+														payload: data,
+													};
+
+													form.setValue("actions.organizationInviteLinks", inviteLinkActions);
+											  }
+											: undefined
+									}
+									defaultValues={
+										user.organizationId === "1"
+											? {
+													organizationId: form.getValues("id"),
+											  }
+											: undefined
+									}
+								/>
+							) : (
+								<Button
+									onClick={() => {
+										toast({
+											title: `Maximum invite links reached`,
+											description: `You can only have a maximum of 20 invite links at one time. Please delete an existing invite link to create a new one.`,
+										});
+									}}
+								>
+									Generate invite link
+								</Button>
+							)}
 						</div>
 					</div>
 				</FormGroup>
@@ -182,16 +225,24 @@ function OrganizationInviteLinkTableRow({
 	inviteLink,
 	onDelete,
 }: {
-	inviteLink: OrganizationSettingsFormSchema["organizationInviteLinks"][number];
+	inviteLink: ManageOrganizationFormSchema["organizationInviteLinks"][number];
 	onDelete: () => Promise<void>;
 }) {
 	const { dayjs } = useDayjs();
+
+	const user = useUser();
 
 	const [isDeleting, setIsDeleting] = React.useState(false);
 	return (
 		<tr key={inviteLink.id}>
 			<td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium sm:w-auto sm:max-w-none sm:pl-0">
-				{inviteLink.user.givenName} {inviteLink.user.familyName}
+				{inviteLink.user ? (
+					<>
+						{inviteLink.user.givenName} {inviteLink.user.familyName}
+					</>
+				) : (
+					"Deleted User"
+				)}
 				<dl className="font-normal sm:hidden">
 					<dt className="sr-only">Uses</dt>
 					<dd className="mt-1 truncate">
@@ -217,7 +268,6 @@ function OrganizationInviteLinkTableRow({
 				{inviteLink.uses}
 				{inviteLink.maxUses ? `/${inviteLink.maxUses}` : null}
 			</td>
-			<td className="px-3 py-4 text-sm capitalize">{inviteLink.role}</td>
 			<td className="hidden px-3 py-4 text-sm capitalize sm:table-cell">
 				{dayjs.tz(inviteLink.expiresAt).isBefore(dayjs.tz()) ? (
 					"Expired"
@@ -227,29 +277,31 @@ function OrganizationInviteLinkTableRow({
 			</td>
 			<td className="w-8 py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
 				<div className="flex items-center justify-end">
-					<DropdownMenu>
-						<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-							<span className="sr-only">Open options</span>
-							<EllipsisVerticalIcon className="h-5 w-5" />
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Actions</DropdownMenuLabel>
-							<DropdownMenuSeparator />
+					{user.organizationRole !== "member" && (
+						<DropdownMenu>
+							<DropdownMenuTrigger className="flex items-center rounded-full text-slate-400 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+								<span className="sr-only">Open options</span>
+								<EllipsisVerticalIcon className="h-5 w-5" />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuLabel>Actions</DropdownMenuLabel>
+								<DropdownMenuSeparator />
 
-							<DropdownMenuItem
-								onSelect={() => {
-									setIsDeleting(true);
-									void onDelete().finally(() => {
-										setIsDeleting(false);
-									});
-								}}
-							>
-								<TrashIcon className="mr-2 h-4 w-4" />
-								<span className="flex-1">Remove</span>
-								{isDeleting && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+								<DropdownMenuItem
+									onSelect={() => {
+										setIsDeleting(true);
+										void onDelete().finally(() => {
+											setIsDeleting(false);
+										});
+									}}
+								>
+									<TrashIcon className="mr-2 h-4 w-4" />
+									<span className="flex-1">Remove</span>
+									{isDeleting && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
 			</td>
 		</tr>

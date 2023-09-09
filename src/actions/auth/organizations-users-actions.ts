@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -22,10 +23,19 @@ const insertOrganizationsUser = createServerAction(async (data: InsertUserSchema
 			return { success: false, error: "You are not authorized to create new users for your organization.", data: null };
 		}
 
-		await drizzle.insert(users).values({
-			...validation.data,
-			organizationId: user.organizationId,
+		await drizzle.transaction(async (tx) => {
+			await tx.insert(users).values({
+				...validation.data,
+				organizationId: user.organizationId === "1" ? validation.data.organizationId : user.organizationId,
+			});
+
+			if (user.organizationRole === "owner" && validation.data.organizationRole === "owner") {
+				await tx.update(users).set({ organizationRole: "admin" }).where(eq(users.id, user.id));
+			}
 		});
+
+		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -50,10 +60,24 @@ const updateOrganizationsUser = createServerAction(async (data: UpdateUserSchema
 
 		const { id, ...data } = validation.data;
 
-		await drizzle
-			.update(users)
-			.set(data)
-			.where(and(eq(users.organizationId, user.organizationId), eq(users.id, id)));
+		await drizzle.transaction(async (tx) => {
+			await drizzle
+				.update(users)
+				.set(data)
+				.where(
+					and(
+						user.organizationId !== "1" ? eq(users.organizationId, user.organizationId) : undefined,
+						eq(users.id, id),
+					),
+				);
+
+			if (user.organizationRole === "owner" && validation.data.organizationRole === "owner") {
+				await tx.update(users).set({ organizationRole: "admin" }).where(eq(users.id, user.id));
+			}
+		});
+
+		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -84,7 +108,35 @@ const deleteOrganizationsUser = createServerAction(async (id: string) => {
 			};
 		}
 
-		await drizzle.delete(users).where(and(eq(users.organizationId, user.organizationId), eq(users.id, user.id)));
+		if (user.organizationId !== "1") {
+			const deletingUser = await drizzle.query.users.findFirst({
+				where: and(eq(users.organizationId, user.organizationId), eq(users.id, id)),
+			});
+
+			if (!deletingUser) {
+				return { success: false, error: "User not found", data: null };
+			}
+
+			if (
+				deletingUser.organizationRole === "owner" ||
+				(user.organizationRole === "admin" && deletingUser.organizationRole === "admin")
+			) {
+				return {
+					success: false,
+					error: "You are not authorized to delete this user.",
+					data: null,
+				};
+			}
+		}
+
+		await drizzle
+			.delete(users)
+			.where(
+				and(user.organizationId !== "1" ? eq(users.organizationId, user.organizationId) : undefined, eq(users.id, id)),
+			);
+
+		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {

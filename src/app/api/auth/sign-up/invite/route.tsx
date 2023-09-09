@@ -37,7 +37,6 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 				maxUses: true,
 				uses: true,
 				organizationId: true,
-				role: true,
 			},
 		});
 
@@ -58,7 +57,7 @@ async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromIn
 			familyName: validation.data.familyName,
 			emailAddress: validation.data.emailAddress,
 			organizationId: inviteLink.organizationId,
-			organizationRole: inviteLink.role,
+			organizationRole: "member",
 		} satisfies InsertUserSchema;
 
 		await drizzle.transaction(async (db) => {

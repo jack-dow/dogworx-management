@@ -64,6 +64,9 @@ const sessions = mysqlTable("auth_sessions", {
 	userAgent: varchar("user_agent", { length: 200 }),
 	city: varchar("city", { length: 50 }),
 	country: varchar("country", { length: 100 }),
+	lastActiveAt: timestamp("last_active_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
 });
 
 const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -129,8 +132,7 @@ const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
 		.notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
-	userId: char("user_id", { length: 24 }).notNull(),
-	role: mysqlEnum("role", organizationRoleOptions).notNull(),
+	userId: char("user_id", { length: 24 }),
 	uses: unsignedSmallInt("uses").notNull().default(0),
 	maxUses: unsignedSmallInt("max_uses"),
 });

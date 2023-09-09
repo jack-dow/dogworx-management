@@ -21,25 +21,24 @@ import {
 	SelectUserSchema,
 } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { hasTrueValue } from "~/utils";
+import { generateId, hasTrueValue } from "~/utils";
 import { OrganizationGeneralSettings } from "./organization-general-settings";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 import { OrganizationUsers } from "./organization-users";
 
-const OrganizationUserSchema = SelectUserSchema.pick({
-	id: true,
-	givenName: true,
-	familyName: true,
-	emailAddress: true,
-	organizationRole: true,
-	profileImageUrl: true,
+const OrganizationUserSchema = SelectUserSchema.omit({
+	createdAt: true,
+	updatedAt: true,
+	bannedAt: true,
+	bannedUntil: true,
 });
 
-const OrganizationSettingsFormSchema = InsertOrganizationSchema.extend({
+const ManageOrganizationFormSchema = InsertOrganizationSchema.extend({
 	name: z.string().max(50).nonempty({ message: "Required" }),
 	organizationInviteLinks: z.array(
 		InsertOrganizationInviteLinkSchema.extend({
-			user: OrganizationUserSchema,
+			userId: z.string().nullable(),
+			user: OrganizationUserSchema.nullable(),
 		}),
 	),
 	users: z.array(
@@ -47,29 +46,33 @@ const OrganizationSettingsFormSchema = InsertOrganizationSchema.extend({
 			sessions: z.array(
 				SelectSessionSchema.pick({
 					id: true,
-					updatedAt: true,
+					lastActiveAt: true,
 				}),
 			),
 		}),
 	),
 });
-type OrganizationSettingsFormSchema = z.infer<typeof OrganizationSettingsFormSchema>;
+type ManageOrganizationFormSchema = z.infer<typeof ManageOrganizationFormSchema>;
 
 type ManageOrganizationFormProps = {
-	organization: OrganizationById;
+	organization?: OrganizationById;
 };
 
-function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps) {
+function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
+	const isNew = !organization;
+
 	const user = useUser();
 
 	const router = useRouter();
 
 	const { toast } = useToast();
 
-	const form = useForm<OrganizationSettingsFormSchema>({
-		resolver: zodResolver(OrganizationSettingsFormSchema),
+	const form = useForm<ManageOrganizationFormSchema>({
+		resolver: zodResolver(ManageOrganizationFormSchema),
 		defaultValues: {
+			maxUsers: 1,
 			...organization,
+			id: organization?.id ?? generateId(),
 			actions: {
 				organizationInviteLinks: {},
 				users: {},
@@ -96,21 +99,35 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 		}
 	}, [organization, form, toast]);
 
-	async function onSubmit(data: OrganizationSettingsFormSchema) {
+	async function onSubmit(data: ManageOrganizationFormSchema) {
 		let success = false;
 
-		const response = await actions.auth.organizations.update(data);
-		success = response.success && !!response.data;
+		if (isNew) {
+			const response = await actions.auth.organizations.insert(data);
+			success = response.success && !!response.data;
+		} else {
+			const response = await actions.auth.organizations.update(data);
+			success = response.success && !!response.data;
+		}
 
 		if (success) {
+			if (user.organizationId === "1") {
+				if (isNew) {
+					router.replace(`/organization/${data.id}`);
+				} else {
+					router.push(`/organizations`);
+				}
+			} else {
+				form.reset(form.getValues());
+			}
 			toast({
-				title: `Organization Updated`,
-				description: `Successfully updated your organization.`,
+				title: `Organization ${isNew ? "Created" : "Updated"}`,
+				description: `Successfully ${isNew ? "create" : "updated"} your organization.`,
 			});
 		} else {
 			toast({
-				title: `Organization Update Failed`,
-				description: `There was an error updating your organization. Please try again.`,
+				title: `Organization  ${isNew ? "Creation" : "Update"} Failed`,
+				description: `There was an error ${isNew ? "creating" : "updating"} your organization. Please try again.`,
 				variant: "destructive",
 			});
 		}
@@ -145,13 +162,13 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 
 					<Separator />
 
-					<OrganizationInviteLinks existingInviteLinks={organization?.organizationInviteLinks ?? []} />
+					<OrganizationInviteLinks isNew={isNew} />
 
 					<Separator />
 
-					<OrganizationUsers existingUsers={organization?.users ?? []} />
+					<OrganizationUsers isNew={isNew} />
 
-					{/* <Separator /> */}
+					<Separator />
 
 					<div className="flex justify-end space-x-4">
 						<Button
@@ -176,6 +193,9 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 							}
 							onClick={() => {
 								const numOfErrors = Object.keys(form.formState.errors).length;
+								console.log(form.getValues());
+								console.log(form.formState.errors);
+
 								if (numOfErrors > 0) {
 									toast({
 										title: `Form submission errors`,
@@ -197,4 +217,4 @@ function OrganizationSettingsForm({ organization }: ManageOrganizationFormProps)
 	);
 }
 
-export { OrganizationSettingsForm, OrganizationSettingsFormSchema };
+export { ManageOrganizationForm, ManageOrganizationFormSchema };

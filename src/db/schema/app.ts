@@ -72,7 +72,7 @@ const bookings = mysqlTable("bookings", {
 		.onUpdateNow()
 		.notNull(),
 	dogId: char("dog_id", { length: 24 }),
-	assignedToId: char("assigned_to_id", { length: 24 }).notNull(),
+	assignedToId: char("assigned_to_id", { length: 24 }),
 	date: timestamp("date").notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
 	details: text("details"),

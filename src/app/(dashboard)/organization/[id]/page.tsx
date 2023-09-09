@@ -1,9 +1,9 @@
 import { type Metadata } from "next";
 
+import { ManageOrganizationForm } from "~/components/manage-organization-form/manage-organization-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
-import { ManageOrganizationForm } from "../_components/manage-organization/manage-organization-form";
 
 export const metadata: Metadata = {
 	title: "Update Organization | Dogworx Management",

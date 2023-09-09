@@ -48,6 +48,8 @@ interface ManageOrganizationInviteLinkDialogProps
 }
 
 function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkDialogProps) {
+	const user = useUser();
+
 	// This is in state so that we can use the invite link prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
 	const [isNew, setIsNew] = React.useState(!props.organizationInviteLink);
 
@@ -64,6 +66,10 @@ function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkD
 			return;
 		}
 	}, [internalOpen, props.organizationInviteLink]);
+
+	if (user.organizationRole === "member") {
+		return null;
+	}
 
 	return (
 		<>
@@ -123,15 +129,19 @@ type ManageOrganizationInviteLinkDialogFormProps = {
 	isNew: boolean;
 	organizationInviteLink?: OrganizationInviteLinkById;
 	defaultValues?: Partial<ManageOrganizationInviteLinkFormSchema>;
+	onSubmit?: (data: ManageOrganizationInviteLinkFormSchema) => void;
+	onDelete?: (id: string) => Promise<void>;
 };
 
 function ManageOrganizationInviteLinkDialogForm({
 	setOpen,
 	setIsDirty,
 	onConfirmCancel,
+	isNew,
 	organizationInviteLink,
 	defaultValues,
-	isNew,
+	onSubmit,
+	onDelete,
 }: ManageOrganizationInviteLinkDialogFormProps) {
 	const { toast } = useToast();
 	const { dayjs } = useDayjs();
@@ -141,12 +151,12 @@ function ManageOrganizationInviteLinkDialogForm({
 	const form = useForm<ManageOrganizationInviteLinkFormSchema>({
 		resolver: zodResolver(ManageOrganizationInviteLinkFormSchema),
 		defaultValues: {
-			userId: user.id,
 			organizationId: user.organizationId,
 			role: "member",
 			maxUses: null,
 			...organizationInviteLink,
 			...defaultValues,
+			userId: organizationInviteLink?.userId || defaultValues?.userId || user.id,
 			id: organizationInviteLink?.id ?? createInviteLinkCode(),
 		},
 	});
@@ -155,16 +165,22 @@ function ManageOrganizationInviteLinkDialogForm({
 
 	React.useEffect(() => {
 		function syncOrganizationInviteLink(organizationInviteLink: OrganizationInviteLinkById) {
-			form.reset(organizationInviteLink, {
-				keepDirty: true,
-				keepDirtyValues: true,
-			});
+			form.reset(
+				{
+					...organizationInviteLink,
+					userId: organizationInviteLink.userId || user.id,
+				},
+				{
+					keepDirty: true,
+					keepDirtyValues: true,
+				},
+			);
 		}
 
 		if (organizationInviteLink) {
 			syncOrganizationInviteLink(organizationInviteLink);
 		}
-	}, [organizationInviteLink, form]);
+	}, [organizationInviteLink, form, user.id]);
 
 	React.useEffect(() => {
 		setIsDirty(form.formState.isDirty);
@@ -181,6 +197,12 @@ function ManageOrganizationInviteLinkDialogForm({
 					void form.handleSubmit(async (data) => {
 						try {
 							let success = false;
+
+							if (onSubmit) {
+								onSubmit(data);
+								setOpen(false);
+								return;
+							}
 
 							if (organizationInviteLink) {
 								const response = await actions.auth.organizations.inviteLinks.update(data);
@@ -322,26 +344,11 @@ function ManageOrganizationInviteLinkDialogForm({
 				/>
 
 				<DialogFooter className="mt-2">
-					{!isNew && (
+					{!isNew && onDelete && (
 						<DestructiveActionDialog
 							name="invite link"
 							onConfirm={async () => {
-								const result = await actions.auth.organizations.inviteLinks.delete(form.getValues("id"));
-
-								if (result.success) {
-									toast({
-										title: `Invite link deleted`,
-										description: `Successfully deleted invite link.`,
-									});
-
-									setOpen(false);
-								} else {
-									toast({
-										title: `Invite link deletion failed`,
-										description: "There was an error deleting the invite link. Please try again",
-										variant: "destructive",
-									});
-								}
+								await onDelete(form.getValues("id"));
 							}}
 						/>
 					)}
@@ -364,6 +371,8 @@ function ManageOrganizationInviteLinkDialogForm({
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
 						onClick={() => {
 							const numOfErrors = Object.keys(form.formState.errors).length;
+							console.log(form.formState.errors);
+							console.log(form.getValues());
 							if (numOfErrors > 0) {
 								toast({
 									title: `Form submission errors`,

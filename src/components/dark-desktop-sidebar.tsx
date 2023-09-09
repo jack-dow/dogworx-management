@@ -39,6 +39,7 @@ type Navigation = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	icon: (...args: any[]) => JSX.Element | React.ReactNode;
 	disabled: boolean;
+	adminOnly?: boolean;
 	subNavigation?: Array<{
 		name: string;
 		href: string;
@@ -57,6 +58,7 @@ export const navigation = [
 		href: "/settings/organization",
 		icon: SettingsIcon,
 		disabled: false,
+		adminOnly: true,
 		subNavigation: [
 			{
 				name: "Organization",
@@ -99,6 +101,14 @@ function DarkDesktopSidebar() {
 										item.href === pathname ||
 										pathname.startsWith(item.href) ||
 										pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
+									if (
+										item.adminOnly &&
+										session.user.organizationRole !== "owner" &&
+										session.user.organizationRole !== "admin"
+									) {
+										return null;
+									}
 
 									return (
 										<React.Fragment key={"desktop-" + item.name}>
@@ -185,7 +195,7 @@ function DarkDesktopSidebar() {
 										</React.Fragment>
 									);
 								})}
-								{session.user.emailAddress === "jack.dowww@gmail.com" && (
+								{session.user.organizationId === "1" && (
 									<li>
 										<a
 											href="/organizations"

@@ -22,7 +22,7 @@ async function OrganizationsPage({
 	});
 	const session = await actions.auth.sessions.current();
 
-	if (session.user.emailAddress !== "jack.dowww@gmail.com") {
+	if (session.user.organizationId !== "1") {
 		redirect("/");
 	}
 

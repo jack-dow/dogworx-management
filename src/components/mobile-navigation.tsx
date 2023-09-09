@@ -58,6 +58,14 @@ function MobileNavigation() {
 								{Object.values(navigation).map((item) => {
 									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
 
+									if (
+										item.adminOnly &&
+										session.user.organizationRole !== "owner" &&
+										session.user.organizationRole !== "admin"
+									) {
+										return null;
+									}
+
 									return (
 										<React.Fragment key={item.name}>
 											<li>

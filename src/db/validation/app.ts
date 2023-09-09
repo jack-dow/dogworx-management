@@ -100,6 +100,7 @@ export const InsertBookingSchema = createInsertSchema(bookings)
 	.omit({ createdAt: true, updatedAt: true, organizationId: true })
 	.extend({
 		id: IdSchema,
+		assignedToId: IdSchema,
 		// Isn't a IdSchema because react-hook-form won't let you set a null value, so we have to use an empty string to unset the value
 		dogId: z.string().nullable(),
 		bookingTypeId: z.string().nullable(),

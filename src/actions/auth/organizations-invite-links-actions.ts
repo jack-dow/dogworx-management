@@ -51,10 +51,11 @@ const insertOrganizationInviteLink = createServerAction(async (data: InsertOrgan
 
 		await drizzle.insert(organizationInviteLinks).values({
 			...validation.data,
-			organizationId: user.organizationId,
+			organizationId: user.organizationId !== "1" ? user.organizationId : validation.data.organizationId,
 		});
 
 		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -86,9 +87,15 @@ const updateOrganizationInviteLink = createServerAction(async (data: UpdateOrgan
 		await drizzle
 			.update(organizationInviteLinks)
 			.set(data)
-			.where(and(eq(organizationInviteLinks.organizationId, user.organizationId), eq(organizationInviteLinks.id, id)));
+			.where(
+				and(
+					user.organizationId !== "1" ? eq(organizationInviteLinks.organizationId, user.organizationId) : undefined,
+					eq(organizationInviteLinks.id, id),
+				),
+			);
 
 		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -117,9 +124,15 @@ const deleteOrganizationInviteLink = createServerAction(async (id: string) => {
 
 		await drizzle
 			.delete(organizationInviteLinks)
-			.where(and(eq(organizationInviteLinks.organizationId, user.organizationId), eq(organizationInviteLinks.id, id)));
+			.where(
+				and(
+					user.organizationId !== "1" ? eq(organizationInviteLinks.organizationId, user.organizationId) : undefined,
+					eq(organizationInviteLinks.id, id),
+				),
+			);
 
 		revalidatePath("/settings/organization");
+		revalidatePath("/organization/[id]");
 
 		return { success: true, data: undefined };
 	} catch {

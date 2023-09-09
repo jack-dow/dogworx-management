@@ -1,9 +1,9 @@
 import { type Metadata } from "next";
 
+import { ManageOrganizationForm } from "~/components/manage-organization-form/manage-organization-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
-import { OrganizationSettingsForm } from "./_components/organization-settings-form";
 
 export const metadata: Metadata = {
 	title: "Organization Settings | Dogworx Management",
@@ -16,7 +16,7 @@ async function OrganizationSettingsPage() {
 		<>
 			<PageHeader title="Organization Settings" back={{ href: "/" }} />
 
-			{result.data ? <OrganizationSettingsForm organization={result.data} /> : <NotFound />}
+			{result.data ? <ManageOrganizationForm organization={result.data} /> : <NotFound />}
 		</>
 	);
 }

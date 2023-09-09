@@ -11,7 +11,7 @@ import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { TimeInput } from "~/components/ui/time-input";
 import { useToast } from "~/components/ui/use-toast";
 import { signOut } from "~/lib/auth";
-import { ManageOrganizationUserDialog } from "../../settings/organization/_components/manage-organization-user-dialog";
+import { ManageOrganizationUserDialog } from "../../../../components/manage-organization-form/manage-organization-user-dialog";
 
 function Test() {
 	const { toast } = useToast();

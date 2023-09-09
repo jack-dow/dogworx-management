@@ -29,7 +29,7 @@ import { Label } from "~/components/ui/label";
 import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type UserById } from "~/actions";
+import { actions } from "~/actions";
 import { type ProfileImageUrlPOSTResponse } from "~/app/api/auth/profile-image-url/route";
 import { useSession, useUser } from "~/app/providers";
 import { organizationRoleOptions } from "~/db/schema";
@@ -48,6 +48,7 @@ const ManageOrganizationUserFormSchema = InsertUserSchema.extend({
 			expiresAt: true,
 			ipAddress: true,
 			userAgent: true,
+			lastActiveAt: true,
 		}),
 	),
 });
@@ -142,17 +143,21 @@ type ManageOrganizationUserDialogFormProps = {
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	isNew: boolean;
-	organizationUser?: UserById;
+	organizationUser?: InsertUserSchema;
 	defaultValues?: Partial<ManageOrganizationUserFormSchema>;
+	onSubmit?: (data: ManageOrganizationUserFormSchema) => void;
+	onDelete?: (id: string) => Promise<void>;
 };
 
 function ManageOrganizationUserDialogForm({
 	setOpen,
 	setIsDirty,
 	onConfirmCancel,
+	isNew,
 	organizationUser,
 	defaultValues,
-	isNew,
+	onSubmit,
+	onDelete,
 }: ManageOrganizationUserDialogFormProps) {
 	const { toast } = useToast();
 
@@ -161,11 +166,14 @@ function ManageOrganizationUserDialogForm({
 	// Have to hold the file here because we need to upload as a File not a url and if you use a File in zod it errors when run on the server as File doesn't exist there
 	const [uploadedProfileImage, setUploadedProfileImage] = React.useState<File | null>(null);
 
+	const [isConfirmOwnershipChangeDialogOpen, setIsConfirmOwnershipChangeDialogOpen] = React.useState(false);
+
 	const form = useForm<ManageOrganizationUserFormSchema>({
 		resolver: zodResolver(ManageOrganizationUserFormSchema),
 		defaultValues: {
 			organizationId: user.organizationId,
 			organizationRole: "member",
+			sessions: [],
 			...organizationUser,
 			...defaultValues,
 			id: organizationUser?.id ?? generateId(),
@@ -175,7 +183,7 @@ function ManageOrganizationUserDialogForm({
 	useConfirmPageNavigation(isFormDirty);
 
 	React.useEffect(() => {
-		function syncOrganizationUser(organizationUser: UserById) {
+		function syncOrganizationUser(organizationUser: InsertUserSchema) {
 			form.reset(organizationUser, {
 				keepDirty: true,
 				keepDirtyValues: true,
@@ -191,267 +199,305 @@ function ManageOrganizationUserDialogForm({
 		setIsDirty(form.formState.isDirty);
 	}, [form.formState.isDirty, setIsDirty]);
 
-	return (
-		<Form {...form}>
-			<form
-				className="grid gap-4"
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
+	async function _onSubmit(data: ManageOrganizationUserFormSchema) {
+		try {
+			if (data.organizationRole === "owner" && !isConfirmOwnershipChangeDialogOpen && user.organizationId !== "1") {
+				setIsConfirmOwnershipChangeDialogOpen(true);
+				return;
+			}
 
-					void form.handleSubmit(async (data) => {
+			let successfullyUploadedImage = false;
+			if (data.profileImageUrl && data.profileImageUrl !== organizationUser?.profileImageUrl) {
+				const errorResponse = {
+					title: "Failed to upload profile image",
+					description: "An unknown error occurred while trying to upload your profile image. Please try again.",
+				};
+				if (uploadedProfileImage) {
+					const response = await fetch(
+						`/api/auth/profile-image-url?fileType=${encodeURIComponent(uploadedProfileImage.type)}`,
+						{
+							method: "POST",
+							body: JSON.stringify({ id: data.id }),
+						},
+					);
+
+					const body = (await response.json()) as ProfileImageUrlPOSTResponse;
+
+					if (!body.success || !response.ok) {
+						toast(errorResponse);
+					} else {
 						try {
-							let successfullyUploadedImage = false;
-							if (data.profileImageUrl && data.profileImageUrl !== organizationUser?.profileImageUrl) {
-								const errorResponse = {
-									title: "Failed to upload profile image",
-									description: "An unknown error occurred while trying to upload your profile image. Please try again.",
-								};
-								if (uploadedProfileImage) {
-									const response = await fetch(
-										`/api/auth/profile-image-url?fileType=${encodeURIComponent(uploadedProfileImage.type)}`,
-										{
-											method: "POST",
-											body: JSON.stringify({ id: data.id }),
-										},
-									);
+							const url = body.data;
+							const response = await fetch(url, {
+								method: "PUT",
+								body: uploadedProfileImage,
+							});
 
-									const body = (await response.json()) as ProfileImageUrlPOSTResponse;
+							if (!response.ok) {
+								toast(errorResponse);
+							} else {
+								function removeQueryParametersFromUrl(url: string) {
+									const index = url.indexOf("?");
+									if (index !== -1) {
+										return url.substring(0, index);
+									}
+									return url;
+								}
 
-									if (!body.success || !response.ok) {
-										toast(errorResponse);
-									} else {
-										try {
-											const url = body.data;
-											const response = await fetch(url, {
-												method: "PUT",
-												body: uploadedProfileImage,
-											});
+								data.profileImageUrl = removeQueryParametersFromUrl(url);
+								successfullyUploadedImage = true;
+							}
+						} catch {
+							toast(errorResponse);
+						}
+					}
+				} else {
+					if (data.profileImageUrl != null) {
+						toast(errorResponse);
+					}
+				}
+			}
 
-											if (!response.ok) {
-												toast(errorResponse);
-											} else {
-												function removeQueryParametersFromUrl(url: string) {
-													const index = url.indexOf("?");
-													if (index !== -1) {
-														return url.substring(0, index);
-													}
-													return url;
+			let success = false;
+
+			if (onSubmit) {
+				onSubmit(data);
+				setOpen(false);
+				return;
+			}
+
+			if (organizationUser) {
+				const response = await actions.auth.organizations.users.update({
+					...data,
+					profileImageUrl:
+						data.profileImageUrl != null
+							? successfullyUploadedImage
+								? data.profileImageUrl
+								: organizationUser.profileImageUrl
+							: null,
+				});
+				success = response.success;
+			} else {
+				const response = await actions.auth.organizations.users.insert({
+					...data,
+					profileImageUrl:
+						data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
+				});
+				success = response.success;
+			}
+
+			if (success) {
+				toast({
+					title: `User ${isNew ? "Created" : "Updated"}`,
+					description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
+						data.familyName ? " " + data.familyName : ""
+					}".`,
+				});
+			} else {
+				toast({
+					title: `User ${isNew ? "Creation" : "Update"} Failed`,
+					description: `There was an error ${isNew ? "creating" : "updating"} user "${data.givenName}${
+						data.familyName ? " " + data.familyName : ""
+					}". Please try again.`,
+					variant: "destructive",
+				});
+			}
+
+			setOpen(false);
+		} catch (error) {
+			if (process.env.NODE_ENV === "development") {
+				console.error(error);
+			}
+		}
+	}
+
+	return (
+		<>
+			<Dialog open={isConfirmOwnershipChangeDialogOpen} onOpenChange={setIsConfirmOwnershipChangeDialogOpen}>
+				<DialogContent className="sm:max-w-[425px]">
+					<DialogHeader>
+						<DialogTitle>Are you sure?</DialogTitle>
+						<DialogDescription>
+							You are about to change the ownership of this organization. This will remove your ownership of this
+							organization and make this user the owner. You will be demoted to an admin.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setIsConfirmOwnershipChangeDialogOpen(false);
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={form.formState.isSubmitting}
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+
+								void form
+									.handleSubmit(_onSubmit)(e)
+									.finally(() => {
+										setIsConfirmOwnershipChangeDialogOpen(false);
+									});
+							}}
+						>
+							{form.formState.isSubmitting && <Loader size="sm" />}
+							<span>Change ownership</span>
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Form {...form}>
+				<form
+					className="grid gap-4"
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+
+						void form.handleSubmit(_onSubmit)(e);
+					}}
+				>
+					<div className="grid gap-2 xl:grid-cols-2">
+						<div className="flex w-full flex-1">
+							<FormField
+								control={form.control}
+								name="givenName"
+								render={({ field }) => (
+									<FormItem className="w-full">
+										<FormLabel>First name</FormLabel>
+										<FormControl>
+											<Input {...field} value={field.value ?? ""} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
+						<div className="flex w-full flex-1">
+							<FormField
+								control={form.control}
+								name="familyName"
+								render={({ field }) => (
+									<FormItem className="w-full">
+										<FormLabel>Last name</FormLabel>
+										<FormControl>
+											<Input {...field} value={field.value ?? ""} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+					</div>
+
+					<FormField
+						control={form.control}
+						name="emailAddress"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Email address</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<AccountProfileImage setUploadedProfileImage={setUploadedProfileImage} />
+
+					{!isNew && <AccountSessions />}
+
+					<FormField
+						control={form.control}
+						name="organizationRole"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Role</FormLabel>
+								<FormControl>
+									<Tabs
+										value={field.value}
+										onValueChange={(value) => {
+											field.onChange(value);
+										}}
+										className="w-full"
+									>
+										<TabsList className="w-full">
+											{organizationRoleOptions.map((option) => {
+												if (option === "owner" && user.organizationId !== "1" && user.organizationRole !== "owner") {
+													return null;
 												}
 
-												data.profileImageUrl = removeQueryParametersFromUrl(url);
-												successfullyUploadedImage = true;
-											}
-										} catch {
-											toast(errorResponse);
-										}
-									}
-								} else {
-									if (data.profileImageUrl != null) {
-										toast(errorResponse);
-									}
-								}
-							}
+												return (
+													<TabsTrigger key={option} value={option} className="flex-1 capitalize">
+														{option}
+													</TabsTrigger>
+												);
+											})}
+										</TabsList>
+									</Tabs>
+								</FormControl>
 
-							let success = false;
-
-							if (organizationUser) {
-								const response = await actions.auth.organizations.users.update({
-									...data,
-									profileImageUrl:
-										data.profileImageUrl != null
-											? successfullyUploadedImage
-												? data.profileImageUrl
-												: organizationUser.profileImageUrl
-											: null,
-								});
-								success = response.success && !!response.data;
-							} else {
-								const response = await actions.auth.organizations.users.insert({
-									...data,
-									profileImageUrl:
-										data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
-								});
-								success = response.success;
-							}
-
-							if (success) {
-								toast({
-									title: `User ${isNew ? "Created" : "Updated"}`,
-									description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
-										data.familyName ? " " + data.familyName : ""
-									}".`,
-								});
-							} else {
-								toast({
-									title: `User ${isNew ? "Creation" : "Update"} Failed`,
-									description: `There was an error ${isNew ? "creating" : "updating"} user "${data.givenName}${
-										data.familyName ? " " + data.familyName : ""
-									}". Please try again.`,
-									variant: "destructive",
-								});
-							}
-
-							setOpen(false);
-						} catch (error) {
-							if (process.env.NODE_ENV === "development") {
-								console.error(error);
-							}
-						}
-					})(e);
-				}}
-			>
-				<div className="grid gap-2 xl:grid-cols-2">
-					<div className="flex w-full flex-1">
-						<FormField
-							control={form.control}
-							name="givenName"
-							render={({ field }) => (
-								<FormItem className="w-full">
-									<FormLabel>First name</FormLabel>
-									<FormControl>
-										<Input {...field} value={field.value ?? ""} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-
-					<div className="flex w-full flex-1">
-						<FormField
-							control={form.control}
-							name="familyName"
-							render={({ field }) => (
-								<FormItem className="w-full">
-									<FormLabel>Last name</FormLabel>
-									<FormControl>
-										<Input {...field} value={field.value ?? ""} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-				</div>
-
-				<FormField
-					control={form.control}
-					name="emailAddress"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Email address</FormLabel>
-							<FormControl>
-								<Input {...field} value={field.value ?? ""} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-
-				<AccountProfileImage setUploadedProfileImage={setUploadedProfileImage} />
-
-				{!isNew && <AccountSessions />}
-
-				<FormField
-					control={form.control}
-					name="organizationRole"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Role</FormLabel>
-							<FormControl>
-								<Tabs
-									value={field.value}
-									onValueChange={(value) => {
-										field.onChange(value);
-									}}
-									className="w-full"
-								>
-									<TabsList className="grid w-full grid-cols-2">
-										{organizationRoleOptions.map((option) => {
-											if (option === "owner") {
-												return null;
-											}
-
-											return (
-												<TabsTrigger key={option} value={option} className="capitalize">
-													{option}
-												</TabsTrigger>
-											);
-										})}
-									</TabsList>
-								</Tabs>
-							</FormControl>
-
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-
-				<DialogFooter className="mt-2">
-					{!isNew &&
-						organizationUser?.organizationRole !== "owner" &&
-						(user.organizationRole === "owner" || organizationUser?.organizationRole === "member") && (
-							<DestructiveActionDialog
-								name="user"
-								onConfirm={async () => {
-									const result = await actions.auth.organizations.users.delete(form.getValues("id"));
-
-									if (result.success) {
-										toast({
-											title: `User deleted`,
-											description: `Successfully deleted client "${form.getValues("givenName")}${
-												form.getValues("familyName") ? " " + form.getValues("familyName") : ""
-											}".`,
-										});
-									} else {
-										toast({
-											title: `User deletion failed`,
-											description: `There was an error deleting client "${form.getValues("givenName")}${
-												form.getValues("familyName") ? " " + form.getValues("familyName") : ""
-											}". Please try again.`,
-											variant: "destructive",
-										});
-									}
-								}}
-							/>
+								<FormMessage />
+							</FormItem>
 						)}
+					/>
 
-					<Button
-						variant="outline"
-						onClick={() => {
-							if (form.formState.isDirty) {
-								onConfirmCancel();
-								return;
-							}
+					<DialogFooter className="mt-2">
+						{!isNew &&
+							onDelete &&
+							organizationUser?.organizationRole !== "owner" &&
+							(user.organizationRole === "owner" || organizationUser?.organizationRole === "member") && (
+								<DestructiveActionDialog
+									name="user"
+									onConfirm={async () => {
+										await onDelete(form.getValues("id"));
+									}}
+								/>
+							)}
 
-							setOpen(false);
-						}}
-					>
-						Cancel
-					</Button>
-					<Button
-						type="submit"
-						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
-						onClick={() => {
-							const numOfErrors = Object.keys(form.formState.errors).length;
-							if (numOfErrors > 0) {
-								toast({
-									title: `Form submission errors`,
-									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-										numOfErrors > 1 ? "s" : ""
-									} with your submission. Please fix them and resubmit.`,
-									variant: "destructive",
-								});
-							}
-						}}
-					>
-						{form.formState.isSubmitting && <Loader size="sm" />}
-						{!isNew ? "Update user" : "Create user"}
-					</Button>
-				</DialogFooter>
-			</form>
-		</Form>
+						<Button
+							variant="outline"
+							onClick={() => {
+								if (form.formState.isDirty) {
+									onConfirmCancel();
+									return;
+								}
+
+								setOpen(false);
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							type="submit"
+							disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
+							onClick={() => {
+								const numOfErrors = Object.keys(form.formState.errors).length;
+								if (numOfErrors > 0) {
+									toast({
+										title: `Form submission errors`,
+										description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+											numOfErrors > 1 ? "s" : ""
+										} with your submission. Please fix them and resubmit.`,
+										variant: "destructive",
+									});
+								}
+							}}
+						>
+							{form.formState.isSubmitting && <Loader size="sm" />}
+							{!isNew ? "Update user" : "Create user"}
+						</Button>
+					</DialogFooter>
+				</form>
+			</Form>
+		</>
 	);
 }
 
@@ -569,12 +615,9 @@ function AccountSessions() {
 	const activeSession = sessions.fields.find((session) => session.id === currentSession?.id);
 
 	return (
-		<>
+		<div className="space-y-2">
 			<div>
-				<h2 className="text-base font-semibold leading-7 text-foreground">Sessions</h2>
-				<p className="text-sm leading-6 text-muted-foreground">
-					These are the sessions/devices that have logged into your account. Click the session to view more information.
-				</p>
+				<Label>Sessions</Label>
 			</div>
 			<div className="">
 				<Accordion type="single" collapsible className="w-full">
@@ -607,7 +650,7 @@ function AccountSessions() {
 					})}
 				</Accordion>
 			</div>
-		</>
+		</div>
 	);
 }
 
