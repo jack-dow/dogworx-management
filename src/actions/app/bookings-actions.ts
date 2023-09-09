@@ -340,7 +340,7 @@ const insertBooking = createServerAction(async (values: InsertBookingSchema) => 
 		});
 
 		revalidatePath("/bookings");
-		revalidatePath("/booking/[id]");
+		revalidatePath("/bookings/[id]");
 		revalidatePath("/calendar/week/[...date]");
 
 		return { success: true, data: booking };
@@ -385,7 +385,7 @@ const updateBooking = createServerAction(async (values: UpdateBookingSchema) => 
 		});
 
 		revalidatePath("/bookings");
-		revalidatePath("/booking/[id]");
+		revalidatePath("/bookings/[id]");
 		revalidatePath("/calendar/week/[...date]");
 
 		return { success: true, data: booking };

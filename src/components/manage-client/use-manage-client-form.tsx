@@ -63,7 +63,7 @@ function useManageClientForm(props: UseManageClientFormProps) {
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/client/new");
+			router.replace("/clients/new");
 		}
 	}, [searchParams, router]);
 

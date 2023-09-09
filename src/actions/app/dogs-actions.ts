@@ -234,7 +234,7 @@ const insertDog = createServerAction(async (values: InsertDogSchema) => {
 		});
 
 		revalidatePath("/dogs");
-		revalidatePath("/dog/[id]");
+		revalidatePath("/dogs/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -340,7 +340,7 @@ const updateDog = createServerAction(async (values: UpdateDogSchema) => {
 		});
 
 		revalidatePath("/dogs");
-		revalidatePath("/dog/[id]");
+		revalidatePath("/dogs/[id]");
 
 		return { success: true, data: undefined };
 	} catch {

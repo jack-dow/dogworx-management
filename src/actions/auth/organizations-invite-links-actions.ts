@@ -55,7 +55,7 @@ const insertOrganizationInviteLink = createServerAction(async (data: InsertOrgan
 		});
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -95,7 +95,7 @@ const updateOrganizationInviteLink = createServerAction(async (data: UpdateOrgan
 			);
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -132,7 +132,7 @@ const deleteOrganizationInviteLink = createServerAction(async (id: string) => {
 			);
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {

@@ -171,7 +171,7 @@ function VetToDogRelationships({
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
-									router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+									router.push(`/dogs/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
 									if (setOpen) {
 										setOpen(false);
 									}
@@ -304,10 +304,10 @@ function VetToDogRelationship({
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
-							{`/dog/${dogToVetRelationship.dogId}` !== pathname && (
+							{`/dogs/${dogToVetRelationship.dogId}` !== pathname && (
 								<DropdownMenuItem asChild>
 									<Link
-										href={`/dog/${dogToVetRelationship.dogId}`}
+										href={`/dogs/${dogToVetRelationship.dogId}`}
 										onClick={() => {
 											setIsLoadingDogPage(true);
 										}}

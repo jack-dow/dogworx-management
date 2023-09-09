@@ -361,7 +361,7 @@ function BookingFields({
 										renderActions={({ searchTerm }) => (
 											<SearchComboboxAction
 												onSelect={() => {
-													router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+													router.push(`/dogs/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
 												}}
 											>
 												<PlusIcon className="mr-1 h-4 w-4" />

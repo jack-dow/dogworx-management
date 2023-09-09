@@ -28,7 +28,7 @@ function VetDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => vo
 						}".`,
 					});
 
-					if (pathname.startsWith("/vet/")) {
+					if (pathname.startsWith("/vets/")) {
 						router.push("/vets");
 						return;
 					}

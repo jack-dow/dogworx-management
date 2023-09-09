@@ -29,7 +29,7 @@ function BookingDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =
 						description: `Successfully deleted booking.`,
 					});
 
-					if (pathname.startsWith("/booking/")) {
+					if (pathname.startsWith("/bookings/")) {
 						router.push("/bookings");
 						return;
 					}

@@ -113,7 +113,7 @@ function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
 		if (success) {
 			if (user.organizationId === "1") {
 				if (isNew) {
-					router.replace(`/organization/${data.id}`);
+					router.replace(`/organizations/${data.id}`);
 				} else {
 					router.push(`/organizations`);
 				}

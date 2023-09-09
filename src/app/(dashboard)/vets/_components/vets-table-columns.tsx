@@ -85,7 +85,7 @@ function createVetsTableColumns(
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href={`/vet/${row.original.id}`} className="hover:cursor-pointer">
+									<Link href={`/vets/${row.original.id}`} className="hover:cursor-pointer">
 										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 										Edit
 									</Link>

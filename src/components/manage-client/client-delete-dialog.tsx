@@ -28,7 +28,7 @@ function ClientDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =>
 						}".`,
 					});
 
-					if (pathname.startsWith("/client/")) {
+					if (pathname.startsWith("/clients/")) {
 						router.push("/clients");
 						return;
 					}

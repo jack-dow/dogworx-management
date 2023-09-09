@@ -27,7 +27,7 @@ function VetClinicDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: ()
 						description: `Successfully deleted vet clinic "${form.getValues("name")}".`,
 					});
 
-					if (pathname.startsWith("/vet-clinic/")) {
+					if (pathname.startsWith("/vet-clinics/")) {
 						router.push("/vet-clinics");
 						return;
 					}

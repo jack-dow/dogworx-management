@@ -68,7 +68,7 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/vet-clinic/new");
+			router.replace("/vet-clinics/new");
 		}
 	}, [searchParams, router]);
 

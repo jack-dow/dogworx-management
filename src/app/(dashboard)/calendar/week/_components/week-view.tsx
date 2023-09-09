@@ -681,7 +681,7 @@ function BookingPopover({ booking, trigger, onEditClick, setIsPreviewCardOpen }:
 							<div className="grid gap-y-2">
 								<Label htmlFor="dog">Dog</Label>
 								<Button variant="ghost" asChild className="-ml-4 h-auto w-[318px] justify-between rounded-none">
-									<Link href={`/dog/${booking.dog.id}`}>
+									<Link href={`/dogs/${booking.dog.id}`}>
 										<div className="flex max-w-full shrink items-center gap-x-2 truncate">
 											<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 												<DogIcon className="h-5 w-5" />

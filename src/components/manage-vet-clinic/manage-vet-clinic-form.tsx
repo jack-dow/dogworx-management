@@ -48,7 +48,7 @@ function ManageVetClinicForm({ vetClinic, onSubmit }: UseManageVetClinicFormProp
 
 							if (result.success) {
 								if (isNew) {
-									router.replace(`/vet-clinic/${data.id}`);
+									router.replace(`/vet-clinics/${data.id}`);
 									return;
 								}
 								router.push("/vet-clinics");

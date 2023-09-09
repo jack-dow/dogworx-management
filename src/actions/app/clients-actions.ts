@@ -376,7 +376,7 @@ const updateClient = createServerAction(async (values: UpdateClientSchema) => {
 		}
 
 		revalidatePath("/clients");
-		revalidatePath("/dog/[id]");
+		revalidatePath("/dogs/[id]");
 
 		const client = await drizzle.query.clients.findFirst({
 			columns: {

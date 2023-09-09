@@ -134,7 +134,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 								onSelectChange={(result) => {
 									if (result) {
 										setIsLoading(true);
-										router.push(`${pathname.slice(0, -1)}/${result.id}`);
+										router.push(`${pathname}/${result.id}`);
 									}
 								}}
 								placeholder={`Search ${count} ${name}s...`}
@@ -147,9 +147,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 										onSelect={() => {
 											setIsLoading(true);
 											router.push(
-												`${pathname.slice(0, -1)}/new${
-													searchTerm ? `?searchTerm=${encodeURIComponent(searchTerm)}` : ""
-												}`,
+												`${pathname}/new${searchTerm ? `?searchTerm=${encodeURIComponent(searchTerm)}` : ""}`,
 											);
 											return;
 										}}
@@ -239,9 +237,9 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									onClick={(event) => {
 										setIsLoading(true);
 										if (event.metaKey || event.ctrlKey) {
-											window.open(`/${pathname.slice(0, -1)}/${row.original.id}`, "_blank");
+											window.open(`${pathname}/${row.original.id}`, "_blank");
 										} else {
-											router.push(`${pathname.slice(0, -1)}/${row.original.id}`, {
+											router.push(`${pathname}/${row.original.id}`, {
 												scroll: false,
 											});
 										}

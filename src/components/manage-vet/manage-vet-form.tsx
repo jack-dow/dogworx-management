@@ -49,7 +49,7 @@ function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
 
 							if (result.success) {
 								if (isNew) {
-									router.replace(`/vet/${data.id}`);
+									router.replace(`/vets/${data.id}`);
 									return;
 								}
 

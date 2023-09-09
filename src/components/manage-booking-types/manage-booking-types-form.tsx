@@ -47,7 +47,7 @@ function ManageBookingTypeForm({ bookingType, onSubmit }: UseManageBookingTypeFo
 
 							if (result.success) {
 								if (isNew) {
-									router.replace(`/settings/booking-type/${data.id}`);
+									router.replace(`/settings/booking-types/${data.id}`);
 									return;
 								}
 

@@ -29,7 +29,7 @@ function BookingTypeDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: 
 						description: `Successfully deleted booking.`,
 					});
 
-					if (pathname.startsWith("/settings/booking-type/")) {
+					if (pathname.startsWith("/settings/booking-types/")) {
 						router.push("/settings/booking-types/");
 						return;
 					}

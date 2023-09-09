@@ -35,7 +35,7 @@ const insertOrganizationsUser = createServerAction(async (data: InsertUserSchema
 		});
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -77,7 +77,7 @@ const updateOrganizationsUser = createServerAction(async (data: UpdateUserSchema
 		});
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {
@@ -136,7 +136,7 @@ const deleteOrganizationsUser = createServerAction(async (id: string) => {
 			);
 
 		revalidatePath("/settings/organization");
-		revalidatePath("/organization/[id]");
+		revalidatePath("/organizations/[id]");
 
 		return { success: true, data: undefined };
 	} catch {

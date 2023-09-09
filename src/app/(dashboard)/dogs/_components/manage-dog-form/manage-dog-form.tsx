@@ -111,7 +111,7 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/dog/new");
+			router.replace("/dogs/new");
 		}
 	}, [searchParams, router]);
 
@@ -135,7 +135,7 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 
 		if (success) {
 			if (isNew) {
-				router.replace(`/dog/${data.id}`);
+				router.replace(`/dogs/${data.id}`);
 			} else {
 				router.push("/dogs");
 			}

@@ -89,7 +89,7 @@ function useManageVetForm(props: UseManageVetFormProps) {
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
-			router.replace("/vet/new");
+			router.replace("/vets/new");
 		}
 	}, [searchParams, router]);
 

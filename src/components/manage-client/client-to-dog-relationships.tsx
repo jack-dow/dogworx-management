@@ -172,7 +172,7 @@ function ClientToDogRelationships({
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
-									router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+									router.push(`/dogs/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
 
 									if (setOpen) {
 										setOpen(false);
@@ -305,10 +305,10 @@ function ClientToDogRelationship({
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 
-							{`/dog/${dogToClientRelationship.dogId}` !== pathname && (
+							{`/dogs/${dogToClientRelationship.dogId}` !== pathname && (
 								<DropdownMenuItem asChild>
 									<Link
-										href={`/dog/${dogToClientRelationship.dogId}`}
+										href={`/dogs/${dogToClientRelationship.dogId}`}
 										onClick={() => {
 											setIsLoadingDogPage(true);
 										}}

@@ -48,7 +48,7 @@ function ManageClientForm({ client, onSubmit }: UseManageClientFormProps) {
 
 							if (result.success) {
 								if (isNew) {
-									router.replace(`/client/${data.id}`);
+									router.replace(`/clients/${data.id}`);
 									return;
 								}
 								router.push("/clients");
