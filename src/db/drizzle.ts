@@ -3,7 +3,8 @@ import { type Logger } from "drizzle-orm";
 import { drizzle as createDrizzle } from "drizzle-orm/planetscale-serverless";
 
 import { env } from "~/env.mjs";
-import * as schema from "./schema";
+import * as app from "./schema/app";
+import * as auth from "./schema/auth";
 
 const connection = connect({
 	host: env.DATABASE_HOST,
@@ -35,5 +36,8 @@ class MyLogger implements Logger {
 
 export const drizzle = createDrizzle(connection, {
 	logger: process.env.NODE_ENV === "development" ? new MyLogger() : false,
-	schema,
+	schema: {
+		...app,
+		...auth,
+	},
 });

@@ -10,12 +10,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type OrganizationInviteLinkById } from "~/actions";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { signUp } from "~/lib/auth";
 import { SignUpSchema } from "~/lib/validation";
+import { type RouterOutputs } from "~/server";
 
-function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) {
+function InviteForm({
+	inviteLink,
+}: {
+	inviteLink: RouterOutputs["auth"]["organizations"]["inviteLinks"]["byId"]["data"];
+}) {
 	const { toast } = useToast();
 	const router = useRouter();
 

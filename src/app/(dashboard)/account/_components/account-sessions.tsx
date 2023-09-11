@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useFieldArray, type Control } from "react-hook-form";
 import UAParser from "ua-parser-js";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
@@ -16,21 +15,22 @@ import {
 } from "~/components/ui/dialog";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { actions } from "~/actions";
 import { useDayjs } from "~/hooks/use-dayjs";
+import { api, type RouterOutputs } from "~/lib/trpc/client";
 import { useSession } from "../../../providers";
-import { type ManageAccountFormSchema } from "./manage-account-form";
 
-function AccountSessions({ control }: { control: Control<ManageAccountFormSchema> }) {
+type Sessions = RouterOutputs["auth"]["user"]["sessions"]["all"]["data"];
+
+function AccountSessions({ initialSessions }: { initialSessions: RouterOutputs["auth"]["user"]["sessions"]["all"] }) {
 	const currentSession = useSession();
 
-	const sessions = useFieldArray({
-		control,
-		name: "sessions",
-		keyName: "rhf-id",
+	const { data } = api.auth.user.sessions.all.useQuery(undefined, {
+		initialData: initialSessions,
 	});
 
-	const activeSession = sessions.fields.find((session) => session.id === currentSession?.id);
+	const sessions = data.data;
+
+	const activeSession = sessions.find((session) => session.id === currentSession?.id);
 
 	return (
 		<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
@@ -42,17 +42,9 @@ function AccountSessions({ control }: { control: Control<ManageAccountFormSchema
 			</div>
 			<div className="xl:col-span-2">
 				<Accordion type="single" collapsible className="w-full">
-					{activeSession && (
-						<SessionAccordion
-							session={activeSession}
-							isCurrentSession
-							onDelete={(session) => {
-								sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
-							}}
-						/>
-					)}
+					{activeSession && <SessionAccordionItem session={activeSession} isCurrentSession />}
 
-					{sessions.fields.map((session) => {
+					{sessions.map((session) => {
 						const isCurrentSession = currentSession?.id === session.id;
 
 						if (isCurrentSession) {
@@ -60,11 +52,11 @@ function AccountSessions({ control }: { control: Control<ManageAccountFormSchema
 						}
 
 						return (
-							<SessionAccordion
+							<SessionAccordionItem
 								key={session.id}
 								session={session}
-								onDelete={(session) => {
-									sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
+								onDelete={() => {
+									// void refetch();
 								}}
 							/>
 						);
@@ -75,23 +67,48 @@ function AccountSessions({ control }: { control: Control<ManageAccountFormSchema
 	);
 }
 
-function SessionAccordion({
-	session,
-	isCurrentSession = false,
-	onDelete,
-}: {
-	session: ManageAccountFormSchema["sessions"][number];
-	isCurrentSession?: boolean;
-	onDelete: (session: ManageAccountFormSchema["sessions"][number]) => void;
-}) {
+type SessionAccordionItemProps =
+	| {
+			session: Sessions[number];
+			isCurrentSession: true;
+			onDelete?: undefined;
+	  }
+	| {
+			session: Sessions[number];
+			isCurrentSession?: false;
+			onDelete: (session: Sessions[number]) => void;
+	  };
+
+function SessionAccordionItem({ session, isCurrentSession = false, onDelete }: SessionAccordionItemProps) {
+	const { toast } = useToast();
+
 	const { dayjs } = useDayjs();
 
-	const [isSignOutConfirmDialogOpen, setIsSignOutConfirmDialogOpen] = React.useState(false);
-	const [isSigningOut, setIsSigningOut] = React.useState(false);
+	const [isDeleteSessionConfirmDialogOpen, setIsDeleteSessionConfirmDialogOpen] = React.useState(false);
+	const [isDeletingSession, setIsDeletingSession] = React.useState(false);
+
+	const deleteMutation = api.auth.user.sessions.delete.useMutation({
+		onSuccess: () => {
+			toast({
+				title: "Signed session out",
+				description: "Successfully signed session/device out of your account.",
+			});
+			onDelete?.(session);
+			setIsDeleteSessionConfirmDialogOpen(false);
+		},
+		onError: () => {
+			toast({
+				title: "Failed to sign session out",
+				description: "An error occurred while signing the session out of your account. Please try again.",
+				variant: "destructive",
+			});
+		},
+		onSettled: () => {
+			setIsDeletingSession(false);
+		},
+	});
 
 	const hasCityOrCountry = session.city || session.country;
-
-	const { toast } = useToast();
 
 	const parsedUA = new UAParser(session.userAgent ?? undefined);
 	const os = parsedUA.getOS();
@@ -108,7 +125,9 @@ function SessionAccordion({
 								? `(${session.city ?? ""}${session.city && session.country ? ", " : ""}${session.country ?? ""})`
 								: ""}
 						</p>
-						<p className="text-left text-xs text-muted-foreground">{dayjs.tz(session.updatedAt).fromNow(true)} ago</p>
+						<p className="text-left text-xs text-muted-foreground">
+							{dayjs.tz(session.lastActiveAt).fromNow(true)} ago
+						</p>
 					</div>
 					<div>{isCurrentSession && <Badge>This Session</Badge>}</div>
 				</div>
@@ -141,7 +160,7 @@ function SessionAccordion({
 								: "Click the button below to sign this session out of your account. "}
 						</p>
 						{!isCurrentSession && (
-							<Dialog open={isSignOutConfirmDialogOpen} onOpenChange={setIsSignOutConfirmDialogOpen}>
+							<Dialog open={isDeleteSessionConfirmDialogOpen} onOpenChange={setIsDeleteSessionConfirmDialogOpen}>
 								<DialogTrigger asChild>
 									<Button variant="link" className="-ml-4 text-destructive">
 										Remove this session
@@ -156,40 +175,20 @@ function SessionAccordion({
 										</DialogDescription>
 									</DialogHeader>
 									<DialogFooter>
-										<Button variant="outline" onClick={() => setIsSignOutConfirmDialogOpen(false)}>
+										<Button variant="outline" onClick={() => setIsDeleteSessionConfirmDialogOpen(false)}>
 											Cancel
 										</Button>
 										<Button
 											variant="destructive"
-											disabled={isSigningOut}
+											disabled={isDeletingSession}
 											onClick={(e) => {
 												e.preventDefault();
-												setIsSigningOut(true);
+												setIsDeletingSession(true);
 
-												actions.auth.sessions
-													.invalidate(session.id)
-													.then(() => {
-														toast({
-															title: "Signed out session",
-															description: "Successfully signed session/device out of your account.",
-														});
-														onDelete(session);
-														setIsSignOutConfirmDialogOpen(false);
-													})
-													.catch(() => {
-														toast({
-															title: "Failed to sign session out",
-															description:
-																"An error occurred while signing the session out of your account. Please try again.",
-															variant: "destructive",
-														});
-													})
-													.finally(() => {
-														setIsSigningOut(false);
-													});
+												deleteMutation.mutate({ id: session.id });
 											}}
 										>
-											{isSigningOut && <Loader size="sm" />}
+											{isDeletingSession && <Loader size="sm" />}
 											<span>Sign session out</span>
 										</Button>
 									</DialogFooter>

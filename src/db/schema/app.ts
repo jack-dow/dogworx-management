@@ -13,6 +13,16 @@ import {
 
 import { organizations, users } from "./auth";
 
+// -----------------------------------------------------------------------------
+// NOTE: As Planetscale does not support foreign keys, table rows that represent a relationship to another table
+// should not be marked with notNull() even though they should not be null, as we want the types to show that
+// they can reference an id of a resource that has been deleted (which means trying to access that id will return null).
+// Instead the not null relationship should be enforced in zod validation (SEE ../validation).
+// The only exception to this is the organization_id field, as the only people who could potentially
+// try to query an organization id that no longer exists is a developer account in the organization with id 1.
+// -----------------------------------------------------------------------------
+
+// Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type.
 const unsignedMediumInt = customType<{
 	data: number;
 	driverData: number;
@@ -37,26 +47,26 @@ const dogs = mysqlTable("dogs", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
-	familyName: varchar("family_name", { length: 100 }),
+	familyName: varchar("family_name", { length: 100 }).notNull().default(""),
 	breed: varchar("breed", { length: 50 }).notNull(),
 	age: date("age").notNull(),
 	isAgeEstimate: boolean("is_age_estimate").notNull(),
 	sex: mysqlEnum("sex", ["male", "female", "unknown"]).notNull(),
 	desexed: boolean("desexed").notNull(),
 	color: varchar("color", { length: 50 }).notNull(),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
 	notes: text("notes"),
 });
 
 const dogsRelations = relations(dogs, ({ many, one }) => ({
-	bookings: many(bookings),
-	dogToClientRelationships: many(dogToClientRelationships),
-	dogToVetRelationships: many(dogToVetRelationships),
 	organization: one(organizations, {
 		fields: [dogs.organizationId],
 		references: [organizations.id],
 	}),
+	bookings: many(bookings),
+	dogToClientRelationships: many(dogToClientRelationships),
+	dogToVetRelationships: many(dogToVetRelationships),
 }));
 
 // -----------------------------------------------------------------------------
@@ -71,31 +81,31 @@ const bookings = mysqlTable("bookings", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }),
 	assignedToId: char("assigned_to_id", { length: 24 }),
+	bookingTypeId: char("booking_type_id", { length: 24 }),
+	dogId: char("dog_id", { length: 24 }),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	date: timestamp("date").notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
 	details: text("details"),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
-	bookingTypeId: char("booking_type_id", { length: 24 }),
 });
 
 const bookingsRelations = relations(bookings, ({ one }) => ({
-	dog: one(dogs, {
-		fields: [bookings.dogId],
-		references: [dogs.id],
-	}),
 	assignedTo: one(users, {
 		fields: [bookings.assignedToId],
 		references: [users.id],
 	}),
-	organization: one(organizations, {
-		fields: [bookings.organizationId],
-		references: [organizations.id],
-	}),
 	bookingType: one(bookingTypes, {
 		fields: [bookings.bookingTypeId],
 		references: [bookingTypes.id],
+	}),
+	dog: one(dogs, {
+		fields: [bookings.dogId],
+		references: [dogs.id],
+	}),
+	organization: one(organizations, {
+		fields: [bookings.organizationId],
+		references: [organizations.id],
 	}),
 }));
 
@@ -111,11 +121,11 @@ const bookingTypes = mysqlTable("booking_types", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
+	color: varchar("color", { length: 7 }).notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
 	details: text("details"),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
-	color: varchar("color", { length: 7 }).notNull(),
 });
 
 const bookingTypesRelations = relations(bookingTypes, ({ one, many }) => ({
@@ -138,6 +148,7 @@ const clients = mysqlTable("clients", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
@@ -146,16 +157,15 @@ const clients = mysqlTable("clients", {
 	city: varchar("city", { length: 50 }).notNull().default(""),
 	state: varchar("state", { length: 30 }).notNull().default(""),
 	postalCode: varchar("postal_code", { length: 10 }).notNull().default(""),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
 	notes: text("notes"),
 });
 
 const clientsRelations = relations(clients, ({ many, one }) => ({
-	dogToClientRelationships: many(dogToClientRelationships),
 	organization: one(organizations, {
 		fields: [clients.organizationId],
 		references: [organizations.id],
 	}),
+	dogToClientRelationships: many(dogToClientRelationships),
 }));
 
 // -----------------------------------------------------------------------------
@@ -170,21 +180,21 @@ const vets = mysqlTable("vets", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
 	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
 	notes: text("notes"),
 });
 
 const vetsRelations = relations(vets, ({ many, one }) => ({
-	dogToVetRelationships: many(dogToVetRelationships),
-	vetToVetClinicRelationships: many(vetToVetClinicRelationships),
 	organization: one(organizations, {
 		fields: [vets.organizationId],
 		references: [organizations.id],
 	}),
+	dogToVetRelationships: many(dogToVetRelationships),
+	vetToVetClinicRelationships: many(vetToVetClinicRelationships),
 }));
 
 // -----------------------------------------------------------------------------
@@ -199,19 +209,19 @@ const vetClinics = mysqlTable("vet_clinics", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	name: varchar("name", { length: 100 }).notNull(),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().default(""),
 	phoneNumber: varchar("phone_number", { length: 20 }).notNull().default(""),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
 	notes: text("notes"),
 });
 
 const vetClinicsRelations = relations(vetClinics, ({ many, one }) => ({
-	vetToVetClinicRelationships: many(vetToVetClinicRelationships),
 	organization: one(organizations, {
 		fields: [vetClinics.organizationId],
 		references: [organizations.id],
 	}),
+	vetToVetClinicRelationships: many(vetToVetClinicRelationships),
 }));
 
 // -----------------------------------------------------------------------------
@@ -226,10 +236,10 @@ const dogToClientRelationships = mysqlTable("dog_to_client_relationships", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }).notNull(),
-	clientId: char("client_id", { length: 24 }).notNull(),
-	relationship: mysqlEnum("relationship", ["owner", "emergency-contact", "fosterer", "groomer"]).notNull(),
+	dogId: char("dog_id", { length: 24 }),
+	clientId: char("client_id", { length: 24 }),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
+	relationship: mysqlEnum("relationship", ["owner", "emergency-contact", "fosterer", "groomer"]).notNull(),
 });
 
 const dogToClientRelationshipsRelations = relations(dogToClientRelationships, ({ one }) => ({
@@ -259,10 +269,10 @@ const dogToVetRelationships = mysqlTable("dog_to_vet_relationships", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }).notNull(),
-	vetId: char("vet_id", { length: 24 }).notNull(),
-	relationship: mysqlEnum("relationship", ["primary", "secondary"]).notNull(),
+	dogId: char("dog_id", { length: 24 }),
+	vetId: char("vet_id", { length: 24 }),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
+	relationship: mysqlEnum("relationship", ["primary", "secondary"]).notNull(),
 });
 
 const dogToVetRelationshipsRelations = relations(dogToVetRelationships, ({ one }) => ({
@@ -292,10 +302,10 @@ const vetToVetClinicRelationships = mysqlTable("vet_to_vet_clinic_relationships"
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	vetId: char("vet_id", { length: 24 }).notNull(),
-	vetClinicId: char("vet_clinic_id", { length: 24 }).notNull(),
-	relationship: mysqlEnum("relationship", ["full-time", "part-time"]).notNull(),
+	vetId: char("vet_id", { length: 24 }),
+	vetClinicId: char("vet_clinic_id", { length: 24 }),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
+	relationship: mysqlEnum("relationship", ["full-time", "part-time"]).notNull(),
 });
 
 const vetToVetClinicRelationshipsRelations = relations(vetToVetClinicRelationships, ({ one }) => ({

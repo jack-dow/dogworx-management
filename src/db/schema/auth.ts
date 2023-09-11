@@ -1,7 +1,17 @@
 import { relations, sql } from "drizzle-orm";
 import { boolean, char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
-export const unsignedSmallInt = customType<{
+// -----------------------------------------------------------------------------
+// NOTE: As Planetscale does not support foreign keys, table rows that represent a relationship to another table
+// should not be marked with notNull() even though they should not be null, as we want the types to show that
+// they can reference an id of a resource that has been deleted (which means trying to access that id will return null).
+// Instead the not null relationship should be enforced in zod validation (SEE ../validation).
+// The only exception to this is the organization_id field, as the only people who could potentially
+// try to query an organization id that no longer exists is a developer account in the organization with id 1.
+// -----------------------------------------------------------------------------
+
+// Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type.
+const unsignedSmallInt = customType<{
 	data: number;
 	driverData: number;
 }>({
@@ -27,10 +37,10 @@ const users = mysqlTable("auth_users", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
+	organizationId: char("organization_id", { length: 24 }).notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
-	organizationId: char("organization_id", { length: 24 }).notNull(),
 	organizationRole: mysqlEnum("organization_role", organizationRoleOptions).notNull(),
 	bannedAt: timestamp("banned_at"),
 	bannedUntil: timestamp("banned_until"),
@@ -38,11 +48,11 @@ const users = mysqlTable("auth_users", {
 });
 
 const usersRelations = relations(users, ({ many, one }) => ({
-	sessions: many(sessions),
 	organization: one(organizations, {
 		fields: [users.organizationId],
 		references: [organizations.id],
 	}),
+	sessions: many(sessions),
 	organizationInviteLinks: many(organizationInviteLinks),
 }));
 
@@ -59,14 +69,14 @@ const sessions = mysqlTable("auth_sessions", {
 		.onUpdateNow()
 		.notNull(),
 	userId: char("user_id", { length: 24 }).notNull(),
+	lastActiveAt: timestamp("last_active_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 	ipAddress: varchar("ip_address", { length: 15 }),
 	userAgent: varchar("user_agent", { length: 200 }),
 	city: varchar("city", { length: 50 }),
 	country: varchar("country", { length: 100 }),
-	lastActiveAt: timestamp("last_active_at")
-		.default(sql`CURRENT_TIMESTAMP`)
-		.notNull(),
 });
 
 const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -81,6 +91,13 @@ const sessionsRelations = relations(sessions, ({ one }) => ({
 // -----------------------------------------------------------------------------
 const verificationCodes = mysqlTable("auth_verification_codes", {
 	id: char("id", { length: 24 }).notNull().primaryKey(),
+	createdAt: timestamp("created_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	updatedAt: timestamp("updated_at")
+		.default(sql`CURRENT_TIMESTAMP`)
+		.onUpdateNow()
+		.notNull(),
 	emailAddress: varchar("email_address", { length: 100 }).notNull(),
 	code: char("code", { length: 6 }).notNull().unique(),
 	token: char("token", { length: 64 }).unique(),
@@ -130,9 +147,9 @@ const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	expiresAt: timestamp("expires_at").notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	userId: char("user_id", { length: 24 }),
+	expiresAt: timestamp("expires_at").notNull(),
 	uses: unsignedSmallInt("uses").notNull().default(0),
 	maxUses: unsignedSmallInt("max_uses"),
 });

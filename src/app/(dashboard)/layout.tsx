@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
+
 import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
 import { MobileNavigation } from "~/components/mobile-navigation";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { cn } from "~/utils";
 import { SessionProvider } from "../providers";
 
@@ -41,7 +43,12 @@ interface DashboardLayoutProps {
 }
 
 async function DashboardLayout({ children }: DashboardLayoutProps) {
-	const session = await actions.auth.sessions.current();
+	const session = await server.auth.user.sessions.current.query();
+
+	if (!session) {
+		redirect("/sign-in");
+	}
+
 	const prefersDarkMode = session.user?.organizationId !== "mslu0ytyi8i2g7u1rdvooe55";
 
 	return (

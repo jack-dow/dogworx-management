@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { jwt } from "~/lib/jwt";
 import { drizzle } from "./db/drizzle";
-import { sessions } from "./db/schema";
+import { sessions } from "./db/schema/auth";
 import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "./lib/auth-options";
 
 export async function middleware(request: NextRequest) {
@@ -36,6 +36,13 @@ export async function middleware(request: NextRequest) {
 			response.cookies.delete(sessionCookieOptions.name);
 
 			return response;
+		}
+
+		if (process.env.NODE_ENV === "development") {
+			if (!sessionTokenData) {
+				console.log("NO SESSION TOKEN!!!");
+			}
+			return NextResponse.next();
 		}
 
 		const session = await drizzle.query.sessions.findFirst({

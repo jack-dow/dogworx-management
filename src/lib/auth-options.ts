@@ -1,7 +1,8 @@
 import { type ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
+import { type InferSelectModel } from "drizzle-orm";
 import ms from "ms";
 
-import { type SelectUserSchema } from "~/db/validation";
+import { type users } from "~/db/schema/auth";
 import { jwt } from "./jwt";
 
 const sessionCookieOptions = {
@@ -15,7 +16,7 @@ const sessionCookieOptions = {
 
 type SessionCookiePayload = {
 	id: string;
-	user: SelectUserSchema;
+	user: InferSelectModel<typeof users>;
 };
 
 type SessionCookie = SessionCookiePayload & {

@@ -11,7 +11,6 @@ import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { TimeInput } from "~/components/ui/time-input";
 import { useToast } from "~/components/ui/use-toast";
 import { signOut } from "~/lib/auth";
-import { ManageOrganizationUserDialog } from "../../../../components/manage-organization-form/manage-organization-user-dialog";
 
 function Test() {
 	const { toast } = useToast();
@@ -24,7 +23,6 @@ function Test() {
 				<div className="flex shrink-0 gap-4 pb-3 pt-6">
 					{process.env.NODE_ENV === "development" && (
 						<>
-							<ManageOrganizationUserDialog />
 							<Button
 								disabled={isLoading}
 								onClick={() => {

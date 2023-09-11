@@ -4,6 +4,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { type z } from "zod";
 
+import { env } from "./env.mjs";
+
 type DefaultErrorCodes = "InvalidBody" | "UnknownError" | "NotAuthorized";
 
 export type APIResponse<Data, ErrorCodes extends string | undefined = undefined> =
@@ -71,17 +73,24 @@ export function mergeRelationships<Relationship extends { id: string; relationsh
 	return Object.values(newRelationships);
 }
 
+// const getBaseUrl = () => {
+// 	if (typeof window !== "undefined") return ""; // browser should use relative url
+// 	if (env.VERCEL_URL) return env.VERCEL_URL; // SSR should use vercel url
+
+// 	return `http://localhost:${env.PORT}`; // dev SSR should use localhost
+// };
+
 export function getBaseUrl(options?: { absolute?: boolean }) {
 	if (typeof window !== "undefined") {
 		if (options?.absolute) {
-			return process.env.NEXT_PUBLIC_APP_URL ?? "";
+			return env.NEXT_PUBLIC_APP_URL;
 		}
 
 		return ""; // browser should use relative url
 	}
-	if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
+	if (env.VERCEL_URL) return env.VERCEL_URL; // SSR should use vercel url
 
-	return `http://localhost:3000`; // dev SSR should use localhost
+	return `http://localhost:${env.PORT}`; // dev SSR should use localhost
 }
 
 type NestedBooleanObject = {
