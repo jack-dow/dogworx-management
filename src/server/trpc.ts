@@ -81,7 +81,7 @@ export const createTRPCContext = async (opts: Opts) => {
 	const timezone = getTimezone();
 	const source = opts.req?.headers.get("x-trpc-source") ?? "unknown";
 
-	console.log(">>> tRPC Request from", source, "by", session?.user);
+	console.log(">>> tRPC Request from", source, "by", `${session?.user.givenName} ${session?.user.familyName}`);
 
 	return createInnerTRPCContext({
 		session,

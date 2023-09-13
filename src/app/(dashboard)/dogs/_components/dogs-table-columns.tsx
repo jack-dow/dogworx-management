@@ -14,11 +14,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type DogsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
 function createDogsTableColumns(
-	onDeleteClick: (dog: DogsList["data"][number]) => void,
-): ColumnDef<DogsList["data"][number]>[] {
+	onDeleteClick: (dog: RouterOutputs["app"]["dogs"]["all"]["data"][number]) => void,
+): ColumnDef<RouterOutputs["app"]["dogs"]["all"]["data"][number]>[] {
 	return [
 		{
 			accessorKey: "givenName",

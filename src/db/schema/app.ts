@@ -81,7 +81,7 @@ const bookings = mysqlTable("bookings", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	assignedToId: char("assigned_to_id", { length: 24 }),
+	assignedToId: char("assigned_to_id", { length: 24 }).notNull(),
 	bookingTypeId: char("booking_type_id", { length: 24 }),
 	dogId: char("dog_id", { length: 24 }),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
@@ -236,8 +236,8 @@ const dogToClientRelationships = mysqlTable("dog_to_client_relationships", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }),
-	clientId: char("client_id", { length: 24 }),
+	dogId: char("dog_id", { length: 24 }).notNull(),
+	clientId: char("client_id", { length: 24 }).notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["owner", "emergency-contact", "fosterer", "groomer"]).notNull(),
 });
@@ -269,8 +269,8 @@ const dogToVetRelationships = mysqlTable("dog_to_vet_relationships", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	dogId: char("dog_id", { length: 24 }),
-	vetId: char("vet_id", { length: 24 }),
+	dogId: char("dog_id", { length: 24 }).notNull(),
+	vetId: char("vet_id", { length: 24 }).notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["primary", "secondary"]).notNull(),
 });
@@ -302,8 +302,8 @@ const vetToVetClinicRelationships = mysqlTable("vet_to_vet_clinic_relationships"
 		.default(sql`CURRENT_TIMESTAMP`)
 		.onUpdateNow()
 		.notNull(),
-	vetId: char("vet_id", { length: 24 }),
-	vetClinicId: char("vet_clinic_id", { length: 24 }),
+	vetId: char("vet_id", { length: 24 }).notNull(),
+	vetClinicId: char("vet_clinic_id", { length: 24 }).notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	relationship: mysqlEnum("relationship", ["full-time", "part-time"]).notNull(),
 });

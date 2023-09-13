@@ -19,7 +19,7 @@ type MultiSelectSearchComboboxProps<Result extends RequiredResultProps> = {
 	renderActions?: ({ searchTerm }: { searchTerm: string }) => React.ReactNode;
 	selected?: Array<Result>;
 	onSelectedChange?: (selected: Array<Result>) => void;
-	onSelect?: (result: Result) => void;
+	onSelect?: (result: Result) => void | Promise<void>;
 	disabled?: boolean;
 	placeholder?: string;
 	className?: string;
@@ -59,7 +59,7 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 
 		const [isOpen, setIsOpen] = React.useState(false);
 		const [searchTerm, setSearchTerm] = React.useState("");
-		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
+		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 200);
 		const [results, setResults] = React.useState<Array<RequiredResultProps>>(selected);
 		const [_selected, _setSelected] = React.useState(selected);
 		const [isLoading, setIsLoading] = React.useState(false);
@@ -132,7 +132,7 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 				}
 
 				setSelected(newSelected);
-				onSelect?.(selectedOption);
+				void onSelect?.(selectedOption);
 			},
 			[setSelected, internalSelected, onSelect],
 		);
@@ -189,19 +189,13 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 										{results.map((option) => {
 											const isSelected = internalSelected.some((selectedOption) => selectedOption.id === option.id);
 											return (
-												<CommandItem
+												<Option
 													key={option.id}
-													value={option.id}
-													onMouseDown={(event) => {
-														event.preventDefault();
-														event.stopPropagation();
-													}}
+													option={option}
+													isSelected={isSelected}
 													onSelect={() => handleSelectOption(option)}
-													className={cn("flex items-center gap-2 w-full", !isSelected ? "pl-8" : null)}
-												>
-													{isSelected ? <CheckIcon className="w-4" /> : null}
-													{resultLabel(option)}
-												</CommandItem>
+													resultLabel={resultLabel}
+												/>
 											);
 										})}
 									</CommandGroup>
@@ -233,6 +227,47 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 	},
 );
 MultiSelectSearchCombobox.displayName = "MultiSelectSearch";
+
+function Option({
+	option,
+	isSelected,
+	onSelect,
+	resultLabel,
+}: {
+	option: RequiredResultProps;
+	isSelected: boolean;
+	onSelect: () => void | Promise<void>;
+	resultLabel: (result: RequiredResultProps) => string;
+}) {
+	const [isLoading, setIsLoading] = React.useState(false);
+	return (
+		<CommandItem
+			key={option.id}
+			value={option.id}
+			onMouseDown={(event) => {
+				event.preventDefault();
+				event.stopPropagation();
+			}}
+			onSelect={() => {
+				setIsLoading(true);
+
+				Promise.resolve(onSelect())
+					.catch(() => {})
+					.finally(() => {
+						setIsLoading(false);
+					});
+			}}
+			className={cn("flex items-center gap-2 w-full", !isSelected ? "pl-8" : null)}
+		>
+			{isLoading ? (
+				<Loader size="sm" variant="black" className="ml-2 mr-0" />
+			) : isSelected ? (
+				<CheckIcon className="w-4" />
+			) : null}
+			{resultLabel(option)}
+		</CommandItem>
+	);
+}
 
 const MultiSelectSearchComboboxAction = React.forwardRef<
 	React.ElementRef<typeof CommandPrimitive.Item>,

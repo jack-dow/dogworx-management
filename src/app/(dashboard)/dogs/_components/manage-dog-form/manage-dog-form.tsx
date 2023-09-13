@@ -21,11 +21,11 @@ import { Form, FormSection } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingTypesList, type DogById } from "~/actions";
-import { InsertDogSchema, InsertDogToVetRelationshipSchema, SelectVetSchema } from "~/db/validation";
+import { InsertDogSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { useDidUpdate } from "~/hooks/use-did-update";
-import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { type RouterOutputs } from "~/server";
+import { generateId, hasTrueValue, logInDevelopment } from "~/utils";
 import { Bookings } from "./bookings";
 import { DogBasicInformation } from "./dog-basic-information";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
@@ -36,23 +36,16 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 	breed: z.string().max(50).nonempty({ message: "Required" }),
 	color: z.string().max(25).nonempty({ message: "Required" }),
 	notes: z.string().max(100000).nullish(),
-	dogToVetRelationships: z.array(
-		InsertDogToVetRelationshipSchema.extend({
-			vet: SelectVetSchema.pick({
-				id: true,
-				givenName: true,
-				familyName: true,
-				emailAddress: true,
-				phoneNumber: true,
-			}),
-		}),
-	),
-	unsavedSessionIds: z.array(z.string()),
 });
-
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
 
-function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: BookingTypesList["data"] }) {
+function ManageDogForm({
+	dog,
+	bookingTypes,
+}: {
+	dog?: RouterOutputs["app"]["dogs"]["byId"]["data"];
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
+}) {
 	const searchParams = useSearchParams();
 	const params = useParams();
 	const isNew = !params.id;
@@ -69,45 +62,18 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 			givenName: searchParams.get("searchTerm") ?? undefined,
 			desexed: false,
 			isAgeEstimate: true,
+			bookings: [],
+			dogToClientRelationships: [],
+			dogToVetRelationships: [],
 			...dog,
-			actions: {
-				bookings: {},
-				dogToClientRelationships: {},
-				dogToVetRelationships: {},
-			},
-			unsavedSessionIds: [],
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty && !form.formState.isSubmitted);
 
-	useDidUpdate(() => {
-		if (dog) {
-			const actions = form.getValues("actions");
-
-			form.reset(
-				{
-					...dog,
-					dogToClientRelationships: mergeRelationships(
-						form.getValues("dogToClientRelationships"),
-						dog.dogToClientRelationships ?? [],
-						actions.dogToClientRelationships,
-					),
-					dogToVetRelationships: mergeRelationships(
-						form.getValues("dogToVetRelationships"),
-						dog.dogToVetRelationships ?? [],
-						actions.dogToVetRelationships,
-					),
-					actions,
-					unsavedSessionIds: form.getValues("unsavedSessionIds"),
-				},
-				{
-					keepDirty: true,
-					keepDirtyValues: true,
-				},
-			);
-		}
-	}, [dog, form]);
+	const insertMutation = api.app.dogs.insert.useMutation();
+	const updateMutation = api.app.dogs.update.useMutation();
+	const deleteMutation = api.app.dogs.delete.useMutation();
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -116,27 +82,12 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 	}, [searchParams, router]);
 
 	async function onSubmit(data: ManageDogFormSchema) {
-		let success = false;
-
-		if (data.unsavedSessionIds.length > 0) {
-			setIsConfirmSubmittingDialogOpen(true);
-			return;
-		}
-
-		if (dog) {
-			// Have to spread in the age as typescript is being dumb and not inferring it properly
-			const response = await actions.app.dogs.update({ ...data, age: data.age });
-			success = response.success;
-		} else {
-			// Have to spread in the age as typescript is being dumb and not inferring it properly
-			const response = await actions.app.dogs.insert({ ...data, age: data.age });
-			success = response.success;
-		}
-
-		if (success) {
+		try {
 			if (isNew) {
+				await insertMutation.mutateAsync(data);
 				router.replace(`/dogs/${data.id}`);
 			} else {
+				await updateMutation.mutateAsync(data);
 				router.push("/dogs");
 			}
 
@@ -144,9 +95,7 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 				title: `Dog ${isNew ? "Created" : "Updated"}`,
 				description: `Successfully ${isNew ? "created" : "updated"} dog "${data.givenName}".`,
 			});
-
-			form.setValue("id", generateId());
-		} else {
+		} catch (error) {
 			toast({
 				title: `Dog ${isNew ? "Creation" : "Update"} Failed`,
 				description: `Failed to ${isNew ? "create" : "update"} dog "${data.givenName}". Please try again.`,
@@ -180,7 +129,6 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 						<Button
 							variant="destructive"
 							onClick={() => {
-								form.setValue("unsavedSessionIds", []);
 								void form.handleSubmit(onSubmit)();
 							}}
 						>
@@ -204,10 +152,7 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 						title="Manage Relationships"
 						description="Manage the relationships of this dog between other clients and vets within the system."
 					>
-						<DogToClientRelationships
-							control={form.control}
-							existingDogToClientRelationships={dog?.dogToClientRelationships}
-						/>
+						<DogToClientRelationships />
 
 						<Separator className="my-4" />
 
@@ -221,15 +166,16 @@ function ManageDogForm({ dog, bookingTypes }: { dog?: DogById; bookingTypes: Boo
 							<DestructiveActionDialog
 								name="dog"
 								onConfirm={async () => {
-									const result = await actions.app.dogs.delete(form.getValues("id"));
-
-									if (result.success) {
+									try {
+										await deleteMutation.mutateAsync({ id: form.getValues("id") });
 										toast({
 											title: `Dog deleted`,
 											description: `Successfully deleted dog "${form.getValues("givenName")}".`,
 										});
 										router.push("/dogs");
-									} else {
+									} catch (error) {
+										logInDevelopment(error);
+
 										toast({
 											title: `Dog deletion failed`,
 											description: `There was an error deleting dog "${form.getValues(

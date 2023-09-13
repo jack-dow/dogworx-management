@@ -169,3 +169,9 @@ export function secondsToHumanReadable(seconds: number): string {
 
 	return formattedTime.join(", ");
 }
+
+export function logInDevelopment(...args: unknown[]) {
+	if (process.env.NODE_ENV === "development") {
+		console.log(...args);
+	}
+}

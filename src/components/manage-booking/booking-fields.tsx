@@ -7,9 +7,10 @@ import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { actions, type BookingById, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
+import { api } from "~/lib/trpc/client";
+import { type RouterOutputs } from "~/server";
 import { cn, secondsToHumanReadable } from "~/utils";
 import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";
@@ -54,12 +55,14 @@ function roundDateToNearest15Minutes(dayjs: Dayjs, date: Date) {
 }
 
 function BookingFields({
-	dog,
+	disableDogSearch,
 	bookingTypes,
+	booking,
 }: {
 	variant: "dialog" | "form";
-	dog?: BookingById["dog"];
-	bookingTypes: BookingTypesList["data"];
+	disableDogSearch?: boolean;
+	booking: RouterOutputs["app"]["bookings"]["byId"]["data"];
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { dayjs } = useDayjs();
 	const router = useRouter();
@@ -77,6 +80,15 @@ function BookingFields({
 
 	const [durationInputValue, setDurationInputValue] = React.useState(
 		form.getValues("duration") ? ms(form.getValues("duration") * 1000, { long: true }) : "",
+	);
+
+	const [dogsSearchTerm, setDogsSearchTerm] = React.useState("");
+	const dogSearch = api.app.dogs.search.useQuery({ searchTerm: dogsSearchTerm }, { enabled: Boolean(dogsSearchTerm) });
+
+	const [assignedToSearchTerm, setAssignedToSearchTerm] = React.useState("");
+	const assignedToSearch = api.auth.organizations.users.search.useQuery(
+		{ searchTerm: assignedToSearchTerm },
+		{ enabled: Boolean(assignedToSearchTerm) },
 	);
 
 	return (
@@ -336,24 +348,18 @@ function BookingFields({
 					control={form.control}
 					name="dogId"
 					render={({ field }) => {
-						const defaultSelected = dog ?? form.getValues("dog");
-
 						return (
 							<FormItem>
 								<FormLabel>Dog</FormLabel>
 								<FormControl>
 									<SearchCombobox
-										disabled={dog !== undefined}
-										placeholder="Select dog"
-										onSearch={async (searchTerm) => {
-											const result = await actions.app.dogs.search(searchTerm);
-
-											if (!result.success) {
-												throw new Error("Failed to search dogs");
-											}
-
-											return result.data;
+										disabled={disableDogSearch}
+										placeholder={disableDogSearch ? "Current Dog" : "Select dog"}
+										onSearchTermChange={(searchTerm) => {
+											setDogsSearchTerm(searchTerm);
 										}}
+										results={dogSearch.data?.data ?? []}
+										isFetching={!!dogsSearchTerm && dogSearch.isFetching}
 										resultLabel={(result) => `${result.givenName ?? "Unnamed Dog"} ${result.familyName}`}
 										onSelectChange={(result) => {
 											field.onChange(result?.id ?? "");
@@ -368,7 +374,6 @@ function BookingFields({
 												<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
 											</SearchComboboxAction>
 										)}
-										defaultSelected={defaultSelected}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -386,15 +391,11 @@ function BookingFields({
 							<FormControl>
 								<SearchCombobox
 									placeholder="Select user"
-									onSearch={async (searchTerm) => {
-										const result = await actions.app.users.search(searchTerm);
-
-										if (!result.success) {
-											throw new Error("Failed to search users");
-										}
-
-										return result.data;
+									onSearchTermChange={(searchTerm) => {
+										setAssignedToSearchTerm(searchTerm);
 									}}
+									results={assignedToSearch.data?.data ?? []}
+									isFetching={!!assignedToSearchTerm && assignedToSearch.isFetching}
 									onBlur={({ setSearchTerm, setSelected, setResults }) => {
 										if (!form.getValues("assignedToId")) {
 											field.onChange(user?.id);
@@ -407,7 +408,7 @@ function BookingFields({
 									onSelectChange={(result) => {
 										field.onChange(result?.id);
 									}}
-									defaultSelected={form.getValues("assignedTo")}
+									defaultSelected={booking?.assignedToId ? booking.assignedTo ?? undefined : user}
 								/>
 							</FormControl>
 							<FormMessage />

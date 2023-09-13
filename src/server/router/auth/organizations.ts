@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -27,26 +27,9 @@ import {
 	UpdateOrganizationSchema,
 	UpdateUserSchema,
 } from "~/db/validation/auth";
-import { PaginationOptionsSchema, validatePaginationSearchParams, type SortableColumns } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-const ORGANIZATIONS_SORTABLE_COLUMNS = {
-	name: {
-		id: "name",
-		label: "Name",
-		columns: [organizations.name],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [organizations.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [organizations.updatedAt],
-	},
-} satisfies SortableColumns;
+import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const organizationsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
@@ -314,6 +297,23 @@ export const organizationsRouter = createTRPCRouter({
 	}),
 
 	users: createTRPCRouter({
+		search: protectedProcedure.input(z.object({ searchTerm: z.string() })).query(async ({ ctx, input }) => {
+			const data = await ctx.db.query.users.findMany({
+				where: (users, { like }) =>
+					and(
+						ctx.user.organizationId !== "1" ? eq(users.organizationId, ctx.user.organizationId) : undefined,
+						or(
+							sql`CONCAT(${users.givenName},' ', ${users.familyName}) LIKE CONCAT('%', ${input.searchTerm}, '%')`,
+							like(users.emailAddress, `%${input.searchTerm}%`),
+						),
+					),
+				limit: 50,
+				orderBy: (users, { asc }) => [asc(users.givenName), asc(users.familyName), asc(users.id)],
+			});
+
+			return { data };
+		}),
+
 		insert: protectedProcedure.input(InsertUserSchema).mutation(async ({ ctx, input }) => {
 			if (ctx.user.organizationRole !== "owner" && ctx.user.organizationRole !== "admin") {
 				throw new TRPCError({

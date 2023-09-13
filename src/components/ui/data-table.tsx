@@ -25,10 +25,9 @@ import {
 	SortDescIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
-import { type SortableColumns } from "~/actions/sortable-columns";
-import { type PaginationSearchParams } from "~/actions/utils";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { useViewportSize } from "~/hooks/use-viewport-size";
+import { type PaginationOptions, type SortableColumns } from "~/server/utils";
 import { Button } from "./button";
 import { Label } from "./label";
 import { Loader } from "./loader";
@@ -44,7 +43,7 @@ declare module "@tanstack/table-core" {
 	}
 }
 
-function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
+function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationOptions) {
 	const searchParams = new URLSearchParams(currentParams);
 
 	Object.entries(newParams).forEach(([key, value]) => {
@@ -72,7 +71,9 @@ interface DataTableProps<TData, TValue, SearchResultType extends { id: string }>
 	/** Allow for passing of custom base path. E.g. want to redirect to /settings/booking-type instead of just /booking-type */
 	basePath?: string;
 	search:
-		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & { component?: undefined })
+		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & {
+				component?: undefined;
+		  })
 		| { component: ({ setIsLoading }: { setIsLoading?: (isLoading: boolean) => void }) => JSX.Element };
 }
 

@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import { actions } from "~/actions";
+import { api } from "~/lib/trpc/client";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageBookingFormSchema } from "./use-manage-booking-form";
@@ -15,15 +15,16 @@ function BookingDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =
 	const form = useFormContext<ManageBookingFormSchema>();
 	const { toast } = useToast();
 
+	const deleteMutation = api.app.bookings.delete.useMutation();
+
 	return (
 		<DestructiveActionDialog
 			name="booking"
 			onConfirm={async () => {
-				const result = await actions.app.bookings.delete({
-					id: form.getValues("id"),
-				});
-
-				if (result.success) {
+				try {
+					await deleteMutation.mutateAsync({
+						id: form.getValues("id"),
+					});
 					toast({
 						title: `Booking deleted`,
 						description: `Successfully deleted booking.`,
@@ -35,7 +36,7 @@ function BookingDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =
 					}
 
 					onSuccessfulDelete?.();
-				} else {
+				} catch (error) {
 					toast({
 						title: `Booking deletion failed`,
 						description: `There was an error deleting this booking. Please try again.`,

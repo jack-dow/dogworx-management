@@ -14,46 +14,9 @@ import {
 	UpdateVetSchema,
 	UpdateVetToVetClinicRelationshipSchema,
 } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams, type SortableColumns } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-const VETS_SORTABLE_COLUMNS = {
-	fullName: {
-		id: "fullName",
-		label: "Full name",
-		columns: [vets.givenName, vets.familyName],
-	},
-	givenName: {
-		id: "givenName",
-		label: "First name",
-		columns: [vets.givenName],
-	},
-	familyName: {
-		id: "familyName",
-		label: "Last name",
-		columns: [vets.familyName],
-	},
-	emailAddress: {
-		id: "emailAddress",
-		label: "Email address",
-		columns: [vets.emailAddress],
-	},
-	phoneNumber: {
-		id: "phoneNumber",
-		label: "Phone number",
-		columns: [vets.phoneNumber],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [vets.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [vets.updatedAt],
-	},
-} satisfies SortableColumns;
+import { VETS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const vetsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {

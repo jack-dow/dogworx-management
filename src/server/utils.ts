@@ -21,9 +21,12 @@ export const PaginationOptionsSchema = z.object({
 			if (ctx.error?.issues?.[0]?.code === "too_small") {
 				return 1;
 			}
-			return 100;
+			if (ctx.error?.issues?.[0]?.code === "too_big") {
+				return 100;
+			}
+			return 20;
 		}),
-	sortBy: z.string().optional(),
+	sortBy: z.string().optional().catch(undefined),
 	sortDirection: z
 		.union([z.literal("asc"), z.literal("desc")])
 		.optional()
@@ -40,7 +43,7 @@ export function validatePaginationSearchParams({
 	sortableColumns,
 	count = 0,
 	page = 1,
-	limit = 5,
+	limit = 20,
 	sortBy,
 	sortDirection = "asc",
 }: ValidatePaginationSearchParamsProps) {

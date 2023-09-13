@@ -3,31 +3,9 @@ import { z } from "zod";
 
 import { bookingTypes } from "~/db/schema/app";
 import { InsertBookingTypeSchema, UpdateBookingTypeSchema } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams, type SortableColumns } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-export const BOOKING_TYPES_SORTABLE_COLUMNS = {
-	name: {
-		id: "name",
-		label: "Name",
-		columns: [bookingTypes.name],
-	},
-	duration: {
-		id: "duration",
-		label: "Duration",
-		columns: [bookingTypes.duration],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [bookingTypes.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [bookingTypes.updatedAt],
-	},
-} satisfies SortableColumns;
+import { BOOKING_TYPES_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const bookingTypesRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {

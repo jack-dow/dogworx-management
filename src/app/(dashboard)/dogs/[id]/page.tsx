@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
 import { actions } from "~/actions";
-import { ManageDogForm } from "../_components/manage-dog-form";
+import { ManageDogForm } from "../_components/manage-dog-form/manage-dog-form";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {

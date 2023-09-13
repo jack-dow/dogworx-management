@@ -5,31 +5,14 @@ import { z } from "zod";
 
 import { bookings } from "~/db/schema/app";
 import { InsertBookingSchema, UpdateBookingSchema } from "~/db/validation/app";
-import { PaginationOptionsSchema, type SortableColumns, validatePaginationSearchParams } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { BOOKINGS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 dayjs.extend(updateLocale);
 dayjs.updateLocale("en", {
 	weekStart: 1,
 });
-
-export const BOOKINGS_SORTABLE_COLUMNS = {
-	date: {
-		id: "date",
-		label: "Date",
-		columns: [bookings.date, bookings.duration],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [bookings.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [bookings.updatedAt],
-	},
-} satisfies SortableColumns;
 
 export const bookingsRouter = createTRPCRouter({
 	all: protectedProcedure

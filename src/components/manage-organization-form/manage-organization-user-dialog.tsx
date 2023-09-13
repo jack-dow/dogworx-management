@@ -36,7 +36,7 @@ import { organizationRoleOptions } from "~/db/schema";
 import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, generateId, hasTrueValue } from "~/utils";
+import { cn, generateId, hasTrueValue, logInDevelopment } from "~/utils";
 
 const ManageOrganizationUserFormSchema = InsertUserSchema.extend({
 	sessions: z.array(
@@ -305,9 +305,7 @@ function ManageOrganizationUserDialogForm({
 
 			setOpen(false);
 		} catch (error) {
-			if (process.env.NODE_ENV === "development") {
-				console.error(error);
-			}
+			logInDevelopment(error);
 		}
 	}
 

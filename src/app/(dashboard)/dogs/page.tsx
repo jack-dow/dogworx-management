@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { DogsTable } from "./_components/dogs-table";
 
 export const metadata: Metadata = {
@@ -9,18 +9,18 @@ export const metadata: Metadata = {
 };
 
 async function DogsPage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
-	const response = await actions.app.dogs.list({
-		page: Number(searchParams?.page) ?? undefined,
-		limit: Number(searchParams?.limit) ?? undefined,
-		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
-		sortDirection: typeof searchParams?.sortDirection === "string" ? searchParams?.sortDirection : undefined,
+	const response = await server.app.dogs.all.query({
+		page: searchParams?.page,
+		limit: searchParams?.limit,
+		sortBy: searchParams?.sortBy,
+		sortDirection: searchParams?.sortDirection,
 	});
 
 	return (
 		<>
 			<PageHeader title="Manage Dogs" back={{ href: "/" }} />
 
-			<DogsTable result={response.data} />
+			<DogsTable initialResult={response} />
 		</>
 	);
 }

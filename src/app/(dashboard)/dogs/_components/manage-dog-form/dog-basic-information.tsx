@@ -187,22 +187,12 @@ function getAgeInWords(dayjs: Dayjs, age: Date | null) {
 	const days = now.diff(dayjs.tz(age).add(years, "year").add(months, "month"), "day");
 
 	if (years === 0 && months === 0) {
-		if (days < 0) {
-			return "Not born yet";
-		}
-		if (days < 7) {
-			return `${days} day${days !== 1 ? "s" : ""} old`;
-		}
+		if (days < 0) return "Not born yet";
+		if (days < 7) return `${days} day${days !== 1 ? "s" : ""} old`;
 		return `${Math.floor(days / 7)} week${Math.floor(days / 7) !== 1 ? "s" : ""} old`;
 	} else {
-		if (years === 0) {
-			return `${months} month${months !== 1 ? "s" : ""} old`;
-		}
-
-		if (months === 0) {
-			return `${years} year${years !== 1 ? "s" : ""} old`;
-		}
-
+		if (years === 0) return `${months} month${months !== 1 ? "s" : ""} old`;
+		if (months === 0) return `${years} year${years !== 1 ? "s" : ""} old`;
 		return `${years} year${years !== 1 ? "s" : ""}, ${months} month${months !== 1 ? "s" : ""} old`;
 	}
 }

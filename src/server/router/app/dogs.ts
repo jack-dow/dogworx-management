@@ -15,41 +15,9 @@ import {
 	UpdateDogToClientRelationshipSchema,
 	UpdateDogToVetRelationshipSchema,
 } from "~/db/validation/app";
-import {
-	constructFamilyName,
-	PaginationOptionsSchema,
-	validatePaginationSearchParams,
-	type SortableColumns,
-} from "~/server/utils";
+import { constructFamilyName, PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-const DOGS_SORTABLE_COLUMNS = {
-	givenName: {
-		id: "givenName",
-		label: "Name",
-		columns: [dogs.givenName],
-	},
-	breed: {
-		id: "breed",
-		label: "Breed",
-		columns: [dogs.breed],
-	},
-	color: {
-		id: "color",
-		label: "Color",
-		columns: [dogs.color],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [dogs.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [dogs.updatedAt],
-	},
-} satisfies SortableColumns;
+import { DOGS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const dogsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
@@ -179,23 +147,20 @@ export const dogsRouter = createTRPCRouter({
 	insert: protectedProcedure.input(InsertDogSchema).mutation(async ({ ctx, input }) => {
 		const { bookings, dogToClientRelationships, dogToVetRelationships, ...data } = input;
 
-		const bookingsArray =
-			bookings?.map((booking) => ({
-				...booking,
-				organizationId: ctx.user.organizationId,
-			})) ?? [];
+		const bookingsArray = bookings?.map((booking) => ({
+			...booking,
+			organizationId: ctx.user.organizationId,
+		}));
 
-		const dogToClientRelationshipsArray =
-			dogToClientRelationships?.map((relationship) => ({
-				...relationship,
-				organizationId: ctx.user.organizationId,
-			})) ?? [];
+		const dogToClientRelationshipsArray = dogToClientRelationships?.map((relationship) => ({
+			...relationship,
+			organizationId: ctx.user.organizationId,
+		}));
 
-		const dogToVetRelationshipsArray =
-			dogToVetRelationships?.map((relationship) => ({
-				...relationship,
-				organizationId: ctx.user.organizationId,
-			})) ?? [];
+		const dogToVetRelationshipsArray = dogToVetRelationships?.map((relationship) => ({
+			...relationship,
+			organizationId: ctx.user.organizationId,
+		}));
 
 		await ctx.db.transaction(async (trx) => {
 			await trx.insert(dogs).values({
@@ -204,7 +169,7 @@ export const dogsRouter = createTRPCRouter({
 				organizationId: ctx.user.organizationId,
 			});
 
-			if (bookings && bookings.length > 0) {
+			if (bookings.length > 0) {
 				await trx.insert(bookingsTable).values(bookingsArray);
 			}
 

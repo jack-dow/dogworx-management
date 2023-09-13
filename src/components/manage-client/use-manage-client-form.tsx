@@ -7,11 +7,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type ClientById, type ClientInsert, type ClientUpdate } from "~/actions";
-import { InsertClientSchema } from "~/db/validation";
+import { InsertClientSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { api } from "~/lib/trpc/client";
 import { EmailOrPhoneNumberSchema } from "~/lib/validation";
-import { generateId, hasTrueValue, mergeRelationships } from "~/utils";
+import { type RouterOutputs } from "~/server";
+import { generateId, hasTrueValue, logInDevelopment } from "~/utils";
 
 const ManageClientFormSchema = z.intersection(
 	InsertClientSchema.extend({
@@ -28,11 +29,10 @@ const ManageClientFormSchema = z.intersection(
 type ManageClientFormSchema = z.infer<typeof ManageClientFormSchema>;
 
 type UseManageClientFormProps = {
-	client?: ClientById;
+	client?: RouterOutputs["app"]["clients"]["byId"]["data"];
 	defaultValues?: Partial<ManageClientFormSchema>;
-	onSubmit?: (
-		data: ManageClientFormSchema,
-	) => Promise<{ success: boolean; data: ClientInsert | ClientUpdate | null | undefined }>;
+	onSubmit?: (data: ManageClientFormSchema) => Promise<void>;
+	onSuccessfulSubmit?: (data: ManageClientFormSchema) => void;
 };
 
 function useManageClientForm(props: UseManageClientFormProps) {
@@ -50,16 +50,17 @@ function useManageClientForm(props: UseManageClientFormProps) {
 		defaultValues: {
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
+			dogToClientRelationships: [],
 			...props.client,
 			...props.defaultValues,
 			id: props.client?.id ?? generateId(),
-			actions: {
-				dogToClientRelationships: {},
-			},
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
+
+	const insertMutation = api.app.clients.insert.useMutation();
+	const updateMutation = api.app.clients.update.useMutation();
 
 	React.useEffect(() => {
 		if (searchParams.get("searchTerm")) {
@@ -68,67 +69,48 @@ function useManageClientForm(props: UseManageClientFormProps) {
 	}, [searchParams, router]);
 
 	React.useEffect(() => {
-		function syncClient(client: ClientById) {
-			const actions = form.getValues("actions");
-			form.reset(
-				{
-					...client,
-					dogToClientRelationships: mergeRelationships(
-						form.getValues("dogToClientRelationships"),
-						client.dogToClientRelationships,
-						actions.dogToClientRelationships,
-					),
-					actions,
-				},
-				{
-					keepDirty: true,
-					keepDirtyValues: true,
-				},
-			);
-		}
-
 		if (props.client) {
-			syncClient(props.client);
+			form.reset(props.client, {
+				keepDirty: true,
+				keepDirtyValues: true,
+			});
 		}
 	}, [props.client, form, toast]);
 
-	async function onSubmit(data: ManageClientFormSchema) {
-		let success = false;
-		let newClient: ClientUpdate | ClientInsert | null | undefined;
+	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+		e.preventDefault();
+		e.stopPropagation();
 
-		if (props.onSubmit) {
-			const response = await props.onSubmit(data);
-			success = response.success;
-			newClient = response.data;
-			return { success, data: newClient };
-		} else if (props.client) {
-			const response = await actions.app.clients.update(data);
-			success = response.success && !!response.data;
-			newClient = response.data;
-		} else {
-			const response = await actions.app.clients.insert(data);
-			success = response.success;
-			newClient = response.data;
-		}
+		void form.handleSubmit(async (data) => {
+			try {
+				if (props.onSubmit) {
+					await props.onSubmit(data);
+				} else if (isNew) {
+					await insertMutation.mutateAsync(data);
+				} else {
+					await updateMutation.mutateAsync(data);
+				}
 
-		if (success) {
-			toast({
-				title: `Client ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
-					data.familyName ? " " + data.familyName : ""
-				}".`,
-			});
-		} else {
-			toast({
-				title: `Client ${isNew ? "Creation" : "Update"} Failed`,
-				description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
-					data.familyName ? " " + data.familyName : ""
-				}". Please try again.`,
-				variant: "destructive",
-			});
-		}
+				toast({
+					title: `Client ${isNew ? "Created" : "Updated"}`,
+					description: `Successfully ${isNew ? "created" : "updated"} client "${data.givenName}${
+						data.familyName ? " " + data.familyName : ""
+					}".`,
+				});
+				props.onSuccessfulSubmit?.(data);
+			} catch (error) {
+				logInDevelopment(error);
 
-		return { success, data: newClient };
+				toast({
+					title: `Client ${isNew ? "Creation" : "Update"} Failed`,
+					description: `There was an error ${isNew ? "creating" : "updating"} client "${data.givenName}${
+						data.familyName ? " " + data.familyName : ""
+					}". Please try again.`,
+					variant: "destructive",
+				});
+				throw new Error("Failed to create client");
+			}
+		})(e);
 	}
 
 	return { form, onSubmit };

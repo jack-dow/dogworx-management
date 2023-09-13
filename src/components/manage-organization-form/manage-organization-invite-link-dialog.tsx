@@ -29,7 +29,7 @@ import { organizationRoleOptions } from "~/db/schema";
 import { InsertOrganizationInviteLinkSchema } from "~/db/validation";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, hasTrueValue, secondsToHumanReadable } from "~/utils";
+import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/utils";
 
 const createInviteLinkCode = init({
 	length: 8,
@@ -229,9 +229,7 @@ function ManageOrganizationInviteLinkDialogForm({
 
 							setOpen(false);
 						} catch (error) {
-							if (process.env.NODE_ENV === "development") {
-								console.error(error);
-							}
+							logInDevelopment(error);
 						}
 					})(e);
 				}}

@@ -67,7 +67,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 
 		const [isOpen, setIsOpen] = React.useState(false);
 		const [searchTerm, setSearchTerm] = React.useState(defaultSelected ? resultLabel(defaultSelected) : "");
-		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
+		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 200);
 		const [results, setResults] = React.useState<Array<RequiredResultProps>>(defaultSelected ? [defaultSelected] : []);
 		const [selected, setSelected] = React.useState<RequiredResultProps | null>(defaultSelected ?? null);
 		const [isLoading, setIsLoading] = React.useState(false);

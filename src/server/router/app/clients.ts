@@ -8,51 +8,9 @@ import {
 	UpdateClientSchema,
 	UpdateDogToClientRelationshipSchema,
 } from "~/db/validation/app";
-import {
-	constructFamilyName,
-	PaginationOptionsSchema,
-	validatePaginationSearchParams,
-	type SortableColumns,
-} from "~/server/utils";
+import { constructFamilyName, PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-const CLIENTS_SORTABLE_COLUMNS = {
-	fullName: {
-		id: "fullName",
-		label: "Full name",
-		columns: [clients.givenName, clients.familyName],
-	},
-	givenName: {
-		id: "givenName",
-		label: "First name",
-		columns: [clients.givenName],
-	},
-	familyName: {
-		id: "familyName",
-		label: "Last name",
-		columns: [clients.familyName],
-	},
-	emailAddress: {
-		id: "emailAddress",
-		label: "Email address",
-		columns: [clients.emailAddress],
-	},
-	phoneNumber: {
-		id: "phoneNumber",
-		label: "Phone number",
-		columns: [clients.phoneNumber],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [clients.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [clients.updatedAt],
-	},
-} satisfies SortableColumns;
+import { CLIENTS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const clientsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {

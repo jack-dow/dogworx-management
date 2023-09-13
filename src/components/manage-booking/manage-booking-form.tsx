@@ -20,7 +20,19 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit, bookingTypes });
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({
+		booking,
+		onSubmit,
+		bookingTypes,
+		onSuccessfulSubmit: (data) => {
+			if (isNew) {
+				router.replace(`/bookings/${data.id}`);
+				return;
+			}
+
+			router.push("/bookings");
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -38,25 +50,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							const result = await _onSubmit(data);
-
-							if (result.success) {
-								if (isNew) {
-									router.replace(`/bookings/${data.id}`);
-									return;
-								}
-
-								router.push("/bookings");
-							}
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
 					<FormSection
 						title="Booking Information"
 						description={`
@@ -64,7 +58,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 				`}
 					>
 						<div className="flex flex-col gap-y-4">
-							<BookingFields variant="form" bookingTypes={bookingTypes} />
+							<BookingFields variant="form" booking={booking} bookingTypes={bookingTypes} />
 						</div>
 					</FormSection>
 

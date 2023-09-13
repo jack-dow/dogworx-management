@@ -8,36 +8,9 @@ import {
 	UpdateVetClinicSchema,
 	UpdateVetToVetClinicRelationshipSchema,
 } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams, type SortableColumns } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-
-const VET_CLINICS_SORTABLE_COLUMNS = {
-	name: {
-		id: "name",
-		label: "Name",
-		columns: [vetClinics.name],
-	},
-	emailAddress: {
-		id: "emailAddress",
-		label: "Email address",
-		columns: [vetClinics.emailAddress],
-	},
-	phoneNumber: {
-		id: "phoneNumber",
-		label: "Phone number",
-		columns: [vetClinics.phoneNumber],
-	},
-	createdAt: {
-		id: "createdAt",
-		label: "Created at",
-		columns: [vetClinics.createdAt],
-	},
-	updatedAt: {
-		id: "updatedAt",
-		label: "Last updated at",
-		columns: [vetClinics.updatedAt],
-	},
-} satisfies SortableColumns;
+import { VET_CLINICS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const vetClinicsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
