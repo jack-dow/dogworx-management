@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { type SignOutPOSTResponse } from "~/app/api/auth/sign-out/route";
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/client-utils";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,

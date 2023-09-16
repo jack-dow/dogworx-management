@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { cn, secondsToHumanReadable } from "~/lib/client-utils";
 import { type RouterOutputs } from "~/server";
 
 type BookingType = RouterOutputs["app"]["bookingTypes"]["all"]["data"][number];

@@ -1,25 +1,10 @@
 import { type MutableRefObject, type RefCallback } from "react";
 import { createId } from "@paralleldrive/cuid2";
-import S3 from "aws-sdk/clients/s3";
 import { clsx, type ClassValue } from "clsx";
-import { Resend } from "resend";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
 import { env } from "../env.mjs";
-
-type DefaultErrorCodes = "InvalidBody" | "UnknownError" | "NotAuthorized";
-
-export type APIResponse<Data, ErrorCodes extends string | undefined = undefined> =
-	| (Data extends undefined ? { success: true; error?: never } : { success: true; data: Data; error?: never })
-	| {
-			success: false;
-			error: {
-				code: ErrorCodes extends undefined ? DefaultErrorCodes : DefaultErrorCodes | ErrorCodes;
-				message: string | z.ZodIssue[];
-			};
-			data?: never;
-	  };
 
 export const generateId = createId;
 
@@ -162,13 +147,3 @@ export const EmailOrPhoneNumberSchema = z
 		}
 	});
 export type EmailOrPhoneNumberSchema = z.infer<typeof EmailOrPhoneNumberSchema>;
-
-export const s3 = new S3({
-	apiVersion: "2006-03-01",
-	accessKeyId: env.AWS_S3_ACCESS_KEY,
-	secretAccessKey: env.AWS_S3_SECRET_KEY,
-	region: env.AWS_S3_REGION,
-	signatureVersion: "v4",
-});
-
-export const resend = new Resend(env.RESEND_API_KEY);

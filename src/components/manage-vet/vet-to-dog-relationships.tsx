@@ -16,8 +16,8 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { InsertDogToVetRelationshipSchema } from "~/db/validation/app";
+import { cn, generateId, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
-import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,

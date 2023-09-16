@@ -16,7 +16,7 @@ import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/client-utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
 function DogBasicInformation() {

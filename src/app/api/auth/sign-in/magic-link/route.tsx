@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { sessions, verificationCodes } from "~/db/schema/auth";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { generateId } from "~/lib/utils";
+import { generateId } from "~/lib/client-utils";
 
 export const fetchCache = "force-no-store";
 

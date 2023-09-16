@@ -19,8 +19,8 @@ import { EditIcon, EllipsisVerticalIcon, EnvelopeIcon, TrashIcon, UserCircleIcon
 import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { sessionJWTExpiry } from "~/lib/auth-options";
+import { logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
-import { logInDevelopment } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
 import { useToast } from "../ui/use-toast";

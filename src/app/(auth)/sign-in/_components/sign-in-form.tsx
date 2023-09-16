@@ -11,7 +11,7 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
-import { SignInSchema } from "~/lib/utils";
+import { SignInSchema } from "~/lib/client-utils";
 import { VerifyEmailAddressAlertDialog } from "./verify-email-address-dialog";
 
 function SignInForm() {

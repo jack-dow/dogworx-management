@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/button";
 import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/lib/utils";
+import { hasTrueValue } from "~/lib/client-utils";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
 import { useManageVetClinicForm, type UseManageVetClinicFormProps } from "./use-manage-vet-clinic-form";

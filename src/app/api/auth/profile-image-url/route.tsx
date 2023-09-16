@@ -3,8 +3,7 @@ import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { env } from "~/env.mjs";
-import { s3 } from "~/lib/utils";
-import { type APIResponse } from "~/lib/utils";
+import { s3, type APIResponse } from "~/lib/server-utils";
 import { verifyAPISession } from "../../utils";
 
 type ProfileImageUrlGETResponse = APIResponse<string, "InvalidFileType" | "NotAuthorized">;

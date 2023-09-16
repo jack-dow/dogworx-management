@@ -6,7 +6,7 @@ import { drizzle } from "~/db/drizzle";
 import { sessions } from "~/db/schema/auth";
 import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
 import { jwt } from "~/lib/jwt";
-import { type APIResponse } from "~/lib/utils";
+import { type APIResponse } from "~/lib/server-utils";
 
 type SignOutPOSTResponse = APIResponse<undefined>;
 

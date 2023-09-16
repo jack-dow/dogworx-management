@@ -12,7 +12,7 @@ import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { type CreateUserFromInvitePOSTResponse } from "~/app/api/auth/sign-up/invite/route";
-import { SignUpSchema } from "~/lib/utils";
+import { SignUpSchema } from "~/lib/client-utils";
 import { type RouterOutputs } from "~/server";
 
 async function signUp(

@@ -32,8 +32,8 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation/app";
+import { cn, generateId, logInDevelopment } from "~/lib/client-utils";
 import { api, type RouterOutputs } from "~/lib/trpc/client";
-import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { ManageVetClinicSheet } from "../manage-vet-clinic/manage-vet-clinic-sheet";
 import { ClickToCopy } from "../ui/click-to-copy";
 import { Loader } from "../ui/loader";

@@ -14,7 +14,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { CopyIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/client-utils";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 
 function Booking({

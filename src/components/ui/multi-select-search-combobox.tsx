@@ -6,7 +6,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn, shareRef } from "~/lib/utils";
+import { cn, shareRef } from "~/lib/client-utils";
 import { CheckIcon } from "./icons";
 import { Loader } from "./loader";
 import { useToast } from "./use-toast";

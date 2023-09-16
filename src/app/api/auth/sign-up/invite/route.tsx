@@ -4,7 +4,8 @@ import { eq, sql, type InferSelectModel } from "drizzle-orm";
 import { drizzle } from "~/db/drizzle";
 import { organizationInviteLinks, users } from "~/db/schema/auth";
 import { type InsertUserSchema } from "~/db/validation/auth";
-import { generateId, SignUpSchema, type APIResponse } from "~/lib/utils";
+import { generateId, SignUpSchema } from "~/lib/client-utils";
+import { type APIResponse } from "~/lib/server-utils";
 
 export const fetchCache = "force-no-store";
 

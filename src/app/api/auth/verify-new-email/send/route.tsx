@@ -6,7 +6,8 @@ import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { verificationCodes } from "~/db/schema/auth";
-import { generateId, resend, type APIResponse } from "~/lib/utils";
+import { generateId } from "~/lib/client-utils";
+import { resend, type APIResponse } from "~/lib/server-utils";
 import { verifyAPISession } from "../../../utils";
 
 const VerifyNewEmailSendBodySchema = z.object({

@@ -42,7 +42,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { DotFilledIcon } from "@radix-ui/react-icons";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/client-utils";
 
 type IconProps = {
 	className: string;
