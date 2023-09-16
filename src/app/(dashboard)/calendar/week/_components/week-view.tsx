@@ -11,12 +11,13 @@ import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { type BookingsByWeek, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs, type DayjsDate } from "~/hooks/use-dayjs";
 import { useViewportSize } from "~/hooks/use-viewport-size";
-import { cn, secondsToHumanReadable } from "~/utils";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
+type BookingsByWeek = RouterOutputs["app"]["bookings"]["byWeek"]["data"];
 type Booking = BookingsByWeek[number];
 
 function areBookingsOverlapping(dayjs: Dayjs, booking1: Booking, booking2: Booking): boolean {
@@ -124,8 +125,8 @@ function WeekView({
 	bookingTypes,
 }: {
 	date?: string;
-	bookings: BookingsByWeek | null;
-	bookingTypes: BookingTypesList["data"];
+	bookings: BookingsByWeek;
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { toast } = useToast();
 

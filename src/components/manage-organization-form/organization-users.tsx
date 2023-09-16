@@ -16,10 +16,11 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { FormGroup, FormSection } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, EnvelopeIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
-import { actions } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { sessionJWTExpiry } from "~/lib/auth-options";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
 import { useToast } from "../ui/use-toast";
@@ -34,35 +35,36 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 
 	const organizationUsers = useFieldArray({
 		control: form.control,
-		name: "users",
+		name: "organizationUsers",
 		keyName: "rhf-id",
 	});
 
-	const [editingUser, setEditingUser] = React.useState<ManageOrganizationFormSchema["users"][number] | null>(null);
+	const [editingUser, setEditingUser] = React.useState<
+		ManageOrganizationFormSchema["organizationUsers"][number] | null
+	>(null);
 	const [confirmUserDelete, setConfirmUserDelete] = React.useState<string | null>(null);
 
+	const deleteMutation = api.auth.organizations.users.delete.useMutation();
+
 	async function handleUserDelete(userId: string) {
-		if (isNew) {
-			const usersActions = { ...form.getValues("actions.users") };
-
-			delete usersActions[userId];
-
-			form.setValue("actions.users", usersActions);
-
-			organizationUsers.remove(organizationUsers.fields.findIndex((field) => field.id === userId));
-			return;
-		}
-
 		const user = organizationUsers.fields.find((field) => field.id === userId)!;
 
-		const result = await actions.auth.organizations.users.delete(userId);
+		try {
+			if (!isNew) {
+				await deleteMutation.mutateAsync({
+					id: userId,
+				});
+			}
 
-		if (result.success) {
+			organizationUsers.remove(organizationUsers.fields.findIndex((field) => field.id === userId));
+
 			toast({
 				title: `User deleted`,
 				description: `Successfully deleted user "${user.givenName}${user.familyName ? " " + user.familyName : ""}".`,
 			});
-		} else {
+		} catch (error) {
+			logInDevelopment(error);
+
 			toast({
 				title: `User deletion failed`,
 				description: `There was an error deleting user "${user.givenName}${
@@ -153,26 +155,9 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 						<div className="flex justify-end">
 							{form.getValues("maxUsers") > organizationUsers.fields.length ? (
 								<ManageOrganizationUserDialog
-									onSubmit={
-										isNew
-											? (data) => {
-													organizationUsers.append({
-														...data,
-														familyName: data.familyName ?? "",
-														profileImageUrl: data.profileImageUrl ?? null,
-													});
-
-													const usersActions = form.getValues("actions.users");
-
-													usersActions[data.id] = {
-														type: "INSERT",
-														payload: data,
-													};
-
-													form.setValue("actions.users", usersActions);
-											  }
-											: undefined
-									}
+									onSuccessfulSubmit={(data) => {
+										organizationUsers.append(data);
+									}}
 									defaultValues={
 										user.organizationId === "1"
 											? {
@@ -208,7 +193,7 @@ function OrganizationUserItem({
 	onDeleteClick,
 	onEditClick,
 }: {
-	organizationUser: ManageOrganizationFormSchema["users"][number];
+	organizationUser: ManageOrganizationFormSchema["organizationUsers"][number];
 	onDeleteClick: () => Promise<void>;
 	onEditClick: () => void;
 }) {

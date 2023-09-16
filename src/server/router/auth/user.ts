@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { organizations, sessions, users } from "~/db/schema/auth";
+import { organizationInviteLinks, organizations, sessions, users } from "~/db/schema/auth";
 import { sessionCookieOptions } from "~/lib/auth-options";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 
@@ -73,6 +73,8 @@ export const userRouter = createTRPCRouter({
 		}
 
 		await ctx.db.delete(users).where(eq(users.id, ctx.user.id));
+		await ctx.db.delete(sessions).where(eq(sessions.userId, ctx.user.id));
+		await ctx.db.delete(organizationInviteLinks).where(eq(organizationInviteLinks.userId, ctx.user.id));
 
 		cookies().set({
 			...sessionCookieOptions,

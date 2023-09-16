@@ -3,9 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { users, verificationCodes } from "~/db/schema";
+import { users, verificationCodes } from "~/db/schema/auth";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { type APIResponse } from "~/utils";
+import { type APIResponse } from "~/lib/utils";
 import { verifyAPISession } from "../../utils";
 
 export const fetchCache = "force-no-store";

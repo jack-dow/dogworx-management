@@ -31,9 +31,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { actions, type VetById, type VetClinicById, type VetClinicsSearch } from "~/actions";
-import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation";
-import { cn, generateId } from "~/utils";
+import { InsertVetToVetClinicRelationshipSchema } from "~/db/validation/app";
+import { api, type RouterOutputs } from "~/lib/trpc/client";
+import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { ManageVetClinicSheet } from "../manage-vet-clinic/manage-vet-clinic-sheet";
 import { ClickToCopy } from "../ui/click-to-copy";
 import { Loader } from "../ui/loader";
@@ -41,13 +41,10 @@ import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../u
 import { useToast } from "../ui/use-toast";
 import { type ManageVetFormSchema } from "./use-manage-vet-form";
 
-function VetToVetClinicRelationships({
-	existingVetToVetClinicRelationships,
-	variant,
-}: {
-	existingVetToVetClinicRelationships: VetById["vetToVetClinicRelationships"] | undefined;
-	variant: "sheet" | "form";
-}) {
+type VetClinicById = NonNullable<RouterOutputs["app"]["vetClinics"]["byId"]["data"]>;
+
+function VetToVetClinicRelationships({ isNew, variant }: { isNew: boolean; variant: "sheet" | "form" }) {
+	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchema>();
 
 	const vetToVetClinicRelationships = useFieldArray({
@@ -57,95 +54,39 @@ function VetToVetClinicRelationships({
 	});
 
 	const [editingVetClinic, setEditingVetClinic] = React.useState<VetClinicById | null>(null);
-	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 	const [isCreateVetClinicSheetOpen, setIsCreateVetClinicSheetOpen] = React.useState<true | string | null>(null);
+
+	const [confirmRelationshipDelete, setConfirmRelationshipDelete] = React.useState<string | null>(null);
 
 	const searchVetClinicsInputRef = React.useRef<HTMLInputElement>(null);
 
-	function handleVetToVetClinicRelationshipDelete(relationshipId: string) {
-		const vetToVetClinicRelationshipActions = { ...form.getValues("actions.vetToVetClinicRelationships") };
+	const context = api.useContext();
 
-		vetToVetClinicRelationships.remove(
-			vetToVetClinicRelationships.fields.findIndex((field) => field.id === relationshipId),
-		);
-
-		if (vetToVetClinicRelationshipActions[relationshipId]?.type === "INSERT") {
-			delete vetToVetClinicRelationshipActions[relationshipId];
-		} else {
-			vetToVetClinicRelationshipActions[relationshipId] = {
-				type: "DELETE",
-				payload: relationshipId,
-			};
-		}
-
-		form.setValue("actions.vetToVetClinicRelationships", vetToVetClinicRelationshipActions);
-
-		// HACK: Focus the button after the dialog closes
-		setTimeout(() => {
-			searchVetClinicsInputRef?.current?.focus();
-		}, 0);
-	}
-
-	function toggleVetToVetClinicRelationship(vetClinic: VetClinicsSearch[number]) {
-		const relationshipId = vetToVetClinicRelationships.fields.find(
-			(vetClinicRelationship) => vetClinicRelationship.vetClinicId === vetClinic.id,
-		)?.id;
-
-		if (relationshipId) {
-			const existingVetToVetClinicRelationship = existingVetToVetClinicRelationships?.find(
-				(vetToVetClinicRelationship) => vetToVetClinicRelationship.id === relationshipId,
-			);
-			if (existingVetToVetClinicRelationship) {
-				setConfirmRelationshipDelete(existingVetToVetClinicRelationship.id);
-			} else {
-				handleVetToVetClinicRelationshipDelete(relationshipId);
-			}
-
-			return;
-		}
-		const id = generateId();
-
-		vetToVetClinicRelationships.append({
-			id,
-			vetId: form.getValues("id"),
-			vetClinicId: vetClinic.id,
-			relationship: "full-time",
-			vetClinic,
-		});
-
-		form.setValue("actions.vetToVetClinicRelationships", {
-			...form.getValues("actions.vetToVetClinicRelationships"),
-			[id]: {
-				type: "INSERT",
-				payload: {
-					id,
-					vetId: form.getValues("id"),
-					vetClinicId: vetClinic.id,
-					relationship: "full-time",
-				},
-			},
-		});
-	}
+	const insertVetToVetClinicRelationshipMutation = api.app.vets.vetToVetClinicRelationships.insert.useMutation();
+	const deleteVetToVetClinicRelationshipMutation = api.app.vets.vetToVetClinicRelationships.delete.useMutation();
 
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
 
 	return (
 		<>
 			<ManageVetClinicSheet
-				vetClinic={editingVetClinic ?? undefined}
+				withoutTrigger
 				open={!!editingVetClinic}
 				setOpen={(value) => {
 					if (value === false) {
 						setEditingVetClinic(null);
 					}
 				}}
-				withoutTrigger
+				vetClinic={editingVetClinic ?? undefined}
 				onSuccessfulSubmit={(vetClinic) => {
 					const newVetToVetClinicRelationships = [...vetToVetClinicRelationships.fields].map((field) => {
-						if (field.vetClinicId === vetClinic.id) {
+						if (field.vetId === vetClinic.id) {
 							return {
 								...field,
-								vetClinic,
+								vetClinic: {
+									...field.vetClinic,
+									...vetClinic,
+								},
 							};
 						}
 
@@ -154,28 +95,60 @@ function VetToVetClinicRelationships({
 
 					form.setValue("vetToVetClinicRelationships", newVetToVetClinicRelationships, { shouldDirty: false });
 				}}
-				onVetClinicDelete={(id) => {
+				onDelete={(id) => {
 					form.setValue(
 						"vetToVetClinicRelationships",
-						vetToVetClinicRelationships.fields.filter((relationship) => relationship.vetClinicId !== id),
+						vetToVetClinicRelationships.fields.filter((relationship) => relationship.vetId !== id),
 						{ shouldDirty: false },
 					);
 				}}
 			/>
 
 			<DestructiveActionDialog
-				name="relationship"
-				requiresSaveOf="vet"
 				withoutTrigger
 				open={!!confirmRelationshipDelete}
-				onOpenChange={() => setConfirmRelationshipDelete(null)}
-				onConfirm={() => {
+				onOpenChange={() => {
+					setConfirmRelationshipDelete(null);
+				}}
+				name="relationship"
+				onConfirm={async () => {
 					if (confirmRelationshipDelete) {
-						handleVetToVetClinicRelationshipDelete(confirmRelationshipDelete);
-						// HACK: Focus the combobox trigger after the dialog closes
-						setTimeout(() => {
-							searchVetClinicsInputRef?.current?.focus();
-						}, 0);
+						try {
+							if (!isNew) {
+								await deleteVetToVetClinicRelationshipMutation.mutateAsync({
+									id: confirmRelationshipDelete,
+								});
+							}
+
+							// Use setValue instead of remove so that we can set shouldDirty to false
+							form.setValue(
+								"vetToVetClinicRelationships",
+								vetToVetClinicRelationships.fields.filter(
+									(relationship) => relationship.id !== confirmRelationshipDelete,
+								),
+								{ shouldDirty: false },
+							);
+
+							toast({
+								title: "Deleted relationship",
+								description: "The relationship has been successfully deleted.",
+							});
+
+							setConfirmRelationshipDelete(null);
+
+							// HACK: Focus the combobox trigger after the dialog closes
+							setTimeout(() => {
+								searchVetClinicsInputRef?.current?.focus();
+							}, 0);
+						} catch (error) {
+							logInDevelopment(error);
+
+							toast({
+								title: "Failed to delete relationship",
+								description: "Something went wrong while deleting the relationship. Please try again.",
+								variant: "destructive",
+							});
+						}
 					}
 				}}
 			/>
@@ -196,8 +169,7 @@ function VetToVetClinicRelationships({
 					defaultValues={{
 						name: typeof isCreateVetClinicSheetOpen === "string" ? isCreateVetClinicSheetOpen : undefined,
 					}}
-					onSuccessfulSubmit={(vetClinic) => {
-						toggleVetToVetClinicRelationship(vetClinic);
+					onSuccessfulSubmit={() => {
 						searchVetClinicsInputRef?.current?.focus();
 					}}
 					withoutTrigger
@@ -206,25 +178,63 @@ function VetToVetClinicRelationships({
 				<div className="sm:col-span-6">
 					<MultiSelectSearchCombobox
 						ref={searchVetClinicsInputRef}
+						placeholder={
+							vetToVetClinicRelationships.fields.length === 0
+								? "Search vets clinics..."
+								: vetToVetClinicRelationships.fields.length === 1
+								? "1 vet clinic selected"
+								: `${vetToVetClinicRelationships.fields.length} vets clinics selected`
+						}
+						onSearch={async (searchTerm) => {
+							const res = await context.app.vetClinics.search.fetch({ searchTerm });
+
+							return res.data ?? [];
+						}}
 						resultLabel={(result) => result.name}
 						selected={vetToVetClinicRelationships.fields.map(
 							(vetToVetClinicRelationship) => vetToVetClinicRelationship.vetClinic,
 						)}
-						onSelect={(vet) => {
-							toggleVetToVetClinicRelationship(vet);
-						}}
-						onSearch={async (searchTerm) => {
-							const res = await actions.app.vetClinics.search(searchTerm);
+						onSelect={async (vetClinic) => {
+							const relationship = {
+								id: generateId(),
+								vetId: form.getValues("id"),
+								vetClinicId: vetClinic.id,
+								vetClinic,
+								relationship: "full-time",
+							} satisfies ManageVetFormSchema["vetToVetClinicRelationships"][number];
 
-							return res.data ?? [];
+							if (!isNew) {
+								try {
+									await insertVetToVetClinicRelationshipMutation.mutateAsync(relationship);
+
+									toast({
+										title: "Created relationship",
+										description: `Relationship between vet clinic "${vetClinic.name}" and vet ${
+											form.getValues("givenName")
+												? `"${form.getValues("givenName")}${
+														form.getValues("familyName") ? " " + form.getValues("familyName") : ""
+												  }"`
+												: ""
+										} has been successfully created.`,
+									});
+								} catch (error) {
+									logInDevelopment(error);
+
+									toast({
+										title: "Failed to create relationship",
+										description: `Relationship between vet clinic "${vetClinic.name}" and vet ${
+											form.getValues("givenName")
+												? `"${form.getValues("givenName")}${
+														form.getValues("familyName") ? " " + form.getValues("familyName") : ""
+												  }"`
+												: ""
+										} failed to create. Please try again.`,
+									});
+								}
+							}
+
+							vetToVetClinicRelationships.append(relationship);
 						}}
-						placeholder={
-							vetToVetClinicRelationships.fields.length === 0
-								? "Search vet clinics..."
-								: vetToVetClinicRelationships.fields.length === 1
-								? "1 vet clinic selected"
-								: `${vetToVetClinicRelationships.fields.length} vet clinics selected`
-						}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
@@ -249,7 +259,9 @@ function VetToVetClinicRelationships({
 									onEdit={(vetClinic) => {
 										setEditingVetClinic(vetClinic);
 									}}
-									onDelete={(vetClinic) => toggleVetToVetClinicRelationship(vetClinic)}
+									onDelete={() => {
+										setConfirmRelationshipDelete(vetToVetClinicRelationship.id);
+									}}
 									variant={variant}
 								/>
 							))}
@@ -271,13 +283,21 @@ function VetToVetClinicRelationship({
 	vetToVetClinicRelationship: ManageVetFormSchema["vetToVetClinicRelationships"][number];
 	index: number;
 	onEdit: (vetClinic: VetClinicById) => void;
-	onDelete: (vetClinic: VetClinicsSearch[number]) => void;
+	onDelete: () => void;
 	variant: "sheet" | "form";
 }) {
 	const { toast } = useToast();
 	const form = useFormContext<ManageVetFormSchema>();
 
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
+	const [updatingRelationshipTo, setUpdatingRelationshipTo] = React.useState<
+		keyof typeof InsertVetToVetClinicRelationshipSchema.shape.relationship.Enum | null
+	>(null);
+
+	const context = api.useContext();
+
+	const updateVetToVetClinicRelationshipMutation = api.app.vets.vetToVetClinicRelationships.update.useMutation();
+
 	return (
 		<li className={cn("flex items-center justify-between gap-x-6", index === 0 ? "pb-4" : "py-4")}>
 			<div className="flex shrink items-center gap-x-2 truncate">
@@ -327,33 +347,54 @@ function VetToVetClinicRelationship({
 					render={({ field }) => (
 						<FormItem>
 							<Select
-								onValueChange={(value) => {
-									field.onChange(value as typeof field.value);
-
-									const existingAction = form.getValues(
-										`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`,
-									);
-
-									if (existingAction?.type === "INSERT") {
-										form.setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
-											type: "INSERT",
-											payload: {
-												...existingAction.payload,
-												relationship: value as typeof field.value,
-											},
-										});
-										return;
-									}
-
-									form.setValue(`actions.vetToVetClinicRelationships.${vetToVetClinicRelationship.id}`, {
-										type: "UPDATE",
-										payload: {
-											...vetToVetClinicRelationship,
-											relationship: value as typeof field.value,
-										},
-									});
-								}}
 								value={field.value}
+								onValueChange={(value) => {
+									if (value !== field.value) {
+										setUpdatingRelationshipTo(value as typeof field.value);
+
+										updateVetToVetClinicRelationshipMutation
+											.mutateAsync({
+												id: vetToVetClinicRelationship.id,
+												relationship: value as typeof field.value,
+											})
+											.then(() => {
+												field.onChange(value as typeof field.value);
+
+												toast({
+													title: "Updated relationship",
+													description: `The relationship between vet clinic "${
+														vetToVetClinicRelationship.vetClinic.name
+													}" and vet ${
+														form.getValues("givenName")
+															? `"${form.getValues("givenName")}${
+																	form.getValues("familyName") ? " " + form.getValues("familyName") : ""
+															  }"`
+															: ""
+													} has been successfully updated.`,
+												});
+											})
+											.catch((error) => {
+												logInDevelopment(error);
+
+												toast({
+													title: "Failed to update relationship",
+													description: `The relationship between vet clinic "${
+														vetToVetClinicRelationship.vetClinic.name
+													}" and vet ${
+														form.getValues("givenName")
+															? `"${form.getValues("givenName")}${
+																	form.getValues("familyName") ? " " + form.getValues("familyName") : ""
+															  }"`
+															: ""
+													} failed to update. Please try again.`,
+													variant: "destructive",
+												});
+											})
+											.finally(() => {
+												setUpdatingRelationshipTo(null);
+											});
+									}
+								}}
 							>
 								<FormControl>
 									<SelectTrigger>
@@ -366,7 +407,12 @@ function VetToVetClinicRelationship({
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map((relation) => (
-											<SelectItem key={relation} value={relation} className="capitalize">
+											<SelectItem
+												key={relation}
+												value={relation}
+												className="capitalize"
+												isLoading={updatingRelationshipTo === relation}
+											>
 												{relation.split("-").join(" ")}
 											</SelectItem>
 										))}
@@ -391,28 +437,23 @@ function VetToVetClinicRelationship({
 								onSelect={(e) => {
 									e.preventDefault();
 
-									const renderErrorToast = () => {
-										toast({
-											title: "Failed to fetch vet clinic",
-											description: "Something went wrong while fetching the vet clinic. Please try again.",
-											variant: "destructive",
-										});
-									};
-
 									setIsFetchingVetClinic(true);
 
-									actions.app.vetClinics
-										.byId(vetToVetClinicRelationship.vetClinic.id)
+									context.app.vetClinics.byId
+										.fetch({ id: vetToVetClinicRelationship.vetClinic.id })
 										.then((result) => {
-											if (result.success && result.data) {
-												onEdit(result.data);
-												return;
+											if (!result.data) {
+												throw new Error("No vet clinic found");
 											}
 
-											renderErrorToast();
+											onEdit(result.data);
 										})
 										.catch(() => {
-											renderErrorToast();
+											toast({
+												title: "Failed to fetch vet clinic",
+												description: "Something went wrong while fetching the vet clinic. Please try again.",
+												variant: "destructive",
+											});
 										})
 										.finally(() => {
 											setIsFetchingVetClinic(false);
@@ -426,7 +467,7 @@ function VetToVetClinicRelationship({
 							<DropdownMenuItem
 								onSelect={(e) => {
 									e.preventDefault();
-									onDelete(vetToVetClinicRelationship.vetClinic);
+									onDelete();
 								}}
 							>
 								<TrashIcon className="mr-2 h-4 w-4" />

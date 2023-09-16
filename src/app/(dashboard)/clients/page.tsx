@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { ClientsTable } from "./_components/clients-table";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 async function ClientsPage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
-	const response = await actions.app.clients.list({
+	const response = await server.app.clients.all.query({
 		page: Number(searchParams?.page) ?? undefined,
 		limit: Number(searchParams?.limit) ?? undefined,
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
@@ -20,7 +20,7 @@ async function ClientsPage({ searchParams }: { searchParams?: { [key: string]: s
 		<>
 			<PageHeader title="Manage Clients" back={{ href: "/" }} />
 
-			<ClientsTable result={response.data} />
+			<ClientsTable initialResult={response} />
 		</>
 	);
 }

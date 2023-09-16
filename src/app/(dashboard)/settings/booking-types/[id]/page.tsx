@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { ManageBookingTypeForm } from "~/components/manage-booking-types/manage-booking-types-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {
@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function UpdateVetClinicPage({ params }: { params: { id: string } }) {
-	const bookingTypes = params.id === "new" ? undefined : await actions.app.bookingTypes.byId(params.id);
+	const bookingTypes = params.id === "new" ? undefined : await server.app.bookingTypes.byId.query({ id: params.id });
 
 	return (
 		<>

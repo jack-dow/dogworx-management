@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import {
 	Dialog,
@@ -11,6 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
@@ -18,11 +20,7 @@ import { Loader } from "../ui/loader";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
-import {
-	useManageBookingForm,
-	type ManageBookingFormSchema,
-	type UseManageBookingFormProps,
-} from "./use-manage-booking-form";
+import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
 interface ManageBookingDialogProps
 	extends Omit<ManageBookingDialogFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
@@ -35,6 +33,8 @@ interface ManageBookingDialogProps
 function ManageBookingDialog(props: ManageBookingDialogProps) {
 	// This is in state so that we can use the booking prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
 	const [isNew, setIsNew] = React.useState(!props.booking);
+
+	const pathname = usePathname();
 
 	const [_open, _setOpen] = React.useState(props.open);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -49,6 +49,10 @@ function ManageBookingDialog(props: ManageBookingDialogProps) {
 			return;
 		}
 	}, [internalOpen, props.booking]);
+
+	useDidUpdate(() => {
+		setInternalOpen(false);
+	}, [pathname]);
 
 	return (
 		<>
@@ -107,7 +111,6 @@ interface ManageBookingDialogFormProps extends UseManageBookingFormProps {
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	isNew: boolean;
-	onSuccessfulSubmit?: (booking: ManageBookingFormSchema) => void;
 	disableDogSearch?: boolean;
 }
 
@@ -144,7 +147,12 @@ function ManageBookingDialogForm({
 	return (
 		<Form {...form}>
 			<form onSubmit={_onSubmit} className="flex flex-col gap-4">
-				<BookingFields variant="dialog" disableDogSearch={disableDogSearch} booking={booking} bookingTypes={bookingTypes} />
+				<BookingFields
+					variant="dialog"
+					disableDogSearch={disableDogSearch}
+					booking={booking}
+					bookingTypes={bookingTypes}
+				/>
 
 				<DialogFooter className="mt-2">
 					{!isNew && (

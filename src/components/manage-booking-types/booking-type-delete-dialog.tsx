@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import { actions } from "~/actions";
+import { api } from "~/lib/trpc/client";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageBookingTypeFormSchema } from "./use-manage-booking-types-form";
@@ -15,30 +15,31 @@ function BookingTypeDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: 
 	const form = useFormContext<ManageBookingTypeFormSchema>();
 	const { toast } = useToast();
 
+	const deleteMutation = api.app.bookingTypes.delete.useMutation();
+
 	return (
 		<DestructiveActionDialog
-			name="booking"
+			name="booking type"
 			onConfirm={async () => {
-				const result = await actions.app.bookings.delete({
-					id: form.getValues("id"),
-				});
-
-				if (result.success) {
+				try {
+					await deleteMutation.mutateAsync({
+						id: form.getValues("id"),
+					});
 					toast({
 						title: `Booking type deleted`,
-						description: `Successfully deleted booking.`,
+						description: `Successfully deleted booking type "${form.getValues("name")}".`,
 					});
 
-					if (pathname.startsWith("/settings/booking-types/")) {
-						router.push("/settings/booking-types/");
+					if (pathname.startsWith("/bookings/")) {
+						router.push("/bookings");
 						return;
 					}
 
 					onSuccessfulDelete?.();
-				} else {
+				} catch (error) {
 					toast({
 						title: `Booking type deletion failed`,
-						description: `There was an error deleting booking "${form.getValues("name")}". Please try again.`,
+						description: `There was an error deleting booking type "${form.getValues("name")}". Please try again.`,
 						variant: "destructive",
 					});
 				}

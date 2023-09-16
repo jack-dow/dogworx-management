@@ -10,9 +10,8 @@ import { useToast } from "~/components/ui/use-toast";
 import { InsertClientSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { api } from "~/lib/trpc/client";
-import { EmailOrPhoneNumberSchema } from "~/lib/validation";
+import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
-import { generateId, hasTrueValue, logInDevelopment } from "~/utils";
 
 const ManageClientFormSchema = z.intersection(
 	InsertClientSchema.extend({
@@ -108,7 +107,6 @@ function useManageClientForm(props: UseManageClientFormProps) {
 					}". Please try again.`,
 					variant: "destructive",
 				});
-				throw new Error("Failed to create client");
 			}
 		})(e);
 	}

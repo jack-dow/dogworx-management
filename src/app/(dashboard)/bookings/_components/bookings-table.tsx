@@ -11,25 +11,41 @@ import { DestructiveActionDialog } from "~/components/ui/destructive-action-dial
 import { CalendarIcon, ChevronUpDownIcon } from "~/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingsList } from "~/actions";
-import { BOOKINGS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn, logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
+import { BOOKINGS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createBookingsTableColumns } from "./bookings-table-columns";
 
-function BookingsTable({ result }: { result: BookingsList }) {
+function BookingsTable({ initialResult }: { initialResult: RouterOutputs["app"]["bookings"]["all"] }) {
 	const { dayjs } = useDayjs();
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
 
-	const [confirmBookingDelete, setConfirmBookingDelete] = React.useState<BookingsList["data"][number] | null>(null);
+	const result = api.app.bookings.all.useQuery(
+		{
+			page: searchParams.get("page") ?? undefined,
+			limit: searchParams.get("limit") ?? undefined,
+			sortBy: searchParams.get("sortBy") ?? undefined,
+			sortDirection: searchParams.get("sortDirection") ?? undefined,
+		},
+		{
+			initialData: initialResult,
+		},
+	);
+
+	const deleteMutation = api.app.bookings.delete.useMutation();
+	const [confirmBookingDelete, setConfirmBookingDelete] = React.useState<
+		RouterOutputs["app"]["bookings"]["all"]["data"][number] | null
+	>(null);
 
 	// Remove bookings that were added to ensure timezones are correct
 	if (searchParams.get("from") || searchParams.get("to")) {
-		const startingLength = result.data.length;
+		const startingLength = initialResult.data.length;
 
-		result.data = result.data.filter((booking) => {
+		initialResult.data = initialResult.data.filter((booking) => {
 			const from = searchParams.get("from") ? dayjs.tz(searchParams.get("from") as string).toDate() : undefined;
 			const to = searchParams.get("to") ? dayjs.tz(searchParams.get("to") as string).toDate() : undefined;
 
@@ -44,9 +60,9 @@ function BookingsTable({ result }: { result: BookingsList }) {
 			return true;
 		});
 
-		if (startingLength !== result.data.length) {
-			result.pagination.count -= startingLength - result.data.length;
-			result.pagination.maxPage = Math.ceil(result.pagination.count / result.pagination.limit);
+		if (startingLength !== initialResult.data.length) {
+			initialResult.pagination.count -= startingLength - initialResult.data.length;
+			initialResult.pagination.maxPage = Math.ceil(initialResult.pagination.count / initialResult.pagination.limit);
 		}
 	}
 
@@ -62,16 +78,16 @@ function BookingsTable({ result }: { result: BookingsList }) {
 				onConfirm={async () => {
 					if (confirmBookingDelete == null) return;
 
-					const result = await actions.app.bookings.delete({
-						id: confirmBookingDelete.id,
-					});
+					try {
+						await deleteMutation.mutateAsync({ id: confirmBookingDelete.id });
 
-					if (result.success) {
 						toast({
 							title: `Booking deleted`,
 							description: `Successfully deleted booking`,
 						});
-					} else {
+					} catch (error) {
+						logInDevelopment(error);
+
 						toast({
 							title: `Booking deletion failed`,
 							description: `There was an error deleting the booking. Please try again.`,
@@ -86,7 +102,7 @@ function BookingsTable({ result }: { result: BookingsList }) {
 					setConfirmBookingDelete(booking);
 				})}
 				sortableColumns={BOOKINGS_SORTABLE_COLUMNS}
-				{...result}
+				{...result.data}
 				search={{
 					component: DateRangeSearch,
 				}}

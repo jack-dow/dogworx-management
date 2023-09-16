@@ -16,9 +16,9 @@ import {
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { type RouterOutputs } from "~/server";
 
-function createDogsTableColumns(
-	onDeleteClick: (dog: RouterOutputs["app"]["dogs"]["all"]["data"][number]) => void,
-): ColumnDef<RouterOutputs["app"]["dogs"]["all"]["data"][number]>[] {
+type Dog = RouterOutputs["app"]["dogs"]["all"]["data"][number];
+
+function createDogsTableColumns(onDeleteClick: (dog: Dog) => void): ColumnDef<Dog>[] {
 	return [
 		{
 			accessorKey: "givenName",

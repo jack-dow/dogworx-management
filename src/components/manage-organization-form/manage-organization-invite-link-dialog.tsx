@@ -21,15 +21,14 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type OrganizationInviteLinkById } from "~/actions";
 import { useUser } from "~/app/providers";
-import { organizationRoleOptions } from "~/db/schema";
-import { InsertOrganizationInviteLinkSchema } from "~/db/validation";
+import { InsertOrganizationInviteLinkSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/lib/utils";
+import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 const createInviteLinkCode = init({
 	length: 8,
@@ -127,9 +126,9 @@ type ManageOrganizationInviteLinkDialogFormProps = {
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	isNew: boolean;
-	organizationInviteLink?: OrganizationInviteLinkById;
+	organizationInviteLink?: ManageOrganizationFormSchema["organizationInviteLinks"][number];
 	defaultValues?: Partial<ManageOrganizationInviteLinkFormSchema>;
-	onSubmit?: (data: ManageOrganizationInviteLinkFormSchema) => void;
+	onSuccessfulSubmit?: (data: ManageOrganizationInviteLinkFormSchema) => void;
 	onDelete?: (id: string) => Promise<void>;
 };
 
@@ -140,7 +139,7 @@ function ManageOrganizationInviteLinkDialogForm({
 	isNew,
 	organizationInviteLink,
 	defaultValues,
-	onSubmit,
+	onSuccessfulSubmit,
 	onDelete,
 }: ManageOrganizationInviteLinkDialogFormProps) {
 	const { toast } = useToast();
@@ -152,35 +151,18 @@ function ManageOrganizationInviteLinkDialogForm({
 		resolver: zodResolver(ManageOrganizationInviteLinkFormSchema),
 		defaultValues: {
 			organizationId: user.organizationId,
-			role: "member",
 			maxUses: null,
-			...organizationInviteLink,
 			...defaultValues,
-			userId: organizationInviteLink?.userId || defaultValues?.userId || user.id,
+			...organizationInviteLink,
+			userId: defaultValues?.userId || organizationInviteLink?.userId || user.id,
 			id: organizationInviteLink?.id ?? createInviteLinkCode(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
 
-	React.useEffect(() => {
-		function syncOrganizationInviteLink(organizationInviteLink: OrganizationInviteLinkById) {
-			form.reset(
-				{
-					...organizationInviteLink,
-					userId: organizationInviteLink.userId || user.id,
-				},
-				{
-					keepDirty: true,
-					keepDirtyValues: true,
-				},
-			);
-		}
-
-		if (organizationInviteLink) {
-			syncOrganizationInviteLink(organizationInviteLink);
-		}
-	}, [organizationInviteLink, form, user.id]);
+	const insertMutation = api.auth.organizations.inviteLinks.insert.useMutation();
+	const updateMutation = api.auth.organizations.inviteLinks.update.useMutation();
 
 	React.useEffect(() => {
 		setIsDirty(form.formState.isDirty);
@@ -196,40 +178,30 @@ function ManageOrganizationInviteLinkDialogForm({
 
 					void form.handleSubmit(async (data) => {
 						try {
-							let success = false;
-
-							if (onSubmit) {
-								onSubmit(data);
-								setOpen(false);
-								return;
+							if (!isNew) {
+								if (organizationInviteLink) {
+									await updateMutation.mutateAsync(data);
+								} else {
+									await insertMutation.mutateAsync(data);
+								}
 							}
 
-							if (organizationInviteLink) {
-								const response = await actions.auth.organizations.inviteLinks.update(data);
-								success = response.success && !!response.data;
-							} else {
-								const response = await actions.auth.organizations.inviteLinks.insert(data);
-								success = response.success;
-							}
-
-							if (success) {
-								toast({
-									title: `Invite link ${isNew ? "Created" : "Updated"}`,
-									description: `Successfully ${isNew ? "created" : "updated"} invite link.`,
-								});
-							} else {
-								toast({
-									title: `Invite link ${isNew ? "Creation" : "Update"} Failed`,
-									description: `There was an error ${
-										isNew ? "creating" : "updating"
-									} the invite link. Please try again.`,
-									variant: "destructive",
-								});
-							}
+							onSuccessfulSubmit?.(data);
 
 							setOpen(false);
+
+							toast({
+								title: `Invite link ${isNew ? "Created" : "Updated"}`,
+								description: `Successfully ${isNew ? "created" : "updated"} invite link.`,
+							});
 						} catch (error) {
 							logInDevelopment(error);
+
+							toast({
+								title: `Invite link ${isNew ? "Creation" : "Update"} Failed`,
+								description: `There was an error ${isNew ? "creating" : "updating"} the invite link. Please try again.`,
+								variant: "destructive",
+							});
 						}
 					})(e);
 				}}
@@ -301,40 +273,6 @@ function ManageOrganizationInviteLinkDialogForm({
 									))}
 								</SelectContent>
 							</Select>
-
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<FormField
-					control={form.control}
-					name="role"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Role</FormLabel>
-							<FormControl>
-								<Tabs
-									value={field.value}
-									onValueChange={(value) => {
-										field.onChange(value);
-									}}
-									className="w-full"
-								>
-									<TabsList className="grid w-full grid-cols-2">
-										{organizationRoleOptions.map((option) => {
-											if (option === "owner") {
-												return null;
-											}
-
-											return (
-												<TabsTrigger key={option} value={option} className="capitalize">
-													{option}
-												</TabsTrigger>
-											);
-										})}
-									</TabsList>
-								</Tabs>
-							</FormControl>
 
 							<FormMessage />
 						</FormItem>

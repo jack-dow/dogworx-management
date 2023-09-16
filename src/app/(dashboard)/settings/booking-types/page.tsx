@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { BookingTypesTable } from "./_components/booking-types-table";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 async function BookingTypesPage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
-	const response = await actions.app.bookingTypes.list({
+	const response = await server.app.bookingTypes.all.query({
 		page: Number(searchParams?.page) ?? undefined,
 		limit: Number(searchParams?.limit) ?? undefined,
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
@@ -19,7 +19,7 @@ async function BookingTypesPage({ searchParams }: { searchParams?: { [key: strin
 		<>
 			<PageHeader title="Manage Booking Types" back={{ href: "/" }} />
 
-			<BookingTypesTable result={response.data} />
+			<BookingTypesTable initialResult={response} />
 		</>
 	);
 }

@@ -14,12 +14,12 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type BookingTypesList } from "~/actions";
-import { cn, secondsToHumanReadable } from "~/utils";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
-function createBookingTypesTableColumns(
-	onDeleteClick: (bookingType: BookingTypesList["data"][number]) => void,
-): ColumnDef<BookingTypesList["data"][number]>[] {
+type BookingType = RouterOutputs["app"]["bookingTypes"]["all"]["data"][number];
+
+function createBookingTypesTableColumns(onDeleteClick: (bookingType: BookingType) => void): ColumnDef<BookingType>[] {
 	return [
 		{
 			accessorKey: "name",

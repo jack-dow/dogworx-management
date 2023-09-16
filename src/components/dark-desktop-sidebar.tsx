@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { type SignOutPOSTResponse } from "~/app/api/auth/sign-out/route";
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
-import { signOut } from "~/lib/auth";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -71,6 +71,20 @@ export const navigation = [
 		],
 	},
 ] satisfies Array<Navigation>;
+
+export async function signOut() {
+	const signOutResponse = await fetch("/api/auth/sign-out", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		cache: "no-store",
+	});
+
+	const body = (await signOutResponse.json()) as SignOutPOSTResponse;
+
+	return body;
+}
 
 function DarkDesktopSidebar() {
 	const session = useSession();

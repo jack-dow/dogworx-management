@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import { actions } from "~/actions";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
@@ -14,13 +15,16 @@ function ClientDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =>
 
 	const form = useFormContext<ManageClientFormSchema>();
 	const { toast } = useToast();
+
+	const deleteMutation = api.app.clients.delete.useMutation();
+
 	return (
 		<DestructiveActionDialog
 			name="client"
 			onConfirm={async () => {
-				const result = await actions.app.clients.delete(form.getValues("id"));
+				try {
+					await deleteMutation.mutateAsync({ id: form.getValues("id") });
 
-				if (result.success) {
 					toast({
 						title: `Client deleted`,
 						description: `Successfully deleted client "${form.getValues("givenName")}${
@@ -34,7 +38,9 @@ function ClientDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =>
 					}
 
 					onSuccessfulDelete?.();
-				} else {
+				} catch (error) {
+					logInDevelopment(error);
+
 					toast({
 						title: `Client deletion failed`,
 						description: `There was an error deleting client "${form.getValues("givenName")}${

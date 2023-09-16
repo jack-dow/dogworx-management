@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import { actions } from "~/actions";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetFormSchema } from "./use-manage-vet-form";
@@ -14,13 +15,16 @@ function VetDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => vo
 
 	const form = useFormContext<ManageVetFormSchema>();
 	const { toast } = useToast();
+
+	const deleteMutation = api.app.vets.delete.useMutation();
+
 	return (
 		<DestructiveActionDialog
 			name="vet"
 			onConfirm={async () => {
-				const result = await actions.app.vets.delete(form.getValues("id"));
+				try {
+					await deleteMutation.mutateAsync({ id: form.getValues("id") });
 
-				if (result.success) {
 					toast({
 						title: `Vet deleted`,
 						description: `Successfully deleted vet "${form.getValues("givenName")}${
@@ -34,7 +38,9 @@ function VetDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => vo
 					}
 
 					onSuccessfulDelete?.();
-				} else {
+				} catch (error) {
+					logInDevelopment(error);
+
 					toast({
 						title: `Vet deletion failed`,
 						description: `There was an error deleting vet "${form.getValues("givenName")}${

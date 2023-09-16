@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { parseDate } from "chrono-node";
-import { useFormContext, type Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
@@ -16,10 +16,11 @@ import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { ManageDogFormSchema } from "./manage-dog-form";
 
-function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema> }) {
+function DogBasicInformation() {
+	const form = useFormContext<ManageDogFormSchema>();
 	return (
 		<FormSection
 			title="Basic Information"
@@ -28,7 +29,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 			<FormGroup>
 				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
-						control={control}
+						control={form.control}
 						name="givenName"
 						render={({ field }) => (
 							<FormItem>
@@ -44,7 +45,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 
 				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
-						control={control}
+						control={form.control}
 						name="breed"
 						render={({ field }) => (
 							<FormItem>
@@ -60,7 +61,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 
 				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
-						control={control}
+						control={form.control}
 						name="color"
 						render={({ field }) => (
 							<FormItem>
@@ -75,9 +76,9 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 				</div>
 
 				<div className="space-y-2 sm:col-span-3 md:col-span-2">
-					<BirthdayInputCalendar control={control} />
+					<BirthdayInputCalendar />
 					<FormField
-						control={control}
+						control={form.control}
 						name="isAgeEstimate"
 						render={({ field }) => (
 							<FormItem className="flex items-center space-x-2 space-y-0">
@@ -97,7 +98,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 
 				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
-						control={control}
+						control={form.control}
 						name="sex"
 						render={({ field }) => (
 							<FormItem>
@@ -133,7 +134,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 
 				<div className="sm:col-span-3 md:col-span-2">
 					<FormField
-						control={control}
+						control={form.control}
 						name="desexed"
 						render={({ field }) => (
 							<FormItem>
@@ -161,7 +162,7 @@ function DogBasicInformation({ control }: { control: Control<ManageDogFormSchema
 
 				<div className="sm:col-span-6">
 					<FormField
-						control={control}
+						control={form.control}
 						name="notes"
 						render={({ field }) => (
 							<FormItem>
@@ -197,7 +198,7 @@ function getAgeInWords(dayjs: Dayjs, age: Date | null) {
 	}
 }
 
-function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSchema> }) {
+function BirthdayInputCalendar() {
 	const { dayjs } = useDayjs();
 	const form = useFormContext<ManageDogFormSchema>();
 
@@ -210,7 +211,7 @@ function BirthdayInputCalendar({ control }: { control: Control<ManageDogFormSche
 	return (
 		<>
 			<FormField
-				control={control}
+				control={form.control}
 				name="age"
 				render={({ field }) => (
 					<FormItem>

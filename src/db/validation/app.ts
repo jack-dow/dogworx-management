@@ -12,6 +12,7 @@ import {
 	vets,
 	vetToVetClinicRelationships,
 } from "~/db/schema/app";
+import { users } from "../schema/auth";
 
 // -----------------------------------------------------------------------------
 // NOTE: For the update schemas we manually select the fields that can be updated.
@@ -103,8 +104,26 @@ export const InsertBookingSchema = createInsertSchema(bookings)
 	.extend({
 		id: IdSchema,
 		assignedToId: IdSchema,
+		assignedTo: createSelectSchema(users).pick({
+			id: true,
+			givenName: true,
+			familyName: true,
+			emailAddress: true,
+			organizationId: true,
+			organizationRole: true,
+			profileImageUrl: true,
+		}),
 		bookingTypeId: IdSchema.nullable(),
 		dogId: IdSchema.nullable(),
+		dog: createSelectSchema(dogs)
+			.pick({
+				id: true,
+				givenName: true,
+				familyName: true,
+				color: true,
+				breed: true,
+			})
+			.nullable(),
 		duration: UnsignedMediumInt,
 	})
 	.omit({ createdAt: true, updatedAt: true, organizationId: true });
@@ -131,7 +150,17 @@ export type UpdateBookingSchema = z.infer<typeof UpdateBookingSchema>;
 export const InsertClientSchema = createInsertSchema(clients)
 	.extend({
 		id: IdSchema,
-		dogToClientRelationships: z.array(InsertDogToClientRelationshipSchema),
+		dogToClientRelationships: z.array(
+			InsertDogToClientRelationshipSchema.extend({
+				dog: createSelectSchema(dogs).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					color: true,
+					breed: true,
+				}),
+			}),
+		),
 	})
 	.omit({ createdAt: true, updatedAt: true, organizationId: true });
 export type InsertClientSchema = z.infer<typeof InsertClientSchema>;
@@ -159,8 +188,27 @@ export type UpdateClientSchema = z.infer<typeof UpdateClientSchema>;
 export const InsertVetSchema = createInsertSchema(vets)
 	.extend({
 		id: IdSchema,
-		dogToVetRelationships: z.array(InsertDogToVetRelationshipSchema),
-		vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema),
+		dogToVetRelationships: z.array(
+			InsertDogToVetRelationshipSchema.extend({
+				dog: createSelectSchema(dogs).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					color: true,
+					breed: true,
+				}),
+			}),
+		),
+		vetToVetClinicRelationships: z.array(
+			InsertVetToVetClinicRelationshipSchema.extend({
+				vetClinic: createSelectSchema(vetClinics).pick({
+					id: true,
+					name: true,
+					emailAddress: true,
+					phoneNumber: true,
+				}),
+			}),
+		),
 	})
 	.omit({ createdAt: true, updatedAt: true, organizationId: true });
 export type InsertVetSchema = z.infer<typeof InsertVetSchema>;
@@ -184,7 +232,19 @@ export type UpdateVetSchema = z.infer<typeof UpdateVetSchema>;
 export const InsertDogSchema = createInsertSchema(dogs)
 	.extend({
 		id: IdSchema,
-		bookings: z.array(InsertBookingSchema),
+		bookings: z.array(
+			InsertBookingSchema.extend({
+				assignedTo: createSelectSchema(users).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					emailAddress: true,
+					organizationId: true,
+					organizationRole: true,
+					profileImageUrl: true,
+				}),
+			}),
+		),
 		dogToClientRelationships: z.array(
 			InsertDogToClientRelationshipSchema.extend({
 				client: createSelectSchema(clients).pick({
@@ -261,7 +321,17 @@ export type UpdateBookingTypeSchema = z.infer<typeof UpdateBookingTypeSchema>;
 export const InsertVetClinicSchema = createInsertSchema(vetClinics)
 	.extend({
 		id: IdSchema,
-		vetToVetClinicRelationships: z.array(InsertVetToVetClinicRelationshipSchema),
+		vetToVetClinicRelationships: z.array(
+			InsertVetToVetClinicRelationshipSchema.extend({
+				vet: createSelectSchema(vets).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					emailAddress: true,
+					phoneNumber: true,
+				}),
+			}),
+		),
 	})
 	.omit({ createdAt: true, updatedAt: true, organizationId: true });
 export type InsertVetClinicSchema = z.infer<typeof InsertVetClinicSchema>;

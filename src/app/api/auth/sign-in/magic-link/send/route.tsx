@@ -5,9 +5,8 @@ import ms from "ms";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { verificationCodes } from "~/db/schema";
-import { resend } from "~/lib/resend";
-import { generateId, type APIResponse } from "~/utils";
+import { verificationCodes } from "~/db/schema/auth";
+import { generateId, resend, type APIResponse } from "~/lib/utils";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),

@@ -4,7 +4,7 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { CodeInput, getSegmentCssWidth } from "rci";
 
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 
 const useIsFocused = (inputRef: React.RefObject<HTMLInputElement>) => {
 	const [isFocused, setIsFocused] = React.useState<boolean | undefined>(undefined);

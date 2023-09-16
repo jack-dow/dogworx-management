@@ -1,7 +1,7 @@
 import { useState, type FC } from "react";
 import { BubbleMenu as TipTapBubbleMenu, type BubbleMenuProps as TipTapBubbleMenuProps } from "@tiptap/react";
 
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "../../icons";
 import { ColorSelector } from "./color-selector";
 // import { LinkSelector } from "./link-selector";
@@ -20,8 +20,8 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 	const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
 	const [isColorSelectorOpen, setIsColorSelectorOpen] = useState(false);
 	// const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
-	
-	if(!props.editor) return null;
+
+	if (!props.editor) return null;
 
 	const items: BubbleMenuItem[] = [
 		{
@@ -78,8 +78,6 @@ const BubbleMenu: FC<BubbleMenuProps> = (props) => {
 			},
 		},
 	};
-
-
 
 	return (
 		<TipTapBubbleMenu

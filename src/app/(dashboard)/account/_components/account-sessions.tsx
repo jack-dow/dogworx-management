@@ -171,7 +171,7 @@ function SessionAccordionItem({ session, isCurrentSession = false, onDelete }: S
 										<DialogTitle>Are you sure?</DialogTitle>
 										<DialogDescription>
 											You are about to sign this session out of your account. If you believe this is a suspicious login,
-											please reset your password and contact support.
+											please contact support.
 										</DialogDescription>
 									</DialogHeader>
 									<DialogFooter>

@@ -7,9 +7,9 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 import { DOGS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
-import { logInDevelopment } from "~/utils";
 import { createDogsTableColumns } from "./dogs-table-columns";
 
 function DogsTable({ initialResult }: { initialResult: RouterOutputs["app"]["dogs"]["all"] }) {

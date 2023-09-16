@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
@@ -14,7 +14,7 @@ import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBookingFormProps) {
+function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit }: UseManageBookingFormProps) {
 	const isNew = !booking;
 
 	const { toast } = useToast();
@@ -25,6 +25,8 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 		onSubmit,
 		bookingTypes,
 		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
 			if (isNew) {
 				router.replace(`/bookings/${data.id}`);
 				return;

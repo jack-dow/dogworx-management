@@ -1,4 +1,4 @@
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { organizationInviteLinks, organizations, sessions, users, verificationCodes } from "../schema/auth";
@@ -104,9 +104,11 @@ export const UpdateOrganizationInviteLinkSchema = InsertOrganizationInviteLinkSc
 	userId: true,
 	expiresAt: true,
 	maxUses: true,
-}).partial().extend({
-	id: IdSchema,
 })
+	.partial()
+	.extend({
+		id: IdSchema,
+	});
 export type UpdateOrganizationInviteLinkSchema = z.infer<typeof UpdateOrganizationInviteLinkSchema>;
 
 // -----------------------------------------------------------------------------
@@ -116,8 +118,34 @@ export const InsertOrganizationSchema = createInsertSchema(organizations)
 	.extend({
 		id: IdSchema,
 		maxUsers: UnsignedSmallInt,
-		organizationInviteLinks: z.array(InsertOrganizationInviteLinkSchema).optional(),
-		organizationUsers: z.array(InsertUserSchema).optional(),
+		organizationInviteLinks: z.array(
+			InsertOrganizationInviteLinkSchema.extend({
+				user: createSelectSchema(users).pick({
+					id: true,
+					givenName: true,
+					familyName: true,
+					emailAddress: true,
+				}),
+			}),
+		),
+		organizationUsers: z.array(
+			InsertUserSchema.extend({
+				sessions: z
+					.array(
+						createSelectSchema(sessions).pick({
+							id: true,
+							userId: true,
+							lastActiveAt: true,
+							expiresAt: true,
+							ipAddress: true,
+							userAgent: true,
+							city: true,
+							country: true,
+						}),
+					)
+					.optional(),
+			}),
+		),
 	})
 	.omit({
 		createdAt: true,

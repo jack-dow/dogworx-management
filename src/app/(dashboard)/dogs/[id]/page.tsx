@@ -2,7 +2,7 @@ import { type Metadata } from "next";
 
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { ManageDogForm } from "../_components/manage-dog-form/manage-dog-form";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
@@ -13,8 +13,8 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 
 async function UpdateDogPage({ params }: { params: { id: string } }) {
 	const [dog, bookingTypes] = await Promise.all([
-		params.id === "new" ? undefined : await actions.app.dogs.byId(params.id),
-		await actions.app.bookingTypes.list(),
+		params.id === "new" ? undefined : await server.app.dogs.byId.query({ id: params.id }),
+		await server.app.bookingTypes.all.query({}),
 	]);
 
 	return (
@@ -26,7 +26,7 @@ async function UpdateDogPage({ params }: { params: { id: string } }) {
 				back={{ href: "/dogs" }}
 			/>
 
-			{dog?.data !== null ? <ManageDogForm dog={dog?.data} bookingTypes={bookingTypes.data.data} /> : <NotFound />}
+			{dog?.data !== null ? <ManageDogForm dog={dog?.data} bookingTypes={bookingTypes.data} /> : <NotFound />}
 		</>
 	);
 }

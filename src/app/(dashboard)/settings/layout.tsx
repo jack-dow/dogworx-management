@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
 
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 async function SettingsLayout({ children }: { children: React.ReactNode }) {
-	const session = await actions.auth.sessions.current();
+	const session = await server.auth.user.sessions.current.query();
 
 	if (session.user.organizationRole !== "owner" && session.user.organizationRole !== "admin") {
 		redirect("/");
 	}
 
-	return children;
+	return <>{children}</>;
 }
 
 export default SettingsLayout;

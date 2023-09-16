@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import updateLocale from "dayjs/plugin/updateLocale";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
@@ -147,71 +148,84 @@ export const bookingsRouter = createTRPCRouter({
 							profileImageUrl: true,
 						},
 					},
+					dog: {
+						columns: {
+							id: true,
+							givenName: true,
+							familyName: true,
+							color: true,
+							breed: true,
+						},
+					},
 				},
 			});
 
 			return {
-				success: true,
 				data,
 			};
 		}),
 
-	byWeek: protectedProcedure.input(z.object({ date: z.string() }).optional()).query(async ({ ctx, input }) => {
-		const date = dayjs(input?.date).startOf("day");
-		const day = date.day();
+	byWeek: protectedProcedure
+		.input(z.object({ date: z.string().optional() }).optional())
+		.query(async ({ ctx, input }) => {
+			const date = dayjs(input?.date).startOf("day");
+			const day = date.day();
 
-		if (!date.isValid) {
-			return { success: false, error: "Invalid date", data: null };
-		}
+			if (!date.isValid) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Invalid date",
+				});
+			}
 
-		const data = await ctx.db.query.bookings.findMany({
-			where: and(
-				eq(bookings.organizationId, ctx.user.organizationId),
-				// -12 hours to +14 hours to account for timezone differences
-				// Not using .startOf week as it can become the wrong week.
-				// E.g. If a user from Brisbane (UTC+10) views the calendar at 8am on Monday, it will show the previous week as it would be 10pm Sunday UTC.
-				gte(
-					bookings.date,
-					date
-						.subtract(day === 0 ? 7 : day - 1, "day")
-						.subtract(14, "hours")
-						.toDate(),
+			const data = await ctx.db.query.bookings.findMany({
+				where: and(
+					eq(bookings.organizationId, ctx.user.organizationId),
+					// -12 hours to +14 hours to account for timezone differences
+					// Not using .startOf week as it can become the wrong week.
+					// E.g. If a user from Brisbane (UTC+10) views the calendar at 8am on Monday, it will show the previous week as it would be 10pm Sunday UTC.
+					gte(
+						bookings.date,
+						date
+							.subtract(day === 0 ? 7 : day - 1, "day")
+							.subtract(14, "hours")
+							.toDate(),
+					),
+					lt(
+						bookings.date,
+						date
+							.endOf("day")
+							.add(day === 0 ? 0 : 7 - day, "day")
+							.add(12, "hours")
+							.toDate(),
+					),
 				),
-				lt(
-					bookings.date,
-					date
-						.endOf("day")
-						.add(day === 0 ? 0 : 7 - day, "day")
-						.add(12, "hours")
-						.toDate(),
-				),
-			),
-			with: {
-				dog: {
-					columns: {
-						id: true,
-						givenName: true,
-						familyName: true,
-						color: true,
-						breed: true,
+				with: {
+					dog: {
+						columns: {
+							id: true,
+							givenName: true,
+							familyName: true,
+							color: true,
+							breed: true,
+						},
+					},
+					assignedTo: {
+						columns: {
+							id: true,
+							givenName: true,
+							familyName: true,
+							emailAddress: true,
+							organizationId: true,
+							organizationRole: true,
+							profileImageUrl: true,
+						},
 					},
 				},
-				assignedTo: {
-					columns: {
-						id: true,
-						givenName: true,
-						familyName: true,
-						emailAddress: true,
-						organizationId: true,
-						organizationRole: true,
-						profileImageUrl: true,
-					},
-				},
-			},
-		});
+			});
 
-		return { data };
-	}),
+			return { data };
+		}),
 
 	byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
 		const data = await ctx.db.query.bookings.findFirst({

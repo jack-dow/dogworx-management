@@ -6,21 +6,34 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
-import { BookingTypeDeleteDialog } from "./booking-types-delete-dialog";
+import { BookingTypeDeleteDialog } from "./booking-type-delete-dialog";
 import { BookingTypeFields } from "./booking-types-fields";
 import { useManageBookingTypeForm, type UseManageBookingTypeFormProps } from "./use-manage-booking-types-form";
 
-function ManageBookingTypeForm({ bookingType, onSubmit }: UseManageBookingTypeFormProps) {
+function ManageBookingTypeForm({ bookingType, onSubmit, onSuccessfulSubmit }: UseManageBookingTypeFormProps) {
 	const isNew = !bookingType;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingTypeForm({ bookingType, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageBookingTypeForm({
+		bookingType,
+		onSubmit,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			if (isNew) {
+				router.replace(`/settings/booking-types/${data.id}`);
+				return;
+			}
+
+			router.push("/settings/booking-types");
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -38,25 +51,7 @@ function ManageBookingTypeForm({ bookingType, onSubmit }: UseManageBookingTypeFo
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							const result = await _onSubmit(data);
-
-							if (result.success) {
-								if (isNew) {
-									router.replace(`/settings/booking-types/${data.id}`);
-									return;
-								}
-
-								router.push("/settings/booking-types");
-							}
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
 					<FormSection
 						title="Booking type Information"
 						description={`

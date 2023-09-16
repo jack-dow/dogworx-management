@@ -24,9 +24,9 @@ import { useToast } from "~/components/ui/use-toast";
 import { InsertDogSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { api } from "~/lib/trpc/client";
+import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
-import { generateId, hasTrueValue, logInDevelopment } from "~/utils";
-import { Bookings } from "./bookings";
+import { Bookings } from "./bookings/bookings";
 import { DogBasicInformation } from "./dog-basic-information";
 import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
@@ -140,11 +140,11 @@ function ManageDogForm({
 
 			<Form {...form}>
 				<form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)} className="space-y-6 lg:space-y-10">
-					<DogBasicInformation control={form.control} />
+					<DogBasicInformation />
 
 					<Separator />
 
-					<Bookings isNew={isNew} bookings={dog?.bookings} bookingTypes={bookingTypes} />
+					<Bookings isNew={isNew} bookingTypes={bookingTypes} />
 
 					<Separator />
 
@@ -152,11 +152,11 @@ function ManageDogForm({
 						title="Manage Relationships"
 						description="Manage the relationships of this dog between other clients and vets within the system."
 					>
-						<DogToClientRelationships />
+						<DogToClientRelationships isNew={isNew} />
 
 						<Separator className="my-4" />
 
-						<DogToVetRelationships control={form.control} existingDogToVetRelationships={dog?.dogToVetRelationships} />
+						<DogToVetRelationships isNew={isNew} />
 					</FormSection>
 
 					<Separator />

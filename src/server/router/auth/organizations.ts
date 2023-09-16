@@ -17,6 +17,7 @@ import {
 	organizationInviteLinks,
 	organizationInviteLinks as organizationInviteLinksTable,
 	organizations,
+	sessions,
 	users,
 } from "~/db/schema/auth";
 import {
@@ -58,7 +59,7 @@ export const organizationsRouter = createTRPCRouter({
 			limit: limit ?? 50,
 			orderBy: (organizations, { asc }) => (orderBy ? [...orderBy, asc(organizations.id)] : [asc(organizations.id)]),
 			with: {
-				users: {
+				organizationsUsers: {
 					columns: {
 						id: true,
 					},
@@ -114,7 +115,7 @@ export const organizationsRouter = createTRPCRouter({
 						},
 					},
 				},
-				users: {
+				organizationsUsers: {
 					orderBy: (users, { asc }) => [
 						asc(users.organizationRole),
 						asc(users.givenName),
@@ -413,6 +414,8 @@ export const organizationsRouter = createTRPCRouter({
 						eq(users.id, input.id),
 					),
 				);
+			await ctx.db.delete(sessions).where(eq(sessions.userId, input.id));
+			await ctx.db.delete(organizationInviteLinks).where(eq(organizationInviteLinks.userId, input.id));
 		}),
 	}),
 });

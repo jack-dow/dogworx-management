@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { ManageVetForm } from "~/components/manage-vet/manage-vet-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {
@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function UpdateVetPage({ params }: { params: { id: string } }) {
-	const vet = params.id === "new" ? undefined : await actions.app.vets.byId(params.id);
+	const vet = params.id === "new" ? undefined : await server.app.vets.byId.query({ id: params.id });
 
 	return (
 		<>

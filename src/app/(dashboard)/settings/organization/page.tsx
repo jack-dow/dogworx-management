@@ -3,14 +3,15 @@ import { type Metadata } from "next";
 import { ManageOrganizationForm } from "~/components/manage-organization-form/manage-organization-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 export const metadata: Metadata = {
 	title: "Organization Settings | Dogworx Management",
 };
 
 async function OrganizationSettingsPage() {
-	const result = await actions.auth.organizations.current();
+	const session = await server.auth.user.sessions.current.query();
+	const result = await server.auth.organizations.byId.query({ id: session.user.organizationId });
 
 	return (
 		<>

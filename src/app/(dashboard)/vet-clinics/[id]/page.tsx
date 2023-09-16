@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { ManageVetClinicForm } from "~/components/manage-vet-clinic/manage-vet-clinic-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {
@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function UpdateVetClinicPage({ params }: { params: { id: string } }) {
-	const vetClinic = params.id === "new" ? undefined : await actions.app.vetClinics.byId(params.id);
+	const vetClinic = params.id === "new" ? undefined : await server.app.vetClinics.byId.query({ id: params.id });
 
 	return (
 		<>

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { signOut } from "~/components/dark-desktop-sidebar";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -10,7 +11,6 @@ import { Loader } from "~/components/ui/loader";
 import { RichTextEditor } from "~/components/ui/rich-text-editor";
 import { TimeInput } from "~/components/ui/time-input";
 import { useToast } from "~/components/ui/use-toast";
-import { signOut } from "~/lib/auth";
 
 function Test() {
 	const { toast } = useToast();

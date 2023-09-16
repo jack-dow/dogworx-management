@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 import { VetClinicsTable } from "./_components/vet-clinics-table";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 async function VetsPage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
-	const response = await actions.app.vetClinics.list({
+	const response = await server.app.vetClinics.all.query({
 		page: Number(searchParams?.page) ?? undefined,
 		limit: Number(searchParams?.limit) ?? undefined,
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
@@ -19,7 +19,7 @@ async function VetsPage({ searchParams }: { searchParams?: { [key: string]: stri
 		<>
 			<PageHeader title="Manage Vets Clinics" back={{ href: "/" }} />
 
-			<VetClinicsTable result={response.data} />
+			<VetClinicsTable initialResult={response} />
 		</>
 	);
 }

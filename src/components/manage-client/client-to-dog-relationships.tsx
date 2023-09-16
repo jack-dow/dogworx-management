@@ -15,10 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
-import { actions, type ClientById, type DogsSearch } from "~/actions";
-import { InsertDogToClientRelationshipSchema } from "~/db/validation";
-import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn, generateId } from "~/utils";
+import { InsertDogToClientRelationshipSchema } from "~/db/validation/app";
+import { api } from "~/lib/trpc/client";
+import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import {
 	DropdownMenu,
@@ -31,21 +30,21 @@ import {
 import { FormControl, FormField, FormGroup, FormItem, FormMessage, FormSheetGroup } from "../ui/form";
 import { Loader } from "../ui/loader";
 import { MultiSelectSearchCombobox, MultiSelectSearchComboboxAction } from "../ui/multi-select-search-combobox";
+import { useToast } from "../ui/use-toast";
 import { type ManageClientFormSchema } from "./use-manage-client-form";
 
 function ClientToDogRelationships({
-	existingDogToClientRelationships,
+	isNew,
 	variant,
 	setOpen,
 }: {
-	existingDogToClientRelationships: ClientById["dogToClientRelationships"] | undefined;
+	isNew: boolean;
 	variant: "sheet" | "form";
 	setOpen?: (open: boolean) => void;
 }) {
+	const { toast } = useToast();
+
 	const router = useRouter();
-
-	const pathname = usePathname();
-
 	const form = useFormContext<ManageClientFormSchema>();
 
 	const dogToClientRelationships = useFieldArray({
@@ -58,92 +57,57 @@ function ClientToDogRelationships({
 
 	const searchDogsInputRef = React.useRef<HTMLInputElement>(null);
 
-	function handleDogToClientRelationshipDelete(relationshipId: string) {
-		const dogToClientRelationshipActions = { ...form.getValues("actions.dogToClientRelationships") };
-
-		dogToClientRelationships.remove(dogToClientRelationships.fields.findIndex((field) => field.id === relationshipId));
-
-		if (dogToClientRelationshipActions[relationshipId]?.type === "INSERT") {
-			delete dogToClientRelationshipActions[relationshipId];
-		} else {
-			dogToClientRelationshipActions[relationshipId] = {
-				type: "DELETE",
-				payload: relationshipId,
-			};
-		}
-
-		form.setValue("actions.dogToClientRelationships", dogToClientRelationshipActions);
-
-		// HACK: Focus the button after the dialog closes
-		setTimeout(() => {
-			searchDogsInputRef?.current?.focus();
-		}, 0);
-	}
-
-	function toggleDogToClientRelationship(dog: DogsSearch[number]) {
-		const relationshipId = dogToClientRelationships.fields.find(
-			(dogToClientRelationship) => dogToClientRelationship.dogId === dog.id,
-		)?.id;
-
-		if (relationshipId) {
-			const existingDogToClientRelationship = existingDogToClientRelationships?.find(
-				(dogToClientRelationship) => dogToClientRelationship.id === relationshipId,
-			);
-			if (existingDogToClientRelationship) {
-				setConfirmRelationshipDelete(existingDogToClientRelationship.id);
-			} else {
-				handleDogToClientRelationshipDelete(relationshipId);
-			}
-
-			return;
-		}
-		const id = generateId();
-
-		dogToClientRelationships.append({
-			id,
-			clientId: form.getValues("id"),
-			dogId: dog.id,
-			relationship: "owner",
-			dog,
-		});
-
-		form.setValue("actions.dogToClientRelationships", {
-			...form.getValues("actions.dogToClientRelationships"),
-			[id]: {
-				type: "INSERT",
-				payload: {
-					id,
-					clientId: form.getValues("id"),
-					dogId: dog.id,
-					relationship: "owner",
-				},
-			},
-		});
-	}
-
-	useDidUpdate(() => {
-		if (setOpen) {
-			setOpen(false);
-		}
-	}, [pathname]);
-
 	const FieldsWrapper = variant === "sheet" ? FormSheetGroup : FormGroup;
+
+	const context = api.useContext();
+
+	const insertDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.insert.useMutation();
+	const deleteDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.delete.useMutation();
 
 	return (
 		<>
 			<DestructiveActionDialog
-				name="relationship"
-				requiresSaveOf="client"
 				withoutTrigger
 				open={!!confirmRelationshipDelete}
-				onOpenChange={() => setConfirmRelationshipDelete(null)}
-				onConfirm={() => {
+				onOpenChange={() => {
+					setConfirmRelationshipDelete(null);
+				}}
+				name="relationship"
+				onConfirm={async () => {
 					if (confirmRelationshipDelete) {
-						handleDogToClientRelationshipDelete(confirmRelationshipDelete);
-						// HACK: Focus the combobox trigger after the dialog closes
-						setTimeout(() => {
-							searchDogsInputRef?.current?.focus();
-						}, 0);
+						try {
+							if (!isNew) {
+								await deleteDogToClientRelationshipMutation.mutateAsync({
+									id: confirmRelationshipDelete,
+								});
+							}
+
+							form.setValue(
+								"dogToClientRelationships",
+								dogToClientRelationships.fields.filter((relationship) => relationship.id !== confirmRelationshipDelete),
+								{ shouldDirty: false },
+							);
+
+							toast({
+								title: "Deleted relationship",
+								description: "The relationship has been successfully deleted.",
+							});
+
+							setConfirmRelationshipDelete(null);
+
+							// HACK: Focus the combobox trigger after the dialog closes
+							setTimeout(() => {
+								searchDogsInputRef?.current?.focus();
+							}, 0);
+						} catch (error) {
+							logInDevelopment(error);
+
+							toast({
+								title: "Failed to delete relationship",
+								description: "Something went wrong while deleting the relationship. Please try again.",
+								variant: "destructive",
+							});
+						}
 					}
 				}}
 			/>
@@ -152,16 +116,6 @@ function ClientToDogRelationships({
 				<div className="sm:col-span-6">
 					<MultiSelectSearchCombobox
 						ref={searchDogsInputRef}
-						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.dog)}
-						onSelect={(dog) => {
-							toggleDogToClientRelationship(dog);
-						}}
-						onSearch={async (searchTerm) => {
-							const res = await actions.app.dogs.search(searchTerm);
-
-							return res.data ?? [];
-						}}
 						placeholder={
 							dogToClientRelationships.fields.length === 0
 								? "Search dogs..."
@@ -169,6 +123,49 @@ function ClientToDogRelationships({
 								? "1 dog selected"
 								: `${dogToClientRelationships.fields.length} dogs selected`
 						}
+						onSearch={async (searchTerm) => {
+							const res = await context.app.dogs.search.fetch({ searchTerm });
+
+							return res.data ?? [];
+						}}
+						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.dog)}
+						onSelect={async (dog) => {
+							const relationship = {
+								id: generateId(),
+								clientId: form.getValues("id"),
+								dogId: dog.id,
+								dog,
+								relationship: "owner",
+							} satisfies ManageClientFormSchema["dogToClientRelationships"][number];
+
+							if (!isNew) {
+								try {
+									await insertDogToClientRelationshipMutation.mutateAsync(relationship);
+
+									toast({
+										title: "Created relationship",
+										description: `Relationship between dog "${dog.givenName} ${dog.familyName}" and client ${
+											form.getValues("givenName")
+												? `"${form.getValues("givenName")} ${form.getValues("familyName")}"`
+												: ""
+										} has been successfully created.`,
+									});
+								} catch (error) {
+									logInDevelopment(error);
+									toast({
+										title: "Failed to create relationship",
+										description: `Relationship between "${dog.givenName} ${dog.familyName}" and client ${
+											form.getValues("givenName")
+												? `"${form.getValues("givenName")} ${form.getValues("familyName")}"`
+												: ""
+										} failed to create. Please try again.`,
+									});
+								}
+							}
+
+							dogToClientRelationships.append(relationship);
+						}}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
@@ -193,7 +190,9 @@ function ClientToDogRelationships({
 								key={dogToClientRelationship.id}
 								dogToClientRelationship={dogToClientRelationship}
 								index={index}
-								onDelete={() => toggleDogToClientRelationship(dogToClientRelationship.dog)}
+								onDelete={() => {
+									setConfirmRelationshipDelete(dogToClientRelationship.id);
+								}}
 								variant={variant}
 							/>
 						))}
@@ -215,10 +214,18 @@ function ClientToDogRelationship({
 	onDelete: () => void;
 	variant: "sheet" | "form";
 }) {
+	const { toast } = useToast();
 	const form = useFormContext<ManageClientFormSchema>();
 	const pathname = usePathname();
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
+
+	const [updatingRelationshipTo, setUpdatingRelationshipTo] = React.useState<
+		keyof typeof InsertDogToClientRelationshipSchema.shape.relationship.Enum | null
+	>(null);
+
+	const updateDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.update.useMutation();
+
 	return (
 		<li
 			key={dogToClientRelationship.id}
@@ -244,33 +251,50 @@ function ClientToDogRelationship({
 					render={({ field }) => (
 						<FormItem>
 							<Select
-								onValueChange={(value) => {
-									field.onChange(value as typeof field.value);
-
-									const existingAction = form.getValues(
-										`actions.dogToClientRelationships.${dogToClientRelationship.id}`,
-									);
-
-									if (existingAction?.type === "INSERT") {
-										form.setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
-											type: "INSERT",
-											payload: {
-												...existingAction.payload,
-												relationship: value as typeof field.value,
-											},
-										});
-										return;
-									}
-
-									form.setValue(`actions.dogToClientRelationships.${dogToClientRelationship.id}`, {
-										type: "UPDATE",
-										payload: {
-											...dogToClientRelationship,
-											relationship: value as typeof field.value,
-										},
-									});
-								}}
 								value={field.value}
+								onValueChange={(value) => {
+									if (value !== field.value) {
+										setUpdatingRelationshipTo(value as typeof field.value);
+
+										updateDogToClientRelationshipMutation
+											.mutateAsync({
+												id: dogToClientRelationship.id,
+												relationship: value as typeof field.value,
+											})
+											.then(() => {
+												field.onChange(value as typeof field.value);
+
+												toast({
+													title: "Updated relationship",
+													description: `Relationship between dog "${dogToClientRelationship.dog.givenName} ${
+														dogToClientRelationship.dog.familyName
+													}" and client ${
+														form.getValues("givenName")
+															? `"${form.getValues("givenName")} ${form.getValues("familyName")}"`
+															: ""
+													} has been successfully created.`,
+												});
+											})
+											.catch((error) => {
+												logInDevelopment(error);
+
+												toast({
+													title: "Failed to update relationship relationship",
+													description: `The relationship between dog "${dogToClientRelationship.dog.givenName} ${
+														dogToClientRelationship.dog.familyName
+													}" and client ${
+														form.getValues("givenName")
+															? `"${form.getValues("givenName")} ${form.getValues("familyName")}"`
+															: ""
+													} failed to update. Please try again.`,
+													variant: "destructive",
+												});
+											})
+											.finally(() => {
+												setUpdatingRelationshipTo(null);
+											});
+									}
+								}}
 							>
 								<FormControl>
 									<SelectTrigger>
@@ -283,7 +307,12 @@ function ClientToDogRelationship({
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (
-											<SelectItem key={relation} value={relation} className=" capitalize">
+											<SelectItem
+												key={relation}
+												value={relation}
+												className=" capitalize"
+												isLoading={updatingRelationshipTo === relation}
+											>
 												{relation.split("-").join(" ")}
 											</SelectItem>
 										))}

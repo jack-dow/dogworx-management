@@ -17,10 +17,10 @@ import { FormGroup, FormSection } from "~/components/ui/form";
 import { EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { actions } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { getBaseUrl } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { getBaseUrl, logInDevelopment } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 import { ManageOrganizationInviteLinkDialog } from "./manage-organization-invite-link-dialog";
@@ -37,26 +37,25 @@ function OrganizationInviteLinks({ isNew }: { isNew: boolean }) {
 
 	const [confirmInviteLinkDelete, setConfirmInviteLinkDelete] = React.useState<string | null>(null);
 
+	const deleteMutation = api.auth.organizations.inviteLinks.delete.useMutation();
+
 	async function handleInviteLinkDelete(inviteLinkId: string) {
-		if (isNew) {
-			const inviteLinkActions = form.getValues("actions.organizationInviteLinks");
-
-			delete inviteLinkActions[inviteLinkId];
-
-			form.setValue("actions.organizationInviteLinks", inviteLinkActions);
+		try {
+			if (!isNew) {
+				await deleteMutation.mutateAsync({
+					id: inviteLinkId,
+				});
+			}
 
 			organizationInviteLinks.remove(organizationInviteLinks.fields.findIndex((link) => link.id === inviteLinkId));
-			return;
-		}
 
-		const result = await actions.auth.organizations.inviteLinks.delete(inviteLinkId);
-
-		if (result.success) {
 			toast({
 				title: `Invite link deleted`,
 				description: `Successfully deleted invite link.`,
 			});
-		} else {
+		} catch (error) {
+			logInDevelopment(error);
+
 			toast({
 				title: `Invite link deletion failed`,
 				description: "There was an error deleting the invite link. Please try again",
@@ -131,22 +130,12 @@ function OrganizationInviteLinks({ isNew }: { isNew: boolean }) {
 						<div className="flex justify-end">
 							{organizationInviteLinks.fields.length < 20 ? (
 								<ManageOrganizationInviteLinkDialog
-									onSubmit={
-										isNew
-											? (data) => {
-													organizationInviteLinks.append({ ...data, user: user });
-
-													const inviteLinkActions = form.getValues("actions.organizationInviteLinks");
-
-													inviteLinkActions[data.id] = {
-														type: "INSERT",
-														payload: data,
-													};
-
-													form.setValue("actions.organizationInviteLinks", inviteLinkActions);
-											  }
-											: undefined
-									}
+									onSuccessfulSubmit={(inviteLink) => {
+										organizationInviteLinks.append({
+											...inviteLink,
+											user,
+										});
+									}}
 									defaultValues={
 										user.organizationId === "1"
 											? {

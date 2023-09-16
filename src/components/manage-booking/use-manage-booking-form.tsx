@@ -12,8 +12,8 @@ import { useUser } from "~/app/providers";
 import { InsertBookingSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { api } from "~/lib/trpc/client";
+import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
-import { generateId, hasTrueValue, logInDevelopment } from "~/utils";
 
 dayjs.extend(customParseFormat);
 
@@ -25,11 +25,9 @@ const ManageBookingFormSchema = InsertBookingSchema.extend({
 });
 type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
 
-type Booking = NonNullable<RouterOutputs["app"]["bookings"]["byId"]["data"]>;
-
 type UseManageBookingFormProps = {
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
-	booking?: Booking;
+	booking?: InsertBookingSchema;
 	defaultValues?: Partial<ManageBookingFormSchema>;
 	onSubmit?: (data: ManageBookingFormSchema) => Promise<void>;
 	onSuccessfulSubmit?: (data: ManageBookingFormSchema) => void;
@@ -39,7 +37,6 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const isNew = !props.booking;
 
 	const user = useUser();
-
 	const { toast } = useToast();
 
 	const form = useForm<ManageBookingFormSchema>({
@@ -49,14 +46,15 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 				props.bookingTypes.find(
 					(bt) => bt.id === props.booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
 				)?.duration ?? 1800,
-			assignedTo: user,
 			details: "",
 			bookingTypeId: null,
 			dogId: null,
-			...props.booking,
+			dog: null,
 			...props.defaultValues,
+			...props.booking,
 			assignedToId: props.defaultValues?.assignedToId || props.booking?.assignedToId || user.id,
-			id: props.booking?.id ?? generateId(),
+			assignedTo: props.defaultValues?.assignedTo || props.booking?.assignedTo || user,
+			id: props.defaultValues?.id || props.booking?.id || generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -101,7 +99,6 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 					description: `There was an error ${isNew ? "creating" : "updating"} the booking. Please try again.`,
 					variant: "destructive",
 				});
-				throw new Error("Failed to create booking");
 			}
 		})(e);
 	}

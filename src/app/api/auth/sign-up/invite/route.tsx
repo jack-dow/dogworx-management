@@ -1,16 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, type InferSelectModel } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks, users } from "~/db/schema";
-import { type InsertUserSchema, type SelectUserSchema } from "~/db/validation";
-import { SignUpSchema } from "~/lib/validation";
-import { generateId, type APIResponse } from "~/utils";
+import { organizationInviteLinks, users } from "~/db/schema/auth";
+import { type InsertUserSchema } from "~/db/validation/auth";
+import { generateId, SignUpSchema, type APIResponse } from "~/lib/utils";
 
 export const fetchCache = "force-no-store";
 
 type CreateUserFromInvitePOSTResponse = APIResponse<
-	SelectUserSchema | { message: string; user: InsertUserSchema },
+	InferSelectModel<typeof users> | { message: string; user: InsertUserSchema },
 	"InviteLinkInvalid" | "AlreadyExists"
 >;
 async function POST(request: NextRequest): Promise<NextResponse<CreateUserFromInvitePOSTResponse>> {

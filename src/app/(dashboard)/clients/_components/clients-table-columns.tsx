@@ -13,11 +13,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type ClientsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
-function createClientsTableColumns(
-	onDeleteClick: (client: ClientsList["data"][number]) => void,
-): ColumnDef<ClientsList["data"][number]>[] {
+type Client = RouterOutputs["app"]["clients"]["all"]["data"][number];
+
+function createClientsTableColumns(onDeleteClick: (client: Client) => void): ColumnDef<Client>[] {
 	return [
 		{
 			accessorKey: "fullName",

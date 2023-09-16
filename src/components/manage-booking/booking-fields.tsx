@@ -8,10 +8,11 @@ import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useUser } from "~/app/providers";
+import { type InsertBookingSchema } from "~/db/validation/app";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
 import { api } from "~/lib/trpc/client";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
-import { cn, secondsToHumanReadable } from "~/utils";
 import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
@@ -61,7 +62,7 @@ function BookingFields({
 }: {
 	variant: "dialog" | "form";
 	disableDogSearch?: boolean;
-	booking: RouterOutputs["app"]["bookings"]["byId"]["data"];
+	booking: InsertBookingSchema | undefined;
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { dayjs } = useDayjs();
@@ -69,6 +70,8 @@ function BookingFields({
 
 	const user = useUser();
 	const form = useFormContext<ManageBookingFormSchema>();
+
+	const context = api.useContext();
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
@@ -80,15 +83,6 @@ function BookingFields({
 
 	const [durationInputValue, setDurationInputValue] = React.useState(
 		form.getValues("duration") ? ms(form.getValues("duration") * 1000, { long: true }) : "",
-	);
-
-	const [dogsSearchTerm, setDogsSearchTerm] = React.useState("");
-	const dogSearch = api.app.dogs.search.useQuery({ searchTerm: dogsSearchTerm }, { enabled: Boolean(dogsSearchTerm) });
-
-	const [assignedToSearchTerm, setAssignedToSearchTerm] = React.useState("");
-	const assignedToSearch = api.auth.organizations.users.search.useQuery(
-		{ searchTerm: assignedToSearchTerm },
-		{ enabled: Boolean(assignedToSearchTerm) },
 	);
 
 	return (
@@ -354,13 +348,15 @@ function BookingFields({
 								<FormControl>
 									<SearchCombobox
 										disabled={disableDogSearch}
-										placeholder={disableDogSearch ? "Current Dog" : "Select dog"}
-										onSearchTermChange={(searchTerm) => {
-											setDogsSearchTerm(searchTerm);
+										placeholder={disableDogSearch ? "" : "Select dog"}
+										onSearch={async (searchTerm) => {
+											const result = await context.app.dogs.search.fetch({ searchTerm });
+
+											return result.data;
 										}}
-										results={dogSearch.data?.data ?? []}
-										isFetching={!!dogsSearchTerm && dogSearch.isFetching}
-										resultLabel={(result) => `${result.givenName ?? "Unnamed Dog"} ${result.familyName}`}
+										resultLabel={(result) =>
+											result.givenName ? `${result.givenName} ${result.familyName}` : "Unnamed Dog"
+										}
 										onSelectChange={(result) => {
 											field.onChange(result?.id ?? "");
 										}}
@@ -374,6 +370,7 @@ function BookingFields({
 												<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
 											</SearchComboboxAction>
 										)}
+										defaultSelected={booking?.dogId ? booking.dog ?? undefined : undefined}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -391,11 +388,11 @@ function BookingFields({
 							<FormControl>
 								<SearchCombobox
 									placeholder="Select user"
-									onSearchTermChange={(searchTerm) => {
-										setAssignedToSearchTerm(searchTerm);
+									onSearch={async (searchTerm) => {
+										const result = await context.auth.organizations.users.search.fetch({ searchTerm });
+
+										return result.data;
 									}}
-									results={assignedToSearch.data?.data ?? []}
-									isFetching={!!assignedToSearchTerm && assignedToSearch.isFetching}
 									onBlur={({ setSearchTerm, setSelected, setResults }) => {
 										if (!form.getValues("assignedToId")) {
 											field.onChange(user?.id);

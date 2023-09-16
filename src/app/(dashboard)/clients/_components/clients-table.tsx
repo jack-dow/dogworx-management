@@ -1,18 +1,40 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 
 import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type ClientsList } from "~/actions";
-import { CLIENTS_SORTABLE_COLUMNS } from "~/actions/sortable-columns";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
+import { CLIENTS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createClientsTableColumns } from "./clients-table-columns";
 
-function ClientsTable({ result }: { result: ClientsList }) {
+function ClientsTable({ initialResult }: { initialResult: RouterOutputs["app"]["clients"]["all"] }) {
 	const { toast } = useToast();
 
-	const [confirmClientDelete, setConfirmClientDelete] = React.useState<ClientsList["data"][number] | null>(null);
+	const searchParams = useSearchParams();
+
+	const context = api.useContext();
+
+	const result = api.app.clients.all.useQuery(
+		{
+			page: searchParams.get("page") ?? undefined,
+			limit: searchParams.get("limit") ?? undefined,
+			sortBy: searchParams.get("sortBy") ?? undefined,
+			sortDirection: searchParams.get("sortDirection") ?? undefined,
+		},
+		{
+			initialData: initialResult,
+		},
+	);
+
+	const deleteMutation = api.app.clients.delete.useMutation();
+	const [confirmClientDelete, setConfirmClientDelete] = React.useState<
+		RouterOutputs["app"]["clients"]["all"]["data"][number] | null
+	>(null);
 
 	return (
 		<>
@@ -26,16 +48,17 @@ function ClientsTable({ result }: { result: ClientsList }) {
 				onConfirm={async () => {
 					if (confirmClientDelete == null) return;
 
-					const result = await actions.app.clients.delete(confirmClientDelete.id);
-
-					if (result.success) {
+					try {
+						await deleteMutation.mutateAsync({ id: confirmClientDelete.id });
 						toast({
 							title: `Client deleted`,
 							description: `Successfully deleted client "${confirmClientDelete.givenName}${
 								confirmClientDelete.familyName ? " " + confirmClientDelete.familyName : ""
 							}".`,
 						});
-					} else {
+					} catch (error) {
+						logInDevelopment(error);
+
 						toast({
 							title: `Client deletion failed`,
 							description: `There was an error deleting client "${confirmClientDelete.givenName}${
@@ -50,11 +73,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 			<DataTable
 				search={{
 					onSearch: async (searchTerm) => {
-						const result = await actions.app.clients.search(searchTerm);
-
-						if (!result.success) {
-							throw new Error("Failed to search clients");
-						}
+						const result = await context.app.clients.search.fetch({ searchTerm });
 
 						return result.data;
 					},
@@ -64,7 +83,7 @@ function ClientsTable({ result }: { result: ClientsList }) {
 					setConfirmClientDelete(client);
 				})}
 				sortableColumns={CLIENTS_SORTABLE_COLUMNS}
-				{...result}
+				{...result.data}
 			/>
 		</>
 	);

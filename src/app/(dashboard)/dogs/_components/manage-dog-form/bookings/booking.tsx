@@ -13,9 +13,9 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { CopyIcon, EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type DogById } from "~/actions";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
+import { type ManageDogFormSchema } from "../manage-dog-form";
 
 function Booking({
 	booking,
@@ -24,11 +24,11 @@ function Booking({
 	onDelete,
 	onCopy,
 }: {
-	booking: DogById["bookings"][number];
+	booking: ManageDogFormSchema["bookings"][number];
 	isLast: boolean;
 	onEditClick: () => void;
 	onDelete: () => void;
-	onCopy: (booking: DogById["bookings"][number]) => void;
+	onCopy: (booking: ManageDogFormSchema["bookings"][number]) => void;
 }) {
 	const { dayjs } = useDayjs();
 	const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);

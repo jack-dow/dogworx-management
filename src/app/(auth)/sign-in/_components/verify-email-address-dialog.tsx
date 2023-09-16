@@ -16,7 +16,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
 import { type SignInWithVerificationCodeGETResponse } from "~/app/api/auth/sign-in/verification-code/route";
-import { getBaseUrl } from "~/utils";
+import { getBaseUrl } from "~/lib/utils";
 
 function VerifyEmailAddressAlertDialog({
 	emailAddress,

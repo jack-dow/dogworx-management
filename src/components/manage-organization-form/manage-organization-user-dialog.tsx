@@ -4,9 +4,9 @@ import * as React from "react";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDropzone, type FileRejection } from "react-dropzone";
-import { useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 import { UAParser } from "ua-parser-js";
-import { z } from "zod";
+import { type z } from "zod";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Badge } from "~/components/ui/badge";
@@ -29,29 +29,17 @@ import { Label } from "~/components/ui/label";
 import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { actions } from "~/actions";
-import { type ProfileImageUrlPOSTResponse } from "~/app/api/auth/profile-image-url/route";
+import { handleProfileImageUpload } from "~/app/(dashboard)/account/_components/manage-account-form";
 import { useSession, useUser } from "~/app/providers";
-import { organizationRoleOptions } from "~/db/schema";
-import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
+import { organizationRoleOptions } from "~/db/schema/auth";
+import { InsertUserSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, generateId, hasTrueValue, logInDevelopment } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
+import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
-const ManageOrganizationUserFormSchema = InsertUserSchema.extend({
-	sessions: z.array(
-		SelectSessionSchema.pick({
-			id: true,
-			updatedAt: true,
-			city: true,
-			country: true,
-			expiresAt: true,
-			ipAddress: true,
-			userAgent: true,
-			lastActiveAt: true,
-		}),
-	),
-});
+const ManageOrganizationUserFormSchema = InsertUserSchema;
 
 type ManageOrganizationUserFormSchema = z.infer<typeof ManageOrganizationUserFormSchema>;
 
@@ -143,9 +131,9 @@ type ManageOrganizationUserDialogFormProps = {
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	isNew: boolean;
-	organizationUser?: InsertUserSchema;
+	organizationUser?: ManageOrganizationFormSchema["organizationUsers"][number];
 	defaultValues?: Partial<ManageOrganizationUserFormSchema>;
-	onSubmit?: (data: ManageOrganizationUserFormSchema) => void;
+	onSuccessfulSubmit?: (data: ManageOrganizationUserFormSchema) => void;
 	onDelete?: (id: string) => Promise<void>;
 };
 
@@ -156,7 +144,7 @@ function ManageOrganizationUserDialogForm({
 	isNew,
 	organizationUser,
 	defaultValues,
-	onSubmit,
+	onSuccessfulSubmit,
 	onDelete,
 }: ManageOrganizationUserDialogFormProps) {
 	const { toast } = useToast();
@@ -173,7 +161,6 @@ function ManageOrganizationUserDialogForm({
 		defaultValues: {
 			organizationId: user.organizationId,
 			organizationRole: "member",
-			sessions: [],
 			...organizationUser,
 			...defaultValues,
 			id: organizationUser?.id ?? generateId(),
@@ -181,6 +168,9 @@ function ManageOrganizationUserDialogForm({
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
+
+	const insertMutation = api.auth.organizations.users.insert.useMutation();
+	const updateMutation = api.auth.organizations.users.update.useMutation();
 
 	React.useEffect(() => {
 		function syncOrganizationUser(organizationUser: InsertUserSchema) {
@@ -199,101 +189,69 @@ function ManageOrganizationUserDialogForm({
 		setIsDirty(form.formState.isDirty);
 	}, [form.formState.isDirty, setIsDirty]);
 
-	async function _onSubmit(data: ManageOrganizationUserFormSchema) {
-		try {
+	function _onSubmit(e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		void form.handleSubmit(async (data) => {
 			if (data.organizationRole === "owner" && !isConfirmOwnershipChangeDialogOpen && user.organizationId !== "1") {
 				setIsConfirmOwnershipChangeDialogOpen(true);
 				return;
 			}
 
 			let successfullyUploadedImage = false;
-			if (data.profileImageUrl && data.profileImageUrl !== organizationUser?.profileImageUrl) {
-				const errorResponse = {
-					title: "Failed to upload profile image",
-					description: "An unknown error occurred while trying to upload your profile image. Please try again.",
-				};
+
+			// If the profile image has changed, upload it
+			if ((data.profileImageUrl && !organizationUser) || data.profileImageUrl !== organizationUser?.profileImageUrl) {
 				if (uploadedProfileImage) {
-					const response = await fetch(
-						`/api/auth/profile-image-url?fileType=${encodeURIComponent(uploadedProfileImage.type)}`,
-						{
-							method: "POST",
-							body: JSON.stringify({ id: data.id }),
-						},
-					);
-
-					const body = (await response.json()) as ProfileImageUrlPOSTResponse;
-
-					if (!body.success || !response.ok) {
-						toast(errorResponse);
-					} else {
-						try {
-							const url = body.data;
-							const response = await fetch(url, {
-								method: "PUT",
-								body: uploadedProfileImage,
+					handleProfileImageUpload(uploadedProfileImage)
+						.then((url) => {
+							data.profileImageUrl = url;
+							successfullyUploadedImage = true;
+						})
+						.catch(() => {
+							toast({
+								title: "Failed to upload profile image",
+								description: "An unknown error occurred while trying to upload the profile image. Please try again.",
 							});
-
-							if (!response.ok) {
-								toast(errorResponse);
-							} else {
-								function removeQueryParametersFromUrl(url: string) {
-									const index = url.indexOf("?");
-									if (index !== -1) {
-										return url.substring(0, index);
-									}
-									return url;
-								}
-
-								data.profileImageUrl = removeQueryParametersFromUrl(url);
-								successfullyUploadedImage = true;
-							}
-						} catch {
-							toast(errorResponse);
-						}
-					}
-				} else {
-					if (data.profileImageUrl != null) {
-						toast(errorResponse);
-					}
+						});
 				}
 			}
 
-			let success = false;
+			try {
+				if (!isNew) {
+					if (organizationUser) {
+						await updateMutation.mutateAsync({
+							...data,
+							profileImageUrl:
+								data.profileImageUrl != null
+									? successfullyUploadedImage
+										? data.profileImageUrl
+										: organizationUser.profileImageUrl
+									: null,
+						});
+					} else {
+						await insertMutation.mutateAsync({
+							...data,
+							profileImageUrl:
+								data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
+						});
 
-			if (onSubmit) {
-				onSubmit(data);
-				setOpen(false);
-				return;
-			}
+						onSuccessfulSubmit?.(data);
 
-			if (organizationUser) {
-				const response = await actions.auth.organizations.users.update({
-					...data,
-					profileImageUrl:
-						data.profileImageUrl != null
-							? successfullyUploadedImage
-								? data.profileImageUrl
-								: organizationUser.profileImageUrl
-							: null,
-				});
-				success = response.success;
-			} else {
-				const response = await actions.auth.organizations.users.insert({
-					...data,
-					profileImageUrl:
-						data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
-				});
-				success = response.success;
-			}
+						setOpen(false);
 
-			if (success) {
-				toast({
-					title: `User ${isNew ? "Created" : "Updated"}`,
-					description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
-						data.familyName ? " " + data.familyName : ""
-					}".`,
-				});
-			} else {
+						toast({
+							title: `User ${isNew ? "Created" : "Updated"}`,
+							description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
+								data.familyName ? " " + data.familyName : ""
+							}".`,
+						});
+					}
+				}
+			} catch (error) {
+				logInDevelopment(error);
+
 				toast({
 					title: `User ${isNew ? "Creation" : "Update"} Failed`,
 					description: `There was an error ${isNew ? "creating" : "updating"} user "${data.givenName}${
@@ -302,11 +260,7 @@ function ManageOrganizationUserDialogForm({
 					variant: "destructive",
 				});
 			}
-
-			setOpen(false);
-		} catch (error) {
-			logInDevelopment(error);
-		}
+		});
 	}
 
 	return (
@@ -329,20 +283,7 @@ function ManageOrganizationUserDialogForm({
 						>
 							Cancel
 						</Button>
-						<Button
-							variant="destructive"
-							disabled={form.formState.isSubmitting}
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-
-								void form
-									.handleSubmit(_onSubmit)(e)
-									.finally(() => {
-										setIsConfirmOwnershipChangeDialogOpen(false);
-									});
-							}}
-						>
+						<Button variant="destructive" disabled={form.formState.isSubmitting} onClick={_onSubmit}>
 							{form.formState.isSubmitting && <Loader size="sm" />}
 							<span>Change ownership</span>
 						</Button>
@@ -351,15 +292,7 @@ function ManageOrganizationUserDialogForm({
 			</Dialog>
 
 			<Form {...form}>
-				<form
-					className="grid gap-4"
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-
-						void form.handleSubmit(_onSubmit)(e);
-					}}
-				>
+				<form className="grid gap-4" onSubmit={_onSubmit}>
 					<div className="grid gap-2 xl:grid-cols-2">
 						<div className="flex w-full flex-1">
 							<FormField
@@ -599,18 +532,14 @@ function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileIm
 	);
 }
 
-function AccountSessions() {
+type Sessions = NonNullable<ManageOrganizationFormSchema["organizationUsers"][number]["sessions"]>;
+
+function AccountSessions({ initialSessions = [] }: { initialSessions?: Sessions }) {
 	const currentSession = useSession();
 
-	const form = useFormContext<ManageOrganizationUserFormSchema>();
+	const [sessions, setSessions] = React.useState(initialSessions);
 
-	const sessions = useFieldArray({
-		control: form.control,
-		name: "sessions",
-		keyName: "rhf-id",
-	});
-
-	const activeSession = sessions.fields.find((session) => session.id === currentSession?.id);
+	const activeSession = sessions.find((session) => session.id === currentSession?.id);
 
 	return (
 		<div className="space-y-2">
@@ -624,12 +553,12 @@ function AccountSessions() {
 							session={activeSession}
 							isCurrentSession
 							onDelete={(session) => {
-								sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
+								setSessions((prev) => prev.filter((s) => s.id !== session.id));
 							}}
 						/>
 					)}
 
-					{sessions.fields.map((session) => {
+					{sessions.map((session) => {
 						const isCurrentSession = currentSession?.id === session.id;
 
 						if (isCurrentSession) {
@@ -641,7 +570,7 @@ function AccountSessions() {
 								key={session.id}
 								session={session}
 								onDelete={(session) => {
-									sessions.remove(sessions.fields.findIndex((s) => s.id === session.id));
+									setSessions((prev) => prev.filter((s) => s.id !== session.id));
 								}}
 							/>
 						);
@@ -657,9 +586,9 @@ function SessionAccordionItem({
 	isCurrentSession = false,
 	onDelete,
 }: {
-	session: ManageOrganizationUserFormSchema["sessions"][number];
+	session: Sessions[number];
 	isCurrentSession?: boolean;
-	onDelete: (session: ManageOrganizationUserFormSchema["sessions"][number]) => void;
+	onDelete: (session: Sessions[number]) => void;
 }) {
 	const { dayjs } = useDayjs();
 
@@ -674,6 +603,8 @@ function SessionAccordionItem({
 	const os = parsedUA.getOS();
 	const browser = parsedUA.getBrowser();
 
+	const deleteMutation = api.auth.sessions.delete.useMutation();
+
 	return (
 		<AccordionItem value={session.id}>
 			<AccordionTrigger>
@@ -685,7 +616,9 @@ function SessionAccordionItem({
 								? `(${session.city ?? ""}${session.city && session.country ? ", " : ""}${session.country ?? ""})`
 								: ""}
 						</p>
-						<p className="text-left text-xs text-muted-foreground">{dayjs.tz(session.updatedAt).fromNow(true)} ago</p>
+						<p className="text-left text-xs text-muted-foreground">
+							{session.lastActiveAt ? `${dayjs.tz(session.lastActiveAt).fromNow(true)} ago` : "Never logged in"}
+						</p>
 					</div>
 					<div>{isCurrentSession && <Badge>This Session</Badge>}</div>
 				</div>
@@ -715,7 +648,7 @@ function SessionAccordionItem({
 						<p className="text-xs text-muted-foreground">
 							{isCurrentSession
 								? "This is the session you are currently using."
-								: "Click the button below to sign this session out of your account. "}
+								: "Click the button below to sign this session out. "}
 						</p>
 						{!isCurrentSession && (
 							<Dialog open={isSignOutConfirmDialogOpen} onOpenChange={setIsSignOutConfirmDialogOpen}>
@@ -728,8 +661,8 @@ function SessionAccordionItem({
 									<DialogHeader>
 										<DialogTitle>Are you sure?</DialogTitle>
 										<DialogDescription>
-											You are about to sign this session out of your account. If you believe this is a suspicious login,
-											please reset your password and contact support.
+											You are about to sign this session out. If you believe this is a suspicious login, please and
+											contact support.
 										</DialogDescription>
 									</DialogHeader>
 									<DialogFooter>
@@ -743,12 +676,12 @@ function SessionAccordionItem({
 												e.preventDefault();
 												setIsSigningOut(true);
 
-												actions.auth.sessions
-													.invalidate(session.id)
+												deleteMutation
+													.mutateAsync({ id: session.id })
 													.then(() => {
 														toast({
 															title: "Signed out session",
-															description: "Successfully signed session/device out of your account.",
+															description: "Successfully signed session/device out.",
 														});
 														onDelete(session);
 														setIsSignOutConfirmDialogOpen(false);
@@ -756,8 +689,7 @@ function SessionAccordionItem({
 													.catch(() => {
 														toast({
 															title: "Failed to sign session out",
-															description:
-																"An error occurred while signing the session out of your account. Please try again.",
+															description: "An error occurred while signing the session out. Please try again.",
 															variant: "destructive",
 														});
 													})

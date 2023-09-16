@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { drizzle } from "~/db/drizzle";
-import { sessions } from "~/db/schema";
+import { sessions } from "~/db/schema/auth";
 import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
 import { jwt } from "~/lib/jwt";
-import { type APIResponse } from "~/utils";
+import { type APIResponse } from "~/lib/utils";
 
 type SignOutPOSTResponse = APIResponse<undefined>;
 

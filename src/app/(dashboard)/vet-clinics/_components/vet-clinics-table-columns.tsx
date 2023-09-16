@@ -13,11 +13,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type VetClinicsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
-function createVetClinicsTableColumns(
-	onDeleteClick: (vetClinic: VetClinicsList["data"][number]) => void,
-): ColumnDef<VetClinicsList["data"][number]>[] {
+type VetClinic = RouterOutputs["app"]["vetClinics"]["all"]["data"][number];
+
+function createVetClinicsTableColumns(onDeleteClick: (vetClinic: VetClinic) => void): ColumnDef<VetClinic>[] {
 	return [
 		{
 			accessorKey: "name",

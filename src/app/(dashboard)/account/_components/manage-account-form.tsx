@@ -36,7 +36,7 @@ import { AccountVerifyNewEmailAddressDialog } from "./account-verify-new-email-a
 const ManageAccountFormSchema = InsertUserSchema;
 type ManageAccountFormSchema = z.infer<typeof ManageAccountFormSchema>;
 
-async function handleProfileImageUpload(file: File) {
+export async function handleProfileImageUpload(file: File) {
 	const getUrlResponse = await fetch(`/api/auth/profile-image-url?fileType=${encodeURIComponent(file.type)}`, {
 		method: "GET",
 	});
@@ -106,11 +106,6 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 
 			// If the profile image has changed, upload it
 			if (data.profileImageUrl !== user.profileImageUrl) {
-				const errorResponse = {
-					title: "Failed to upload profile image",
-					description: "An unknown error occurred while trying to upload your profile image. Please try again.",
-				};
-
 				if (uploadedProfileImage) {
 					handleProfileImageUpload(uploadedProfileImage)
 						.then((url) => {
@@ -118,7 +113,10 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 							successfullyUploadedImage = true;
 						})
 						.catch(() => {
-							toast(errorResponse);
+							toast({
+								title: "Failed to upload profile image",
+								description: "An unknown error occurred while trying to upload your profile image. Please try again.",
+							});
 						});
 				}
 			}

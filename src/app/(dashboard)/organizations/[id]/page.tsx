@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { ManageOrganizationForm } from "~/components/manage-organization-form/manage-organization-form";
 import { NotFound } from "~/components/not-found";
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
+import { server } from "~/lib/trpc/server";
 
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {
@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function UpdateOrganizationPage({ params }: { params: { id: string } }) {
-	const organization = params.id === "new" ? undefined : await actions.auth.organizations.byId(params.id);
+	const organization = params.id === "new" ? undefined : await server.auth.organizations.byId.query({ id: params.id });
 
 	return (
 		<>

@@ -13,11 +13,13 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type OrganizationsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
+
+type Organization = RouterOutputs["auth"]["organizations"]["all"]["data"][number];
 
 function createOrganizationsTableColumns(
-	onDeleteClick: (organization: OrganizationsList["data"][number]) => void,
-): ColumnDef<OrganizationsList["data"][number]>[] {
+	onDeleteClick: (organization: Organization) => void,
+): ColumnDef<Organization>[] {
 	return [
 		{
 			accessorKey: "name",
@@ -45,7 +47,7 @@ function createOrganizationsTableColumns(
 				return (
 					<div className="flex items-center">
 						<span className="truncate">
-							{row.original.users.length}/{row.original.maxUsers}
+							{row.original.organizationsUsers.length}/{row.original.maxUsers}
 						</span>
 					</div>
 				);

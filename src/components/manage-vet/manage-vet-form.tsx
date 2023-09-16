@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
@@ -16,13 +16,26 @@ import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
+function ManageVetForm({ vet, onSubmit, onSuccessfulSubmit }: UseManageVetFormProps) {
 	const isNew = !vet;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageVetForm({ vet, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageVetForm({
+		vet,
+		onSubmit,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			if (isNew) {
+				router.replace(`/vets/${data.id}`);
+				return;
+			}
+
+			router.push("/vets");
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -40,25 +53,7 @@ function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							const result = await _onSubmit(data);
-
-							if (result.success) {
-								if (isNew) {
-									router.replace(`/vets/${data.id}`);
-									return;
-								}
-
-								router.push("/vets");
-							}
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
 					<VetContactInformation variant="form" />
 
 					<Separator />
@@ -67,14 +62,11 @@ function ManageVetForm({ vet, onSubmit }: UseManageVetFormProps) {
 						title="Manage Relationships"
 						description="Manage the relationships of this vet clinic between other vets within the system."
 					>
-						<VetToVetClinicRelationships
-							existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
-							variant="form"
-						/>
+						<VetToVetClinicRelationships isNew={isNew} variant="form" />
 
 						<Separator className="my-4" />
 
-						<VetToDogRelationships existingDogToVetRelationships={vet?.dogToVetRelationships} variant="form" />
+						<VetToDogRelationships isNew={isNew} variant="form" />
 					</FormSection>
 
 					<Separator />

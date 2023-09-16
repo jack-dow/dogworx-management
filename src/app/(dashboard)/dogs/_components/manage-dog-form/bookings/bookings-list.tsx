@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { ManageBookingDialog } from "~/components/manage-booking/manage-booking-dialog";
 import { Button } from "~/components/ui/button";
@@ -9,13 +9,14 @@ import { DestructiveActionDialog } from "~/components/ui/destructive-action-dial
 import { ChevronLeftIcon, ChevronRightIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingTypesList, type DogById } from "~/actions";
-import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 import { type ManageDogFormSchema } from "../manage-dog-form";
 import { Booking } from "./booking";
 
-function sortBookingsAscending(a: DogById["bookings"][number], b: DogById["bookings"][number]) {
+function sortBookingsAscending(a: ManageDogFormSchema["bookings"][number], b: ManageDogFormSchema["bookings"][number]) {
 	if (a.date > b.date) {
 		return 1;
 	}
@@ -35,7 +36,10 @@ function sortBookingsAscending(a: DogById["bookings"][number], b: DogById["booki
 	return a.id.localeCompare(b.id);
 }
 
-function sortBookingsDescending(a: DogById["bookings"][number], b: DogById["bookings"][number]) {
+function sortBookingsDescending(
+	a: ManageDogFormSchema["bookings"][number],
+	b: ManageDogFormSchema["bookings"][number],
+) {
 	if (a.date > b.date) {
 		return -1;
 	}
@@ -57,24 +61,37 @@ function sortBookingsDescending(a: DogById["bookings"][number], b: DogById["book
 
 function BookingsList({
 	isNew,
-	bookings,
-	setBookings,
-	onAddOrUpdateBooking,
 	tab,
 	bookingTypes,
 }: {
 	isNew: boolean;
-	bookings: DogById["bookings"];
-	setBookings: React.Dispatch<React.SetStateAction<DogById["bookings"]>>;
-	onAddOrUpdateBooking: (booking: DogById["bookings"][number]) => void;
 	tab: "past" | "future";
-	bookingTypes: BookingTypesList["data"];
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { dayjs } = useDayjs();
-	const user = useUser();
 	const { toast } = useToast();
 	const form = useFormContext<ManageDogFormSchema>();
 
+	const context = api.useContext();
+	const bookingDeleteMutation = api.app.bookings.delete.useMutation();
+
+	const allBookings = useFieldArray({
+		control: form.control,
+		name: "bookings",
+		keyName: "rhf-id",
+	});
+
+	const bookings = React.useMemo(() => {
+		return allBookings.fields.filter((f) => {
+			if (tab === "past") {
+				return dayjs.tz(f.date).isBefore(dayjs.tz());
+			}
+
+			return dayjs.tz(f.date).isAfter(dayjs.tz());
+		});
+	}, [allBookings.fields, dayjs, tab]);
+
+	// Pagination Management
 	const [page, setPage] = React.useState(1);
 	const [loadedPages, setLoadedPages] = React.useState(1);
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -82,17 +99,16 @@ function BookingsList({
 
 	const [confirmBookingDelete, setConfirmBookingDelete] = React.useState<string | null>(null);
 
-	const [isManageBookingDialogOpen, setIsManageBookingDialogOpen] = React.useState(false);
-	const [editingBooking, setEditingBooking] = React.useState<DogById["bookings"][number] | null>(null);
-	const [copiedBooking, setCopiedBooking] = React.useState<DogById["bookings"][number] | null>(null);
+	const [editingBooking, setEditingBooking] = React.useState<ManageDogFormSchema["bookings"][number] | null>(null);
+	const [copiedBooking, setCopiedBooking] = React.useState<ManageDogFormSchema["bookings"][number] | null>(null);
 
-	let visibleSessions: typeof bookings = [];
+	const visibleBookings = React.useMemo(() => {
+		if (tab === "past") {
+			return [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
+		}
 
-	if (tab === "past") {
-		visibleSessions = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
-	} else {
-		visibleSessions = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
-	}
+		return [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
+	}, [bookings, page, tab]);
 
 	React.useEffect(() => {
 		// If new booking has been added, ensure loaded pages is correct
@@ -111,81 +127,56 @@ function BookingsList({
 				onOpenChange={() => setConfirmBookingDelete(null)}
 				onConfirm={async () => {
 					if (confirmBookingDelete) {
-						if (isNew) {
-							const bookingActions = form.getValues("actions.bookings");
+						try {
+							if (!isNew) {
+								const result = await bookingDeleteMutation.mutateAsync({
+									id: confirmBookingDelete,
+									dogId: form.getValues("id"),
+								});
 
-							delete bookingActions[confirmBookingDelete];
-
-							form.setValue("actions.bookings", bookingActions);
-
-							setBookings(bookings.filter((f) => f.id !== confirmBookingDelete));
-
-							if (visibleSessions.length - 1 === 0) {
-								setPage(page - 1);
-								setLoadedPages(loadedPages - 1);
-							}
-							return;
-						}
-
-						await actions.app.bookings
-							.delete({ id: confirmBookingDelete, dogId: form.getValues("id") })
-							.then((result) => {
-								if (!result.success) {
-									throw new Error("Failed to delete booking");
-								}
-
-								setBookings(bookings.filter((f) => f.id !== confirmBookingDelete));
-
-								if (bookings.length - 1 < result.data.count) {
+								if (bookings.length - 1 < result.count) {
 									setHasMore(true);
 								}
 
-								if (bookings.length - 1 === result.data.count) {
+								if (bookings.length - 1 === result.count) {
 									setHasMore(false);
 								}
+							}
 
-								if (visibleSessions.length - 1 === 0) {
-									setPage(page - 1);
-									setLoadedPages(loadedPages - 1);
-								}
+							allBookings.remove(allBookings.fields.findIndex((f) => f.id === confirmBookingDelete));
 
-								toast({
-									title: "Session deleted",
-									description: "This booking has been successfully deleted.",
-								});
-							})
-							.catch(() => {
-								toast({
-									title: "Session deletion failed",
-									description: "There was an error deleting this booking. Please try again.",
-									variant: "destructive",
-								});
+							if (visibleBookings.length - 1 === 0) {
+								setPage(page - 1);
+								setLoadedPages(loadedPages - 1);
+							}
+
+							toast({
+								title: "Session deleted",
+								description: "This booking has been successfully deleted.",
 							});
+						} catch (error) {
+							logInDevelopment(error);
+
+							toast({
+								title: "Session deletion failed",
+								description: "There was an error deleting this booking. Please try again.",
+								variant: "destructive",
+							});
+						}
 					}
 				}}
 			/>
 
 			<ManageBookingDialog
 				bookingTypes={bookingTypes}
-				open={isManageBookingDialogOpen}
+				open={!!editingBooking || !!copiedBooking}
 				setOpen={(value) => {
 					if (value === false) {
-						setIsManageBookingDialogOpen(false);
 						setEditingBooking(null);
 						setCopiedBooking(null);
 					}
 				}}
-				dog={
-					isNew
-						? {
-								id: form.getValues("id"),
-								givenName: form.getValues("givenName"),
-								familyName: form.getValues("familyName") ?? "",
-								breed: form.getValues("breed"),
-								color: form.getValues("color"),
-						  }
-						: undefined
-				}
+				disableDogSearch={isNew}
 				withoutTrigger
 				booking={
 					editingBooking
@@ -209,84 +200,41 @@ function BookingsList({
 									id: form.getValues("id"),
 									givenName: form.getValues("givenName") ?? "Unnamed new dog",
 									familyName: form.getValues("familyName") ?? "",
+									color: form.getValues("color"),
+									breed: form.getValues("breed"),
 								},
 						  }
 						: undefined
 				}
-				onSuccessfulSubmit={onAddOrUpdateBooking}
-				onSubmit={
-					isNew
-						? // eslint-disable-next-line @typescript-eslint/require-await
-						  async (booking) => {
-								form.setValue(
-									"actions.bookings",
-									{
-										...form.getValues("actions.bookings"),
-										[booking.id]: {
-											type: "INSERT",
-											payload: booking,
-										},
-									},
-									{ shouldDirty: true },
-								);
+				onSuccessfulSubmit={(booking) => {
+					// Remove booking if dog has been changed
+					if (booking.dogId !== form.getValues("id")) {
+						allBookings.remove(allBookings.fields.findIndex((f) => f.id === booking.id));
+						return;
+					}
 
-								toast({
-									title: "Booking updated",
-									description: `Successfully updated booking to dog's ${
-										dayjs.tz(booking.date).isBefore(dayjs.tz()) ? "past" : "future"
-									} bookings.`,
-								});
-
-								return {
-									success: true,
-									data: {
-										...booking,
-										createdAt: new Date(),
-										updatedAt: new Date(),
-										organizationId: user.organizationId,
-										assignedToId: booking.assignedToId ?? user.id,
-										assignedTo: booking.assignedTo ?? user,
-									},
-								};
-						  }
-						: undefined
-				}
+					allBookings.update(
+						allBookings.fields.findIndex((f) => f.id === booking.id),
+						booking,
+					);
+				}}
+				onSubmit={isNew ? async () => {} : undefined}
 			/>
 
 			<ul role="list">
-				{visibleSessions.map((booking, index) => {
+				{visibleBookings.map((booking, index) => {
 					return (
 						<Booking
 							key={booking.id}
 							booking={booking}
-							isLast={index === 4 || index === visibleSessions.length - 1}
+							isLast={index === 4 || index === visibleBookings.length - 1}
 							onEditClick={() => {
 								setEditingBooking(booking);
-								setIsManageBookingDialogOpen(true);
 							}}
 							onCopy={() => {
 								setCopiedBooking(booking);
-								setIsManageBookingDialogOpen(true);
 							}}
 							onDelete={() => {
-								if (isNew) {
-									const bookingsActions = { ...form.getValues("actions.bookings") };
-
-									setBookings((prev) => prev.filter((f) => f.id !== booking.id));
-
-									if (bookingsActions[booking.id]?.type === "INSERT") {
-										delete bookingsActions[booking.id];
-									} else {
-										bookingsActions[booking.id] = {
-											type: "DELETE",
-											payload: booking.id,
-										};
-									}
-
-									form.setValue("actions.bookings", bookingsActions);
-									return;
-								}
-
 								setConfirmBookingDelete(booking.id);
 							}}
 						/>
@@ -294,7 +242,7 @@ function BookingsList({
 				})}
 			</ul>
 
-			{visibleSessions.length > 0 ? (
+			{visibleBookings.length > 0 ? (
 				<div className="flex items-center justify-center space-x-2">
 					<Button
 						variant="outline"
@@ -339,19 +287,15 @@ function BookingsList({
 										.pop()!;
 								}
 
-								actions.app.bookings
-									.search({
+								context.app.bookings.search
+									.fetch({
 										dogId: form.getValues("id"),
 										cursor,
 										after: tab === "past" ? undefined : dayjs.tz().startOf("day").toDate(),
 										sortDirection: tab === "past" ? "desc" : "asc",
 									})
 									.then((result) => {
-										if (!result.success) {
-											throw new Error("Failed to load bookings");
-										}
-
-										setBookings((prev) => [...prev, ...result.data]);
+										allBookings.append(result.data);
 										setPage(page + 1);
 										setLoadedPages(loadedPages + 1);
 										setHasMore(result.data.length === 5);

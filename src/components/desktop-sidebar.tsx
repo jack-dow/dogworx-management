@@ -7,9 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useSession } from "~/app/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
-import { signOut } from "~/lib/auth";
-import { cn } from "~/utils";
-import { navigation } from "./dark-desktop-sidebar";
+import { cn } from "~/lib/utils";
+import { navigation, signOut } from "./dark-desktop-sidebar";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,

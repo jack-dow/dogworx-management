@@ -2,8 +2,8 @@ import { headers as nextHeaders } from "next/headers";
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 import SuperJSON from "superjson";
 
+import { getBaseUrl } from "~/lib/utils";
 import { type AppRouter } from "~/server";
-import { getBaseUrl } from "~/utils";
 
 export const server = createTRPCProxyClient<AppRouter>({
 	transformer: SuperJSON,

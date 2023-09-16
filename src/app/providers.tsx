@@ -7,7 +7,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
-import { loggerLink, unstable_httpBatchStreamLink } from "@trpc/client";
+import { httpBatchLink, loggerLink } from "@trpc/client";
 import superjson from "superjson";
 
 import { env } from "~/env.mjs";
@@ -48,7 +48,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode; headers?: 
 					enabled: (opts) =>
 						process.env.NODE_ENV === "development" || (opts.direction === "down" && opts.result instanceof Error),
 				}),
-				unstable_httpBatchStreamLink({
+				httpBatchLink({
 					url: `${getBaseUrl()}/api/trpc`,
 					headers() {
 						const headers = new Map(props.headers);

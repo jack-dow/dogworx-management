@@ -6,10 +6,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type BookingTypeById, type BookingTypeInsert, type BookingTypeUpdate } from "~/actions";
-import { InsertBookingTypeSchema } from "~/db/validation";
+import { InsertBookingTypeSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId, hasTrueValue } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
 const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
 	name: z.string().max(100).nonempty({ message: "Required" }),
@@ -22,11 +23,10 @@ const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
 type ManageBookingTypeFormSchema = z.infer<typeof ManageBookingTypeFormSchema>;
 
 type UseManageBookingTypeFormProps = {
-	bookingType?: BookingTypeById;
+	bookingType?: RouterOutputs["app"]["bookingTypes"]["byId"]["data"];
 	defaultValues?: Partial<ManageBookingTypeFormSchema>;
-	onSubmit?: (
-		data: ManageBookingTypeFormSchema,
-	) => Promise<{ success: boolean; data: BookingTypeInsert | BookingTypeUpdate | null | undefined }>;
+	onSubmit?: (data: ManageBookingTypeFormSchema) => Promise<void>;
+	onSuccessfulSubmit?: (data: ManageBookingTypeFormSchema) => void;
 };
 
 function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
@@ -38,60 +38,57 @@ function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
 		resolver: zodResolver(ManageBookingTypeFormSchema),
 		defaultValues: {
 			details: "",
-			...props.bookingType,
 			...props.defaultValues,
-			id: props.bookingType?.id ?? generateId(),
+			...props.bookingType,
+			id: props.defaultValues?.id || props.bookingType?.id || generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
 
+	const insertMutation = api.app.bookingTypes.insert.useMutation();
+	const updateMutation = api.app.bookingTypes.update.useMutation();
+
 	React.useEffect(() => {
-		function syncBookingType(booking: BookingTypeById) {
-			form.reset(booking, {
+		if (props.bookingType) {
+			form.reset(props.bookingType, {
 				keepDirty: true,
 				keepDirtyValues: true,
 			});
 		}
-
-		if (props.bookingType) {
-			syncBookingType(props.bookingType);
-		}
 	}, [props.bookingType, form]);
 
-	async function onSubmit(data: ManageBookingTypeFormSchema) {
-		let success = false;
-		let newBookingType: BookingTypeInsert | BookingTypeUpdate | null | undefined;
+	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+		e.preventDefault();
+		e.stopPropagation();
 
-		if (props.onSubmit) {
-			const response = await props.onSubmit(data);
-			success = response.success;
-			newBookingType = response.data;
-			return { success, data: newBookingType };
-		} else if (props.bookingType) {
-			const response = await actions.app.bookingTypes.update(data);
-			success = response.success && !!response.data;
-			newBookingType = response.data;
-		} else {
-			const response = await actions.app.bookingTypes.insert(data);
-			success = response.success;
-			newBookingType = response.data;
-		}
+		void form.handleSubmit(async (data) => {
+			try {
+				if (props.onSubmit) {
+					await props.onSubmit(data);
+				} else if (isNew) {
+					await insertMutation.mutateAsync(data);
+				} else {
+					await updateMutation.mutateAsync(data);
+				}
 
-		if (success) {
-			toast({
-				title: `Booking type ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "created" : "updated"} booking.`,
-			});
-		} else {
-			toast({
-				title: `Booking type ${isNew ? "Creation" : "Update"} Failed`,
-				description: `There was an error ${isNew ? "creating" : "updating"} the booking. Please try again.`,
-				variant: "destructive",
-			});
-		}
+				toast({
+					title: `Booking type ${isNew ? "Created" : "Updated"}`,
+					description: `Successfully ${isNew ? "created" : "updated"} booking type "${data.name}".`,
+				});
+				props.onSuccessfulSubmit?.(data);
+			} catch (error) {
+				logInDevelopment(error);
 
-		return { success, data: newBookingType };
+				toast({
+					title: `Booking ${isNew ? "Creation" : "Update"} Failed`,
+					description: `There was an error ${isNew ? "creating" : "updating"} the booking type "${
+						data.name
+					}". Please try again.`,
+					variant: "destructive",
+				});
+			}
+		})(e);
 	}
 
 	return { form, onSubmit };

@@ -5,7 +5,7 @@ import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
 import { MobileNavigation } from "~/components/mobile-navigation";
 import { server } from "~/lib/trpc/server";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { SessionProvider } from "../providers";
 
 const BackgroundGradients = {

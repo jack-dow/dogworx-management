@@ -15,14 +15,13 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type BookingsList } from "~/actions";
 import { type Dayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
-function createBookingsTableColumns(
-	dayjs: Dayjs,
-	onDeleteClick: (booking: BookingsList["data"][number]) => void,
-): ColumnDef<BookingsList["data"][number]>[] {
+type Booking = RouterOutputs["app"]["bookings"]["all"]["data"][number];
+
+function createBookingsTableColumns(dayjs: Dayjs, onDeleteClick: (booking: Booking) => void): ColumnDef<Booking>[] {
 	return [
 		{
 			accessorKey: "bookingType",

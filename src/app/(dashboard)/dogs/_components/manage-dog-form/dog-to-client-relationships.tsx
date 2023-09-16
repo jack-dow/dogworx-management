@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useFieldArray, useFormContext, type Control } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { ManageClientSheet } from "~/components/manage-client/manage-client-sheet";
 import { ClickToCopy } from "~/components/ui/click-to-copy";
@@ -41,8 +41,8 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation/app";
 import { api } from "~/lib/trpc/client";
+import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
-import { cn, generateId, logInDevelopment } from "~/utils";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 
 type ClientById = NonNullable<RouterOutputs["app"]["clients"]["byId"]["data"]>;
@@ -57,8 +57,6 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 		keyName: "rhf-id",
 	});
 
-	const context = api.useContext();
-
 	const [editingClient, setEditingClient] = React.useState<ClientById | null>(null);
 	const [isCreateClientSheetOpen, setIsCreateClientSheetOpen] = React.useState<true | string | null>(null);
 
@@ -66,26 +64,31 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 
 	const searchClientsInputRef = React.useRef<HTMLInputElement>(null);
 
+	const context = api.useContext();
+
 	const insertDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.insert.useMutation();
 	const deleteDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.delete.useMutation();
 
 	return (
 		<>
 			<ManageClientSheet
-				client={editingClient ?? undefined}
+				withoutTrigger
 				open={!!editingClient}
 				setOpen={(value) => {
 					if (value === false) {
 						setEditingClient(null);
 					}
 				}}
-				withoutTrigger
+				client={editingClient ?? undefined}
 				onSuccessfulSubmit={(client) => {
 					const newDogToClientRelationships = [...dogToClientRelationships.fields].map((field) => {
 						if (field.clientId === client.id) {
 							return {
 								...field,
-								client,
+								client: {
+									...field.client,
+									...client,
+								},
 							};
 						}
 
@@ -104,19 +107,22 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 			/>
 
 			<DestructiveActionDialog
-				name="relationship"
 				withoutTrigger
 				open={!!confirmRelationshipDelete}
 				onOpenChange={() => {
 					setConfirmRelationshipDelete(null);
 				}}
+				name="relationship"
 				onConfirm={async () => {
 					if (confirmRelationshipDelete) {
 						try {
-							await deleteDogToClientRelationshipMutation.mutateAsync({
-								id: confirmRelationshipDelete,
-							});
+							if (!isNew) {
+								await deleteDogToClientRelationshipMutation.mutateAsync({
+									id: confirmRelationshipDelete,
+								});
+							}
 
+							// Use setValue instead of remove so that we can set shouldDirty to false
 							form.setValue(
 								"dogToClientRelationships",
 								dogToClientRelationships.fields.filter((relationship) => relationship.id !== confirmRelationshipDelete),
@@ -134,7 +140,15 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 							setTimeout(() => {
 								searchClientsInputRef?.current?.focus();
 							}, 0);
-						} catch (error) {}
+						} catch (error) {
+							logInDevelopment(error);
+
+							toast({
+								title: "Failed to delete relationship",
+								description: "Something went wrong while deleting the relationship. Please try again.",
+								variant: "destructive",
+							});
+						}
 					}
 				}}
 			/>
@@ -175,6 +189,18 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 				<div className="sm:col-span-6">
 					<MultiSelectSearchCombobox
 						ref={searchClientsInputRef}
+						placeholder={
+							dogToClientRelationships.fields.length === 0
+								? "Search clients..."
+								: dogToClientRelationships.fields.length === 1
+								? "1 client selected"
+								: `${dogToClientRelationships.fields.length} clients selected`
+						}
+						onSearch={async (searchTerm) => {
+							const res = await context.app.clients.search.fetch({ searchTerm });
+
+							return res.data ?? [];
+						}}
 						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
 						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.client)}
 						onSelect={async (client) => {
@@ -184,7 +210,7 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 								clientId: client.id,
 								client,
 								relationship: "owner",
-							} as const;
+							} satisfies ManageDogFormSchema["dogToClientRelationships"][number];
 
 							if (!isNew) {
 								try {
@@ -198,9 +224,10 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 									});
 								} catch (error) {
 									logInDevelopment(error);
+
 									toast({
 										title: "Failed to create relationship",
-										description: `Relationship between "${client.givenName} ${client.familyName}" and dog ${
+										description: `Relationship between client "${client.givenName} ${client.familyName}" and dog ${
 											form.getValues("givenName") ? `"${form.getValues("givenName")}"` : ""
 										} failed to create. Please try again.`,
 									});
@@ -209,18 +236,6 @@ function DogToClientRelationships({ isNew }: { isNew: boolean }) {
 
 							dogToClientRelationships.append(relationship);
 						}}
-						onSearch={async (searchTerm) => {
-							const res = await context.app.clients.search.fetch({ searchTerm });
-
-							return res.data ?? [];
-						}}
-						placeholder={
-							dogToClientRelationships.fields.length === 0
-								? "Search clients..."
-								: dogToClientRelationships.fields.length === 1
-								? "1 client selected"
-								: `${dogToClientRelationships.fields.length} clients selected`
-						}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
 								onSelect={() => {
@@ -327,6 +342,7 @@ function DogToClientRelationship({
 					render={({ field }) => (
 						<FormItem>
 							<Select
+								value={field.value}
 								onValueChange={(value) => {
 									if (value !== field.value) {
 										setUpdatingRelationshipTo(value as typeof field.value);
@@ -341,7 +357,7 @@ function DogToClientRelationship({
 
 												toast({
 													title: "Updated relationship",
-													description: `The relationship between "${dogToClientRelationship.client.givenName} ${
+													description: `The relationship between client "${dogToClientRelationship.client.givenName} ${
 														dogToClientRelationship.client.familyName
 													}" and dog ${
 														form.getValues("givenName") ? `"${form.getValues("givenName")}"` : ""
@@ -353,7 +369,7 @@ function DogToClientRelationship({
 
 												toast({
 													title: "Failed to update relationship",
-													description: `The relationship between "${dogToClientRelationship.client.givenName} ${
+													description: `The relationship between client "${dogToClientRelationship.client.givenName} ${
 														dogToClientRelationship.client.familyName
 													}" and dog ${
 														form.getValues("givenName") ? `"${form.getValues("givenName")}"` : ""
@@ -366,7 +382,6 @@ function DogToClientRelationship({
 											});
 									}
 								}}
-								value={field.value}
 							>
 								<FormControl>
 									<SelectTrigger>

@@ -12,125 +12,97 @@ import { Form } from "~/components/ui/form";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { actions, type OrganizationById } from "~/actions";
 import { useUser } from "~/app/providers";
-import {
-	InsertOrganizationInviteLinkSchema,
-	InsertOrganizationSchema,
-	SelectSessionSchema,
-	SelectUserSchema,
-} from "~/db/validation";
+import { InsertOrganizationSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId, hasTrueValue } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 import { OrganizationGeneralSettings } from "./organization-general-settings";
 import { OrganizationInviteLinks } from "./organization-invite-links";
 import { OrganizationUsers } from "./organization-users";
 
-const OrganizationUserSchema = SelectUserSchema.omit({
-	createdAt: true,
-	updatedAt: true,
-	bannedAt: true,
-	bannedUntil: true,
-});
-
 const ManageOrganizationFormSchema = InsertOrganizationSchema.extend({
 	name: z.string().max(50).nonempty({ message: "Required" }),
-	organizationInviteLinks: z.array(
-		InsertOrganizationInviteLinkSchema.extend({
-			userId: z.string().nullable(),
-			user: OrganizationUserSchema.nullable(),
-		}),
-	),
-	users: z.array(
-		OrganizationUserSchema.extend({
-			sessions: z.array(
-				SelectSessionSchema.pick({
-					id: true,
-					lastActiveAt: true,
-				}),
-			),
-		}),
-	),
 });
 type ManageOrganizationFormSchema = z.infer<typeof ManageOrganizationFormSchema>;
 
 type ManageOrganizationFormProps = {
-	organization?: OrganizationById;
+	organization?: RouterOutputs["auth"]["organizations"]["byId"]["data"];
 };
 
 function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
 	const isNew = !organization;
 
+	const { toast } = useToast();
 	const user = useUser();
 
 	const router = useRouter();
-
-	const { toast } = useToast();
 
 	const form = useForm<ManageOrganizationFormSchema>({
 		resolver: zodResolver(ManageOrganizationFormSchema),
 		defaultValues: {
 			maxUsers: 1,
+			organizationInviteLinks: [],
+			organizationUsers: [],
 			...organization,
 			id: organization?.id ?? generateId(),
-			actions: {
-				organizationInviteLinks: {},
-				users: {},
-			},
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
 
+	const insertMutation = api.auth.organizations.insert.useMutation();
+	const updateMutation = api.auth.organizations.update.useMutation();
+
 	React.useEffect(() => {
-		function syncOrganization(organization: OrganizationById) {
-			const actions = form.getValues("actions");
-			form.reset(
-				{ ...organization, actions },
-				{
-					keepDirty: true,
-					keepDirtyValues: true,
-				},
-			);
-		}
-
 		if (organization) {
-			syncOrganization(organization);
+			form.reset(organization, {
+				keepDirty: true,
+				keepDirtyValues: true,
+			});
 		}
-	}, [organization, form, toast]);
+	}, [organization, form]);
 
-	async function onSubmit(data: ManageOrganizationFormSchema) {
-		let success = false;
-
-		if (isNew) {
-			const response = await actions.auth.organizations.insert(data);
-			success = response.success && !!response.data;
-		} else {
-			const response = await actions.auth.organizations.update(data);
-			success = response.success && !!response.data;
-		}
-
-		if (success) {
-			if (user.organizationId === "1") {
+	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+		e.preventDefault();
+		e.stopPropagation();
+		void form.handleSubmit(async (data) => {
+			try {
 				if (isNew) {
-					router.replace(`/organizations/${data.id}`);
+					await insertMutation.mutateAsync(data);
 				} else {
-					router.push(`/organizations`);
+					await updateMutation.mutateAsync(data);
 				}
-			} else {
-				form.reset(form.getValues());
+
+				if (user.organizationId === "1") {
+					if (isNew) {
+						router.replace(`/organizations/${data.id}`);
+					} else {
+						router.push(`/organizations`);
+					}
+				} else {
+					form.reset(form.getValues());
+				}
+
+				toast({
+					title: `Organization ${isNew ? "Created" : "Updated"}`,
+					description: `Successfully ${isNew ? "created" : "updated"} ${
+						user.organizationId !== "1" ? "your" : ""
+					} organization.`,
+				});
+			} catch (error) {
+				logInDevelopment(error);
+
+				toast({
+					title: `Organization  ${isNew ? "Creation" : "Update"} Failed`,
+					description: `There was an error ${isNew ? "creating" : "updating"} ${
+						user.organizationId !== "1" ? "your" : ""
+					} organization. Please try again.`,
+					variant: "destructive",
+				});
 			}
-			toast({
-				title: `Organization ${isNew ? "Created" : "Updated"}`,
-				description: `Successfully ${isNew ? "create" : "updated"} your organization.`,
-			});
-		} else {
-			toast({
-				title: `Organization  ${isNew ? "Creation" : "Update"} Failed`,
-				description: `There was an error ${isNew ? "creating" : "updating"} your organization. Please try again.`,
-				variant: "destructive",
-			});
-		}
+		});
 	}
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -148,16 +120,7 @@ function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							await onSubmit(data);
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={onSubmit} className="space-y-6 lg:space-y-10">
 					<OrganizationGeneralSettings />
 
 					<Separator />

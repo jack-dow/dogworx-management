@@ -11,14 +11,32 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
-import { signUp } from "~/lib/auth";
-import { SignUpSchema } from "~/lib/validation";
+import { type CreateUserFromInvitePOSTResponse } from "~/app/api/auth/sign-up/invite/route";
+import { SignUpSchema } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
+
+async function signUp(
+	data: SignUpSchema,
+	inviteLink: NonNullable<RouterOutputs["auth"]["organizations"]["inviteLinks"]["byId"]["data"]>,
+) {
+	const signUpResponse = await fetch(`/api/auth/sign-up/invite?id=${inviteLink.id}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		cache: "no-store",
+		body: JSON.stringify(data),
+	});
+
+	const body = (await signUpResponse.json()) as CreateUserFromInvitePOSTResponse;
+
+	return body;
+}
 
 function InviteForm({
 	inviteLink,
 }: {
-	inviteLink: RouterOutputs["auth"]["organizations"]["inviteLinks"]["byId"]["data"];
+	inviteLink: NonNullable<RouterOutputs["auth"]["organizations"]["inviteLinks"]["byId"]["data"]>;
 }) {
 	const { toast } = useToast();
 	const router = useRouter();
