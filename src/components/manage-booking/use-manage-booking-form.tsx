@@ -68,9 +68,9 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 			assignedTo: user,
 			details: "",
 			bookingTypeId: null,
-			dogId: null,
-			...props.booking,
 			...props.defaultValues,
+			...props.booking,
+			dogId: props.defaultValues?.dogId ?? props.booking?.dogId ?? null,
 			id: props.booking?.id ?? generateId(),
 		},
 	});
@@ -91,6 +91,7 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	}, [props.booking, form]);
 
 	async function onSubmit(data: ManageBookingFormSchema) {
+
 		let success = false;
 		let newBooking: BookingInsert | BookingUpdate | null | undefined;
 

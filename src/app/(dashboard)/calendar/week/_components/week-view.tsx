@@ -134,6 +134,7 @@ function WeekView({
 	const container = React.useRef<HTMLDivElement>(null);
 	const containerNav = React.useRef<HTMLDivElement>(null);
 	const containerOffset = React.useRef<HTMLDivElement>(null);
+	const calendar = React.useRef<HTMLOListElement>(null);
 
 	const user = useUser();
 
@@ -501,6 +502,7 @@ function WeekView({
 									<ol
 										className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8"
 										style={{ gridTemplateRows: "1.75rem repeat(288, minmax(0, 1fr)) auto" }}
+										ref={calendar}
 										onClick={(event) => {
 											if (isPreviewCardOpen) {
 												return;
@@ -516,10 +518,13 @@ function WeekView({
 												return;
 											}
 
-											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
-											const timeRounded = Math.floor(((offsetY - 16) / 112) * 2) / 2;
+											const halfHourHeight = Math.ceil((rect.height - 32) / 48);
 
-											const date = startOfWeek.startOf("day").add(day, "day").add(timeRounded, "hour");
+
+											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
+											const halfHourClicked = Math.floor(offsetY / halfHourHeight);
+											const date = startOfWeek.startOf("day").add(day, "day").add(halfHourClicked * 30, "minutes");
+
 
 											setIsManageBookingDialogOpen(true);
 											setLastSelectedDate(date);
