@@ -1,31 +1,66 @@
 import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { organizationInviteLinks, organizations, sessions, users } from "~/db/schema/auth";
-import { sessionCookieOptions } from "~/lib/auth-options";
+import { UpdateUserSchema } from "~/db/validation/auth";
+import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const userRouter = createTRPCRouter({
-	// Moved update to app/actions.ts due to a bug in TRPC where you can't set cookies on the response if you provide an .input() to a procedure
+	update: protectedProcedure
+		.input(
+			UpdateUserSchema.pick({ givenName: true, familyName: true, emailAddress: true, profileImageUrl: true }).extend({
+				timezone: z.string().optional(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			const { timezone, ...data } = input;
 
-	// update: protectedProcedure.input(UpdateUserSchema.omit({ id: true })).mutation(async ({ ctx, input }) => {
-	// 	await ctx.db
-	// 		.update(users)
-	// 		.set({ ...input, id: ctx.user.id })
-	// 		.where(eq(users.id, ctx.user.id));
+			if (timezone) {
+				try {
+					// If timezone is invalid, this will throw an error
+					dayjs().tz(timezone, true);
 
-	// 	const newSessionToken = await createSessionJWT({
-	// 		id: ctx.user.id,
-	// 		user: {
-	// 			...ctx.user,
-	// 			...input,
-	// 		},
-	// 	});
+					cookies().set("timezone", timezone, {
+						httpOnly: true,
+						path: "/",
+						sameSite: "lax",
+						secure: process.env.NODE_ENV === "production",
+						maxAge: 60 * 60 * 24 * 365,
+					});
+				} catch (error) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: "Invalid timezone",
+					});
+				}
+			}
 
-	// 	ctx.cookies.set(sessionCookieOptions.name, newSessionToken, sessionCookieOptions);
-	// }),
+			if (Object.keys(data).length > 0) {
+				await ctx.db.update(users).set(input).where(eq(users.id, ctx.user.id));
+
+				const newSessionToken = await createSessionJWT({
+					id: ctx.user.id,
+					user: {
+						...ctx.user,
+						...input,
+					},
+				});
+
+				cookies().set({
+					...sessionCookieOptions,
+					value: newSessionToken,
+				});
+			}
+		}),
 
 	sessions: createTRPCRouter({
 		current: protectedProcedure.query(({ ctx }) => {

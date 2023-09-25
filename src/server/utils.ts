@@ -58,7 +58,7 @@ export function validatePaginationSearchParams({
 		limit = 20;
 	}
 
-	const maxPage = Math.ceil(count / limit);
+	const maxPage = Math.ceil(count / limit) || 1;
 
 	if (page > maxPage) {
 		page = maxPage;

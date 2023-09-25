@@ -5,6 +5,8 @@ import { PageHeader } from "~/components/page-header";
 import { server } from "~/lib/trpc/server";
 import { ManageDogForm } from "../_components/manage-dog-form/manage-dog-form";
 
+export const dynamic = "force-dynamic";
+
 export function generateMetadata({ params }: { params: { id: string } }) {
 	return {
 		title: `${params.id === "new" ? "Create" : "Update"} Dog | Dogworx Management`,
@@ -19,14 +21,9 @@ async function UpdateDogPage({ params }: { params: { id: string } }) {
 
 	return (
 		<>
-			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Dog${
-					dog?.data?.givenName ? ` "${dog?.data.givenName}" ` : ""
-				}`}
-				back={{ href: "/dogs" }}
-			/>
+			<PageHeader title={`${params.id === "new" ? "Create" : "Update"} Dog`} back={{ href: "/dogs" }} />
 
-			{dog?.data !== null ? <ManageDogForm dog={dog?.data} bookingTypes={bookingTypes.data} /> : <NotFound />}
+			{dog?.data !== null ? <ManageDogForm initialData={dog} bookingTypes={bookingTypes.data} /> : <NotFound />}
 		</>
 	);
 }

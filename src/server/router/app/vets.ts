@@ -181,7 +181,7 @@ export const vetsRouter = createTRPCRouter({
 			where: and(eq(vets.organizationId, ctx.user.organizationId), eq(vets.id, id)),
 		});
 
-		return { success: true, data: vet };
+		return { data: vet };
 	}),
 
 	dogToVetRelationships: createTRPCRouter({

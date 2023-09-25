@@ -307,8 +307,7 @@ function ManageOrganizationInviteLinkDialogForm({
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
 						onClick={() => {
 							const numOfErrors = Object.keys(form.formState.errors).length;
-							console.log(form.formState.errors);
-							console.log(form.getValues());
+
 							if (numOfErrors > 0) {
 								toast({
 									title: `Form submission errors`,

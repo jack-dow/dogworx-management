@@ -50,7 +50,7 @@ function Test() {
 								Sign out
 							</Button>
 
-							<div className="flex flex-col gap-y-6">
+							<div className="flex flex-col justify-center gap-y-6">
 								<Button>Button Text</Button>
 								<Button variant="destructive">Button Text</Button>
 								<Button variant="ghost">Button Text</Button>

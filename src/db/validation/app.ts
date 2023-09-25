@@ -20,7 +20,7 @@ import { users } from "../schema/auth";
 // to prevent any accidental updates to fields that shouldn't be updatable.
 // -----------------------------------------------------------------------------
 
-export const IdSchema = z.string().cuid().length(24);
+export const IdSchema = z.string().cuid2().length(24);
 // Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type, therefore we also have to manually represent the type in zod
 const UnsignedMediumInt = z.number().int().nonnegative().max(16777215);
 
@@ -232,19 +232,7 @@ export type UpdateVetSchema = z.infer<typeof UpdateVetSchema>;
 export const InsertDogSchema = createInsertSchema(dogs)
 	.extend({
 		id: IdSchema,
-		bookings: z.array(
-			InsertBookingSchema.extend({
-				assignedTo: createSelectSchema(users).pick({
-					id: true,
-					givenName: true,
-					familyName: true,
-					emailAddress: true,
-					organizationId: true,
-					organizationRole: true,
-					profileImageUrl: true,
-				}),
-			}),
-		),
+		bookings: z.array(InsertBookingSchema),
 		dogToClientRelationships: z.array(
 			InsertDogToClientRelationshipSchema.extend({
 				client: createSelectSchema(clients).pick({

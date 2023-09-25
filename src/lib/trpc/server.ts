@@ -18,6 +18,7 @@ export const server = createTRPCProxyClient<AppRouter>({
 			},
 		}),
 	],
+	
 });
 
 export { type RouterInputs, type RouterOutputs } from "~/server";

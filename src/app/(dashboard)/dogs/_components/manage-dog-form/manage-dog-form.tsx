@@ -40,10 +40,10 @@ const ManageDogFormSchema = InsertDogSchema.extend({
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
 
 function ManageDogForm({
-	dog,
+	initialData,
 	bookingTypes,
 }: {
-	dog?: RouterOutputs["app"]["dogs"]["byId"]["data"];
+	initialData?: RouterOutputs["app"]["dogs"]["byId"];
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const searchParams = useSearchParams();
@@ -54,6 +54,9 @@ function ManageDogForm({
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 	const [isConfirmSubmittingDialogOpen, setIsConfirmSubmittingDialogOpen] = React.useState(false);
+
+	const result = api.app.dogs.byId.useQuery({ id: params.id as string }, { initialData });
+	const dog = result.data?.data;
 
 	const form = useForm<ManageDogFormSchema>({
 		resolver: zodResolver(ManageDogFormSchema),
@@ -80,6 +83,15 @@ function ManageDogForm({
 			router.replace("/dogs/new");
 		}
 	}, [searchParams, router]);
+
+	React.useEffect(() => {
+		if (dog) {
+			form.reset(dog, {
+				keepDirty: true,
+				keepDirtyValues: true,
+			});
+		}
+	}, [dog, form]);
 
 	async function onSubmit(data: ManageDogFormSchema) {
 		try {
@@ -206,6 +218,7 @@ function ManageDogForm({
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
 							onClick={() => {
 								const numOfErrors = Object.keys(form.formState.errors).length;
+
 								if (numOfErrors > 0) {
 									toast({
 										title: `Form submission errors`,

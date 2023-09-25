@@ -23,10 +23,10 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { updateUser } from "~/app/actions";
 import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
 import { useUser } from "~/app/providers";
 import { InsertUserSchema } from "~/db/validation/auth";
+import { logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { type RouterOutputs } from "~/server";
 import { AccountProfileImage } from "./account-profile-image";
@@ -80,25 +80,8 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 
 	const [isDeletingAccount, setIsDeletingAccount] = React.useState(false);
 
-	const accountDeleteMutation = api.auth.user.delete.useMutation({
-		onSuccess: () => {
-			toast({
-				title: "Account deleted",
-				description: "Your account was successfully deleted.",
-			});
-			void router.push("/sign-in");
-		},
-		onError: () => {
-			toast({
-				title: "Something went wrong",
-				description: "An unknown error ocurred and we were unable to delete your account. Please try again.",
-				variant: "destructive",
-			});
-		},
-		onSettled: () => {
-			setIsDeletingAccount(false);
-		},
-	});
+	const accountUpdateMutation = api.auth.user.update.useMutation({});
+	const accountDeleteMutation = api.auth.user.delete.useMutation({});
 
 	async function onSubmit(data: ManageAccountFormSchema) {
 		try {
@@ -121,7 +104,7 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 				}
 			}
 
-			await updateUser({
+			await accountUpdateMutation.mutateAsync({
 				...data,
 				emailAddress: user.emailAddress,
 				profileImageUrl:
@@ -286,7 +269,29 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 												e.preventDefault();
 												e.stopPropagation();
 												setIsDeletingAccount(true);
-												accountDeleteMutation.mutate();
+
+												accountDeleteMutation
+													.mutateAsync()
+													.then(() => {
+														toast({
+															title: "Account deleted",
+															description: "Your account was successfully deleted.",
+														});
+														void router.push("/sign-in");
+													})
+													.catch((error) => {
+														logInDevelopment(error);
+
+														toast({
+															title: "Something went wrong",
+															description:
+																"An unknown error ocurred and we were unable to delete your account. Please try again.",
+															variant: "destructive",
+														});
+													})
+													.finally(() => {
+														setIsDeletingAccount(false);
+													});
 											}}
 										>
 											{isDeletingAccount && <Loader size="sm" />}

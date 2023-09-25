@@ -4,16 +4,17 @@
 // This file exists because Providers must be exported from a client component
 // -----------------------------------------------------------------------------
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
-import { httpBatchLink, loggerLink } from "@trpc/client";
+import { httpBatchLink, loggerLink, splitLink, unstable_httpBatchStreamLink } from "@trpc/client";
 import superjson from "superjson";
 
+import { useToast } from "~/components/ui/use-toast";
 import { env } from "~/env.mjs";
 import { type SessionCookie } from "~/lib/auth-options";
 import { api } from "~/lib/trpc/client";
-import { setTimezone } from "./actions";
 
 type ProviderProps<Props = undefined> = Props extends undefined
 	? {
@@ -28,7 +29,7 @@ const getBaseUrl = () => {
 	return `http://localhost:${env.PORT}`; // dev SSR should use localhost
 };
 
-export function TRPCReactProvider(props: { children: React.ReactNode; headers?: Headers }) {
+export function TRPCReactProvider(props: { children: React.ReactNode; headers: Headers }) {
 	const [queryClient] = React.useState(
 		() =>
 			new QueryClient({
@@ -48,13 +49,27 @@ export function TRPCReactProvider(props: { children: React.ReactNode; headers?: 
 					enabled: (opts) =>
 						process.env.NODE_ENV === "development" || (opts.direction === "down" && opts.result instanceof Error),
 				}),
-				httpBatchLink({
-					url: `${getBaseUrl()}/api/trpc`,
-					headers() {
-						const headers = new Map(props.headers);
-						headers.set("x-trpc-source", "nextjs-react-client");
-						return Object.fromEntries(headers);
+				splitLink({
+					condition(op) {
+						// Add logic here to return true for paths/routes that need to set cookies
+						return op.path.startsWith("auth.");
 					},
+					true: httpBatchLink({
+						url: `${getBaseUrl()}/api/trpc`,
+						headers() {
+							const heads = new Map(props.headers);
+							heads.set("x-trpc-source", "react-no-stream");
+							return Object.fromEntries(heads);
+						},
+					}),
+					false: unstable_httpBatchStreamLink({
+						url: `${getBaseUrl()}/api/trpc`,
+						headers() {
+							const heads = new Map(props.headers);
+							heads.set("x-trpc-source", "react-stream");
+							return Object.fromEntries(heads);
+						},
+					}),
 				}),
 			],
 		}),
@@ -146,19 +161,32 @@ export function useTimezone() {
 }
 
 export const TimezoneProvider = ({ children, timezone }: ProviderProps<{ timezone: string | null }>) => {
-	const [_timezone, _setTimezone] = React.useState(timezone);
+	const { toast } = useToast();
+	const router = useRouter();
+
+	const updateUserMutation = api.auth.user.update.useMutation({
+		onSuccess: () => {
+			router.refresh();
+		},
+		onError: () => {
+			toast({
+				title: "Error updating timezone",
+				description: `We were unable to update your timezone so it has been set to "Australia/Brisbane".`,
+			});
+		},
+	});
 
 	React.useEffect(() => {
-		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-		if (tz !== timezone) {
-			void setTimezone({ timezone: tz });
-			_setTimezone(tz);
+		if (userTimezone !== timezone) {
+			updateUserMutation.mutate({ timezone: userTimezone });
 		}
-	}, [timezone]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	return (
-		<TimezoneContext.Provider value={{ timezone: _timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone }}>
+		<TimezoneContext.Provider value={{ timezone: timezone ?? "Australia/Brisbane" }}>
 			{children}
 		</TimezoneContext.Provider>
 	);

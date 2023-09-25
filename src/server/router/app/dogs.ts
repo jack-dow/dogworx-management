@@ -99,6 +99,15 @@ export const dogsRouter = createTRPCRouter({
 					where: (bookings, { lte }) => lte(bookings.date, new Date()),
 					orderBy: (bookings, { asc, desc }) => [desc(bookings.date), asc(bookings.id)],
 					with: {
+						dog: {
+							columns: {
+								id: true,
+								givenName: true,
+								familyName: true,
+								color: true,
+								breed: true,
+							},
+						},
 						assignedTo: {
 							columns: {
 								id: true,
@@ -141,7 +150,7 @@ export const dogsRouter = createTRPCRouter({
 			},
 		});
 
-		return { success: true, data };
+		return { data };
 	}),
 
 	insert: protectedProcedure.input(InsertDogSchema).mutation(async ({ ctx, input }) => {

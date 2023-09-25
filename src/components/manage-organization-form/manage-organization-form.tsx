@@ -156,8 +156,6 @@ function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
 							}
 							onClick={() => {
 								const numOfErrors = Object.keys(form.formState.errors).length;
-								console.log(form.getValues());
-								console.log(form.formState.errors);
 
 								if (numOfErrors > 0) {
 									toast({
