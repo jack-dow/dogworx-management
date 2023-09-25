@@ -138,7 +138,7 @@ const getDogById = createServerAction(async (id: string) => {
 			where: and(eq(dogs.organizationId, user.organizationId), eq(dogs.id, validation.data)),
 			with: {
 				bookings: {
-					limit: 4,
+					limit: 6,
 					where: (bookings) => lte(bookings.date, new Date()),
 					orderBy: (bookings, { asc }) => [desc(bookings.date), asc(bookings.id)],
 					with: {

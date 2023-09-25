@@ -76,7 +76,7 @@ function BookingsList({
 	const form = useFormContext<ManageDogFormSchema>();
 
 	const [page, setPage] = React.useState(1);
-	const [loadedPages, setLoadedPages] = React.useState(1);
+	const [loadedPages, setLoadedPages] = React.useState(Math.ceil((bookings.length - 1) / 5) || 1);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [hasMore, setHasMore] = React.useState(bookings.length > 5);
 
@@ -86,21 +86,21 @@ function BookingsList({
 	const [editingBooking, setEditingBooking] = React.useState<DogById["bookings"][number] | null>(null);
 	const [copiedBooking, setCopiedBooking] = React.useState<DogById["bookings"][number] | null>(null);
 
-	let visibleSessions: typeof bookings = [];
+	let visibleBookings: typeof bookings = [];
 
 	if (tab === "past") {
-		visibleSessions = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
+		visibleBookings = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
 	} else {
-		visibleSessions = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
-	}
+		visibleBookings = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
+	}	
 
 	React.useEffect(() => {
 		// If new booking has been added, ensure loaded pages is correct
 		if (bookings.length > loadedPages * 5) {
 			setHasMore(true);
-			setLoadedPages(loadedPages + 1);
 		}
 	}, [bookings, loadedPages]);
+
 
 	return (
 		<>
@@ -120,7 +120,7 @@ function BookingsList({
 
 							setBookings(bookings.filter((f) => f.id !== confirmBookingDelete));
 
-							if (visibleSessions.length - 1 === 0) {
+							if (visibleBookings.length - 1 === 0) {
 								setPage(page - 1);
 								setLoadedPages(loadedPages - 1);
 							}
@@ -144,7 +144,7 @@ function BookingsList({
 									setHasMore(false);
 								}
 
-								if (visibleSessions.length - 1 === 0) {
+								if (visibleBookings.length - 1 === 0) {
 									setPage(page - 1);
 									setLoadedPages(loadedPages - 1);
 								}
@@ -254,12 +254,12 @@ function BookingsList({
 			/>
 
 			<ul role="list">
-				{visibleSessions.map((booking, index) => {
+				{visibleBookings.map((booking, index) => {
 					return (
 						<Booking
 							key={booking.id}
 							booking={booking}
-							isLast={index === 4 || index === visibleSessions.length - 1}
+							isLast={index === 4 || index === visibleBookings.length - 1}
 							onEditClick={() => {
 								setEditingBooking(booking);
 								setIsManageBookingDialogOpen(true);
@@ -294,7 +294,7 @@ function BookingsList({
 				})}
 			</ul>
 
-			{visibleSessions.length > 0 ? (
+			{visibleBookings.length > 0 ? (
 				<div className="flex items-center justify-center space-x-2">
 					<Button
 						variant="outline"
@@ -330,12 +330,12 @@ function BookingsList({
 								if (tab === "past") {
 									cursor = [...bookings]
 										.sort(sortBookingsDescending)
-										.slice((page - 1) * 5, page * 5)
+										.slice((page - 1) * 5, page * 5 + 1)
 										.pop()!;
 								} else {
 									cursor = [...bookings]
 										.sort(sortBookingsAscending)
-										.slice((page - 1) * 5, page * 5)
+										.slice((page - 1) * 5, page * 5 + 1)
 										.pop()!;
 								}
 

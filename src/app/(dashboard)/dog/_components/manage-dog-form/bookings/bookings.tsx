@@ -139,6 +139,16 @@ function Bookings({
 										  }
 										: undefined
 								}
+								defaultValues={{
+									dogId: form.getValues("id"),
+									assignedToId: user.id,
+									assignedTo: user,
+									dog: {
+										id: form.getValues("id"),
+												givenName: form.getValues("givenName"),
+												familyName: form.getValues("familyName") ?? "",
+									}
+								}}
 								onSubmit={async (booking) => {
 									if (isNew) {
 										form.setValue(
