@@ -12,7 +12,7 @@ import { type RouterOutputs } from "~/server";
 import { DOGS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createDogsTableColumns } from "./dogs-table-columns";
 
-function DogsTable({ initialResult }: { initialResult: RouterOutputs["app"]["dogs"]["all"] }) {
+function DogsTable({ initialData }: { initialData: RouterOutputs["app"]["dogs"]["all"] }) {
 	const { toast } = useToast();
 	const searchParams = useSearchParams();
 
@@ -25,9 +25,7 @@ function DogsTable({ initialResult }: { initialResult: RouterOutputs["app"]["dog
 			sortBy: searchParams.get("sortBy") ?? undefined,
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
-		{
-			initialData: initialResult,
-		},
+		{ initialData },
 	);
 
 	const deleteMutation = api.app.dogs.delete.useMutation();

@@ -18,7 +18,7 @@ import { type RouterOutputs } from "~/server";
 import { BOOKINGS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createBookingsTableColumns } from "./bookings-table-columns";
 
-function BookingsTable({ initialResult }: { initialResult: RouterOutputs["app"]["bookings"]["all"] }) {
+function BookingsTable({ initialData }: { initialData: RouterOutputs["app"]["bookings"]["all"] }) {
 	const { dayjs } = useDayjs();
 	const { toast } = useToast();
 
@@ -31,9 +31,7 @@ function BookingsTable({ initialResult }: { initialResult: RouterOutputs["app"][
 			sortBy: searchParams.get("sortBy") ?? undefined,
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
-		{
-			initialData: initialResult,
-		},
+		{ initialData },
 	);
 
 	const deleteMutation = api.app.bookings.delete.useMutation();
@@ -43,9 +41,9 @@ function BookingsTable({ initialResult }: { initialResult: RouterOutputs["app"][
 
 	// Remove bookings that were added to ensure timezones are correct
 	if (searchParams.get("from") || searchParams.get("to")) {
-		const startingLength = initialResult.data.length;
+		const startingLength = initialData.data.length;
 
-		initialResult.data = initialResult.data.filter((booking) => {
+		initialData.data = initialData.data.filter((booking) => {
 			const from = searchParams.get("from") ? dayjs.tz(searchParams.get("from") as string).toDate() : undefined;
 			const to = searchParams.get("to") ? dayjs.tz(searchParams.get("to") as string).toDate() : undefined;
 
@@ -60,9 +58,9 @@ function BookingsTable({ initialResult }: { initialResult: RouterOutputs["app"][
 			return true;
 		});
 
-		if (startingLength !== initialResult.data.length) {
-			initialResult.pagination.count -= startingLength - initialResult.data.length;
-			initialResult.pagination.maxPage = Math.ceil(initialResult.pagination.count / initialResult.pagination.limit);
+		if (startingLength !== initialData.data.length) {
+			initialData.pagination.count -= startingLength - initialData.data.length;
+			initialData.pagination.maxPage = Math.ceil(initialData.pagination.count / initialData.pagination.limit);
 		}
 	}
 

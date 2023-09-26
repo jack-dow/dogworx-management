@@ -7,7 +7,7 @@
 		"clean": "rm -rf .next node_modules/ .react-email",
 		"db:generate": "pnpm drizzle-kit generate:mysql --config=./drizzle.config.ts",
 		"db:push": "pnpm with-env drizzle-kit push:mysql --config=./drizzle.config.ts",
-		"dev": "next dev",
+		"dev": "next dev --turbo",
 		"dev:email": "email dev",
 		"lint": "next lint",
 		"lint:knip": "knip",

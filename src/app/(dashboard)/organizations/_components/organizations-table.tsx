@@ -12,7 +12,7 @@ import { type RouterOutputs } from "~/server";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createOrganizationsTableColumns } from "./organizations-table-columns";
 
-function OrganizationsTable({ initialResult }: { initialResult: RouterOutputs["auth"]["organizations"]["all"] }) {
+function OrganizationsTable({ initialData }: { initialData: RouterOutputs["auth"]["organizations"]["all"] }) {
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
@@ -26,9 +26,7 @@ function OrganizationsTable({ initialResult }: { initialResult: RouterOutputs["a
 			sortBy: searchParams.get("sortBy") ?? undefined,
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
-		{
-			initialData: initialResult,
-		},
+		{ initialData },
 	);
 
 	const deleteMutation = api.auth.organizations.delete.useMutation();

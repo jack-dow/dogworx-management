@@ -20,7 +20,7 @@ async function VetsPage({ searchParams }: { searchParams?: { [key: string]: stri
 		<>
 			<PageHeader title="Manage Vets" back={{ href: "/" }} />
 
-			<VetsTable initialResult={response} />
+			<VetsTable initialData={response} />
 		</>
 	);
 }

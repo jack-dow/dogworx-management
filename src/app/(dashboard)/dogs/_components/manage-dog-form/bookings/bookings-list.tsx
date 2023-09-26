@@ -93,7 +93,7 @@ function BookingsList({
 
 	// Pagination Management
 	const [page, setPage] = React.useState(1);
-	const [loadedPages, setLoadedPages] = React.useState(1);
+	const [loadedPages, setLoadedPages] = React.useState(Math.ceil((bookings.length - 1) / 5) || 1);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [hasMore, setHasMore] = React.useState(bookings.length > 5);
 
@@ -114,7 +114,6 @@ function BookingsList({
 		// If new booking has been added, ensure loaded pages is correct
 		if (bookings.length > loadedPages * 5) {
 			setHasMore(true);
-			setLoadedPages(loadedPages + 1);
 		}
 	}, [bookings, loadedPages]);
 

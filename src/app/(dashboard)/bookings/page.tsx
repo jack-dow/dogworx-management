@@ -22,7 +22,7 @@ async function BookingsPage({ searchParams }: { searchParams?: { [key: string]: 
 		<>
 			<PageHeader title="Manage Bookings" back={{ href: "/" }} />
 
-			<BookingsTable initialResult={response} />
+			<BookingsTable initialData={response} />
 		</>
 	);
 }

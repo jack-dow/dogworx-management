@@ -12,7 +12,7 @@ import { type RouterOutputs } from "~/server";
 import { VETS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createVetsTableColumns } from "./vets-table-columns";
 
-function VetsTable({ initialResult }: { initialResult: RouterOutputs["app"]["vets"]["all"] }) {
+function VetsTable({ initialData }: { initialData: RouterOutputs["app"]["vets"]["all"] }) {
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
@@ -27,7 +27,7 @@ function VetsTable({ initialResult }: { initialResult: RouterOutputs["app"]["vet
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
 		{
-			initialData: initialResult,
+			initialData: initialData,
 		},
 	);
 

@@ -12,7 +12,7 @@ import { type RouterOutputs } from "~/server";
 import { CLIENTS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createClientsTableColumns } from "./clients-table-columns";
 
-function ClientsTable({ initialResult }: { initialResult: RouterOutputs["app"]["clients"]["all"] }) {
+function ClientsTable({ initialData }: { initialData: RouterOutputs["app"]["clients"]["all"] }) {
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
@@ -26,9 +26,7 @@ function ClientsTable({ initialResult }: { initialResult: RouterOutputs["app"]["
 			sortBy: searchParams.get("sortBy") ?? undefined,
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
-		{
-			initialData: initialResult,
-		},
+		{ initialData },
 	);
 
 	const deleteMutation = api.app.clients.delete.useMutation();

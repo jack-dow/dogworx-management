@@ -60,7 +60,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 				`}
 					>
 						<div className="flex flex-col gap-y-4">
-							<BookingFields variant="form" booking={booking} bookingTypes={bookingTypes} />
+							<BookingFields variant="form" bookingTypes={bookingTypes} />
 						</div>
 					</FormSection>
 

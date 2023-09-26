@@ -132,9 +132,10 @@ function WeekView({
 
 	const { dayjs } = useDayjs();
 
-	const container = React.useRef<HTMLDivElement>(null);
-	const containerNav = React.useRef<HTMLDivElement>(null);
-	const containerOffset = React.useRef<HTMLDivElement>(null);
+	const containerRef = React.useRef<HTMLDivElement>(null);
+	const containerNavRef = React.useRef<HTMLDivElement>(null);
+	const containerOffsetRef = React.useRef<HTMLDivElement>(null);
+	const calendarRef = React.useRef<HTMLOListElement>(null);
 
 	const user = useUser();
 
@@ -158,9 +159,9 @@ function WeekView({
 	React.useEffect(() => {
 		// Set the container scroll position based on the current time.
 		const currentMinute = new Date().getHours() * 60;
-		if (container.current && containerNav.current && containerOffset.current) {
-			container.current.scrollTop =
-				((container.current.scrollHeight - containerNav.current.offsetHeight - containerOffset.current.offsetHeight) *
+		if (containerRef.current && containerNavRef.current && containerOffsetRef.current) {
+			containerRef.current.scrollTop =
+				((containerRef.current.scrollHeight - containerNavRef.current.offsetHeight - containerOffsetRef.current.offsetHeight) *
 					currentMinute) /
 				1440;
 		}
@@ -269,7 +270,7 @@ function WeekView({
 						</div>
 					</header>
 					<div
-						ref={container}
+						ref={containerRef}
 						className={cn(
 							"isolate flex flex-auto flex-col overflow-auto border bg-white",
 							prefersDarkMode ? "md:rounded-md" : "rounded-md",
@@ -277,7 +278,7 @@ function WeekView({
 					>
 						<div style={{ width: "165%" }} className="flex max-w-full flex-none flex-col sm:max-w-none lg:max-w-full">
 							<div
-								ref={containerNav}
+								ref={containerNavRef}
 								className="sticky top-0 z-30 flex-none bg-white shadow ring-1 ring-black/5  sm:pr-8"
 							>
 								<div className="m-1 grid grid-cols-7 text-sm leading-6 text-gray-500 sm:-mr-px sm:divide-x sm:divide-gray-100 sm:border-r sm:border-gray-100 ">
@@ -423,7 +424,7 @@ function WeekView({
 										className="col-start-1 col-end-2 row-start-1 grid divide-y divide-gray-100"
 										style={{ gridTemplateRows: "repeat(48, minmax(3.5rem, 1fr))" }}
 									>
-										<div ref={containerOffset} className="row-end-1 h-4" />
+										<div ref={containerOffsetRef} className="row-end-1 h-4" />
 
 										{[
 											"12AM",
@@ -502,6 +503,7 @@ function WeekView({
 									<ol
 										className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8"
 										style={{ gridTemplateRows: "1.75rem repeat(288, minmax(0, 1fr)) auto" }}
+										ref={calendarRef}
 										onClick={(event) => {
 											if (isPreviewCardOpen) {
 												return;
@@ -517,10 +519,13 @@ function WeekView({
 												return;
 											}
 
-											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
-											const timeRounded = Math.floor(((offsetY - 16) / 112) * 2) / 2;
+											const halfHourHeight = Math.ceil((rect.height - 32) / 48);
 
-											const date = startOfWeek.startOf("day").add(day, "day").add(timeRounded, "hour");
+
+											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
+											const halfHourClicked = Math.floor(offsetY / halfHourHeight);
+											const date = startOfWeek.startOf("day").add(day, "day").add(halfHourClicked * 30, "minutes");
+
 
 											setIsManageBookingDialogOpen(true);
 											setLastSelectedDate(date);

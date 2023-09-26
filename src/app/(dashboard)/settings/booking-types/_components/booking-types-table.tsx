@@ -12,7 +12,7 @@ import { type RouterOutputs } from "~/server";
 import { BOOKING_TYPES_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createBookingTypesTableColumns } from "./booking-types-table-columns";
 
-function BookingTypesTable({ initialResult }: { initialResult: RouterOutputs["app"]["bookingTypes"]["all"] }) {
+function BookingTypesTable({ initialData }: { initialData: RouterOutputs["app"]["bookingTypes"]["all"] }) {
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
@@ -26,9 +26,7 @@ function BookingTypesTable({ initialResult }: { initialResult: RouterOutputs["ap
 			sortBy: searchParams.get("sortBy") ?? undefined,
 			sortDirection: searchParams.get("sortDirection") ?? undefined,
 		},
-		{
-			initialData: initialResult,
-		},
+		{ initialData },
 	);
 
 	const deleteMutation = api.app.bookingTypes.delete.useMutation();

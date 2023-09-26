@@ -48,15 +48,16 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 				)?.duration ?? 1800,
 			details: "",
 			bookingTypeId: null,
-			dogId: null,
-			dog: null,
 			...props.defaultValues,
 			...props.booking,
 			assignedToId: props.defaultValues?.assignedToId || props.booking?.assignedToId || user.id,
 			assignedTo: props.defaultValues?.assignedTo || props.booking?.assignedTo || user,
 			id: props.defaultValues?.id || props.booking?.id || generateId(),
+			dogId: props.defaultValues?.dogId ?? props.booking?.dogId ?? null,
+			dog: props.defaultValues?.dog ?? props.booking?.dog ?? null,
 		},
 	});
+
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 	useConfirmPageNavigation(isFormDirty);
 

@@ -121,7 +121,6 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 	}, [pathname, searchParams]);
 
 	let name = pathname.split("/").filter((path) => path !== "" && path !== "/" && path !== basePath?.slice(1))[0];
-	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
 	name = name?.split("-").join(" ");
 
 	return (
@@ -138,7 +137,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 										router.push(`${pathname}/${result.id}`);
 									}
 								}}
-								placeholder={`Search ${count} ${name}s...`}
+								placeholder={`Search ${count} ${name}...`}
 								className="h-8"
 								classNames={{
 									results: "max-w-[288px]",
@@ -211,7 +210,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 					<Separator orientation="vertical" className="h-4" />
 					<Button size="sm" asChild className="flex-1 md:flex-none">
 						<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
-							Create {name}
+							Create {name?.endsWith("s") ? name.slice(0, -1) : name}
 						</Link>
 					</Button>
 				</div>

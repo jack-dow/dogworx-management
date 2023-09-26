@@ -13,10 +13,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 /** @type {import("next").NextConfig} */
 const config = {
 	reactStrictMode: true,
-	experimental: {
-		serverComponentsExternalPackages: ["mysql2"],
-		serverActions: true,
-	},
 	images: {
 		domains: [
 			"dogworx-management-dev.s3.ap-southeast-2.amazonaws.com",

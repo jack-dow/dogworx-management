@@ -109,6 +109,16 @@ function Bookings({
 									</Button>
 								}
 								disableDogSearch={isNew}
+								defaultValues={{
+									dogId: form.getValues("id"),
+									dog: {
+										id: form.getValues("id"),
+										givenName: form.getValues("givenName"),
+										familyName: form.getValues("familyName") ?? "",
+										breed: form.getValues("breed"),
+										color: form.getValues("color"),
+									},
+								}}
 								onSubmit={isNew ? async () => {} : undefined}
 								onSuccessfulSubmit={(booking) => {
 									bookings.append(booking);

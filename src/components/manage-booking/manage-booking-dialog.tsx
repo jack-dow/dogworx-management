@@ -147,12 +147,7 @@ function ManageBookingDialogForm({
 	return (
 		<Form {...form}>
 			<form onSubmit={_onSubmit} className="flex flex-col gap-4">
-				<BookingFields
-					variant="dialog"
-					disableDogSearch={disableDogSearch}
-					booking={booking}
-					bookingTypes={bookingTypes}
-				/>
+				<BookingFields variant="dialog" disableDogSearch={disableDogSearch} bookingTypes={bookingTypes} />
 
 				<DialogFooter className="mt-2">
 					{!isNew && (

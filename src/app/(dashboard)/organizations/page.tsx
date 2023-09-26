@@ -30,7 +30,7 @@ async function OrganizationsPage({
 		<>
 			<PageHeader title="Organizations" back={{ href: "/" }} />
 
-			<OrganizationsTable initialResult={response} />
+			<OrganizationsTable initialData={response} />
 		</>
 	);
 }

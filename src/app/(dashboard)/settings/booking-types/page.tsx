@@ -19,7 +19,7 @@ async function BookingTypesPage({ searchParams }: { searchParams?: { [key: strin
 		<>
 			<PageHeader title="Manage Booking Types" back={{ href: "/" }} />
 
-			<BookingTypesTable initialResult={response} />
+			<BookingTypesTable initialData={response} />
 		</>
 	);
 }

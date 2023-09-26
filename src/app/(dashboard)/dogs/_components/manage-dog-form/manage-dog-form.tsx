@@ -48,14 +48,14 @@ function ManageDogForm({
 }) {
 	const searchParams = useSearchParams();
 	const params = useParams();
-	const isNew = !params.id;
+	const isNew = params.id === "new";
 	const router = useRouter();
 	const { toast } = useToast();
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
 	const [isConfirmSubmittingDialogOpen, setIsConfirmSubmittingDialogOpen] = React.useState(false);
 
-	const result = api.app.dogs.byId.useQuery({ id: params.id as string }, { initialData });
+	const result = api.app.dogs.byId.useQuery({ id: params.id as string }, { initialData, enabled: !isNew });
 	const dog = result.data?.data;
 
 	const form = useForm<ManageDogFormSchema>({

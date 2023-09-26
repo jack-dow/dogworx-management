@@ -8,7 +8,6 @@ import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useUser } from "~/app/providers";
-import { type InsertBookingSchema } from "~/db/validation/app";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
 import { cn, secondsToHumanReadable } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
@@ -58,11 +57,9 @@ function roundDateToNearest15Minutes(dayjs: Dayjs, date: Date) {
 function BookingFields({
 	disableDogSearch,
 	bookingTypes,
-	booking,
 }: {
 	variant: "dialog" | "form";
 	disableDogSearch?: boolean;
-	booking: InsertBookingSchema | undefined;
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { dayjs } = useDayjs();
@@ -342,6 +339,9 @@ function BookingFields({
 					control={form.control}
 					name="dogId"
 					render={({ field }) => {
+						const dogId = form.getValues("dogId");
+						const dog = form.getValues("dog");
+
 						return (
 							<FormItem>
 								<FormLabel>Dog</FormLabel>
@@ -370,7 +370,7 @@ function BookingFields({
 												<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
 											</SearchComboboxAction>
 										)}
-										defaultSelected={booking?.dogId ? booking.dog ?? undefined : undefined}
+										defaultSelected={dogId ? dog ?? undefined : undefined}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -382,35 +382,40 @@ function BookingFields({
 				<FormField
 					control={form.control}
 					name="assignedToId"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Assigned to</FormLabel>
-							<FormControl>
-								<SearchCombobox
-									placeholder="Select user"
-									onSearch={async (searchTerm) => {
-										const result = await context.auth.organizations.users.search.fetch({ searchTerm });
+					render={({ field }) => {
+						const assignedToId = form.getValues("assignedToId");
+						const assignedTo = form.getValues("assignedTo");
 
-										return result.data;
-									}}
-									onBlur={({ setSearchTerm, setSelected, setResults }) => {
-										if (!form.getValues("assignedToId")) {
-											field.onChange(user?.id);
-											setSearchTerm(`${user.givenName} ${user.familyName}`);
-											setSelected(user);
-											setResults([user]);
-										}
-									}}
-									resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-									onSelectChange={(result) => {
-										field.onChange(result?.id);
-									}}
-									defaultSelected={booking?.assignedToId ? booking.assignedTo ?? undefined : user}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
+						return (
+							<FormItem>
+								<FormLabel>Assigned to</FormLabel>
+								<FormControl>
+									<SearchCombobox
+										placeholder="Select user"
+										onSearch={async (searchTerm) => {
+											const result = await context.auth.organizations.users.search.fetch({ searchTerm });
+
+											return result.data;
+										}}
+										onBlur={({ setSearchTerm, setSelected, setResults }) => {
+											if (!form.getValues("assignedToId")) {
+												field.onChange(user?.id);
+												setSearchTerm(`${user.givenName} ${user.familyName}`);
+												setSelected(user);
+												setResults([user]);
+											}
+										}}
+										resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+										onSelectChange={(result) => {
+											field.onChange(result?.id);
+										}}
+										defaultSelected={assignedToId ? assignedTo ?? undefined : user}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						);
+					}}
 				/>
 			</div>
 
