@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { SignUpSchema } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { SignUpSchema } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 function InviteForm({

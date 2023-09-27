@@ -14,8 +14,8 @@ import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs, type DayjsDate } from "~/hooks/use-dayjs";
 import { useViewportSize } from "~/hooks/use-viewport-size";
-import { cn, secondsToHumanReadable } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 type BookingsByWeek = RouterOutputs["app"]["bookings"]["byWeek"]["data"];

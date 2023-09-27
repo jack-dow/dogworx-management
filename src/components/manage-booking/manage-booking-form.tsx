@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/lib/client-utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";

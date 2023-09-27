@@ -7,8 +7,8 @@ import { TRPCError } from "@trpc/server";
 import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
-import { getBaseUrl } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { getBaseUrl } from "~/lib/utils";
 
 function AuthVerificationCodeInput() {
 	const { toast } = useToast();

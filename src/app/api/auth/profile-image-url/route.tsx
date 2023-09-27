@@ -5,7 +5,7 @@ import { z } from "zod";
 import { type APIResponse } from "~/app/api/_utils";
 import { drizzle } from "~/db/drizzle";
 import { env } from "~/env.mjs";
-import { verifyAPISession } from "../../utils";
+import { verifyAPISession } from "../../_utils";
 
 type ProfileImageUrlGETResponse = APIResponse<string, "InvalidFileType" | "NotAuthorized">;
 

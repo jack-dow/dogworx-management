@@ -16,7 +16,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { type Dayjs } from "~/hooks/use-dayjs";
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 type Booking = RouterOutputs["app"]["bookings"]["all"]["data"][number];

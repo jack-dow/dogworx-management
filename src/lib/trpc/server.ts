@@ -2,7 +2,7 @@ import { headers as nextHeaders } from "next/headers";
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 import SuperJSON from "superjson";
 
-import { getBaseUrl } from "~/lib/client-utils";
+import { getBaseUrl } from "~/lib/utils";
 import { type AppRouter } from "~/server";
 
 export const server = createTRPCProxyClient<AppRouter>({
@@ -18,7 +18,6 @@ export const server = createTRPCProxyClient<AppRouter>({
 			},
 		}),
 	],
-	
 });
 
 export { type RouterInputs, type RouterOutputs } from "~/server";

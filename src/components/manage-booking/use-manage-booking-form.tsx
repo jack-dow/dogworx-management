@@ -11,8 +11,8 @@ import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertBookingSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 dayjs.extend(customParseFormat);

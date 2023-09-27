@@ -18,7 +18,7 @@ import {
 	UpdateDogToClientRelationshipSchema,
 	UpdateDogToVetRelationshipSchema,
 } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { DOGS_SORTABLE_COLUMNS } from "../sortable-columns";
 

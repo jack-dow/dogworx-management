@@ -17,7 +17,7 @@ import {
 	SheetTrigger,
 } from "~/components/ui/sheet";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { hasTrueValue } from "~/lib/client-utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
 import { useToast } from "../ui/use-toast";

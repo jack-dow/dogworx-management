@@ -27,7 +27,7 @@ import {
 } from "~/components/ui/icons";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { useViewportSize } from "~/hooks/use-viewport-size";
-import { type PaginationOptionsSchema, type SortableColumns } from "~/server/utils";
+import { type PaginationOptionsSchema, type SortableColumns } from "~/lib/utils";
 import { Button } from "./button";
 import { Label } from "./label";
 import { Loader } from "./loader";

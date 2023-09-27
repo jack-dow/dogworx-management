@@ -9,8 +9,8 @@ import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { useSession } from "~/app/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
-import { cn } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { cn } from "~/lib/utils";
 import { navigation } from "./dark-desktop-sidebar";
 import {
 	DropdownMenu,

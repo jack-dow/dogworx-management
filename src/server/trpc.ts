@@ -13,8 +13,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { sessionCookieOptions, type SessionCookie } from "~/lib/auth-options";
-import { jwt } from "~/lib/jwt";
+import { jwt, sessionCookieOptions, type SessionCookie } from "~/lib/utils";
 
 /**
  * 1. CONTEXT

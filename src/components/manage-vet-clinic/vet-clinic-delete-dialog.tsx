@@ -3,8 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
-import { logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { DestructiveActionDialog } from "../ui/destructive-action-dialog";
 import { useToast } from "../ui/use-toast";
 import { type ManageVetClinicFormSchema } from "./use-manage-vet-clinic-form";

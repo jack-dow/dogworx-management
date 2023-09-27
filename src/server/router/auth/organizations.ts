@@ -29,7 +29,7 @@ import {
 	UpdateUserSchema,
 } from "~/db/validation/auth";
 import { env } from "~/env.mjs";
-import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 

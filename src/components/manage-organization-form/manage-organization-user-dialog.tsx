@@ -36,8 +36,8 @@ import { InsertUserSchema } from "~/db/validation/auth";
 import { env } from "~/env.mjs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
-import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 const ManageOrganizationUserFormSchema = InsertUserSchema;

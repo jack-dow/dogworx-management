@@ -8,7 +8,7 @@ import {
 	UpdateVetClinicSchema,
 	UpdateVetToVetClinicRelationshipSchema,
 } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { VET_CLINICS_SORTABLE_COLUMNS } from "../sortable-columns";
 

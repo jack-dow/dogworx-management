@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { SignInSchema } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { SignInSchema } from "~/lib/utils";
 
 function SignInForm() {
 	const router = useRouter();

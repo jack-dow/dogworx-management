@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 
 function LoaderIcon({ className }: { className: string }) {
 	return (

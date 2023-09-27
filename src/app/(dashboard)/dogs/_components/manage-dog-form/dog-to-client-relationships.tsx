@@ -40,8 +40,8 @@ import {
 } from "~/components/ui/select";
 import { useToast } from "~/components/ui/use-toast";
 import { InsertDogToClientRelationshipSchema } from "~/db/validation/app";
-import { cn, generateId, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { cn, generateId, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 import { type ManageDogFormSchema } from "./manage-dog-form";
 

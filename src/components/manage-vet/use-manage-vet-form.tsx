@@ -9,8 +9,8 @@ import { z } from "zod";
 import { useToast } from "~/components/ui/use-toast";
 import { InsertVetSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 const ManageVetFormSchema = z.intersection(

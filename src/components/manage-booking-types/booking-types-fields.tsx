@@ -4,7 +4,7 @@ import * as React from "react";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
-import { cn, secondsToHumanReadable } from "~/lib/client-utils";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";

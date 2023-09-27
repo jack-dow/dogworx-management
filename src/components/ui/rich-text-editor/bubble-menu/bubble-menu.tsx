@@ -1,7 +1,7 @@
 import { useState, type FC } from "react";
 import { BubbleMenu as TipTapBubbleMenu, type BubbleMenuProps as TipTapBubbleMenuProps } from "@tiptap/react";
 
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 import { BoldIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "../../icons";
 import { ColorSelector } from "./color-selector";
 // import { LinkSelector } from "./link-selector";

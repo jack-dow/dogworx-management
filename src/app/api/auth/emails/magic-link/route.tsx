@@ -9,7 +9,7 @@ import { z } from "zod";
 import { type APIResponse } from "~/app/api/_utils";
 import { drizzle } from "~/db/drizzle";
 import { verificationCodes } from "~/db/schema/auth";
-import { generateId } from "~/lib/client-utils";
+import { generateId } from "~/lib/utils";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),

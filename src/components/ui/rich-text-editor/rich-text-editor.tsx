@@ -4,7 +4,7 @@ import * as React from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import sanitizeHtml from "sanitize-html";
 
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 import { BubbleMenu } from "./bubble-menu";
 import { TiptapExtensions } from "./extensions";
 

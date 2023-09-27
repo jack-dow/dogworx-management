@@ -8,8 +8,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { env } from "~/env.mjs";
-import { cn } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
+import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,

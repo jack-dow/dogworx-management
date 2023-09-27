@@ -2,7 +2,7 @@ import { useEffect, useRef, type Dispatch, type FC, type SetStateAction } from "
 import { type Editor } from "@tiptap/core";
 
 import { CheckIcon, TrashIcon } from "~/components/ui/icons";
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 
 interface LinkSelectorProps {
 	editor: Editor;

@@ -9,8 +9,14 @@ import { z } from "zod";
 import { schema } from "~/db/drizzle";
 import { organizationInviteLinks, organizations, sessions, users } from "~/db/schema/auth";
 import { UpdateUserSchema, type InsertUserSchema } from "~/db/validation/auth";
-import { createSessionJWT, sessionCookieOptions, sessionJWTExpiry, type SessionCookie } from "~/lib/auth-options";
-import { generateId, SignUpSchema } from "~/lib/client-utils";
+import {
+	createSessionJWT,
+	generateId,
+	sessionCookieOptions,
+	sessionJWTExpiry,
+	SignUpSchema,
+	type SessionCookie,
+} from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../../trpc";
 
 dayjs.extend(utc);

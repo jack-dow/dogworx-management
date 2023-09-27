@@ -13,8 +13,8 @@ import superjson from "superjson";
 
 import { useToast } from "~/components/ui/use-toast";
 import { env } from "~/env.mjs";
-import { type SessionCookie } from "~/lib/auth-options";
 import { api } from "~/lib/trpc/client";
+import { type SessionCookie } from "~/lib/utils";
 
 type ProviderProps<Props = undefined> = Props extends undefined
 	? {

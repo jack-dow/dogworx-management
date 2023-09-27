@@ -9,8 +9,7 @@ import { z } from "zod";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/emails/magic-link/route";
 import { type SendVerificationCodePOSTResponse } from "~/app/api/auth/emails/verification-code/route";
 import { schema } from "~/db/drizzle";
-import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
-import { generateId } from "~/lib/client-utils";
+import { createSessionJWT, generateId, sessionCookieOptions } from "~/lib/utils";
 import { createTRPCRouter, publicProcedure } from "../../trpc";
 
 dayjs.extend(utc);

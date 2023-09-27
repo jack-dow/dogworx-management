@@ -8,7 +8,7 @@ import { cookies, headers } from "next/headers";
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
 import { TooltipProvider } from "~/components/ui/tooltip";
-import { cn } from "~/lib/client-utils";
+import { cn } from "~/lib/utils";
 import { TimezoneProvider, TRPCReactProvider } from "./providers";
 
 export const metadata: Metadata = {
