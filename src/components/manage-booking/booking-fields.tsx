@@ -82,8 +82,6 @@ function BookingFields({
 		form.getValues("duration") ? ms(form.getValues("duration") * 1000, { long: true }) : "",
 	);
 
-	console.log(form.getValues());
-
 	return (
 		<>
 			<FormField

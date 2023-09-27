@@ -61,6 +61,8 @@ export function logInDevelopment(...args: unknown[]) {
 	}
 }
 
+export type SearchParams = { [key: string]: string | string[] | undefined };
+
 // ------------------------------------------------------------------
 // JWTs
 // ------------------------------------------------------------------
@@ -242,6 +244,18 @@ export type SortableColumns = {
 // ------------------------------------------------------------------
 // Pagination
 // ------------------------------------------------------------------
+export function searchParamsToObject(searchParams: URLSearchParams): SearchParams {
+	const searchParamsObject: Record<string, string> = {};
+
+	for (const [key, value] of searchParams.entries()) {
+		if (value) {
+			searchParamsObject[key] = value;
+		}
+	}
+
+	return searchParamsObject;
+}
+
 export const PaginationOptionsSchema = z.object({
 	page: z.coerce.number().int().min(1).optional().catch(1),
 	limit: z.coerce

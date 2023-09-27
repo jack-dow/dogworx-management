@@ -7,7 +7,7 @@ import { DataTable } from "~/components/ui/data-table";
 import { DestructiveActionDialog } from "~/components/ui/destructive-action-dialog";
 import { useToast } from "~/components/ui/use-toast";
 import { api } from "~/lib/trpc/client";
-import { logInDevelopment } from "~/lib/utils";
+import { logInDevelopment, PaginationOptionsSchema, searchParamsToObject } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createOrganizationsTableColumns } from "./organizations-table-columns";
@@ -16,18 +16,11 @@ function OrganizationsTable({ initialData }: { initialData: RouterOutputs["auth"
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
+	const validatedSearchParams = PaginationOptionsSchema.parse(searchParamsToObject(searchParams));
 
 	const context = api.useContext();
 
-	const result = api.auth.organizations.all.useQuery(
-		{
-			page: searchParams.get("page") ?? undefined,
-			limit: searchParams.get("limit") ?? undefined,
-			sortBy: searchParams.get("sortBy") ?? undefined,
-			sortDirection: searchParams.get("sortDirection") ?? undefined,
-		},
-		{ initialData },
-	);
+	const result = api.auth.organizations.all.useQuery(validatedSearchParams, { initialData });
 
 	const deleteMutation = api.auth.organizations.delete.useMutation();
 	const [confirmOrganizationDelete, setConfirmOrganizationDelete] = React.useState<

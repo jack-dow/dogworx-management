@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
+import { type SearchParams } from "~/lib/utils";
 import { AuthVerificationCodeInput } from "./_components/auth-verification-code-input";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ const SearchParamsSchema = z.object({
 	from: z.string().optional().catch(undefined),
 });
 
-function VerificationCodePage(props: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+function VerificationCodePage(props: { searchParams?: SearchParams }) {
 	const searchParams = SearchParamsSchema.parse(props.searchParams);
 
 	if (!searchParams?.emailAddress) {

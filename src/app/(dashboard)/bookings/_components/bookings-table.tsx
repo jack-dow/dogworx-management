@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DateRange } from "react-day-picker";
+import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
@@ -13,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { useToast } from "~/components/ui/use-toast";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { api } from "~/lib/trpc/client";
-import { cn, logInDevelopment } from "~/lib/utils";
+import { cn, logInDevelopment, PaginationOptionsSchema, searchParamsToObject } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 import { BOOKINGS_SORTABLE_COLUMNS } from "~/server/router/sortable-columns";
 import { createBookingsTableColumns } from "./bookings-table-columns";
@@ -23,16 +24,12 @@ function BookingsTable({ initialData }: { initialData: RouterOutputs["app"]["boo
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
+	const validatedSearchParams = PaginationOptionsSchema.extend({
+		from: z.string().optional().catch(undefined),
+		to: z.string().optional().catch(undefined),
+	}).parse(searchParamsToObject(searchParams));
 
-	const result = api.app.bookings.all.useQuery(
-		{
-			page: searchParams.get("page") ?? undefined,
-			limit: searchParams.get("limit") ?? undefined,
-			sortBy: searchParams.get("sortBy") ?? undefined,
-			sortDirection: searchParams.get("sortDirection") ?? undefined,
-		},
-		{ initialData },
-	);
+	const result = api.app.bookings.all.useQuery(validatedSearchParams, { initialData });
 
 	const deleteMutation = api.app.bookings.delete.useMutation();
 	const [confirmBookingDelete, setConfirmBookingDelete] = React.useState<

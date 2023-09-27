@@ -95,7 +95,9 @@ function DesktopSidebar() {
 												<ul role="list" className="flex flex-1 flex-col gap-y-2">
 													{Object.values(item.subNavigation).map((subItem, index) => {
 														const current =
-															subItem.href === pathname || pathname.startsWith(`${subItem.href.slice(0, -1)}/`);
+														item.href === pathname ||
+														pathname.startsWith(item.href) ||
+														item.subNavigation?.some((subItem) => subItem.href === pathname);
 
 														const isLast = index === item.subNavigation.length - 1;
 

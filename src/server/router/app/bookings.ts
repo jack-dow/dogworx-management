@@ -19,8 +19,8 @@ export const bookingsRouter = createTRPCRouter({
 	all: protectedProcedure
 		.input(
 			PaginationOptionsSchema.extend({
-				from: z.string().optional(),
-				to: z.string().optional(),
+				from: z.string().optional().catch(undefined),
+				to: z.string().optional().catch(undefined),
 			}),
 		)
 		.query(async ({ ctx, input }) => {

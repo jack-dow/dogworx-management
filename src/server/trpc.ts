@@ -13,7 +13,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { drizzle } from "~/db/drizzle";
-import { jwt, sessionCookieOptions, type SessionCookie } from "~/lib/utils";
+import { jwt, logInDevelopment, sessionCookieOptions, type SessionCookie } from "~/lib/utils";
 
 /**
  * 1. CONTEXT
@@ -83,7 +83,7 @@ export const createTRPCContext = async (opts: Opts) => {
 	const timezone = getTimezone();
 	const source = opts.request?.headers.get("x-trpc-source") ?? "unknown";
 
-	console.log(">>> tRPC Request from", source, "by", `${session?.user.givenName} ${session?.user.familyName}`);
+	logInDevelopment(">>> tRPC Request from", source, "by", `${session?.user.givenName} ${session?.user.familyName}`);
 
 	return createInnerTRPCContext({
 		session,
