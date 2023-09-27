@@ -11,6 +11,19 @@ import { boolean, char, customType, mysqlEnum, mysqlTable, text, timestamp, varc
 // -----------------------------------------------------------------------------
 
 // Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type.
+const unsignedMediumInt = customType<{
+	data: number;
+	driverData: number;
+}>({
+	dataType() {
+		return "mediumint unsigned";
+	},
+	fromDriver(data: number) {
+		return data;
+	},
+});
+
+// Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type.
 const unsignedSmallInt = customType<{
 	data: number;
 	driverData: number;
@@ -130,7 +143,7 @@ const organizations = mysqlTable("auth_organizations", {
 
 const organizationsRelations = relations(organizations, ({ many }) => ({
 	organizationInviteLinks: many(organizationInviteLinks),
-	organizationsUsers: many(users),
+	organizationUsers: many(users),
 }));
 
 // -----------------------------------------------------------------------------
@@ -147,7 +160,7 @@ const organizationInviteLinks = mysqlTable("auth_organization_invite_links", {
 		.notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	userId: char("user_id", { length: 24 }).notNull(),
-	expiresAt: timestamp("expires_at").notNull(),
+	expiresAfter: unsignedMediumInt("expires_after_in_seconds").notNull(),
 	uses: unsignedSmallInt("uses").notNull().default(0),
 	maxUses: unsignedSmallInt("max_uses"),
 });

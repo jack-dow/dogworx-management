@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { organizations, sessions } from "~/db/schema/auth";
+import { env } from "~/env.mjs";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 
 export const sessionsRouter = createTRPCRouter({
@@ -37,7 +38,8 @@ export const sessionsRouter = createTRPCRouter({
 
 		if (
 			!session ||
-			(ctx.user.organizationId !== "1" && session.user.organizationId !== ctx.user.organizationId) ||
+			(ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID &&
+				session.user.organizationId !== ctx.user.organizationId) ||
 			(ctx.user.organizationRole === "admin" && session.user.organizationRole !== "member")
 		) {
 			return;

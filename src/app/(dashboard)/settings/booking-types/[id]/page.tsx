@@ -17,9 +17,7 @@ async function UpdateVetClinicPage({ params }: { params: { id: string } }) {
 	return (
 		<>
 			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Booking Type${
-					bookingTypes?.data?.name ? ` "${bookingTypes?.data.name}" ` : ""
-				}`}
+				title={`${params.id === "new" ? "Create" : "Update"} Booking Type`}
 				back={{ href: "/settings/booking-types" }}
 			/>
 

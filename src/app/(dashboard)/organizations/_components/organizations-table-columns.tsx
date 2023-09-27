@@ -47,7 +47,7 @@ function createOrganizationsTableColumns(
 				return (
 					<div className="flex items-center">
 						<span className="truncate">
-							{row.original.organizationsUsers.length}/{row.original.maxUsers}
+							{row.original.organizationUsers.length}/{row.original.maxUsers}
 						</span>
 					</div>
 				);

@@ -82,71 +82,82 @@ function BookingFields({
 		form.getValues("duration") ? ms(form.getValues("duration") * 1000, { long: true }) : "",
 	);
 
+	console.log(form.getValues());
+
 	return (
 		<>
 			<FormField
 				control={form.control}
 				name="bookingTypeId"
-				render={({ field }) => (
-					<FormItem className="w-full">
-						<FormLabel>Booking Type</FormLabel>
-						<Select
-							onValueChange={(value) => {
-								field.onChange(value);
-							}}
-							value={field.value ?? undefined}
-						>
-							<FormControl>
-								<SelectTrigger className={cn("relative")}>
-									<SelectValue placeholder="Default Booking">
-										<span className="truncate capitalize">
-											{!field.value
-												? "Default Booking"
-												: bookingTypes.find((bookingType) => bookingType.id === field.value)!.name}
-										</span>
-									</SelectValue>
-								</SelectTrigger>
-							</FormControl>
-							<SelectContent align="start" className="max-w-[350px]">
-								<SelectGroup>
-									<SelectLabel>Booking types</SelectLabel>
-									<SelectItem value="" className={"pl-8 capitalize"}>
-										<div
-											className={cn(
-												"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
-											)}
-										/>
-										Default Booking
-									</SelectItem>
-
-									{bookingTypes?.map((bookingType) => (
-										<SelectItem
-											key={bookingType.id}
-											value={bookingType.id}
-											className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
-											onClick={() => {
-												if (form.getValues("duration") !== bookingType.duration) {
-													form.setValue("duration", bookingType.duration, { shouldDirty: true });
-													setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
-												}
-											}}
-										>
+				render={({ field }) => {
+					const bookingType = bookingTypes.find((bookingType) => bookingType.id === field.value)!;
+					return (
+						<FormItem className="w-full">
+							<FormLabel>Booking Type</FormLabel>
+							<Select
+								onValueChange={(value) => {
+									field.onChange(value || null);
+								}}
+								value={field.value ?? undefined}
+							>
+								<FormControl>
+									<SelectTrigger className={cn("relative pl-8")}>
+										<SelectValue>
 											<div
 												className={cn(
 													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
-													bookingType.color in BOOKING_TYPES_COLORS &&
-														BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+													bookingType && bookingType?.color in BOOKING_TYPES_COLORS
+														? BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS]
+														: "bg-violet-200",
 												)}
 											/>
-											{bookingType.name}
+											<span className="truncate capitalize">
+												{!field.value ? "Default Booking" : bookingType?.name ?? "Deleted booking type"}
+											</span>
+										</SelectValue>
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent align="start" className="max-w-[350px]">
+									<SelectGroup>
+										<SelectLabel>Booking types</SelectLabel>
+										<SelectItem value="" className={"pl-8 capitalize"}>
+											<div
+												className={cn(
+													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
+												)}
+											/>
+											Default Booking
 										</SelectItem>
-									))}
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-						<FormMessage />
-					</FormItem>
-				)}
+
+										{bookingTypes?.map((bookingType) => (
+											<SelectItem
+												key={bookingType.id}
+												value={bookingType.id}
+												className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+												onClick={() => {
+													if (form.getValues("duration") !== bookingType.duration) {
+														form.setValue("duration", bookingType.duration, { shouldDirty: true });
+														setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
+													}
+												}}
+											>
+												<div
+													className={cn(
+														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+														bookingType.color in BOOKING_TYPES_COLORS &&
+															BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+													)}
+												/>
+												{bookingType.name}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
 			/>
 
 			<div className="grid grid-cols-3 gap-4">

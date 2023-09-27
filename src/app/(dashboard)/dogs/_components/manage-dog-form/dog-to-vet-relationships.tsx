@@ -204,6 +204,13 @@ function DogToVetRelationships({ isNew }: { isNew: boolean }) {
 						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
 						selected={dogToVetRelationships.fields.map((dogToVetRelationship) => dogToVetRelationship.vet)}
 						onSelect={async (vet) => {
+							const selected = dogToVetRelationships.fields.find((relationship) => relationship.vetId === vet.id);
+
+							if (selected) {
+								setConfirmRelationshipDelete(selected.id);
+								return;
+							}
+
 							const relationship = {
 								id: generateId(),
 								dogId: form.getValues("id"),
@@ -234,7 +241,9 @@ function DogToVetRelationships({ isNew }: { isNew: boolean }) {
 								}
 							}
 
-							dogToVetRelationships.append(relationship);
+							form.setValue("dogToVetRelationships", [...dogToVetRelationships.fields, relationship], {
+								shouldDirty: false,
+							});
 						}}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction

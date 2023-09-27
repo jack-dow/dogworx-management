@@ -61,7 +61,8 @@ function Bookings({
 										sortDirection: "asc",
 									})
 									.then(({ data }) => {
-										bookings.append(data);
+										// Use form.setValue instead of bookings.append so we can set shouldDirty to false
+										form.setValue("bookings", [...bookings.fields, ...data], { shouldDirty: false });
 
 										setHasFetchedInitialFutureSessions(true);
 										setCurrentTab(value as typeof currentTab);
@@ -113,24 +114,38 @@ function Bookings({
 									dogId: form.getValues("id"),
 									dog: {
 										id: form.getValues("id"),
-										givenName: form.getValues("givenName"),
+										givenName: form.getValues("givenName") ?? "Unnamed new dog",
 										familyName: form.getValues("familyName") ?? "",
-										breed: form.getValues("breed"),
-										color: form.getValues("color"),
+										breed: form.getValues("breed") ?? "",
+										color: form.getValues("color") ?? "",
 									},
 								}}
 								onSubmit={isNew ? async () => {} : undefined}
 								onSuccessfulSubmit={(booking) => {
-									bookings.append(booking);
+									if (isNew) {
+										bookings.append(booking);
+									} else {
+										form.setValue("bookings", [...bookings.fields, booking], { shouldDirty: false });
+									}
 								}}
 							/>
 						</div>
 						<TabsContent value="past">
-							<BookingsList isNew={isNew} tab="past" bookingTypes={bookingTypes} />
+							<BookingsList
+								isNew={isNew}
+								tab="past"
+								bookingTypes={bookingTypes}
+								bookings={bookings.fields.filter((f) => dayjs.tz(f.date).isSameOrBefore(dayjs.tz()))}
+							/>
 						</TabsContent>
 
 						<TabsContent value="future">
-							<BookingsList isNew={isNew} tab="future" bookingTypes={bookingTypes} />
+							<BookingsList
+								isNew={isNew}
+								tab="future"
+								bookingTypes={bookingTypes}
+								bookings={bookings.fields.filter((f) => dayjs.tz(f.date).isAfter(dayjs.tz()))}
+							/>
 						</TabsContent>
 					</Tabs>
 				</div>

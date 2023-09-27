@@ -207,6 +207,13 @@ function VetClinicToVetRelationships({ isNew, variant }: { isNew: boolean; varia
 							(vetToVetClinicRelationship) => vetToVetClinicRelationship.vet,
 						)}
 						onSelect={async (vet) => {
+							const selected = vetToVetClinicRelationships.fields.find((relationship) => relationship.vetId === vet.id);
+
+							if (selected) {
+								setConfirmRelationshipDelete(selected.id);
+								return;
+							}
+
 							const relationship = {
 								id: generateId(),
 								vetClinicId: form.getValues("id"),
@@ -241,7 +248,9 @@ function VetClinicToVetRelationships({ isNew, variant }: { isNew: boolean; varia
 								}
 							}
 
-							vetToVetClinicRelationships.append(relationship);
+							form.setValue("vetToVetClinicRelationships", [...vetToVetClinicRelationships.fields, relationship], {
+								shouldDirty: false,
+							});
 						}}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction

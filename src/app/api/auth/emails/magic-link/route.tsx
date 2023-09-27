@@ -6,10 +6,10 @@ import ms from "ms";
 import { Resend } from "resend";
 import { z } from "zod";
 
+import { type APIResponse } from "~/app/api/_utils";
 import { drizzle } from "~/db/drizzle";
 import { verificationCodes } from "~/db/schema/auth";
 import { generateId } from "~/lib/client-utils";
-import { type APIResponse } from "~/lib/server-utils";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),

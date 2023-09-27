@@ -11,6 +11,9 @@ import { IdSchema } from "./app";
 // -----------------------------------------------------------------------------
 
 // Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type, therefore we also have to manually represent the type in zod
+const UnsignedMediumInt = z.number().int().nonnegative().max(16777215);
+
+// Drizzle currently doesn't support unsigned integers out of the box, so we are using a custom type, therefore we also have to manually represent the type in zod
 const UnsignedSmallInt = z.number().int().nonnegative().max(65535);
 
 // -----------------------------------------------------------------------------
@@ -87,11 +90,12 @@ export type InsertVerificationCodeSchema = z.infer<typeof InsertVerificationCode
 // -----------------------------------------------------------------------------
 export const InsertOrganizationInviteLinkSchema = createInsertSchema(organizationInviteLinks)
 	.extend({
-		id: IdSchema,
-		organizationId: IdSchema,
+		id: z.string().cuid2().length(8),
+		organizationId: IdSchema.optional(),
 		userId: IdSchema,
 		uses: UnsignedSmallInt,
 		maxUses: UnsignedSmallInt.nullable(),
+		expiresAfter: UnsignedMediumInt,
 	})
 	.omit({
 		createdAt: true,
@@ -102,7 +106,7 @@ export type InsertOrganizationInviteLinkSchema = z.infer<typeof InsertOrganizati
 export const UpdateOrganizationInviteLinkSchema = InsertOrganizationInviteLinkSchema.pick({
 	organizationId: true,
 	userId: true,
-	expiresAt: true,
+	expiresAfter: true,
 	maxUses: true,
 })
 	.partial()
@@ -120,6 +124,7 @@ export const InsertOrganizationSchema = createInsertSchema(organizations)
 		maxUsers: UnsignedSmallInt,
 		organizationInviteLinks: z.array(
 			InsertOrganizationInviteLinkSchema.extend({
+				createdAt: z.date(),
 				user: createSelectSchema(users).pick({
 					id: true,
 					givenName: true,

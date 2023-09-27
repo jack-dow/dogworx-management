@@ -14,6 +14,7 @@ import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertOrganizationSchema } from "~/db/validation/auth";
+import { env } from "~/env.mjs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
@@ -81,7 +82,7 @@ function ManageOrganizationForm(props: ManageOrganizationFormProps) {
 					await updateMutation.mutateAsync(data);
 				}
 
-				if (user.organizationId === "1") {
+				if (user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID) {
 					if (isNew) {
 						router.replace(`/organizations/${data.id}`);
 					} else {
@@ -94,7 +95,7 @@ function ManageOrganizationForm(props: ManageOrganizationFormProps) {
 				toast({
 					title: `Organization ${isNew ? "Created" : "Updated"}`,
 					description: `Successfully ${isNew ? "created" : "updated"} ${
-						user.organizationId !== "1" ? "your" : ""
+						user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID ? "your" : ""
 					} organization.`,
 				});
 			} catch (error) {
@@ -103,7 +104,7 @@ function ManageOrganizationForm(props: ManageOrganizationFormProps) {
 				toast({
 					title: `Organization  ${isNew ? "Creation" : "Update"} Failed`,
 					description: `There was an error ${isNew ? "creating" : "updating"} ${
-						user.organizationId !== "1" ? "your" : ""
+						user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID ? "your" : ""
 					} organization. Please try again.`,
 					variant: "destructive",
 				});

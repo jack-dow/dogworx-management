@@ -28,6 +28,7 @@ export const bookingTypesRouter = createTRPCRouter({
 				name: true,
 				duration: true,
 				color: true,
+				showDetailsInCalendar: true,
 			},
 			limit: limit,
 			offset: (page - 1) * limit,
@@ -55,6 +56,7 @@ export const bookingTypesRouter = createTRPCRouter({
 				name: true,
 				duration: true,
 				color: true,
+				showDetailsInCalendar: true,
 			},
 			limit: 20,
 			where: (bookingTypes, { and, eq, like }) =>

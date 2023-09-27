@@ -1,13 +1,16 @@
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
+import { type drizzle } from "~/db/drizzle";
 import {
 	bookings as bookingsTable,
+	clients,
 	dogs,
 	dogToClientRelationships as dogToClientRelationshipsTable,
 	dogToVetRelationships as dogToVetRelationshipsTable,
 } from "~/db/schema/app";
 import {
+	IdSchema,
 	InsertDogSchema,
 	InsertDogToClientRelationshipSchema,
 	InsertDogToVetRelationshipSchema,
@@ -15,9 +18,40 @@ import {
 	UpdateDogToClientRelationshipSchema,
 	UpdateDogToVetRelationshipSchema,
 } from "~/db/validation/app";
-import { constructFamilyName, PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { DOGS_SORTABLE_COLUMNS } from "../sortable-columns";
+
+function constructFamilyName(
+	dogToClientRelationships: Array<{ relationship: string; client: { familyName: string | undefined } | null }>,
+	updatedFamilyName?: string,
+) {
+	return [
+		...new Set(
+			dogToClientRelationships
+				.filter(({ relationship, client }) => relationship === "owner" && client != null && !!client.familyName)
+				.map(({ client }) => client!.familyName)
+				.concat(updatedFamilyName ?? []),
+		),
+	]
+		.sort()
+		.join("/");
+}
+
+export async function updateDogsFamilyName({ id, db }: { id: string; db: typeof drizzle }) {
+	const dogFamilyName = await db
+		.select({
+			familyName: sql<string>`GROUP_CONCAT(${clients.familyName} SEPARATOR '/')`,
+		})
+		.from(dogToClientRelationshipsTable)
+		.innerJoin(clients, eq(clients.id, dogToClientRelationshipsTable.clientId))
+		.where(and(eq(dogToClientRelationshipsTable.dogId, id), eq(dogToClientRelationshipsTable.relationship, "owner")));
+
+	await db
+		.update(dogs)
+		.set({ familyName: dogFamilyName?.[0]?.familyName })
+		.where(eq(dogs.id, id));
+}
 
 export const dogsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
@@ -203,35 +237,49 @@ export const dogsRouter = createTRPCRouter({
 
 	dogToClientRelationships: createTRPCRouter({
 		insert: protectedProcedure.input(InsertDogToClientRelationshipSchema).mutation(async ({ ctx, input }) => {
-			await ctx.db.insert(dogToClientRelationshipsTable).values({
-				...input,
-				organizationId: ctx.user.organizationId,
+			await ctx.db.transaction(async (trx) => {
+				await trx.insert(dogToClientRelationshipsTable).values({
+					...input,
+					organizationId: ctx.user.organizationId,
+				});
+
+				await updateDogsFamilyName({ id: input.dogId, db: trx });
 			});
 		}),
 
-		update: protectedProcedure.input(UpdateDogToClientRelationshipSchema).mutation(async ({ ctx, input }) => {
-			const { id, ...data } = input;
+		update: protectedProcedure
+			.input(UpdateDogToClientRelationshipSchema.extend({ dogId: IdSchema }))
+			.mutation(async ({ ctx, input }) => {
+				const { id, ...data } = input;
 
-			await ctx.db
-				.update(dogToClientRelationshipsTable)
-				.set(data)
-				.where(
-					and(
-						eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
-						eq(dogToClientRelationshipsTable.id, id),
-					),
-				);
-		}),
+				await ctx.db.transaction(async (trx) => {
+					await trx
+						.update(dogToClientRelationshipsTable)
+						.set(data)
+						.where(
+							and(
+								eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
+								eq(dogToClientRelationshipsTable.id, id),
+							),
+						);
 
-		delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-			await ctx.db
-				.delete(dogToClientRelationshipsTable)
-				.where(
-					and(
-						eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
-						eq(dogToClientRelationshipsTable.id, input.id),
-					),
-				);
+					await updateDogsFamilyName({ id: data.dogId, db: trx });
+				});
+			}),
+
+		delete: protectedProcedure.input(z.object({ id: IdSchema, dogId: IdSchema })).mutation(async ({ ctx, input }) => {
+			await ctx.db.transaction(async (trx) => {
+				await trx
+					.delete(dogToClientRelationshipsTable)
+					.where(
+						and(
+							eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
+							eq(dogToClientRelationshipsTable.id, input.id),
+						),
+					);
+
+				await updateDogsFamilyName({ id: input.dogId, db: trx });
+			});
 		}),
 	}),
 

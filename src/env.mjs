@@ -8,6 +8,7 @@ const env = createEnv({
 			.optional()
 			.transform((v) => (v ? `https://${v}` : undefined)),
 		PORT: z.coerce.number().default(3000),
+		NEXT_PUBLIC_ADMIN_ORG_ID: z.string().cuid2().length(24),
 	},
 	/**
 	 * Specify your server-side environment variables schema here. This way you can ensure the app isn't
@@ -40,6 +41,7 @@ const env = createEnv({
 	runtimeEnv: {
 		VERCEL_URL: process.env.VERCEL_URL,
 		PORT: process.env.PORT,
+		NEXT_PUBLIC_ADMIN_ORG_ID: process.env.NEXT_PUBLIC_ADMIN_ORG_ID,
 		NODE_ENV: process.env.NODE_ENV,
 		DATABASE_HOST: process.env.DATABASE_HOST,
 		DATABASE_USERNAME: process.env.DATABASE_USERNAME,

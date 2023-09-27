@@ -94,6 +94,7 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 					title: `Vet ${isNew ? "Created" : "Updated"}`,
 					description: `Successfully ${isNew ? "created" : "updated"} vet clinic "${data.name}".`,
 				});
+				props.onSuccessfulSubmit?.(data);
 			} catch (error) {
 				logInDevelopment(error);
 

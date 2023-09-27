@@ -33,6 +33,7 @@ import { handleProfileImageUpload } from "~/app/(dashboard)/account/_components/
 import { useSession, useUser } from "~/app/providers";
 import { organizationRoleOptions } from "~/db/schema/auth";
 import { InsertUserSchema } from "~/db/validation/auth";
+import { env } from "~/env.mjs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
@@ -194,7 +195,11 @@ function ManageOrganizationUserDialogForm({
 		e.stopPropagation();
 
 		void form.handleSubmit(async (data) => {
-			if (data.organizationRole === "owner" && !isConfirmOwnershipChangeDialogOpen && user.organizationId !== "1") {
+			if (
+				data.organizationRole === "owner" &&
+				!isConfirmOwnershipChangeDialogOpen &&
+				user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
+			) {
 				setIsConfirmOwnershipChangeDialogOpen(true);
 				return;
 			}
@@ -361,7 +366,11 @@ function ManageOrganizationUserDialogForm({
 									>
 										<TabsList className="w-full">
 											{organizationRoleOptions.map((option) => {
-												if (option === "owner" && user.organizationId !== "1" && user.organizationRole !== "owner") {
+												if (
+													option === "owner" &&
+													user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID &&
+													user.organizationRole !== "owner"
+												) {
 													return null;
 												}
 

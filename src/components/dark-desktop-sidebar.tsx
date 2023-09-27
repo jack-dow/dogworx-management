@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
+import { env } from "~/env.mjs";
 import { cn } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { Button } from "./ui/button";
@@ -194,7 +195,7 @@ function DarkDesktopSidebar() {
 										</React.Fragment>
 									);
 								})}
-								{session.user.organizationId === "1" && (
+								{session.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID && (
 									<li>
 										<a
 											href="/organizations"

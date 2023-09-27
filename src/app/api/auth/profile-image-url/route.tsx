@@ -1,12 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
+import S3 from "aws-sdk/clients/s3";
 import { z } from "zod";
 
+import { type APIResponse } from "~/app/api/_utils";
 import { drizzle } from "~/db/drizzle";
 import { env } from "~/env.mjs";
-import { s3, type APIResponse } from "~/lib/server-utils";
 import { verifyAPISession } from "../../utils";
 
 type ProfileImageUrlGETResponse = APIResponse<string, "InvalidFileType" | "NotAuthorized">;
+
+const s3 = new S3({
+	apiVersion: "2006-03-01",
+	accessKeyId: env.AWS_S3_ACCESS_KEY,
+	secretAccessKey: env.AWS_S3_SECRET_KEY,
+	region: env.AWS_S3_REGION,
+	signatureVersion: "v4",
+});
 
 async function GET(request: NextRequest): Promise<NextResponse<ProfileImageUrlGETResponse>> {
 	const { searchParams } = new URL(request.url);

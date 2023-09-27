@@ -1,7 +1,4 @@
-import S3 from "aws-sdk/clients/s3";
 import { type z } from "zod";
-
-import { env } from "../env.mjs";
 
 type DefaultErrorCodes = "InvalidBody" | "UnknownError" | "NotAuthorized";
 
@@ -15,11 +12,3 @@ export type APIResponse<Data, ErrorCodes extends string | undefined = undefined>
 			};
 			data?: never;
 	  };
-
-export const s3 = new S3({
-	apiVersion: "2006-03-01",
-	accessKeyId: env.AWS_S3_ACCESS_KEY,
-	secretAccessKey: env.AWS_S3_SECRET_KEY,
-	region: env.AWS_S3_REGION,
-	signatureVersion: "v4",
-});

@@ -28,18 +28,27 @@ function SignInForm() {
 
 	const sendMagicLinkMutation = api.auth.signIn.magicLink.send.useMutation();
 
-	const redirectedFrom = searchParams.get("ref");
+	const from = searchParams.get("from");
+	const reference = searchParams.get("ref");
 
 	async function onSubmit(data: SignInSchema) {
 		if (process.env.NODE_ENV === "development" || data.emailAddress.toLowerCase() === "test@dogworx.com.au") {
-			router.push(`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}`);
+			router.push(
+				`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}${
+					from ? `&from=${encodeURIComponent(from)}` : ""
+				}`,
+			);
 			return;
 		}
 
 		try {
 			await sendMagicLinkMutation.mutateAsync({ emailAddress: data.emailAddress });
 
-			router.push(`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}`);
+			router.push(
+				`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}${
+					from ? `&from=${encodeURIComponent(from)}` : ""
+				}`,
+			);
 			toast({
 				title: "Verification code sent",
 				description: "Please check your email for the code and magic link.",
@@ -68,7 +77,7 @@ function SignInForm() {
 	}
 
 	React.useEffect(() => {
-		if (redirectedFrom === "magic-link") {
+		if (reference === "magic-link") {
 			// HACK: If it is not wrapped in a setTimeout it will not render
 			setTimeout(() => {
 				toast({
@@ -79,7 +88,7 @@ function SignInForm() {
 			}, 0);
 			router.replace("/sign-in");
 		}
-	}, [redirectedFrom, router, toast]);
+	}, [reference, router, toast]);
 
 	return (
 		<Form {...form}>

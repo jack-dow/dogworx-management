@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { useUser } from "~/app/providers";
+import { env } from "~/env.mjs";
 import { RichTextEditor } from "../ui/rich-text-editor";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
@@ -46,13 +47,11 @@ function OrganizationGeneralSettings() {
 						name="name"
 						render={({ field }) => (
 							<FormItem>
-								<div>
-									<FormLabel>Organization Name</FormLabel>
-									<FormDescription>This will be displayed publicly on emails, invoices, etc.</FormDescription>
-								</div>
+								<FormLabel>Organization Name</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} disabled={user.organizationRole === "member"} />
 								</FormControl>
+								<FormDescription>This will be displayed publicly on emails, invoices, etc.</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}
@@ -65,13 +64,11 @@ function OrganizationGeneralSettings() {
 						name="emailAddress"
 						render={({ field }) => (
 							<FormItem>
-								<div>
-									<FormLabel>Organization Email</FormLabel>
-									<FormDescription>This is how customers can contact you.</FormDescription>
-								</div>
+								<FormLabel>Organization Email</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} disabled={user.organizationRole === "member"} />
 								</FormControl>
+								<FormDescription>This is how customers can contact you.</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}
@@ -96,7 +93,7 @@ function OrganizationGeneralSettings() {
 					/>
 				</div>
 
-				{user.organizationId === "1" && (
+				{user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID && (
 					<>
 						<div className="sm:col-span-6">
 							<FormField

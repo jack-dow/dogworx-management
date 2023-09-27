@@ -2,15 +2,11 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { clients, dogs, dogToClientRelationships as dogToClientRelationshipsTable } from "~/db/schema/app";
-import {
-	InsertClientSchema,
-	InsertDogToClientRelationshipSchema,
-	UpdateClientSchema,
-	UpdateDogToClientRelationshipSchema,
-} from "~/db/validation/app";
-import { constructFamilyName, PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
+import { InsertClientSchema, UpdateClientSchema } from "~/db/validation/app";
+import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { CLIENTS_SORTABLE_COLUMNS } from "../sortable-columns";
+import { dogsRouter, updateDogsFamilyName } from "./dogs";
 
 export const clientsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
@@ -174,63 +170,32 @@ export const clientsRouter = createTRPCRouter({
 	update: protectedProcedure.input(UpdateClientSchema).mutation(async ({ ctx, input }) => {
 		const { id, ...data } = input;
 
-		await ctx.db
-			.update(clients)
-			.set(data)
-			.where(and(eq(clients.organizationId, ctx.user.organizationId), eq(clients.id, id)));
+		await ctx.db.transaction(async (trx) => {
+			await trx
+				.update(clients)
+				.set(data)
+				.where(and(eq(clients.organizationId, ctx.user.organizationId), eq(clients.id, id)));
 
-		if (input.familyName) {
-			const clientsDogToClientRelationships = await ctx.db.query.dogToClientRelationships.findMany({
-				columns: {
-					id: true,
-					relationship: true,
-				},
-				where: (dogToClientRelationships, { and, eq }) =>
-					and(
-						eq(dogToClientRelationships.organizationId, ctx.user.organizationId),
-						eq(dogToClientRelationships.clientId, id),
-						eq(dogToClientRelationships.relationship, "owner"),
-					),
-				with: {
-					dog: {
-						columns: {
-							id: true,
-						},
-						with: {
-							dogToClientRelationships: {
-								where: (dogToClientRelationships, { and, eq, ne }) =>
-									and(eq(dogToClientRelationships.relationship, "owner"), ne(dogToClientRelationships.clientId, id)),
-								columns: {
-									id: true,
-									relationship: true,
-								},
-								with: {
-									client: {
-										columns: {
-											familyName: true,
-										},
-									},
-								},
-							},
-						},
+			if (data.familyName) {
+				const clientsDogToClientRelationships = await ctx.db.query.dogToClientRelationships.findMany({
+					columns: {
+						id: true,
+						relationship: true,
+						dogId: true,
 					},
-				},
-			});
+					where: (dogToClientRelationships, { and, eq }) =>
+						and(
+							eq(dogToClientRelationships.organizationId, ctx.user.organizationId),
+							eq(dogToClientRelationships.clientId, id),
+							eq(dogToClientRelationships.relationship, "owner"),
+						),
+				});
 
-			for (const dogToClientRelationship of clientsDogToClientRelationships) {
-				if (!dogToClientRelationship.dog) {
-					await ctx.db.delete(dogToClientRelationshipsTable).where(eq(dogs.id, dogToClientRelationship.id));
-					continue;
+				for (const dogToClientRelationship of clientsDogToClientRelationships) {
+					await updateDogsFamilyName({ id: dogToClientRelationship.dogId, db: trx });
 				}
-
-				await ctx.db
-					.update(dogs)
-					.set({
-						familyName: constructFamilyName(dogToClientRelationship.dog.dogToClientRelationships, data.familyName),
-					})
-					.where(eq(dogs.id, dogToClientRelationship.dog.id));
 			}
-		}
+		});
 
 		const client = await ctx.db.query.clients.findFirst({
 			columns: {
@@ -246,39 +211,7 @@ export const clientsRouter = createTRPCRouter({
 		return { data: client };
 	}),
 
-	dogToClientRelationships: createTRPCRouter({
-		insert: protectedProcedure.input(InsertDogToClientRelationshipSchema).mutation(async ({ ctx, input }) => {
-			await ctx.db.insert(dogToClientRelationshipsTable).values({
-				...input,
-				organizationId: ctx.user.organizationId,
-			});
-		}),
-
-		update: protectedProcedure.input(UpdateDogToClientRelationshipSchema).mutation(async ({ ctx, input }) => {
-			const { id, ...data } = input;
-
-			await ctx.db
-				.update(dogToClientRelationshipsTable)
-				.set(data)
-				.where(
-					and(
-						eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
-						eq(dogToClientRelationshipsTable.id, id),
-					),
-				);
-		}),
-
-		delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-			await ctx.db
-				.delete(dogToClientRelationshipsTable)
-				.where(
-					and(
-						eq(dogToClientRelationshipsTable.organizationId, ctx.user.organizationId),
-						eq(dogToClientRelationshipsTable.id, input.id),
-					),
-				);
-		}),
-	}),
+	dogToClientRelationships: dogsRouter.dogToClientRelationships,
 
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
 		const clientsDogToClientRelationships = await ctx.db.query.dogToClientRelationships.findMany({
@@ -297,26 +230,6 @@ export const clientsRouter = createTRPCRouter({
 					columns: {
 						id: true,
 					},
-					with: {
-						dogToClientRelationships: {
-							where: (dogToClientRelationships, { and, eq, ne }) =>
-								and(
-									eq(dogToClientRelationships.relationship, "owner"),
-									ne(dogToClientRelationships.clientId, input.id),
-								),
-							columns: {
-								id: true,
-								relationship: true,
-							},
-							with: {
-								client: {
-									columns: {
-										familyName: true,
-									},
-								},
-							},
-						},
-					},
 				},
 			},
 		});
@@ -325,20 +238,6 @@ export const clientsRouter = createTRPCRouter({
 			await trx.delete(clients).where(eq(clients.id, input.id));
 
 			if (clientsDogToClientRelationships.length > 0) {
-				for (const dogToClientRelationship of clientsDogToClientRelationships) {
-					if (!dogToClientRelationship.dog) {
-						await ctx.db.delete(dogToClientRelationshipsTable).where(eq(dogs.id, dogToClientRelationship.id));
-						continue;
-					}
-
-					await ctx.db
-						.update(dogs)
-						.set({
-							familyName: constructFamilyName(dogToClientRelationship.dog.dogToClientRelationships),
-						})
-						.where(eq(dogs.id, dogToClientRelationship.dog.id));
-				}
-
 				await trx
 					.delete(dogToClientRelationshipsTable)
 					.where(
@@ -347,6 +246,15 @@ export const clientsRouter = createTRPCRouter({
 							eq(dogToClientRelationshipsTable.clientId, input.id),
 						),
 					);
+
+				for (const dogToClientRelationship of clientsDogToClientRelationships) {
+					if (!dogToClientRelationship.dog) {
+						await ctx.db.delete(dogToClientRelationshipsTable).where(eq(dogs.id, dogToClientRelationship.id));
+						continue;
+					}
+
+					await updateDogsFamilyName({ id: dogToClientRelationship.dog.id, db: trx });
+				}
 			}
 		});
 	}),

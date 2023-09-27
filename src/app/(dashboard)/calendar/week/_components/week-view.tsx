@@ -15,6 +15,7 @@ import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs, type DayjsDate } from "~/hooks/use-dayjs";
 import { useViewportSize } from "~/hooks/use-viewport-size";
 import { cn, secondsToHumanReadable } from "~/lib/client-utils";
+import { api } from "~/lib/trpc/client";
 import { type RouterOutputs } from "~/server";
 
 type BookingsByWeek = RouterOutputs["app"]["bookings"]["byWeek"]["data"];
@@ -121,16 +122,20 @@ const bookingCardColors = {
 
 function WeekView({
 	date,
-	bookings,
+	initialData,
 	bookingTypes,
 }: {
 	date?: string;
-	bookings: BookingsByWeek;
+	initialData: RouterOutputs["app"]["bookings"]["byWeek"];
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { toast } = useToast();
 
 	const { dayjs } = useDayjs();
+
+	const {
+		data: { data: bookings },
+	} = api.app.bookings.byWeek.useQuery({ date }, { initialData });
 
 	const containerRef = React.useRef<HTMLDivElement>(null);
 	const containerNavRef = React.useRef<HTMLDivElement>(null);
@@ -161,7 +166,9 @@ function WeekView({
 		const currentMinute = new Date().getHours() * 60;
 		if (containerRef.current && containerNavRef.current && containerOffsetRef.current) {
 			containerRef.current.scrollTop =
-				((containerRef.current.scrollHeight - containerNavRef.current.offsetHeight - containerOffsetRef.current.offsetHeight) *
+				((containerRef.current.scrollHeight -
+					containerNavRef.current.offsetHeight -
+					containerOffsetRef.current.offsetHeight) *
 					currentMinute) /
 				1440;
 		}
@@ -521,16 +528,31 @@ function WeekView({
 
 											const halfHourHeight = Math.ceil((rect.height - 32) / 48);
 
-
 											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
 											const halfHourClicked = Math.floor(offsetY / halfHourHeight);
-											const date = startOfWeek.startOf("day").add(day, "day").add(halfHourClicked * 30, "minutes");
-
+											const date = startOfWeek
+												.startOf("day")
+												.add(day, "day")
+												.add(halfHourClicked * 30, "minutes");
 
 											setIsManageBookingDialogOpen(true);
 											setLastSelectedDate(date);
 										}}
 									>
+										<li
+											className="relative col-span-full flex h-3 w-full items-center"
+											style={{
+												gridRow: `${Math.floor(
+													(288 / 24) * (dayjs.tz().get("hours") + dayjs.tz().get("minutes") / 60) + 2,
+												)} / span ${1}`,
+											}}
+										>
+											<div className="absolute left-[-51.5px] z-30  text-right text-xs leading-5 text-gray-400">
+												{dayjs.tz().format("h:mmA")}
+											</div>
+											<Separator className="h-full w-px bg-primary pl-[2px]" />
+											<Separator orientation="horizontal" className="bg-primary" />
+										</li>
 										{groupOverlappingBookings(dayjs, bookingsLessThanOneDay).map((bookings) => {
 											return bookings.map((booking, index) => {
 												const bookingStart = dayjs.tz(booking.date);
@@ -554,7 +576,7 @@ function WeekView({
 															colStartClasses.at(bookingStart.day()),
 														)}
 														style={{
-															gridRow: `${Math.floor((288 / 24) * time + 1)} / span ${
+															gridRow: `${Math.floor((288 / 24) * time + 2)} / span ${
 																Math.floor((booking.duration / 60) * 0.2) || 1
 															}`,
 															width:
@@ -575,7 +597,7 @@ function WeekView({
 															trigger={
 																<button
 																	className={cn(
-																		"group m-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5 flex-1",
+																		"group m-1 mt-0 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5 flex-1",
 																		colors.card,
 																	)}
 																	onClick={(e) => {
@@ -600,6 +622,18 @@ function WeekView({
 																	<p className={cn("max-w-full truncate whitespace-normal text-left", colors.text)}>
 																		{secondsToHumanReadable(booking.duration)}
 																	</p>
+																	{bookingType?.showDetailsInCalendar ? (
+																		booking.details ? (
+																			<div
+																				className={cn("prose prose-sm whitespace-pre-wrap", colors.text)}
+																				dangerouslySetInnerHTML={{ __html: booking.details }}
+																			/>
+																		) : (
+																			<div className="prose prose-sm whitespace-pre-wrap">
+																				<p className={cn("italic text-left", colors.text)}>No details provided.</p>
+																			</div>
+																		)
+																	) : null}
 																</button>
 															}
 														/>

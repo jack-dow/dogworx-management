@@ -25,7 +25,6 @@ import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertOrganizationInviteLinkSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
-import { useDayjs } from "~/hooks/use-dayjs";
 import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
@@ -130,6 +129,7 @@ type ManageOrganizationInviteLinkDialogFormProps = {
 	defaultValues?: Partial<ManageOrganizationInviteLinkFormSchema>;
 	onSuccessfulSubmit?: (data: ManageOrganizationInviteLinkFormSchema) => void;
 	onDelete?: (id: string) => Promise<void>;
+	isNewOrganization: boolean;
 };
 
 function ManageOrganizationInviteLinkDialogForm({
@@ -137,13 +137,13 @@ function ManageOrganizationInviteLinkDialogForm({
 	setIsDirty,
 	onConfirmCancel,
 	isNew,
+	isNewOrganization,
 	organizationInviteLink,
 	defaultValues,
 	onSuccessfulSubmit,
 	onDelete,
 }: ManageOrganizationInviteLinkDialogFormProps) {
 	const { toast } = useToast();
-	const { dayjs } = useDayjs();
 
 	const user = useUser();
 
@@ -152,6 +152,7 @@ function ManageOrganizationInviteLinkDialogForm({
 		defaultValues: {
 			organizationId: user.organizationId,
 			maxUses: null,
+			uses: 0,
 			...defaultValues,
 			...organizationInviteLink,
 			userId: defaultValues?.userId || organizationInviteLink?.userId || user.id,
@@ -178,11 +179,11 @@ function ManageOrganizationInviteLinkDialogForm({
 
 					void form.handleSubmit(async (data) => {
 						try {
-							if (!isNew) {
-								if (organizationInviteLink) {
-									await updateMutation.mutateAsync(data);
-								} else {
+							if (!isNewOrganization) {
+								if (isNew) {
 									await insertMutation.mutateAsync(data);
+								} else {
+									await updateMutation.mutateAsync(data);
 								}
 							}
 
@@ -208,28 +209,26 @@ function ManageOrganizationInviteLinkDialogForm({
 			>
 				<FormField
 					control={form.control}
-					name="expiresAt"
+					name="expiresAfter"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Expire After</FormLabel>
 							<Select
 								onValueChange={(value) => {
-									field.onChange(dayjs().add(Number(value), "second").toDate());
+									field.onChange(Number(value));
 								}}
 							>
 								<FormControl>
 									<SelectTrigger>
 										<SelectValue>
 											{/* This is required because field is black for a second on page load otherwise */}
-											<span className={cn(field.value && "capitalize")}>
-												{field.value ? dayjs.tz(field.value).format("MMMM Do, YYYY") : "Select a time"}
-											</span>
+											<span>{field.value ? secondsToHumanReadable(field.value) : "Select a time"}</span>
 										</SelectValue>
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
 									{[1800, 3600, 7200, 10800, 21600, 43200, 86400].map((seconds) => (
-										<SelectItem key={seconds} value={`${seconds}`}>
+										<SelectItem key={seconds} value={String(seconds)}>
 											{secondsToHumanReadable(seconds)}
 										</SelectItem>
 									))}

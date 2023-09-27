@@ -36,7 +36,8 @@ export const userRouter = createTRPCRouter({
 
 				columns: {
 					id: true,
-					expiresAt: true,
+					createdAt: true,
+					expiresAfter: true,
 					maxUses: true,
 					uses: true,
 					organizationId: true,
@@ -46,7 +47,8 @@ export const userRouter = createTRPCRouter({
 			if (
 				!inviteLink ||
 				(inviteLink.maxUses && inviteLink.uses >= inviteLink.maxUses) ||
-				inviteLink.expiresAt < new Date()
+				inviteLink.createdAt.setSeconds(inviteLink.createdAt.getSeconds() + inviteLink.expiresAfter) <
+					new Date().getTime()
 			) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",

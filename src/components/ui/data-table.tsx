@@ -27,7 +27,7 @@ import {
 } from "~/components/ui/icons";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { useViewportSize } from "~/hooks/use-viewport-size";
-import { type PaginationOptions, type SortableColumns } from "~/server/utils";
+import { type PaginationOptionsSchema, type SortableColumns } from "~/server/utils";
 import { Button } from "./button";
 import { Label } from "./label";
 import { Loader } from "./loader";
@@ -43,7 +43,7 @@ declare module "@tanstack/table-core" {
 	}
 }
 
-function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationOptions) {
+function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationOptionsSchema) {
 	const searchParams = new URLSearchParams(currentParams);
 
 	Object.entries(newParams).forEach(([key, value]) => {

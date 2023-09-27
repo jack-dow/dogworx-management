@@ -11,7 +11,7 @@ import { server } from "~/lib/trpc/server";
 import { InviteForm } from "./_components/invite-form";
 
 export const metadata: Metadata = {
-	title: "Sign Up | Dogworx Management",
+	title: "Invalid Invite | Dogworx Management",
 };
 
 async function InvitePage({ params }: { params: { id: string } }) {
@@ -20,12 +20,14 @@ async function InvitePage({ params }: { params: { id: string } }) {
 	if (
 		!response.data ||
 		(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
-		response.data.expiresAt < new Date()
+		response.data.createdAt.setSeconds(response.data.createdAt.getSeconds() + response.data.expiresAfter) <
+			new Date().getTime()
 	) {
 		if (response.data) {
 			if (
 				(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
-				response.data?.expiresAt < new Date()
+				response.data.createdAt.setSeconds(response.data.createdAt.getSeconds() + response.data.expiresAfter) <
+					new Date().getTime()
 			) {
 				await drizzle.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${params.id}`);
 			}

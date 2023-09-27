@@ -18,10 +18,12 @@ import { EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
+import { env } from "~/env.mjs";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { getBaseUrl, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 import { ManageOrganizationInviteLinkDialog } from "./manage-organization-invite-link-dialog";
 
@@ -81,7 +83,7 @@ function OrganizationInviteLinks({ isNew }: { isNew: boolean }) {
 
 			<FormSection title="Invite Links" description="Manage this organization's invite links">
 				<FormGroup>
-					<div className="grid gap-2 sm:col-span-6">
+					<div className="grid sm:col-span-6">
 						<div className="-mx-4 sm:-mx-0">
 							<table className="min-w-full divide-y divide-border">
 								<thead>
@@ -127,17 +129,38 @@ function OrganizationInviteLinks({ isNew }: { isNew: boolean }) {
 								</tbody>
 							</table>
 						</div>
-						<div className="flex justify-end">
+						<Separator />
+						<div className="mt-5 flex justify-end">
 							{organizationInviteLinks.fields.length < 20 ? (
 								<ManageOrganizationInviteLinkDialog
+									isNewOrganization={isNew}
 									onSuccessfulSubmit={(inviteLink) => {
-										organizationInviteLinks.append({
-											...inviteLink,
-											user,
-										});
+										if (isNew) {
+											organizationInviteLinks.append({
+												createdAt: new Date(),
+												...inviteLink,
+												user,
+											});
+										} else {
+											// Using form.setValue instead of append if this isn't a new organization because we don't want to dirty the form when adding a new invite link
+											form.setValue(
+												"organizationInviteLinks",
+												[
+													...organizationInviteLinks.fields,
+													{
+														createdAt: new Date(),
+														...inviteLink,
+														user,
+													},
+												],
+												{
+													shouldDirty: false,
+												},
+											);
+										}
 									}}
 									defaultValues={
-										user.organizationId === "1"
+										user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID
 											? {
 													organizationId: form.getValues("id"),
 											  }
@@ -224,7 +247,7 @@ function OrganizationInviteLinkTableRow({
 	const [isDeleting, setIsDeleting] = React.useState(false);
 	return (
 		<tr key={inviteLink.id}>
-			<td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium sm:w-auto sm:max-w-none sm:pl-0">
+			<td className="w-full max-w-0 py-5 pl-4 pr-3 text-sm font-medium sm:w-auto sm:max-w-none sm:pl-0">
 				{inviteLink.user ? (
 					<>
 						{inviteLink.user.givenName} {inviteLink.user.familyName}
@@ -240,10 +263,10 @@ function OrganizationInviteLinkTableRow({
 					</dd>
 					<dt className="sr-only">Expires</dt>
 					<dd className="mt-1 truncate capitalize">
-						{dayjs.tz(inviteLink.expiresAt).isBefore(dayjs.tz()) ? (
+						{dayjs.tz(inviteLink.createdAt).add(inviteLink.expiresAfter, "seconds").isBefore(dayjs.tz()) ? (
 							"Expired"
 						) : (
-							<Timer targetDate={dayjs.tz(inviteLink.expiresAt).toDate()} />
+							<Timer targetDate={dayjs.tz(inviteLink.createdAt).add(inviteLink.expiresAfter, "seconds").toDate()} />
 						)}
 					</dd>
 				</dl>
@@ -258,10 +281,10 @@ function OrganizationInviteLinkTableRow({
 				{inviteLink.maxUses ? `/${inviteLink.maxUses}` : null}
 			</td>
 			<td className="hidden px-3 py-4 text-sm capitalize sm:table-cell">
-				{dayjs.tz(inviteLink.expiresAt).isBefore(dayjs.tz()) ? (
+				{dayjs.tz(inviteLink.createdAt).add(inviteLink.expiresAfter, "seconds").isBefore(dayjs.tz()) ? (
 					"Expired"
 				) : (
-					<Timer targetDate={dayjs.tz(inviteLink.expiresAt).toDate()} />
+					<Timer targetDate={dayjs.tz(inviteLink.createdAt).add(inviteLink.expiresAfter, "seconds").toDate()} />
 				)}
 			</td>
 			<td className="w-8 py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">

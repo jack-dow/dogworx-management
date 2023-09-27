@@ -121,22 +121,6 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 			});
 		}, [debouncedSearchTerm]);
 
-		const handleSelectOption = React.useCallback(
-			(selectedOption: RequiredResultProps) => {
-				let newSelected: Array<RequiredResultProps> = [];
-
-				if (internalSelected.some((option) => selectedOption.id === option.id)) {
-					newSelected = internalSelected.filter((option) => selectedOption.id !== option.id);
-				} else {
-					newSelected = [...internalSelected, selectedOption];
-				}
-
-				setSelected(newSelected);
-				void onSelect?.(selectedOption);
-			},
-			[setSelected, internalSelected, onSelect],
-		);
-
 		return (
 			<CommandPrimitive onKeyDown={handleKeyDown} shouldFilter={false} loop>
 				<div>
@@ -154,6 +138,7 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 							setResults(selected);
 						}}
 						onBlur={() => {
+							setSearchTerm("");
 							// HACK: This hack is ugly but ensures that this is run after all other react events before the next render.
 							// This is required otherwise when the combobox is within another radix component, like sheet or dialog, it has some funky focus behavior
 							setTimeout(() => {
@@ -193,7 +178,18 @@ const MultiSelectSearchCombobox: WithForwardRefType = React.forwardRef(
 													key={option.id}
 													option={option}
 													isSelected={isSelected}
-													onSelect={() => handleSelectOption(option)}
+													onSelect={async () => {
+														let newSelected: Array<RequiredResultProps> = [];
+
+														if (internalSelected.some((o) => option.id === o.id)) {
+															newSelected = internalSelected.filter((o) => option.id !== o.id);
+														} else {
+															newSelected = [...internalSelected, option];
+														}
+
+														setSelected(newSelected);
+														await onSelect?.(option);
+													}}
 													resultLabel={resultLabel}
 												/>
 											);
@@ -240,6 +236,7 @@ function Option({
 	resultLabel: (result: RequiredResultProps) => string;
 }) {
 	const [isLoading, setIsLoading] = React.useState(false);
+
 	return (
 		<CommandItem
 			key={option.id}
@@ -259,12 +256,9 @@ function Option({
 			}}
 			className={cn("flex items-center gap-2 w-full", !isSelected ? "pl-8" : null)}
 		>
-			{isLoading ? (
-				<Loader size="sm" variant="black" className="ml-2 mr-0" />
-			) : isSelected ? (
-				<CheckIcon className="w-4" />
-			) : null}
-			{resultLabel(option)}
+			{isSelected && <CheckIcon className="w-4" />}
+			<span className="flex-1">{resultLabel(option)}</span>
+			{isLoading && <Loader size="sm" variant="black" className="ml-2 mr-0" />}
 		</CommandItem>
 	);
 }

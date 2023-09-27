@@ -63,9 +63,12 @@ function sortBookingsDescending(
 function BookingsList({
 	isNew,
 	tab,
+	bookings,
 	bookingTypes,
 }: {
 	isNew: boolean;
+	// Have to pass in bookings otherwise react-hook-form wasn't re-rendering properly on update/submit/delete
+	bookings: ManageDogFormSchema["bookings"];
 	tab: "past" | "future";
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
@@ -84,16 +87,6 @@ function BookingsList({
 		keyName: "rhf-id",
 	});
 
-	const bookings = React.useMemo(() => {
-		return allBookings.fields.filter((f) => {
-			if (tab === "past") {
-				return dayjs.tz(f.date).isBefore(dayjs.tz());
-			}
-
-			return dayjs.tz(f.date).isAfter(dayjs.tz());
-		});
-	}, [allBookings.fields, dayjs, tab]);
-
 	// Pagination Management
 	const [page, setPage] = React.useState(1);
 	const [loadedPages, setLoadedPages] = React.useState(Math.ceil((bookings.length - 1) / 5) || 1);
@@ -105,13 +98,13 @@ function BookingsList({
 	const [editingBooking, setEditingBooking] = React.useState<ManageDogFormSchema["bookings"][number] | null>(null);
 	const [copiedBooking, setCopiedBooking] = React.useState<ManageDogFormSchema["bookings"][number] | null>(null);
 
-	const visibleBookings = React.useMemo(() => {
-		if (tab === "past") {
-			return [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
-		}
+	let visibleBookings: typeof bookings = [];
 
-		return [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
-	}, [bookings, page, tab]);
+	if (tab === "past") {
+		visibleBookings = [...bookings].sort(sortBookingsDescending).slice((page - 1) * 5, page * 5);
+	} else {
+		visibleBookings = [...bookings].sort(sortBookingsAscending).slice((page - 1) * 5, page * 5);
+	}
 
 	React.useEffect(() => {
 		// If new booking has been added, ensure loaded pages is correct
@@ -191,8 +184,8 @@ function BookingsList({
 									id: form.getValues("id"),
 									givenName: form.getValues("givenName") ?? "Unnamed new dog",
 									familyName: form.getValues("familyName") ?? "",
-									color: form.getValues("color"),
-									breed: form.getValues("breed"),
+									color: form.getValues("color") ?? "",
+									breed: form.getValues("breed") ?? "",
 								},
 						  }
 						: undefined
@@ -205,8 +198,8 @@ function BookingsList({
 									id: form.getValues("id"),
 									givenName: form.getValues("givenName") ?? "Unnamed new dog",
 									familyName: form.getValues("familyName") ?? "",
-									color: form.getValues("color"),
-									breed: form.getValues("breed"),
+									color: form.getValues("color") ?? "",
+									breed: form.getValues("breed") ?? "",
 								},
 						  }
 						: undefined
@@ -214,14 +207,32 @@ function BookingsList({
 				onSuccessfulSubmit={(booking) => {
 					// Remove booking if dog has been changed
 					if (booking.dogId !== form.getValues("id")) {
-						allBookings.remove(allBookings.fields.findIndex((f) => f.id === booking.id));
+						form.setValue(
+							"bookings",
+							[...allBookings.fields].filter((b) => b.id !== booking.id),
+							{ shouldDirty: false },
+						);
 						return;
 					}
 
-					allBookings.update(
-						allBookings.fields.findIndex((f) => f.id === booking.id),
-						booking,
-					);
+					const existing = allBookings.fields.find((f) => f.id === booking.id);
+
+					if (existing) {
+						form.setValue(
+							"bookings",
+							[...allBookings.fields].map((b) => {
+								if (b.id === booking.id) {
+									return booking;
+								}
+
+								return b;
+							}),
+							{ shouldDirty: false },
+						);
+						return;
+					}
+
+					form.setValue("bookings", [...allBookings.fields, booking], { shouldDirty: false });
 				}}
 				onSubmit={isNew ? async () => {} : undefined}
 			/>
@@ -283,12 +294,12 @@ function BookingsList({
 								if (tab === "past") {
 									cursor = [...bookings]
 										.sort(sortBookingsDescending)
-										.slice((page - 1) * 5, page * 5)
+										.slice((page - 1) * 5, page * 5 + 1)
 										.pop()!;
 								} else {
 									cursor = [...bookings]
 										.sort(sortBookingsAscending)
-										.slice((page - 1) * 5, page * 5)
+										.slice((page - 1) * 5, page * 5 + 1)
 										.pop()!;
 								}
 
@@ -300,7 +311,7 @@ function BookingsList({
 										sortDirection: tab === "past" ? "desc" : "asc",
 									})
 									.then((result) => {
-										allBookings.append(result.data);
+										form.setValue("bookings", [...allBookings.fields, ...result.data], { shouldDirty: false });
 										setPage(page + 1);
 										setLoadedPages(loadedPages + 1);
 										setHasMore(result.data.length === 5);

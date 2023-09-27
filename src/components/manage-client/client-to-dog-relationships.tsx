@@ -79,6 +79,9 @@ function ClientToDogRelationships({
 							if (!isNew) {
 								await deleteDogToClientRelationshipMutation.mutateAsync({
 									id: confirmRelationshipDelete,
+									dogId: dogToClientRelationships.fields.find(
+										(relationship) => relationship.id === confirmRelationshipDelete,
+									)!.dogId,
 								});
 							}
 
@@ -131,6 +134,13 @@ function ClientToDogRelationships({
 						resultLabel={(result) => `${result.givenName} ${result.familyName}`}
 						selected={dogToClientRelationships.fields.map((dogToClientRelationship) => dogToClientRelationship.dog)}
 						onSelect={async (dog) => {
+							const selected = dogToClientRelationships.fields.find((relationship) => relationship.dogId === dog.id);
+
+							if (selected) {
+								setConfirmRelationshipDelete(selected.id);
+								return;
+							}
+
 							const relationship = {
 								id: generateId(),
 								clientId: form.getValues("id"),
@@ -164,7 +174,9 @@ function ClientToDogRelationships({
 								}
 							}
 
-							dogToClientRelationships.append(relationship);
+							form.setValue("dogToClientRelationships", [...dogToClientRelationships.fields, relationship], {
+								shouldDirty: false,
+							});
 						}}
 						renderActions={({ searchTerm }) => (
 							<MultiSelectSearchComboboxAction
@@ -261,6 +273,7 @@ function ClientToDogRelationship({
 											.mutateAsync({
 												id: dogToClientRelationship.id,
 												relationship: value as typeof field.value,
+												dogId: dogToClientRelationship.dogId,
 											})
 											.then(() => {
 												toast({

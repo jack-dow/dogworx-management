@@ -99,6 +99,7 @@ function useManageVetForm(props: UseManageVetFormProps) {
 						data.familyName ? " " + data.familyName : ""
 					}".`,
 				});
+				props.onSuccessfulSubmit?.(data);
 			} catch (error) {
 				logInDevelopment(error);
 

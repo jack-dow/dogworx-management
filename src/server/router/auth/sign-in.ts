@@ -11,14 +11,14 @@ import { type SendVerificationCodePOSTResponse } from "~/app/api/auth/emails/ver
 import { schema } from "~/db/drizzle";
 import { createSessionJWT, sessionCookieOptions } from "~/lib/auth-options";
 import { generateId } from "~/lib/client-utils";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../../trpc";
+import { createTRPCRouter, publicProcedure } from "../../trpc";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const signInRouter = createTRPCRouter({
 	magicLink: createTRPCRouter({
-		send: protectedProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
+		send: publicProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
 			try {
 				const response = await fetch("/api/auth/emails/magic-link", {
 					method: "POST",
@@ -92,7 +92,7 @@ export const signInRouter = createTRPCRouter({
 			// });
 		}),
 
-		validate: protectedProcedure.input(z.object({ token: z.string() })).mutation(async ({ ctx, input }) => {
+		validate: publicProcedure.input(z.object({ token: z.string() })).mutation(async ({ ctx, input }) => {
 			const magicLink = await ctx.db.query.verificationCodes.findFirst({
 				where: (verificationCodes, { sql }) => sql`BINARY ${verificationCodes.token} = ${input.token}`,
 				with: {
@@ -151,7 +151,7 @@ export const signInRouter = createTRPCRouter({
 	}),
 
 	verificationCode: createTRPCRouter({
-		send: protectedProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
+		send: publicProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
 			try {
 				// ----------------------------------------------------------------------------------------------
 				// Had to move this into API routes to due issues with react-email and next.js/trpc being on the edge.

@@ -17,12 +17,14 @@ import {
 import { FormGroup, FormSection } from "~/components/ui/form";
 import { EditIcon, EllipsisVerticalIcon, EnvelopeIcon, TrashIcon, UserCircleIcon } from "~/components/ui/icons";
 import { useUser } from "~/app/providers";
+import { env } from "~/env.mjs";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { sessionJWTExpiry } from "~/lib/auth-options";
 import { logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
+import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 import { ManageOrganizationUserDialog } from "./manage-organization-user-dialog";
@@ -94,7 +96,7 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 
 			<FormSection title="Users" description="Manage this organization's users">
 				<FormGroup>
-					<div className="grid gap-2 sm:col-span-6">
+					<div className="grid sm:col-span-6">
 						<ManageOrganizationUserDialog
 							withoutTrigger
 							open={!!editingUser}
@@ -152,14 +154,15 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 								);
 							})}
 						</ul>
-						<div className="flex justify-end">
+						<Separator />
+						<div className="mt-5 flex justify-end">
 							{form.getValues("maxUsers") > organizationUsers.fields.length ? (
 								<ManageOrganizationUserDialog
 									onSuccessfulSubmit={(data) => {
 										organizationUsers.append(data);
 									}}
 									defaultValues={
-										user.organizationId === "1"
+										user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID
 											? {
 													organizationId: form.getValues("id"),
 											  }

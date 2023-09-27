@@ -16,12 +16,7 @@ async function UpdateVetPage({ params }: { params: { id: string } }) {
 
 	return (
 		<>
-			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Vet${
-					vet?.data?.givenName ? ` "${vet?.data.givenName} ${vet?.data.familyName}"` : ""
-				}`}
-				back={{ href: "/vets" }}
-			/>
+			<PageHeader title={`${params.id === "new" ? "Create" : "Update"} Vet`} back={{ href: "/vets" }} />
 
 			{vet?.data !== null ? <ManageVetForm vet={vet?.data} /> : <NotFound />}
 		</>

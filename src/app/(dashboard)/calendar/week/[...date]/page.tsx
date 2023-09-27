@@ -21,7 +21,7 @@ async function WeeklyCalendar({ params }: { params: { [key: string]: string | st
 		<>
 			{/* <PageHeader title="Weekly Calendar" back={{ href: "/" }} /> */}
 
-			<WeekView date={date} bookings={bookings.data} bookingTypes={bookingTypes.data} />
+			<WeekView date={date} initialData={bookings} bookingTypes={bookingTypes.data} />
 		</>
 	);
 }

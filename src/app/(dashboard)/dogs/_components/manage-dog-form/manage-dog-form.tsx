@@ -23,6 +23,7 @@ import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
 import { InsertDogSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
 import { type RouterOutputs } from "~/server";
@@ -84,12 +85,23 @@ function ManageDogForm({
 		}
 	}, [searchParams, router]);
 
-	React.useEffect(() => {
+	useDidUpdate(() => {
 		if (dog) {
-			form.reset(dog, {
-				keepDirty: true,
-				keepDirtyValues: true,
+			// Keep existing bookings and remove any duplicates. Only need to do this for bookings since it has pagination.
+			const bookings = [...dog.bookings, ...form.getValues("bookings")].filter((booking, index, self) => {
+				return self.findIndex((b) => b.id === booking.id) === index;
 			});
+
+			form.reset(
+				{
+					...dog,
+					bookings,
+				},
+				{
+					keepDirty: true,
+					keepDirtyValues: true,
+				},
+			);
 		}
 	}, [dog, form]);
 

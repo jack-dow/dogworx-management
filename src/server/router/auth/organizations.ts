@@ -28,13 +28,14 @@ import {
 	UpdateOrganizationSchema,
 	UpdateUserSchema,
 } from "~/db/validation/auth";
+import { env } from "~/env.mjs";
 import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/server/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { ORGANIZATIONS_SORTABLE_COLUMNS } from "../sortable-columns";
 
 export const organizationsRouter = createTRPCRouter({
 	all: protectedProcedure.input(PaginationOptionsSchema).query(async ({ ctx, input }) => {
-		if (ctx.user.organizationId !== "1") {
+		if (ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID) {
 			throw new TRPCError({ code: "UNAUTHORIZED", message: "You are not authorized to complete this action." });
 		}
 
@@ -59,7 +60,7 @@ export const organizationsRouter = createTRPCRouter({
 			limit: limit ?? 50,
 			orderBy: (organizations, { asc }) => (orderBy ? [...orderBy, asc(organizations.id)] : [asc(organizations.id)]),
 			with: {
-				organizationsUsers: {
+				organizationUsers: {
 					columns: {
 						id: true,
 					},
@@ -81,7 +82,7 @@ export const organizationsRouter = createTRPCRouter({
 	}),
 
 	search: protectedProcedure.input(z.object({ searchTerm: z.string() })).query(async ({ ctx, input }) => {
-		if (ctx.user.organizationId !== "1") {
+		if (ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID) {
 			throw new TRPCError({ code: "UNAUTHORIZED", message: "You are not authorized to complete this action." });
 		}
 
@@ -95,13 +96,16 @@ export const organizationsRouter = createTRPCRouter({
 	}),
 
 	byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-		const id = ctx.user.organizationId === "1" ? input.id : ctx.user.organizationId;
+		const id = ctx.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID ? input.id : ctx.user.organizationId;
 
 		const data = await ctx.db.query.organizations.findFirst({
-			where: (organization, { eq }) => eq(organizations.id, id),
+			where: (organizations, { eq }) => eq(organizations.id, id),
 			with: {
 				organizationInviteLinks: {
-					orderBy: (organizationInviteLinks, { asc }) => [asc(organizationInviteLinks.expiresAt)],
+					orderBy: (organizationInviteLinks, { asc }) => [
+						asc(organizationInviteLinks.createdAt),
+						asc(organizationInviteLinks.expiresAfter),
+					],
 					with: {
 						user: {
 							columns: {
@@ -115,7 +119,7 @@ export const organizationsRouter = createTRPCRouter({
 						},
 					},
 				},
-				organizationsUsers: {
+				organizationUsers: {
 					orderBy: (users, { asc }) => [
 						asc(users.organizationRole),
 						asc(users.givenName),
@@ -145,7 +149,7 @@ export const organizationsRouter = createTRPCRouter({
 	}),
 
 	insert: protectedProcedure.input(InsertOrganizationSchema).mutation(async ({ ctx, input }) => {
-		if (ctx.user.organizationId !== "1") {
+		if (ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID) {
 			throw new TRPCError({ code: "UNAUTHORIZED", message: "You are not authorized to complete this action." });
 		}
 
@@ -178,7 +182,7 @@ export const organizationsRouter = createTRPCRouter({
 		// eslint-disable-next-line prefer-const
 		let { id, ...data } = input;
 
-		id = ctx.user.organizationId === "1" ? id : ctx.user.organizationId;
+		id = ctx.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID ? id : ctx.user.organizationId;
 
 		await ctx.db.transaction(async (trx) => {
 			await trx.update(organizations).set(data).where(eq(organizations.id, id));
@@ -187,13 +191,13 @@ export const organizationsRouter = createTRPCRouter({
 
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
 		if (
-			ctx.user.organizationId !== "1" &&
+			ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID &&
 			!(ctx.user.organizationRole === "owner" && ctx.user.organizationId === input.id)
 		) {
 			throw new TRPCError({ code: "UNAUTHORIZED", message: "You are not authorized to complete this action." });
 		}
 
-		const id = ctx.user.organizationId === "1" ? input.id : ctx.user.organizationId;
+		const id = ctx.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID ? input.id : ctx.user.organizationId;
 
 		const organization = await ctx.db.query.organizations.findFirst({
 			where: eq(organizations.id, input.id),
@@ -249,7 +253,10 @@ export const organizationsRouter = createTRPCRouter({
 
 			await ctx.db.insert(organizationInviteLinks).values({
 				...input,
-				organizationId: ctx.user.organizationId !== "1" ? ctx.user.organizationId : input.organizationId,
+				organizationId:
+					ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID || !input.organizationId
+						? ctx.user.organizationId
+						: input.organizationId,
 			});
 		}),
 
@@ -268,7 +275,7 @@ export const organizationsRouter = createTRPCRouter({
 				.set(data)
 				.where(
 					and(
-						ctx.user.organizationId !== "1"
+						ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
 							? eq(organizationInviteLinks.organizationId, ctx.user.organizationId)
 							: undefined,
 						eq(organizationInviteLinks.id, id),
@@ -288,7 +295,7 @@ export const organizationsRouter = createTRPCRouter({
 				.delete(organizationInviteLinks)
 				.where(
 					and(
-						ctx.user.organizationId !== "1"
+						ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
 							? eq(organizationInviteLinks.organizationId, ctx.user.organizationId)
 							: undefined,
 						eq(organizationInviteLinks.id, input.id),
@@ -302,7 +309,9 @@ export const organizationsRouter = createTRPCRouter({
 			const data = await ctx.db.query.users.findMany({
 				where: (users, { like }) =>
 					and(
-						ctx.user.organizationId !== "1" ? eq(users.organizationId, ctx.user.organizationId) : undefined,
+						ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
+							? eq(users.organizationId, ctx.user.organizationId)
+							: undefined,
 						or(
 							sql`CONCAT(${users.givenName},' ', ${users.familyName}) LIKE CONCAT('%', ${input.searchTerm}, '%')`,
 							like(users.emailAddress, `%${input.searchTerm}%`),
@@ -326,11 +335,12 @@ export const organizationsRouter = createTRPCRouter({
 			await ctx.db.transaction(async (tx) => {
 				await tx.insert(users).values({
 					...input,
-					organizationId: ctx.user.organizationId === "1" ? input.organizationId : ctx.user.organizationId,
+					organizationId:
+						ctx.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID ? input.organizationId : ctx.user.organizationId,
 				});
 
 				if (
-					ctx.user.organizationId !== "1" &&
+					ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID &&
 					ctx.user.organizationRole === "owner" &&
 					input.organizationRole === "owner"
 				) {
@@ -355,7 +365,7 @@ export const organizationsRouter = createTRPCRouter({
 					.set({
 						...data,
 						organizationRole:
-							ctx.user.organizationId === "1"
+							ctx.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID
 								? data.organizationRole
 								: ctx.user.organizationRole === "owner"
 								? data.organizationRole
@@ -363,13 +373,15 @@ export const organizationsRouter = createTRPCRouter({
 					})
 					.where(
 						and(
-							ctx.user.organizationId !== "1" ? eq(users.organizationId, ctx.user.organizationId) : undefined,
+							ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
+								? eq(users.organizationId, ctx.user.organizationId)
+								: undefined,
 							eq(users.id, id),
 						),
 					);
 
 				if (
-					ctx.user.organizationId !== "1" &&
+					ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID &&
 					ctx.user.organizationRole === "owner" &&
 					input.organizationRole === "owner"
 				) {
@@ -393,7 +405,7 @@ export const organizationsRouter = createTRPCRouter({
 				});
 			}
 
-			if (ctx.user.organizationId !== "1") {
+			if (ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID) {
 				const deletingUser = await ctx.db.query.users.findFirst({
 					where: and(eq(users.organizationId, ctx.user.organizationId), eq(users.id, input.id)),
 				});
@@ -410,7 +422,9 @@ export const organizationsRouter = createTRPCRouter({
 				.delete(users)
 				.where(
 					and(
-						ctx.user.organizationId !== "1" ? eq(users.organizationId, ctx.user.organizationId) : undefined,
+						ctx.user.organizationId !== env.NEXT_PUBLIC_ADMIN_ORG_ID
+							? eq(users.organizationId, ctx.user.organizationId)
+							: undefined,
 						eq(users.id, input.id),
 					),
 				);

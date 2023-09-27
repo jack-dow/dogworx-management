@@ -126,6 +126,7 @@ const bookingTypes = mysqlTable("booking_types", {
 	color: varchar("color", { length: 7 }).notNull(),
 	duration: unsignedMediumInt("duration_in_seconds").notNull(),
 	details: text("details"),
+	showDetailsInCalendar: boolean("show_details_in_calendar").notNull().default(false),
 });
 
 const bookingTypesRelations = relations(bookingTypes, ({ one, many }) => ({

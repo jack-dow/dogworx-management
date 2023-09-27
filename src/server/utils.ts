@@ -32,9 +32,9 @@ export const PaginationOptionsSchema = z.object({
 		.optional()
 		.catch("asc"),
 });
-export type PaginationOptions = z.infer<typeof PaginationOptionsSchema>;
+export type PaginationOptionsSchema = z.infer<typeof PaginationOptionsSchema>;
 
-interface ValidatePaginationSearchParamsProps extends PaginationOptions {
+interface ValidatePaginationSearchParamsProps extends PaginationOptionsSchema {
 	count?: number;
 	sortableColumns: SortableColumns;
 }
@@ -81,20 +81,4 @@ export function validatePaginationSearchParams({
 	}
 
 	return { count, page, limit, maxPage, sortBy, sortDirection, orderBy };
-}
-
-export function constructFamilyName(
-	dogToClientRelationships: Array<{ relationship: string; client: { familyName: string | undefined } | null }>,
-	updatedFamilyName?: string,
-) {
-	return [
-		...new Set(
-			dogToClientRelationships
-				.filter(({ relationship, client }) => relationship === "owner" && client != null && !!client.familyName)
-				.map(({ client }) => client!.familyName)
-				.concat(updatedFamilyName ?? []),
-		),
-	]
-		.sort()
-		.join("/");
 }
