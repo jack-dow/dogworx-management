@@ -34,13 +34,19 @@ function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
 
 	const { toast } = useToast();
 
+	const result = api.app.bookingTypes.byId.useQuery(
+		{ id: props.bookingType?.id ?? "new" },
+		{ initialData: { data: props.bookingType }, enabled: !isNew },
+	);
+	const bookingType = result.data?.data;
+
 	const form = useForm<ManageBookingTypeFormSchema>({
 		resolver: zodResolver(ManageBookingTypeFormSchema),
 		defaultValues: {
 			details: "",
 			...props.defaultValues,
-			...props.bookingType,
-			id: props.defaultValues?.id || props.bookingType?.id || generateId(),
+			...bookingType,
+			id: props.defaultValues?.id || bookingType?.id || generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -50,13 +56,13 @@ function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
 	const updateMutation = api.app.bookingTypes.update.useMutation();
 
 	React.useEffect(() => {
-		if (props.bookingType) {
-			form.reset(props.bookingType, {
+		if (bookingType) {
+			form.reset(bookingType, {
 				keepDirty: true,
 				keepDirtyValues: true,
 			});
 		}
-	}, [props.bookingType, form]);
+	}, [bookingType, form]);
 
 	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();

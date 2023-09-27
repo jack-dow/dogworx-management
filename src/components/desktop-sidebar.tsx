@@ -8,7 +8,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "~/app/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { cn } from "~/lib/client-utils";
-import { navigation, signOut } from "./dark-desktop-sidebar";
+import { api } from "~/lib/trpc/client";
+import { navigation } from "./dark-desktop-sidebar";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -29,6 +30,8 @@ function DesktopSidebar() {
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+	const signOutMutation = api.auth.user.signOut.useMutation();
 
 	return (
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
@@ -192,7 +195,8 @@ function DesktopSidebar() {
 											e.preventDefault();
 											setIsSigningOut(true);
 
-											signOut()
+											signOutMutation
+												.mutateAsync()
 												.then(() => {
 													router.push("/sign-in");
 													router.refresh();

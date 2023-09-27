@@ -1,5 +1,4 @@
 import S3 from "aws-sdk/clients/s3";
-import { Resend } from "resend";
 import { type z } from "zod";
 
 import { env } from "../env.mjs";
@@ -24,5 +23,3 @@ export const s3 = new S3({
 	region: env.AWS_S3_REGION,
 	signatureVersion: "v4",
 });
-
-export const resend = new Resend(env.RESEND_API_KEY);

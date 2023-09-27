@@ -39,14 +39,20 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
+	const result = api.app.vetClinics.byId.useQuery(
+		{ id: props.vetClinic?.id ?? "new" },
+		{ initialData: { data: props.vetClinic }, enabled: !isNew },
+	);
+	const vetClinic = result.data?.data;
+
 	const form = useForm<ManageVetClinicFormSchema>({
 		resolver: zodResolver(ManageVetClinicFormSchema),
 		defaultValues: {
 			name: searchTerm,
 			...props.defaultValues,
-			...props.vetClinic,
+			...vetClinic,
 			vetToVetClinicRelationships: [],
-			id: props.vetClinic?.id ?? generateId(),
+			id: vetClinic?.id ?? generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -62,13 +68,13 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 	}, [searchParams, router]);
 
 	React.useEffect(() => {
-		if (props.vetClinic) {
-			form.reset(props.vetClinic, {
+		if (vetClinic) {
+			form.reset(vetClinic, {
 				keepValues: true,
 				keepDirty: true,
 			});
 		}
-	}, [props.vetClinic, form]);
+	}, [vetClinic, form]);
 
 	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -78,10 +84,10 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 			try {
 				if (props.onSubmit) {
 					await props.onSubmit(data);
-				} else if (props.vetClinic) {
-					await updateMutation.mutateAsync(data);
-				} else {
+				} else if (isNew) {
 					await insertMutation.mutateAsync(data);
+				} else {
+					await updateMutation.mutateAsync(data);
 				}
 
 				toast({

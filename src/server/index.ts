@@ -8,6 +8,7 @@ import { vetClinicsRouter } from "./router/app/vet-clinics";
 import { vetsRouter } from "./router/app/vets";
 import { organizationsRouter } from "./router/auth/organizations";
 import { sessionsRouter } from "./router/auth/sessions";
+import { signInRouter } from "./router/auth/sign-in";
 import { userRouter } from "./router/auth/user";
 import { createTRPCRouter } from "./trpc";
 
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
 		organizations: organizationsRouter,
 		sessions: sessionsRouter,
 		user: userRouter,
+		signIn: signInRouter,
 	}),
 });
 // export type definition of API

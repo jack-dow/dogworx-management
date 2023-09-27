@@ -94,5 +94,6 @@ const MagicLinkEmail = ({ code = "123456", token, requestedFromIp, requestedFrom
 		</Html>
 	);
 };
+
 export { MagicLinkEmail };
 export default MagicLinkEmail;

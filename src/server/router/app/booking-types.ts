@@ -74,7 +74,7 @@ export const bookingTypesRouter = createTRPCRouter({
 				and(eq(bookingTypes.organizationId, ctx.user.organizationId), eq(bookingTypes.id, input.id)),
 		});
 
-		return { data: data ?? null };
+		return { data };
 	}),
 
 	insert: protectedProcedure.input(InsertBookingTypeSchema).mutation(async ({ ctx, input }) => {

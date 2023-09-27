@@ -124,7 +124,10 @@ export const InsertBookingSchema = createInsertSchema(bookings)
 				breed: true,
 			})
 			.nullable(),
-		duration: UnsignedMediumInt,
+		details: z.string().max(100000, { message: "Details must be less than 100,000 characters long." }).nullable(),
+		duration: UnsignedMediumInt.nonnegative({
+			message: "Duration must be a positive number",
+		}),
 	})
 	.omit({ createdAt: true, updatedAt: true, organizationId: true });
 

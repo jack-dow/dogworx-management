@@ -17,9 +17,7 @@ async function UpdateOrganizationPage({ params }: { params: { id: string } }) {
 	return (
 		<>
 			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Organization${
-					organization?.data?.name ? ` "${organization?.data.name}" ` : ""
-				}`}
+				title={`${params.id === "new" ? "Create" : "Update"} Organization`}
 				back={{ href: "/organizations" }}
 			/>
 

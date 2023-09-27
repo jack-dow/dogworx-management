@@ -290,9 +290,8 @@ function VetToVetClinicRelationship({
 	const form = useFormContext<ManageVetFormSchema>();
 
 	const [isFetchingVetClinic, setIsFetchingVetClinic] = React.useState(false);
-	const [updatingRelationshipTo, setUpdatingRelationshipTo] = React.useState<
-		keyof typeof InsertVetToVetClinicRelationshipSchema.shape.relationship.Enum | null
-	>(null);
+
+	const previousRelationship = React.useRef(vetToVetClinicRelationship.relationship);
 
 	const context = api.useContext();
 
@@ -350,7 +349,10 @@ function VetToVetClinicRelationship({
 								value={field.value}
 								onValueChange={(value) => {
 									if (value !== field.value) {
-										setUpdatingRelationshipTo(value as typeof field.value);
+										// Using form.setValue instead of field.onChange because we want to set shouldDirty to false
+										form.setValue(`vetToVetClinicRelationships.${index}.relationship`, value as typeof field.value, {
+											shouldDirty: false,
+										});
 
 										updateVetToVetClinicRelationshipMutation
 											.mutateAsync({
@@ -358,8 +360,6 @@ function VetToVetClinicRelationship({
 												relationship: value as typeof field.value,
 											})
 											.then(() => {
-												field.onChange(value as typeof field.value);
-
 												toast({
 													title: "Updated relationship",
 													description: `The relationship between vet clinic "${
@@ -376,6 +376,18 @@ function VetToVetClinicRelationship({
 											.catch((error) => {
 												logInDevelopment(error);
 
+												// HACK: Reset the value to the previous value. Without the setTimeout, the value is not correctly reset
+												setTimeout(() => {
+													// Using form.setValue instead of field.onChange because we want to set shouldDirty to false
+													form.setValue(
+														`vetToVetClinicRelationships.${index}.relationship`,
+														previousRelationship.current,
+														{
+															shouldDirty: false,
+														},
+													);
+												});
+
 												toast({
 													title: "Failed to update relationship",
 													description: `The relationship between vet clinic "${
@@ -389,9 +401,6 @@ function VetToVetClinicRelationship({
 													} failed to update. Please try again.`,
 													variant: "destructive",
 												});
-											})
-											.finally(() => {
-												setUpdatingRelationshipTo(null);
 											});
 									}
 								}}
@@ -407,12 +416,7 @@ function VetToVetClinicRelationship({
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertVetToVetClinicRelationshipSchema.shape.relationship.Values).map((relation) => (
-											<SelectItem
-												key={relation}
-												value={relation}
-												className="capitalize"
-												isLoading={updatingRelationshipTo === relation}
-											>
+											<SelectItem key={relation} value={relation} className="capitalize">
 												{relation.split("-").join(" ")}
 											</SelectItem>
 										))}

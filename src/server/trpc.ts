@@ -7,6 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 import { cookies } from "next/headers";
+import { type NextRequest } from "next/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -28,6 +29,7 @@ interface CreateContextOptions {
 	session: SessionCookie | null;
 	user: SessionCookie["user"] | null;
 	timezone: string | null;
+	request: NextRequest;
 }
 
 /**
@@ -40,6 +42,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
 		user: opts.user,
 		timezone: opts.timezone,
 		db: drizzle,
+		request: opts.request,
 	};
 };
 
@@ -48,7 +51,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  * process every request that goes through your tRPC endpoint
  * @link https://trpc.io/docs/context
  */
-type Opts = { req?: Request };
+type Opts = { request: NextRequest };
 
 async function getServerSession() {
 	const cookieStore = cookies();
@@ -79,7 +82,7 @@ function getTimezone() {
 export const createTRPCContext = async (opts: Opts) => {
 	const session = await getServerSession();
 	const timezone = getTimezone();
-	const source = opts.req?.headers.get("x-trpc-source") ?? "unknown";
+	const source = opts.request?.headers.get("x-trpc-source") ?? "unknown";
 
 	console.log(">>> tRPC Request from", source, "by", `${session?.user.givenName} ${session?.user.familyName}`);
 
@@ -87,6 +90,7 @@ export const createTRPCContext = async (opts: Opts) => {
 		session,
 		user: session?.user ?? null,
 		timezone,
+		request: opts.request,
 	});
 };
 

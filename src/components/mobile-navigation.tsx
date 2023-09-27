@@ -10,7 +10,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/co
 import { useSession } from "~/app/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
 import { cn } from "~/lib/client-utils";
-import { navigation, signOut } from "./dark-desktop-sidebar";
+import { api } from "~/lib/trpc/client";
+import { navigation } from "./dark-desktop-sidebar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -30,6 +31,8 @@ function MobileNavigation() {
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+	const signOutMutation = api.auth.user.signOut.useMutation();
 
 	return (
 		<Sheet>
@@ -201,7 +204,8 @@ function MobileNavigation() {
 											e.preventDefault();
 											setIsSigningOut(true);
 
-											signOut()
+											signOutMutation
+												.mutateAsync()
 												.then(() => {
 													router.push("/sign-in");
 													router.refresh();

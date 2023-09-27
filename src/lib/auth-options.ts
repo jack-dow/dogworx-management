@@ -24,7 +24,7 @@ type SessionCookie = SessionCookiePayload & {
 	nbf: number;
 };
 
-const sessionJWTExpiry = 900; // 15 minutes
+const sessionJWTExpiry = 60; // 1 minute
 
 async function createSessionJWT(payload: SessionCookiePayload) {
 	const accessToken = await jwt.sign(payload);

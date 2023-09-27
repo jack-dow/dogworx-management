@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { TRPCError } from "@trpc/server";
 
 import { RefreshOnFocus } from "~/components/refresh-on-focus";
 import {
@@ -13,8 +14,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
-import { type VerifyNewEmailGETResponse } from "~/app/api/auth/verify-new-email/route";
-import { type VerifyNewEmailSendPOSTResponse } from "~/app/api/auth/verify-new-email/send/route";
+import { api } from "~/lib/trpc/client";
 
 function AccountVerifyNewEmailAddressDialog({
 	emailAddress,
@@ -29,6 +29,9 @@ function AccountVerifyNewEmailAddressDialog({
 	const [isLoading, setIsLoading] = React.useState(true);
 	const [sentFirstEmail, setSentFirstEmail] = React.useState(false);
 	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(0);
+
+	const sendVerificationCodeMutation = api.auth.signIn.verificationCode.send.useMutation();
+	const validateVerificationCodeMutation = api.auth.signIn.verificationCode.validate.useMutation();
 
 	React.useEffect(() => {
 		let timer: NodeJS.Timeout;
@@ -46,34 +49,27 @@ function AccountVerifyNewEmailAddressDialog({
 
 	const handleSendEmail = React.useCallback(() => {
 		setIsLoading(true);
-		async function sendEmail() {
-			const response = await fetch("/api/auth/verify-new-email/send", {
-				method: "POST",
-				body: JSON.stringify({ emailAddress }),
-			});
 
-			const body = (await response.json()) as VerifyNewEmailSendPOSTResponse;
-
-			return body;
-		}
-
-		sendEmail()
-			.then(() => {
-				setSentFirstEmail(true);
-				setResendCodeCountdown(60);
-			})
-			.catch(() => {
-				toast({
-					title: "Failed to send verification code",
-					description:
-						"An unknown error occurred while trying to send a new verification code to your email address. Please try again.",
-					variant: "destructive",
+		if (emailAddress) {
+			sendVerificationCodeMutation
+				.mutateAsync({ emailAddress })
+				.then(() => {
+					setResendCodeCountdown(60);
+					setSentFirstEmail(true);
+				})
+				.catch(() => {
+					toast({
+						title: "Failed to send verification code",
+						description:
+							"An unknown error occurred while trying to send a new verification code to your email address. Please try again.",
+						variant: "destructive",
+					});
+				})
+				.finally(() => {
+					setIsLoading(false);
 				});
-			})
-			.finally(() => {
-				setIsLoading(false);
-			});
-	}, [emailAddress, toast, setSentFirstEmail, setResendCodeCountdown]);
+		}
+	}, [toast, setResendCodeCountdown, sendVerificationCodeMutation, emailAddress]);
 
 	React.useEffect(() => {
 		if (open && !sentFirstEmail) {
@@ -97,46 +93,36 @@ function AccountVerifyNewEmailAddressDialog({
 					<div className="flex justify-center">
 						<VerificationCodeInput
 							onSubmit={async (verificationCode) => {
-								if (emailAddress) {
-									const response = await fetch(`/api/auth/verify-new-email?code=${verificationCode}`);
-
-									const body = (await response.json()) as VerifyNewEmailGETResponse;
-
-									if (!body.success) {
-										if (body.error.code === "Expired") {
-											toast({
-												title: "Verification code expired",
-												description:
-													"The verification code you provided has expired. Please request another and try again.",
-												variant: "destructive",
-											});
-										}
-										if (body.error.code === "Invalid") {
-											throw new Error("Invalid verification code");
-										}
-										if (body.error.code === "NotAuthorized") {
-											toast({
-												title: "Not authorized",
-												description: "You are not authorized to perform this action.",
-												variant: "destructive",
-											});
-										}
-									}
-
-									if (!response.ok) {
-										toast({
-											title: `Failed to verify code`,
-											description: `An unknown error occurred while trying to verify this code. Please try again.`,
-											variant: "destructive",
-										});
-										throw new Error("Failed to verify email address");
-									}
+								try {
+									await validateVerificationCodeMutation.mutateAsync({ code: verificationCode });
 
 									setOpen(false);
 									toast({
 										title: "Email address updated",
 										description: "Your email address has successfully been updated.",
 									});
+								} catch (error) {
+									if (error instanceof TRPCError) {
+										if (error.code === "BAD_REQUEST" || error.code === "NOT_FOUND") {
+											toast({
+												title: "Invalid verification code",
+												description:
+													typeof error.message === "string"
+														? error.message
+														: "The verification code you provided is invalid or expired. Please request a new one and try again.",
+												variant: "destructive",
+											});
+										} else {
+											toast({
+												title: `Failed to verify your email address`,
+												description: `An unknown error occurred while trying to verify your email address. Please try again.`,
+												variant: "destructive",
+											});
+										}
+									}
+
+									// Re-throw the error so that the form error text
+									throw new Error("Invalid verification code");
 								}
 							}}
 						/>

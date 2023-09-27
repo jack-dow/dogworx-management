@@ -31,13 +31,19 @@ type ManageOrganizationFormProps = {
 	organization?: RouterOutputs["auth"]["organizations"]["byId"]["data"];
 };
 
-function ManageOrganizationForm({ organization }: ManageOrganizationFormProps) {
-	const isNew = !organization;
+function ManageOrganizationForm(props: ManageOrganizationFormProps) {
+	const isNew = !props.organization;
 
 	const { toast } = useToast();
 	const user = useUser();
 
 	const router = useRouter();
+
+	const result = api.auth.organizations.byId.useQuery(
+		{ id: props.organization?.id ?? "new" },
+		{ initialData: { data: props.organization }, enabled: !isNew },
+	);
+	const organization = result.data?.data;
 
 	const form = useForm<ManageOrganizationFormSchema>({
 		resolver: zodResolver(ManageOrganizationFormSchema),

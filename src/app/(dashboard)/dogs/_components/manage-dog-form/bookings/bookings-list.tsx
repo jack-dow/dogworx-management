@@ -9,6 +9,7 @@ import { DestructiveActionDialog } from "~/components/ui/destructive-action-dial
 import { ChevronLeftIcon, ChevronRightIcon } from "~/components/ui/icons";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
+import { useUser } from "~/app/providers";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { logInDevelopment } from "~/lib/client-utils";
 import { api } from "~/lib/trpc/client";
@@ -74,6 +75,8 @@ function BookingsList({
 
 	const context = api.useContext();
 	const bookingDeleteMutation = api.app.bookings.delete.useMutation();
+
+	const user = useUser();
 
 	const allBookings = useFieldArray({
 		control: form.control,
@@ -180,6 +183,9 @@ function BookingsList({
 				booking={
 					editingBooking
 						? {
+								createdAt: new Date(),
+								updatedAt: new Date(),
+								organizationId: user?.organizationId,
 								...editingBooking,
 								dog: {
 									id: form.getValues("id"),

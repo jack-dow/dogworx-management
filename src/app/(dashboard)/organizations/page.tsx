@@ -20,9 +20,9 @@ async function OrganizationsPage({
 		sortBy: typeof searchParams?.sortBy === "string" ? searchParams?.sortBy : undefined,
 		sortDirection: typeof searchParams?.sortDirection === "string" ? searchParams?.sortDirection : undefined,
 	});
-	const session = await server.auth.user.sessions.current.query();
+	const { data: session } = await server.auth.user.sessions.current.query();
 
-	if (session.user.organizationId !== "1") {
+	if (!session || session.user.organizationId !== "1") {
 		redirect("/");
 	}
 

@@ -16,8 +16,6 @@ async function DogsPage({ searchParams }: { searchParams?: { [key: string]: stri
 		sortDirection: searchParams?.sortDirection,
 	});
 
-	console.log(response.data[0]);
-
 	return (
 		<>
 			<PageHeader title="Manage Dogs" back={{ href: "/" }} />

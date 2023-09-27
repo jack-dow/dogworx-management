@@ -43,7 +43,7 @@ interface DashboardLayoutProps {
 }
 
 async function DashboardLayout({ children }: DashboardLayoutProps) {
-	const session = await server.auth.user.sessions.current.query();
+	const { data: session } = await server.auth.user.sessions.current.query();
 
 	if (!session) {
 		redirect("/sign-in");

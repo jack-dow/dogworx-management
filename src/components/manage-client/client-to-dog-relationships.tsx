@@ -220,9 +220,7 @@ function ClientToDogRelationship({
 
 	const [isLoadingDogPage, setIsLoadingDogPage] = React.useState(false);
 
-	const [updatingRelationshipTo, setUpdatingRelationshipTo] = React.useState<
-		keyof typeof InsertDogToClientRelationshipSchema.shape.relationship.Enum | null
-	>(null);
+	const previousRelationship = React.useRef(dogToClientRelationship.relationship);
 
 	const updateDogToClientRelationshipMutation = api.app.dogs.dogToClientRelationships.update.useMutation();
 
@@ -254,7 +252,10 @@ function ClientToDogRelationship({
 								value={field.value}
 								onValueChange={(value) => {
 									if (value !== field.value) {
-										setUpdatingRelationshipTo(value as typeof field.value);
+										// Using form.setValue instead of field.onChange because we want to set shouldDirty to false
+										form.setValue(`dogToClientRelationships.${index}.relationship`, value as typeof field.value, {
+											shouldDirty: false,
+										});
 
 										updateDogToClientRelationshipMutation
 											.mutateAsync({
@@ -262,8 +263,6 @@ function ClientToDogRelationship({
 												relationship: value as typeof field.value,
 											})
 											.then(() => {
-												field.onChange(value as typeof field.value);
-
 												toast({
 													title: "Updated relationship",
 													description: `Relationship between dog "${dogToClientRelationship.dog.givenName} ${
@@ -278,6 +277,18 @@ function ClientToDogRelationship({
 											.catch((error) => {
 												logInDevelopment(error);
 
+												// HACK: Reset the value to the previous value. Without the setTimeout, the value is not correctly reset
+												setTimeout(() => {
+													// Using form.setValue instead of field.onChange because we want to set shouldDirty to false
+													form.setValue(
+														`dogToClientRelationships.${index}.relationship`,
+														previousRelationship.current,
+														{
+															shouldDirty: false,
+														},
+													);
+												});
+
 												toast({
 													title: "Failed to update relationship relationship",
 													description: `The relationship between dog "${dogToClientRelationship.dog.givenName} ${
@@ -289,9 +300,6 @@ function ClientToDogRelationship({
 													} failed to update. Please try again.`,
 													variant: "destructive",
 												});
-											})
-											.finally(() => {
-												setUpdatingRelationshipTo(null);
 											});
 									}
 								}}
@@ -307,12 +315,7 @@ function ClientToDogRelationship({
 									<SelectGroup>
 										<SelectLabel>Relationships</SelectLabel>
 										{Object.values(InsertDogToClientRelationshipSchema.shape.relationship.Values).map((relation) => (
-											<SelectItem
-												key={relation}
-												value={relation}
-												className=" capitalize"
-												isLoading={updatingRelationshipTo === relation}
-											>
+											<SelectItem key={relation} value={relation} className=" capitalize">
 												{relation.split("-").join(" ")}
 											</SelectItem>
 										))}

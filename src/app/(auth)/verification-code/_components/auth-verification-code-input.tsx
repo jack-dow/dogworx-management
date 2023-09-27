@@ -1,21 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { TRPCError } from "@trpc/server";
 
 import { Button } from "~/components/ui/button";
 import { useToast } from "~/components/ui/use-toast";
 import { VerificationCodeInput } from "~/components/ui/verification-code-input";
-import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
-import { type SignInWithVerificationCodeGETResponse } from "~/app/api/auth/sign-in/verification-code/route";
+import { getBaseUrl } from "~/lib/client-utils";
+import { api } from "~/lib/trpc/client";
 
 function AuthVerificationCodeInput() {
 	const { toast } = useToast();
 
 	const searchParams = useSearchParams();
+	const emailAddress = searchParams.get("emailAddress") ?? "";
 	const router = useRouter();
 	const [isLoading, setIsLoading] = React.useState(true);
 	const [resendCodeCountdown, setResendCodeCountdown] = React.useState(60);
+
+	const sendMagicLinkMutation = api.auth.signIn.magicLink.send.useMutation();
+	const validateVerificationCodeMutation = api.auth.signIn.verificationCode.validate.useMutation();
 
 	React.useEffect(() => {
 		let timer: NodeJS.Timeout;
@@ -33,16 +38,9 @@ function AuthVerificationCodeInput() {
 
 	const handleSendEmail = React.useCallback(() => {
 		setIsLoading(true);
-		async function sendEmail() {
-			const response = await fetch("/api/auth/sign-in/magic-link/send", {
-				method: "POST",
-				body: JSON.stringify({ emailAddress: searchParams.get("emailAddress") }),
-			});
-			const body = (await response.json()) as SendMagicLinkPOSTResponse;
-			return body;
-		}
 
-		sendEmail()
+		sendMagicLinkMutation
+			.mutateAsync({ emailAddress })
 			.then(() => {
 				setResendCodeCountdown(60);
 			})
@@ -57,39 +55,61 @@ function AuthVerificationCodeInput() {
 			.finally(() => {
 				setIsLoading(false);
 			});
-	}, [searchParams, toast, setResendCodeCountdown]);
+	}, [toast, setResendCodeCountdown, sendMagicLinkMutation, emailAddress]);
+
+	if (!emailAddress) {
+		redirect("/sign-in");
+	}
 
 	return (
 		<>
 			<div className="flex justify-center">
 				<VerificationCodeInput
 					onSubmit={async (verificationCode) => {
-						const response = await fetch(`/api/auth/sign-in/verification-code?code=${verificationCode}`);
+						try {
+							await validateVerificationCodeMutation.mutateAsync({ code: verificationCode });
 
-						const body = (await response.json()) as SignInWithVerificationCodeGETResponse;
-
-						if (!body.success && body.error.code === "InvalidCode") {
 							toast({
-								title: "Invalid verification code",
-								description:
-									typeof body.error.message === "string"
-										? body.error.message
-										: "The verification code you provided is invalid or expired. Please request a new one and try again.",
-								variant: "destructive",
+								title: "Email address verified",
+								description: "Your email address has been successfully verified.",
 							});
+
+							const callbackUrl = searchParams?.get("from") || "/";
+							const baseUrl = getBaseUrl();
+
+							// Allows relative callback URLs
+							if (callbackUrl.startsWith("/")) {
+								return router.push(callbackUrl);
+							}
+							// Allows callback URLs on the same origin
+							if (new URL(callbackUrl).origin === baseUrl) {
+								return router.push(callbackUrl);
+							}
+
+							router.push(baseUrl);
+						} catch (error) {
+							if (error instanceof TRPCError) {
+								if (error.code === "BAD_REQUEST" || error.code === "NOT_FOUND") {
+									toast({
+										title: "Invalid verification code",
+										description:
+											typeof error.message === "string"
+												? error.message
+												: "The verification code you provided is invalid or expired. Please request a new one and try again.",
+										variant: "destructive",
+									});
+								} else {
+									toast({
+										title: `Failed to verify your email address`,
+										description: `An unknown error occurred while trying to verify your email address. Please try again.`,
+										variant: "destructive",
+									});
+								}
+							}
+
+							// Re-throw the error so that the form error text
 							throw new Error("Invalid verification code");
 						}
-
-						if (!response.ok) {
-							toast({
-								title: `Failed to verify your email address`,
-								description: `An unknown error occurred while trying to verify your email address. Please try again.`,
-								variant: "destructive",
-							});
-							throw new Error("Failed to verify email address");
-						}
-
-						router.push("/");
 					}}
 				/>
 			</div>

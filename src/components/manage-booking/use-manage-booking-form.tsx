@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { type z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
@@ -17,17 +17,12 @@ import { type RouterOutputs } from "~/server";
 
 dayjs.extend(customParseFormat);
 
-const ManageBookingFormSchema = InsertBookingSchema.extend({
-	details: z.string().max(100000, { message: "Details must be less than 100,000 characters long." }).nullable(),
-	duration: z.number().nonnegative({
-		message: "Duration must be a positive number",
-	}),
-});
+const ManageBookingFormSchema = InsertBookingSchema;
 type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
 
 type UseManageBookingFormProps = {
 	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
-	booking?: InsertBookingSchema;
+	booking?: RouterOutputs["app"]["bookings"]["byId"]["data"];
 	defaultValues?: Partial<ManageBookingFormSchema>;
 	onSubmit?: (data: ManageBookingFormSchema) => Promise<void>;
 	onSuccessfulSubmit?: (data: ManageBookingFormSchema) => void;
@@ -39,22 +34,28 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const user = useUser();
 	const { toast } = useToast();
 
+	const result = api.app.bookings.byId.useQuery(
+		{ id: props.booking?.id ?? "new" },
+		{ initialData: { data: props.booking }, enabled: !isNew },
+	);
+	const booking = result.data?.data;
+
 	const form = useForm<ManageBookingFormSchema>({
 		resolver: zodResolver(ManageBookingFormSchema),
 		defaultValues: {
 			duration:
 				props.bookingTypes.find(
-					(bt) => bt.id === props.booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
+					(bt) => bt.id === booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
 				)?.duration ?? 1800,
 			details: "",
 			bookingTypeId: null,
 			...props.defaultValues,
-			...props.booking,
-			assignedToId: props.defaultValues?.assignedToId || props.booking?.assignedToId || user.id,
-			assignedTo: props.defaultValues?.assignedTo || props.booking?.assignedTo || user,
-			id: props.defaultValues?.id || props.booking?.id || generateId(),
-			dogId: props.defaultValues?.dogId ?? props.booking?.dogId ?? null,
-			dog: props.defaultValues?.dog ?? props.booking?.dog ?? null,
+			...booking,
+			assignedToId: props.defaultValues?.assignedToId || booking?.assignedToId || user.id,
+			assignedTo: props.defaultValues?.assignedTo || booking?.assignedTo || user,
+			id: props.defaultValues?.id || booking?.id || generateId(),
+			dogId: props.defaultValues?.dogId ?? booking?.dogId ?? null,
+			dog: props.defaultValues?.dog ?? booking?.dog ?? null,
 		},
 	});
 
@@ -65,13 +66,13 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const updateMutation = api.app.bookings.update.useMutation();
 
 	React.useEffect(() => {
-		if (props.booking) {
-			form.reset(props.booking, {
+		if (booking) {
+			form.reset(booking, {
 				keepDirty: true,
 				keepDirtyValues: true,
 			});
 		}
-	}, [props.booking, form]);
+	}, [booking, form]);
 
 	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();

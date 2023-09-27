@@ -16,12 +16,7 @@ async function UpdateVetClinicPage({ params }: { params: { id: string } }) {
 
 	return (
 		<>
-			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Vet Clinic${
-					vetClinic?.data?.name ? ` "${vetClinic?.data.name}" ` : ""
-				}`}
-				back={{ href: "/vet-clinics" }}
-			/>
+			<PageHeader title={`${params.id === "new" ? "Create" : "Update"} Vet Clinic`} back={{ href: "/vet-clinics" }} />
 
 			{vetClinic?.data !== null ? <ManageVetClinicForm vetClinic={vetClinic?.data} /> : <NotFound />}
 		</>

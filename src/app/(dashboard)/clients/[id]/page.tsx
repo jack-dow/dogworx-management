@@ -12,18 +12,13 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 async function UpdateClientPage({ params }: { params: { id: string } }) {
-	const client = params.id === "new" ? undefined : await server.app.clients.byId.query({ id: params.id });
+	const result = params.id === "new" ? undefined : await server.app.clients.byId.query({ id: params.id });
 
 	return (
 		<>
-			<PageHeader
-				title={`${params.id === "new" ? "Create" : "Update"} Client${
-					client?.data?.givenName ? ` "${client?.data.givenName} ${client?.data.familyName}" ` : ""
-				}`}
-				back={{ href: "/clients" }}
-			/>
+			<PageHeader title={`${params.id === "new" ? "Create" : "Update"} Client`} back={{ href: "/clients" }} />
 
-			{client?.data !== null ? <ManageClientForm client={client?.data} /> : <NotFound />}
+			{result?.data !== null ? <ManageClientForm client={result?.data} /> : <NotFound />}
 		</>
 	);
 }

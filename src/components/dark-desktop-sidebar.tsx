@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { type SignOutPOSTResponse } from "~/app/api/auth/sign-out/route";
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
 import { cn } from "~/lib/client-utils";
+import { api } from "~/lib/trpc/client";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -72,20 +72,6 @@ export const navigation = [
 	},
 ] satisfies Array<Navigation>;
 
-export async function signOut() {
-	const signOutResponse = await fetch("/api/auth/sign-out", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		cache: "no-store",
-	});
-
-	const body = (await signOutResponse.json()) as SignOutPOSTResponse;
-
-	return body;
-}
-
 function DarkDesktopSidebar() {
 	const session = useSession();
 	const pathname = usePathname();
@@ -93,6 +79,8 @@ function DarkDesktopSidebar() {
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+	const signOutMutation = api.auth.user.signOut.useMutation();
 
 	return (
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
@@ -286,7 +274,8 @@ function DarkDesktopSidebar() {
 											e.preventDefault();
 											setIsSigningOut(true);
 
-											signOut()
+											signOutMutation
+												.mutateAsync()
 												.then(() => {
 													router.push("/sign-in");
 													router.refresh();

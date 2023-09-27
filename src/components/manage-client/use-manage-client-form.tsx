@@ -44,15 +44,21 @@ function useManageClientForm(props: UseManageClientFormProps) {
 
 	const searchTerm = searchParams.get("searchTerm") ?? "";
 
+	const result = api.app.clients.byId.useQuery(
+		{ id: props.client?.id ?? "new" },
+		{ initialData: { data: props.client }, enabled: !isNew },
+	);
+	const client = result.data?.data;
+
 	const form = useForm<ManageClientFormSchema>({
 		resolver: zodResolver(ManageClientFormSchema),
 		defaultValues: {
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,
 			dogToClientRelationships: [],
-			...props.client,
+			...client,
 			...props.defaultValues,
-			id: props.client?.id ?? generateId(),
+			id: client?.id ?? generateId(),
 		},
 	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
@@ -68,13 +74,13 @@ function useManageClientForm(props: UseManageClientFormProps) {
 	}, [searchParams, router]);
 
 	React.useEffect(() => {
-		if (props.client) {
-			form.reset(props.client, {
+		if (client) {
+			form.reset(client, {
 				keepDirty: true,
 				keepDirtyValues: true,
 			});
 		}
-	}, [props.client, form, toast]);
+	}, [client, form, toast]);
 
 	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();

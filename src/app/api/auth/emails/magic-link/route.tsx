@@ -1,19 +1,23 @@
+import { env } from "process";
 import { NextResponse, type NextRequest } from "next/server";
 import cryptoRandomString from "crypto-random-string";
-import MagicLinkEmail from "emails/magic-link-email";
+import { MagicLinkEmail } from "emails/magic-link-email";
 import ms from "ms";
+import { Resend } from "resend";
 import { z } from "zod";
 
 import { drizzle } from "~/db/drizzle";
 import { verificationCodes } from "~/db/schema/auth";
 import { generateId } from "~/lib/client-utils";
-import { resend, type APIResponse } from "~/lib/server-utils";
+import { type APIResponse } from "~/lib/server-utils";
 
 const SendMagicLinkBodySchema = z.object({
 	emailAddress: z.string().email(),
 });
 
 type SendMagicLinkPOSTResponse = APIResponse<undefined, "NoUserFound">;
+
+const resend = new Resend(env.RESEND_API_KEY);
 
 async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOSTResponse>> {
 	const body = (await request.json()) as unknown;

@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
@@ -10,7 +11,14 @@ export const metadata: Metadata = {
 	title: "Sign In | Dogworx Management",
 };
 
-function VerificationCodePage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+const SearchParamsSchema = z.object({
+	emailAddress: z.string().email().optional().catch(undefined),
+	from: z.string().optional().catch(undefined),
+});
+
+function VerificationCodePage(props: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+	const searchParams = SearchParamsSchema.parse(props.searchParams);
+
 	if (!searchParams?.emailAddress) {
 		redirect("/sign-in");
 	}
