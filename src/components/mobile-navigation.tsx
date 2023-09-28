@@ -58,7 +58,10 @@ function MobileNavigation() {
 						<li>
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
-									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+									const current =
+										item.href === pathname ||
+										pathname.startsWith(item.href) ||
+										item.subNavigation?.some((subItem) => subItem.href === pathname);
 
 									if (
 										item.adminOnly &&
@@ -102,10 +105,7 @@ function MobileNavigation() {
 											{current && item.subNavigation && (
 												<ul role="list" className="flex flex-1 flex-col gap-y-2">
 													{Object.values(item.subNavigation).map((subItem, index) => {
-														const current =
-															item.href === pathname ||
-															pathname.startsWith(item.href) ||
-															item.subNavigation?.some((subItem) => subItem.href === pathname);
+														const current = subItem.href === pathname;
 
 														const isLast = index === item.subNavigation.length - 1;
 
