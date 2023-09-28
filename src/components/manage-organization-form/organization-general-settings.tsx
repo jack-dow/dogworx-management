@@ -93,6 +93,70 @@ function OrganizationGeneralSettings() {
 					/>
 				</div>
 
+				<div className="sm:col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3">
+					<FormField
+						control={form.control}
+						name="streetAddress"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Street Address</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				<div className="sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1">
+					<FormField
+						control={form.control}
+						name="city"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>City</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				<div className="sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1">
+					<FormField
+						control={form.control}
+						name="state"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>State</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				<div className="sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-1">
+					<FormField
+						control={form.control}
+						name="postalCode"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Postal Code</FormLabel>
+								<FormControl>
+									<Input {...field} value={field.value ?? ""} autoComplete="off" />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
 				{user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID && (
 					<>
 						<div className="sm:col-span-6">

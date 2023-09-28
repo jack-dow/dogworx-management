@@ -44,9 +44,7 @@ const MagicLinkEmail = ({ code = "123456", token, requestedFromIp, requestedFrom
 								className="my-0"
 							/>
 						</Section>
-						<Heading className="mx-0 my-8 p-0  text-[24px] font-medium text-black">
-							Your Dogworx Management Login
-						</Heading>
+						<Heading className="mx-0 my-8 p-0  text-[24px] font-medium text-black">🪄 Your magic link</Heading>
 
 						<Section className="my-[24px] text-center">
 							<Row>

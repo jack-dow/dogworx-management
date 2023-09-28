@@ -138,6 +138,10 @@ const organizations = mysqlTable("auth_organizations", {
 	maxUsers: unsignedSmallInt("max_users").notNull(),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
 	notifyAdminsAboutEmails: boolean("notify_admins_about_emails").notNull().default(false),
+	streetAddress: varchar("street_address", { length: 100 }).notNull().default(""),
+	city: varchar("city", { length: 50 }).notNull().default(""),
+	state: varchar("state", { length: 30 }).notNull().default(""),
+	postalCode: varchar("postal_code", { length: 10 }).notNull().default(""),
 	notes: text("notes"),
 });
 

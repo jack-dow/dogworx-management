@@ -17,6 +17,7 @@ import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { api, type RouterOutputs } from "~/lib/trpc/client";
+import { sessionJWTExpiry } from "~/lib/utils";
 import { useSession } from "../../../providers";
 
 type Sessions = RouterOutputs["auth"]["user"]["sessions"]["all"]["data"];
@@ -125,9 +126,22 @@ function SessionAccordionItem({ session, isCurrentSession = false, onDelete }: S
 								? `(${session.city ?? ""}${session.city && session.country ? ", " : ""}${session.country ?? ""})`
 								: ""}
 						</p>
-						<p className="text-left text-xs text-muted-foreground">
-							{dayjs.tz(session.lastActiveAt).fromNow(true)} ago
-						</p>
+						{dayjs.tz(session.lastActiveAt).isAfter(dayjs.tz().subtract(sessionJWTExpiry, "seconds")) ||
+						isCurrentSession ? (
+							<div className="mt-1 flex items-center gap-x-1.5">
+								<div className="flex-none rounded-full bg-emerald-500/20 p-1">
+									<div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+								</div>
+								<p className="text-xs leading-5 text-muted-foreground">Online</p>
+							</div>
+						) : (
+							<p className="mt-1 text-xs leading-5 text-muted-foreground">
+								Last seen{" "}
+								<time dateTime={dayjs.tz(session.lastActiveAt).toISOString()}>
+									{dayjs.tz(session.lastActiveAt).fromNow()}
+								</time>
+							</p>
+						)}
 					</div>
 					<div>{isCurrentSession && <Badge>This Session</Badge>}</div>
 				</div>
