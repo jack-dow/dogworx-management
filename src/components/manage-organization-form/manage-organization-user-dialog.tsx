@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TRPCError } from "@trpc/server";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { useForm, useFormContext } from "react-hook-form";
 import { UAParser } from "ua-parser-js";
@@ -29,7 +30,6 @@ import { Label } from "~/components/ui/label";
 import { Loader } from "~/components/ui/loader";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/use-toast";
-import { handleProfileImageUpload } from "~/app/(dashboard)/account/_components/manage-account-form";
 import { useSession, useUser } from "~/app/providers";
 import { organizationRoleOptions } from "~/db/schema/auth";
 import { InsertUserSchema } from "~/db/validation/auth";
@@ -132,6 +132,7 @@ type ManageOrganizationUserDialogFormProps = {
 	setIsDirty: (isDirty: boolean) => void;
 	onConfirmCancel: () => void;
 	isNew: boolean;
+	isOrganizationNew: boolean;
 	organizationUser?: ManageOrganizationFormSchema["organizationUsers"][number];
 	defaultValues?: Partial<ManageOrganizationUserFormSchema>;
 	onSuccessfulSubmit?: (data: ManageOrganizationUserFormSchema) => void;
@@ -143,6 +144,7 @@ function ManageOrganizationUserDialogForm({
 	setIsDirty,
 	onConfirmCancel,
 	isNew,
+	isOrganizationNew,
 	organizationUser,
 	defaultValues,
 	onSuccessfulSubmit,
@@ -171,6 +173,7 @@ function ManageOrganizationUserDialogForm({
 	useConfirmPageNavigation(isFormDirty);
 
 	const insertMutation = api.auth.organizations.users.insert.useMutation();
+	const getProfileImageUrlMutation = api.auth.organizations.users.getProfileImageUrl.useMutation();
 	const updateMutation = api.auth.organizations.users.update.useMutation();
 
 	React.useEffect(() => {
@@ -209,23 +212,59 @@ function ManageOrganizationUserDialogForm({
 			// If the profile image has changed, upload it
 			if ((data.profileImageUrl && !organizationUser) || data.profileImageUrl !== organizationUser?.profileImageUrl) {
 				if (uploadedProfileImage) {
-					handleProfileImageUpload(uploadedProfileImage)
-						.then((url) => {
-							data.profileImageUrl = url;
-							successfullyUploadedImage = true;
-						})
-						.catch(() => {
-							toast({
-								title: "Failed to upload profile image",
-								description: "An unknown error occurred while trying to upload the profile image. Please try again.",
-							});
+					try {
+						const { data: url } = await getProfileImageUrlMutation.mutateAsync({
+							id: data.id,
+							fileType: uploadedProfileImage.type,
 						});
+
+						const uploadResponse = await fetch(url, {
+							method: "PUT",
+							body: uploadedProfileImage,
+						});
+
+						if (!uploadResponse.ok) {
+							throw new Error("Failed to upload profile image");
+						}
+
+						const index = url.indexOf("?");
+						if (index !== -1) {
+							data.profileImageUrl = url.substring(0, index);
+						} else {
+							data.profileImageUrl = url;
+						}
+						successfullyUploadedImage = true;
+					} catch (error) {
+						logInDevelopment(error);
+
+						if (error instanceof TRPCError) {
+							if (error.code === "UNAUTHORIZED" || error.code === "NOT_FOUND") {
+								toast({
+									title: "Failed to upload profile image",
+									description: "You are not authorized to upload a profile image for this user.",
+									variant: "destructive",
+								});
+							}
+						}
+
+						toast({
+							title: "Failed to upload profile image",
+							description: "An unknown error occurred while trying to upload the profile image. Please try again.",
+							variant: "destructive",
+						});
+					}
 				}
 			}
 
 			try {
-				if (!isNew) {
-					if (organizationUser) {
+				if (!isOrganizationNew) {
+					if (isNew || !organizationUser) {
+						await insertMutation.mutateAsync({
+							...data,
+							profileImageUrl:
+								data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
+						});
+					} else {
 						await updateMutation.mutateAsync({
 							...data,
 							profileImageUrl:
@@ -235,25 +274,19 @@ function ManageOrganizationUserDialogForm({
 										: organizationUser.profileImageUrl
 									: null,
 						});
-					} else {
-						await insertMutation.mutateAsync({
-							...data,
-							profileImageUrl:
-								data.profileImageUrl != null ? (successfullyUploadedImage ? data.profileImageUrl : null) : null,
-						});
-
-						onSuccessfulSubmit?.(data);
-
-						setOpen(false);
-
-						toast({
-							title: `User ${isNew ? "Created" : "Updated"}`,
-							description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
-								data.familyName ? " " + data.familyName : ""
-							}".`,
-						});
 					}
 				}
+
+				onSuccessfulSubmit?.(data);
+
+				setOpen(false);
+
+				toast({
+					title: `User ${isNew ? "Created" : "Updated"}`,
+					description: `Successfully ${isNew ? "created" : "updated"} user "${data.givenName}${
+						data.familyName ? " " + data.familyName : ""
+					}".`,
+				});
 			} catch (error) {
 				logInDevelopment(error);
 

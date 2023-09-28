@@ -1,3 +1,5 @@
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -389,6 +391,58 @@ export const organizationsRouter = createTRPCRouter({
 				}
 			});
 		}),
+
+		getProfileImageUrl: protectedProcedure
+			.input(z.object({ id: z.string(), fileType: z.string().refine((fileType) => fileType.startsWith("image/")) }))
+			.mutation(async ({ ctx, input }) => {
+				if (
+					ctx.user.id !== input.id &&
+					ctx.user.organizationRole !== "owner" &&
+					ctx.user.organizationRole !== "admin"
+				) {
+					throw new TRPCError({
+						code: "UNAUTHORIZED",
+						message: "You are not authorized to update this user.",
+					});
+				}
+
+				const s3 = new S3Client({
+					region: env.AWS_S3_REGION,
+					credentials: {
+						accessKeyId: env.AWS_S3_ACCESS_KEY,
+						secretAccessKey: env.AWS_S3_SECRET_KEY,
+					},
+				});
+
+				const extension = input.fileType.split("/")[1];
+
+				if (!extension) {
+					throw new TRPCError({ code: "BAD_REQUEST", message: "Could not determine file extension." });
+				}
+
+				const user = await ctx.db.query.users.findFirst({
+					where: (users, { eq, and }) => and(eq(users.organizationId, ctx.user.organizationId), eq(users.id, input.id)),
+					columns: {
+						id: true,
+						organizationRole: true,
+					},
+				});
+
+				if (!user) {
+					throw new TRPCError({ code: "NOT_FOUND", message: "User not found." });
+				}
+
+				const command = new PutObjectCommand({
+					Bucket: env.AWS_S3_BUCKET_NAME,
+					Key: `profile-images/${user.id}.${extension}`,
+				});
+
+				const signedUrl = await getSignedUrl(s3, command, {
+					expiresIn: 180,
+				});
+
+				return { data: signedUrl };
+			}),
 
 		delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
 			if (ctx.user.organizationRole !== "owner" && ctx.user.organizationRole !== "admin") {

@@ -17,6 +17,8 @@
 		"with-env": "dotenv -e ./.env --"
 	},
 	"dependencies": {
+		"@aws-sdk/client-s3": "^3.421.0",
+		"@aws-sdk/s3-request-presigner": "^3.421.0",
 		"@heroicons/react": "^2.0.18",
 		"@hookform/resolvers": "^3.3.1",
 		"@internationalized/date": "^3.5.0",
@@ -67,7 +69,6 @@
 		"@trpc/client": "^10.38.3",
 		"@trpc/react-query": "^10.38.3",
 		"@trpc/server": "^10.38.3",
-		"aws-sdk": "^2.1462.0",
 		"chrono-node": "^2.7.0",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",

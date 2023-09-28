@@ -101,6 +101,7 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 							open={!!editingUser}
 							setOpen={() => setEditingUser(null)}
 							organizationUser={editingUser ?? undefined}
+							isOrganizationNew={isNew}
 							onDelete={async (id) => {
 								if (isNew) {
 									await handleUserDelete(id);
@@ -160,6 +161,7 @@ function OrganizationUsers({ isNew }: { isNew: boolean }) {
 									onSuccessfulSubmit={(data) => {
 										organizationUsers.append(data);
 									}}
+									isOrganizationNew={isNew}
 									defaultValues={
 										user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID
 											? {

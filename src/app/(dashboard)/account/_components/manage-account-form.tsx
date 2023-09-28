@@ -23,7 +23,6 @@ import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
 import { useUser } from "~/app/providers";
 import { InsertUserSchema } from "~/db/validation/auth";
 import { api } from "~/lib/trpc/client";
@@ -35,34 +34,6 @@ import { AccountVerifyNewEmailAddressDialog } from "./account-verify-new-email-a
 
 const ManageAccountFormSchema = InsertUserSchema;
 type ManageAccountFormSchema = z.infer<typeof ManageAccountFormSchema>;
-
-export async function handleProfileImageUpload(file: File) {
-	const getUrlResponse = await fetch(`/api/auth/profile-image-url?fileType=${encodeURIComponent(file.type)}`, {
-		method: "GET",
-	});
-
-	const body = (await getUrlResponse.json()) as ProfileImageUrlGETResponse;
-
-	if (!body.success || !getUrlResponse.ok) {
-		throw new Error("Failed to upload profile image");
-	}
-
-	const url = body.data;
-	const uploadResponse = await fetch(url, {
-		method: "PUT",
-		body: file,
-	});
-
-	if (!uploadResponse.ok) {
-		throw new Error("Failed to upload profile image");
-	}
-
-	const index = url.indexOf("?");
-	if (index !== -1) {
-		return url.substring(0, index);
-	}
-	return url;
-}
 
 function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs["auth"]["user"]["sessions"]["all"] }) {
 	const user = useUser();
@@ -80,6 +51,8 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 
 	const [isDeletingAccount, setIsDeletingAccount] = React.useState(false);
 
+	const context = api.useContext();
+
 	const accountUpdateMutation = api.auth.user.update.useMutation({});
 	const accountDeleteMutation = api.auth.user.delete.useMutation({});
 
@@ -90,17 +63,39 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 			// If the profile image has changed, upload it
 			if (data.profileImageUrl !== user.profileImageUrl) {
 				if (uploadedProfileImage) {
-					handleProfileImageUpload(uploadedProfileImage)
-						.then((url) => {
-							data.profileImageUrl = url;
-							successfullyUploadedImage = true;
-						})
-						.catch(() => {
-							toast({
-								title: "Failed to upload profile image",
-								description: "An unknown error occurred while trying to upload your profile image. Please try again.",
-							});
+					try {
+						const { data: url } = await context.auth.user.getProfileImageUrl.fetch({
+							fileType: uploadedProfileImage.type,
 						});
+
+						console.log({ url });
+
+						const uploadResponse = await fetch(url, {
+							method: "PUT",
+							body: uploadedProfileImage,
+						});
+
+						console.log({ uploadResponse });
+
+						if (!uploadResponse.ok) {
+							throw new Error("Failed to upload profile image");
+						}
+
+						const index = url.indexOf("?");
+						if (index !== -1) {
+							data.profileImageUrl = url.substring(0, index);
+						} else {
+							data.profileImageUrl = url;
+						}
+						successfullyUploadedImage = true;
+					} catch (error) {
+						logInDevelopment(error);
+
+						toast({
+							title: "Failed to upload profile image",
+							description: "An unknown error occurred while trying to upload your profile image. Please try again.",
+						});
+					}
 				}
 			}
 

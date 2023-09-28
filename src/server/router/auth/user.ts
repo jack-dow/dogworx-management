@@ -1,4 +1,6 @@
 import { cookies, headers } from "next/headers";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
@@ -9,6 +11,7 @@ import { z } from "zod";
 import { schema } from "~/db/drizzle";
 import { organizationInviteLinks, organizations, sessions, users } from "~/db/schema/auth";
 import { UpdateUserSchema, type InsertUserSchema } from "~/db/validation/auth";
+import { env } from "~/env.mjs";
 import {
 	createSessionJWT,
 	generateId,
@@ -133,7 +136,7 @@ export const userRouter = createTRPCRouter({
 					await ctx.db.update(users).set(input).where(eq(users.id, ctx.user!.id));
 
 					const newSessionToken = await createSessionJWT({
-						id: ctx.user!.id,
+						id: ctx.session!.id,
 						user: {
 							...ctx.user!,
 							...input,
@@ -146,6 +149,61 @@ export const userRouter = createTRPCRouter({
 					});
 				}
 			}
+		}),
+
+	delete: protectedProcedure.mutation(async ({ ctx }) => {
+		if (ctx.user.organizationRole === "owner") {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message: "You must transfer ownership of your organization before you can delete your account.",
+			});
+		}
+
+		await ctx.db.delete(users).where(eq(users.id, ctx.user.id));
+		await ctx.db.delete(sessions).where(eq(sessions.userId, ctx.user.id));
+		await ctx.db.delete(organizationInviteLinks).where(eq(organizationInviteLinks.userId, ctx.user.id));
+
+		cookies().set({
+			...sessionCookieOptions,
+			value: "",
+		});
+	}),
+
+	signOut: protectedProcedure.mutation(async ({ ctx }) => {
+		await ctx.db.delete(schema.sessions).where(eq(schema.sessions.id, ctx.session.id));
+
+		cookies().set({
+			...sessionCookieOptions,
+			value: "",
+		});
+	}),
+
+	getProfileImageUrl: protectedProcedure
+		.input(z.object({ fileType: z.string().refine((fileType) => fileType.startsWith("image/")) }))
+		.query(async ({ ctx, input }) => {
+			const s3 = new S3Client({
+				region: env.AWS_S3_REGION,
+				credentials: {
+					accessKeyId: env.AWS_S3_ACCESS_KEY,
+					secretAccessKey: env.AWS_S3_SECRET_KEY,
+				},
+			});
+
+			const extension = input.fileType.split("/")[1];
+
+			if (!extension) {
+				throw new TRPCError({ code: "BAD_REQUEST", message: "Could not determine file extension." });
+			}
+
+			const command = new PutObjectCommand({
+				Bucket: env.AWS_S3_BUCKET_NAME,
+				Key: `profile-images/${ctx.user.id}.${extension}`,
+			});
+
+			const signedUrl = await getSignedUrl(s3, command, {
+				expiresIn: 180,
+			});
+			return { data: signedUrl };
 		}),
 
 	sessions: createTRPCRouter({
@@ -163,6 +221,8 @@ export const userRouter = createTRPCRouter({
 							user: true,
 						},
 					});
+
+					console.log({ session, ctx: ctx.session });
 
 					if (
 						!session ||
@@ -261,32 +321,5 @@ export const userRouter = createTRPCRouter({
 					),
 				);
 		}),
-	}),
-
-	delete: protectedProcedure.mutation(async ({ ctx }) => {
-		if (ctx.user.organizationRole === "owner") {
-			throw new TRPCError({
-				code: "FORBIDDEN",
-				message: "You must transfer ownership of your organization before you can delete your account.",
-			});
-		}
-
-		await ctx.db.delete(users).where(eq(users.id, ctx.user.id));
-		await ctx.db.delete(sessions).where(eq(sessions.userId, ctx.user.id));
-		await ctx.db.delete(organizationInviteLinks).where(eq(organizationInviteLinks.userId, ctx.user.id));
-
-		cookies().set({
-			...sessionCookieOptions,
-			value: "",
-		});
-	}),
-
-	signOut: protectedProcedure.mutation(async ({ ctx }) => {
-		await ctx.db.delete(schema.sessions).where(eq(schema.sessions.id, ctx.session.id));
-
-		cookies().set({
-			...sessionCookieOptions,
-			value: "",
-		});
 	}),
 });
