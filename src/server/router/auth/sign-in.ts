@@ -9,7 +9,7 @@ import { z } from "zod";
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/emails/magic-link/route";
 import { type SendVerificationCodePOSTResponse } from "~/app/api/auth/emails/verification-code/route";
 import { schema } from "~/db/drizzle";
-import { createSessionJWT, generateId, sessionCookieOptions } from "~/lib/utils";
+import { createSessionJWT, generateId, getBaseUrl, logInDevelopment, sessionCookieOptions } from "~/lib/utils";
 import { createTRPCRouter, publicProcedure } from "../../trpc";
 
 dayjs.extend(utc);
@@ -19,7 +19,7 @@ export const signInRouter = createTRPCRouter({
 	magicLink: createTRPCRouter({
 		send: publicProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
 			try {
-				const response = await fetch("/api/auth/emails/magic-link", {
+				const response = await fetch(getBaseUrl() + "/api/auth/emails/magic-link", {
 					method: "POST",
 					body: JSON.stringify({ emailAddress: input.emailAddress }),
 				});
@@ -38,6 +38,8 @@ export const signInRouter = createTRPCRouter({
 					});
 				}
 			} catch (error) {
+				logInDevelopment(error);
+
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "Error sending magic link",
@@ -157,7 +159,7 @@ export const signInRouter = createTRPCRouter({
 				// The resend/react-email team have said they are working on a fix so hopefully this can be moved back into the router soon.
 				// SEE: https://github.com/resendlabs/react-email/issues/871
 				// ----------------------------------------------------------------------------------------------
-				const response = await fetch("/api/auth/emails/verification-code", {
+				const response = await fetch(getBaseUrl() + "/api/auth/emails/verification-code", {
 					method: "POST",
 					body: JSON.stringify({ emailAddress: input.emailAddress }),
 				});
