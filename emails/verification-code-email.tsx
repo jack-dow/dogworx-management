@@ -43,7 +43,7 @@ const VerificationCodeEmail = ({ code, requestedFromIp, requestedFromLocation }:
 							/>
 						</Section>
 						<Heading className="mx-0 my-8 p-0 text-center text-[24px] font-medium text-black">
-							Email Verification Code
+							Email verification code
 						</Heading>
 
 						<Section>

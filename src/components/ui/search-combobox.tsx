@@ -6,7 +6,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { useDidUpdate } from "~/hooks/use-did-update";
-import { cn, shareRef } from "~/utils";
+import { cn, shareRef } from "~/lib/utils";
 import { CheckIcon } from "./icons";
 import { Loader } from "./loader";
 import { useToast } from "./use-toast";
@@ -67,7 +67,7 @@ const SearchCombobox: WithForwardRefType = React.forwardRef(
 
 		const [isOpen, setIsOpen] = React.useState(false);
 		const [searchTerm, setSearchTerm] = React.useState(defaultSelected ? resultLabel(defaultSelected) : "");
-		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 250);
+		const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 200);
 		const [results, setResults] = React.useState<Array<RequiredResultProps>>(defaultSelected ? [defaultSelected] : []);
 		const [selected, setSelected] = React.useState<RequiredResultProps | null>(defaultSelected ?? null);
 		const [isLoading, setIsLoading] = React.useState(false);

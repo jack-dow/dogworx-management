@@ -25,10 +25,9 @@ import {
 	SortDescIcon,
 	UserPlusIcon,
 } from "~/components/ui/icons";
-import { type SortableColumns } from "~/actions/sortable-columns";
-import { type PaginationSearchParams } from "~/actions/utils";
 import { useDidUpdate } from "~/hooks/use-did-update";
 import { useViewportSize } from "~/hooks/use-viewport-size";
+import { type PaginationOptionsSchema, type SortableColumns } from "~/lib/utils";
 import { Button } from "./button";
 import { Label } from "./label";
 import { Loader } from "./loader";
@@ -44,7 +43,7 @@ declare module "@tanstack/table-core" {
 	}
 }
 
-function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationSearchParams) {
+function setSearchParams(currentParams: ReadonlyURLSearchParams, newParams: PaginationOptionsSchema) {
 	const searchParams = new URLSearchParams(currentParams);
 
 	Object.entries(newParams).forEach(([key, value]) => {
@@ -72,7 +71,9 @@ interface DataTableProps<TData, TValue, SearchResultType extends { id: string }>
 	/** Allow for passing of custom base path. E.g. want to redirect to /settings/booking-type instead of just /booking-type */
 	basePath?: string;
 	search:
-		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & { component?: undefined })
+		| (Pick<SearchComboboxProps<SearchResultType>, "onSearch" | "resultLabel"> & {
+				component?: undefined;
+		  })
 		| { component: ({ setIsLoading }: { setIsLoading?: (isLoading: boolean) => void }) => JSX.Element };
 }
 
@@ -120,7 +121,6 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 	}, [pathname, searchParams]);
 
 	let name = pathname.split("/").filter((path) => path !== "" && path !== "/" && path !== basePath?.slice(1))[0];
-	name?.endsWith("s") ? (name = name.slice(0, -1)) : (name = name);
 	name = name?.split("-").join(" ");
 
 	return (
@@ -134,10 +134,10 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 								onSelectChange={(result) => {
 									if (result) {
 										setIsLoading(true);
-										router.push(`${pathname.slice(0, -1)}/${result.id}`);
+										router.push(`${pathname}/${result.id}`);
 									}
 								}}
-								placeholder={`Search ${count} ${name}s...`}
+								placeholder={`Search ${count} ${name}...`}
 								className="h-8"
 								classNames={{
 									results: "max-w-[288px]",
@@ -147,9 +147,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 										onSelect={() => {
 											setIsLoading(true);
 											router.push(
-												`${pathname.slice(0, -1)}/new${
-													searchTerm ? `?searchTerm=${encodeURIComponent(searchTerm)}` : ""
-												}`,
+												`${pathname}/new${searchTerm ? `?searchTerm=${encodeURIComponent(searchTerm)}` : ""}`,
 											);
 											return;
 										}}
@@ -212,7 +210,7 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 					<Separator orientation="vertical" className="h-4" />
 					<Button size="sm" asChild className="flex-1 md:flex-none">
 						<Link href={`${name?.split(" ").join("-")}/new`} onClick={() => setIsLoading(true)}>
-							Create {name}
+							Create {name?.endsWith("s") ? name.slice(0, -1) : name}
 						</Link>
 					</Button>
 				</div>
@@ -239,9 +237,9 @@ function DataTable<TData extends { id: string }, TValue, SearchResultType extend
 									onClick={(event) => {
 										setIsLoading(true);
 										if (event.metaKey || event.ctrlKey) {
-											window.open(`/${pathname.slice(0, -1)}/${row.original.id}`, "_blank");
+											window.open(`${pathname}/${row.original.id}`, "_blank");
 										} else {
-											router.push(`${pathname.slice(0, -1)}/${row.original.id}`, {
+											router.push(`${pathname}/${row.original.id}`, {
 												scroll: false,
 											});
 										}

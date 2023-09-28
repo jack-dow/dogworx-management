@@ -4,7 +4,8 @@ import * as React from "react";
 import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
-import { cn, secondsToHumanReadable } from "~/utils";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { Checkbox } from "../ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { RichTextEditor } from "../ui/rich-text-editor";
@@ -164,28 +165,48 @@ function BookingTypeFields({}: { variant: "dialog" | "form" }) {
 				)}
 			/>
 
-			<FormField
-				control={form.control}
-				name="details"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Default details</FormLabel>
-						<FormControl>
-							<RichTextEditor
-								content={field.value ?? undefined}
-								onValueChange={({ html, text }) => {
-									if (text === "") {
-										field.onChange(text);
-									} else {
-										field.onChange(html);
-									}
-								}}
-							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+			<div className="space-y-2">
+				<FormField
+					control={form.control}
+					name="details"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Default details</FormLabel>
+							<FormControl>
+								<RichTextEditor
+									content={field.value ?? undefined}
+									onValueChange={({ html, text }) => {
+										if (text === "") {
+											field.onChange(text);
+										} else {
+											field.onChange(html);
+										}
+									}}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="showDetailsInCalendar"
+					render={({ field }) => (
+						<FormItem className="flex items-center space-x-2 space-y-0">
+							<FormControl>
+								<Checkbox
+									checked={field.value}
+									onCheckedChange={(checked) => {
+										field.onChange(checked);
+									}}
+								/>
+							</FormControl>
+							<FormLabel>Display details on calendar</FormLabel>
+						</FormItem>
+					)}
+				/>
+			</div>
 		</>
 	);
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { Button, type ButtonProps } from "./button";
 import { CheckIcon, XIcon } from "./icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";

@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import {
 	Sheet,
-	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetFooter,
@@ -15,8 +15,8 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "~/components/ui/sheet";
-import { type VetById, type VetInsert, type VetUpdate } from "~/actions";
-import { hasTrueValue } from "~/utils";
+import { useDidUpdate } from "~/hooks/use-did-update";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
 import { useToast } from "../ui/use-toast";
@@ -26,17 +26,18 @@ import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-interface ManageVetSheetProps<VetProp extends VetById | undefined>
-	extends Omit<ManageVetSheetFormProps<VetProp>, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+interface ManageVetSheetProps extends Omit<ManageVetSheetFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	trigger?: React.ReactNode;
 }
 
-function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetSheetProps<VetProp>) {
+function ManageVetSheet(props: ManageVetSheetProps) {
 	// This is in state so that we can use the vet prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
 	const [isNew, setIsNew] = React.useState(!props.vet);
+
+	const pathname = usePathname();
 
 	const [_open, _setOpen] = React.useState(props.open || false);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -51,6 +52,10 @@ function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetShe
 			return;
 		}
 	}, [internalOpen, props.vet]);
+
+	useDidUpdate(() => {
+		setInternalOpen(false);
+	}, [pathname]);
 
 	return (
 		<>
@@ -87,44 +92,42 @@ function ManageVetSheet<VetProp extends VetById | undefined>(props: ManageVetShe
 
 					<Separator className="my-4" />
 
-					<ManageVetSheetForm
-						{...props}
-						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
-						setIsDirty={setIsDirty}
-						isNew={isNew}
-					/>
+					<ManageVetSheetForm {...props} setOpen={setInternalOpen} setIsDirty={setIsDirty} isNew={isNew} />
 				</SheetContent>
 			</Sheet>
 		</>
 	);
 }
 
-interface ManageVetSheetFormProps<VetProp extends VetById | undefined> extends UseManageVetFormProps {
+interface ManageVetSheetFormProps extends UseManageVetFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
-	onSuccessfulSubmit?: (client: VetProp extends VetById ? VetUpdate : VetInsert) => void;
-	onVetDelete?: (id: string) => void;
+	onDelete?: (id: string) => void;
 }
 
-function ManageVetSheetForm<VetProp extends VetById | undefined>({
+function ManageVetSheetForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
-	onVetDelete,
+	onDelete,
 	vet,
 	defaultValues,
 	isNew,
-}: ManageVetSheetFormProps<VetProp>) {
+}: ManageVetSheetFormProps) {
 	const { toast } = useToast();
 
-	const { form, onSubmit: _onSubmit } = useManageVetForm({ vet, defaultValues, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageVetForm({
+		vet,
+		defaultValues,
+		onSubmit,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			setOpen(false);
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	React.useEffect(() => {
@@ -133,67 +136,32 @@ function ManageVetSheetForm<VetProp extends VetById | undefined>({
 
 	return (
 		<Form {...form}>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					void form.handleSubmit(async (data) => {
-						const result = await _onSubmit(data);
-
-						if (result.success) {
-							if (result.data && onSuccessfulSubmit) {
-								onSuccessfulSubmit(result.data);
-							}
-
-							setOpen(false);
-						}
-					})(e);
-				}}
-			>
+			<form onSubmit={_onSubmit}>
 				<VetContactInformation variant="sheet" />
 
 				<Separator className="my-4" />
 
-				<VetToVetClinicRelationships
-					existingVetToVetClinicRelationships={vet?.vetToVetClinicRelationships}
-					variant="sheet"
-				/>
+				<VetToVetClinicRelationships isNew={isNew} variant="sheet" />
 
 				<Separator className="my-4" />
 
-				<VetToDogRelationships
-					existingDogToVetRelationships={vet?.dogToVetRelationships}
-					variant="sheet"
-					setOpen={setOpen}
-				/>
+				<VetToDogRelationships isNew={isNew} variant="sheet" setOpen={setOpen} />
 
 				<Separator className="my-4" />
 
-				<SheetFooter>
+				<SheetFooter className="items-center">
 					{!isNew && (
-						<VetDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-								onVetDelete?.(form.getValues("id"));
-							}}
-						/>
+						<>
+							<VetDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+									onDelete?.(form.getValues("id"));
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<SheetClose asChild>
-						<Button
-							variant="outline"
-							onClick={(e) => {
-								e.preventDefault();
-								if (isFormDirty) {
-									onConfirmCancel();
-									return;
-								}
 
-								setOpen(false);
-							}}
-						>
-							Cancel
-						</Button>
-					</SheetClose>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

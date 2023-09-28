@@ -13,11 +13,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type VetClinicsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
-function createVetClinicsTableColumns(
-	onDeleteClick: (vetClinic: VetClinicsList["data"][number]) => void,
-): ColumnDef<VetClinicsList["data"][number]>[] {
+type VetClinic = RouterOutputs["app"]["vetClinics"]["all"]["data"][number];
+
+function createVetClinicsTableColumns(onDeleteClick: (vetClinic: VetClinic) => void): ColumnDef<VetClinic>[] {
 	return [
 		{
 			accessorKey: "name",
@@ -84,7 +84,7 @@ function createVetClinicsTableColumns(
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href={`/vet/${row.original.id}`} className="hover:cursor-pointer">
+									<Link href={`/vets/${row.original.id}`} className="hover:cursor-pointer">
 										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 										Edit
 									</Link>

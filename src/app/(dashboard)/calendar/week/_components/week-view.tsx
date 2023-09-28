@@ -11,12 +11,14 @@ import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { type BookingsByWeek, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs, type DayjsDate } from "~/hooks/use-dayjs";
 import { useViewportSize } from "~/hooks/use-viewport-size";
-import { cn, secondsToHumanReadable } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
+type BookingsByWeek = RouterOutputs["app"]["bookings"]["byWeek"]["data"];
 type Booking = BookingsByWeek[number];
 
 function areBookingsOverlapping(dayjs: Dayjs, booking1: Booking, booking2: Booking): boolean {
@@ -120,21 +122,25 @@ const bookingCardColors = {
 
 function WeekView({
 	date,
-	bookings,
+	initialData,
 	bookingTypes,
 }: {
 	date?: string;
-	bookings: BookingsByWeek | null;
-	bookingTypes: BookingTypesList["data"];
+	initialData: RouterOutputs["app"]["bookings"]["byWeek"];
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { toast } = useToast();
 
 	const { dayjs } = useDayjs();
 
-	const container = React.useRef<HTMLDivElement>(null);
-	const containerNav = React.useRef<HTMLDivElement>(null);
-	const containerOffset = React.useRef<HTMLDivElement>(null);
-	const calendar = React.useRef<HTMLOListElement>(null);
+	const {
+		data: { data: bookings },
+	} = api.app.bookings.byWeek.useQuery({ date }, { initialData });
+
+	const containerRef = React.useRef<HTMLDivElement>(null);
+	const containerNavRef = React.useRef<HTMLDivElement>(null);
+	const containerOffsetRef = React.useRef<HTMLDivElement>(null);
+	const calendarRef = React.useRef<HTMLOListElement>(null);
 
 	const user = useUser();
 
@@ -158,9 +164,11 @@ function WeekView({
 	React.useEffect(() => {
 		// Set the container scroll position based on the current time.
 		const currentMinute = new Date().getHours() * 60;
-		if (container.current && containerNav.current && containerOffset.current) {
-			container.current.scrollTop =
-				((container.current.scrollHeight - containerNav.current.offsetHeight - containerOffset.current.offsetHeight) *
+		if (containerRef.current && containerNavRef.current && containerOffsetRef.current) {
+			containerRef.current.scrollTop =
+				((containerRef.current.scrollHeight -
+					containerNavRef.current.offsetHeight -
+					containerOffsetRef.current.offsetHeight) *
 					currentMinute) /
 				1440;
 		}
@@ -269,7 +277,7 @@ function WeekView({
 						</div>
 					</header>
 					<div
-						ref={container}
+						ref={containerRef}
 						className={cn(
 							"isolate flex flex-auto flex-col overflow-auto border bg-white",
 							prefersDarkMode ? "md:rounded-md" : "rounded-md",
@@ -277,7 +285,7 @@ function WeekView({
 					>
 						<div style={{ width: "165%" }} className="flex max-w-full flex-none flex-col sm:max-w-none lg:max-w-full">
 							<div
-								ref={containerNav}
+								ref={containerNavRef}
 								className="sticky top-0 z-30 flex-none bg-white shadow ring-1 ring-black/5  sm:pr-8"
 							>
 								<div className="m-1 grid grid-cols-7 text-sm leading-6 text-gray-500 sm:-mr-px sm:divide-x sm:divide-gray-100 sm:border-r sm:border-gray-100 ">
@@ -423,7 +431,7 @@ function WeekView({
 										className="col-start-1 col-end-2 row-start-1 grid divide-y divide-gray-100"
 										style={{ gridTemplateRows: "repeat(48, minmax(3.5rem, 1fr))" }}
 									>
-										<div ref={containerOffset} className="row-end-1 h-4" />
+										<div ref={containerOffsetRef} className="row-end-1 h-4" />
 
 										{[
 											"12AM",
@@ -502,7 +510,7 @@ function WeekView({
 									<ol
 										className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8"
 										style={{ gridTemplateRows: "1.75rem repeat(288, minmax(0, 1fr)) auto" }}
-										ref={calendar}
+										ref={calendarRef}
 										onClick={(event) => {
 											if (isPreviewCardOpen) {
 												return;
@@ -520,16 +528,31 @@ function WeekView({
 
 											const halfHourHeight = Math.ceil((rect.height - 32) / 48);
 
-
 											const day = Math.floor(offsetX / ((rect.width - 32) / 7));
 											const halfHourClicked = Math.floor(offsetY / halfHourHeight);
-											const date = startOfWeek.startOf("day").add(day, "day").add(halfHourClicked * 30, "minutes");
-
+											const date = startOfWeek
+												.startOf("day")
+												.add(day, "day")
+												.add(halfHourClicked * 30, "minutes");
 
 											setIsManageBookingDialogOpen(true);
 											setLastSelectedDate(date);
 										}}
 									>
+										<li
+											className="relative col-span-full flex h-3 w-full items-center"
+											style={{
+												gridRow: `${Math.floor(
+													(288 / 24) * (dayjs.tz().get("hours") + dayjs.tz().get("minutes") / 60) + 2,
+												)} / span ${1}`,
+											}}
+										>
+											<div className="absolute left-[-51.5px] z-30  text-right text-xs leading-5 text-gray-400">
+												{dayjs.tz().format("h:mmA")}
+											</div>
+											<Separator className="h-full w-px bg-primary pl-[2px]" />
+											<Separator orientation="horizontal" className="bg-primary" />
+										</li>
 										{groupOverlappingBookings(dayjs, bookingsLessThanOneDay).map((bookings) => {
 											return bookings.map((booking, index) => {
 												const bookingStart = dayjs.tz(booking.date);
@@ -553,7 +576,7 @@ function WeekView({
 															colStartClasses.at(bookingStart.day()),
 														)}
 														style={{
-															gridRow: `${Math.floor((288 / 24) * time + 1)} / span ${
+															gridRow: `${Math.floor((288 / 24) * time + 2)} / span ${
 																Math.floor((booking.duration / 60) * 0.2) || 1
 															}`,
 															width:
@@ -574,7 +597,7 @@ function WeekView({
 															trigger={
 																<button
 																	className={cn(
-																		"group m-1 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5 flex-1",
+																		"group m-1 mt-0 flex flex-col overflow-hidden whitespace-normal rounded-lg border p-2 text-xs leading-5 flex-1",
 																		colors.card,
 																	)}
 																	onClick={(e) => {
@@ -599,6 +622,18 @@ function WeekView({
 																	<p className={cn("max-w-full truncate whitespace-normal text-left", colors.text)}>
 																		{secondsToHumanReadable(booking.duration)}
 																	</p>
+																	{bookingType?.showDetailsInCalendar ? (
+																		booking.details ? (
+																			<div
+																				className={cn("prose prose-sm whitespace-pre-wrap", colors.text)}
+																				dangerouslySetInnerHTML={{ __html: booking.details }}
+																			/>
+																		) : (
+																			<div className="prose prose-sm whitespace-pre-wrap">
+																				<p className={cn("italic text-left", colors.text)}>No details provided.</p>
+																			</div>
+																		)
+																	) : null}
 																</button>
 															}
 														/>
@@ -686,7 +721,7 @@ function BookingPopover({ booking, trigger, onEditClick, setIsPreviewCardOpen }:
 							<div className="grid gap-y-2">
 								<Label htmlFor="dog">Dog</Label>
 								<Button variant="ghost" asChild className="-ml-4 h-auto w-[318px] justify-between rounded-none">
-									<Link href={`/dog/${booking.dog.id}`}>
+									<Link href={`/dogs/${booking.dog.id}`}>
 										<div className="flex max-w-full shrink items-center gap-x-2 truncate">
 											<div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-slate-50">
 												<DogIcon className="h-5 w-5" />

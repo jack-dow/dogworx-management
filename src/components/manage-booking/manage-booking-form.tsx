@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
@@ -14,13 +14,27 @@ import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBookingFormProps) {
+function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit }: UseManageBookingFormProps) {
 	const isNew = !booking;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingForm({ booking, onSubmit, bookingTypes });
+	const { form, onSubmit: _onSubmit } = useManageBookingForm({
+		booking,
+		onSubmit,
+		bookingTypes,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			if (isNew) {
+				router.replace(`/bookings/${data.id}`);
+				return;
+			}
+
+			router.push("/bookings");
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -38,25 +52,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes }: UseManageBooking
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							const result = await _onSubmit(data);
-
-							if (result.success) {
-								if (isNew) {
-									router.replace(`/booking/${data.id}`);
-									return;
-								}
-
-								router.push("/bookings");
-							}
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
 					<FormSection
 						title="Booking Information"
 						description={`

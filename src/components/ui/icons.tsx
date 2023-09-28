@@ -31,7 +31,7 @@ import {
 	UserPlusIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon as ExclamationTriangleOutlineIcon } from "@heroicons/react/24/outline";
 import {
 	Square2StackIcon as BookingIcon,
 	CalendarDaysIcon,
@@ -42,7 +42,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { DotFilledIcon } from "@radix-ui/react-icons";
 
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 
 type IconProps = {
 	className: string;
@@ -694,7 +694,7 @@ export {
 	EllipsisVerticalIcon,
 	EnvelopeIcon,
 	EyeIcon,
-	ExclamationTriangleIcon,
+	ExclamationTriangleOutlineIcon,
 	EyeSlashIcon,
 	InvoiceIcon,
 	PlusIcon,

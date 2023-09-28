@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import {
 	Dialog,
@@ -11,29 +12,29 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { type BookingById, type BookingInsert, type BookingUpdate } from "~/actions";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
 import { Loader } from "../ui/loader";
+import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-interface ManageBookingDialogProps<BookingProp extends BookingById | undefined>
-	extends Omit<ManageBookingDialogFormProps<BookingProp>, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+interface ManageBookingDialogProps extends Omit<ManageBookingDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	trigger?: React.ReactNode;
 }
 
-function ManageBookingDialog<BookingProp extends BookingById | undefined>(
-	props: ManageBookingDialogProps<BookingProp>,
-) {
+function ManageBookingDialog(props: ManageBookingDialogProps) {
 	// This is in state so that we can use the booking prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
 	const [isNew, setIsNew] = React.useState(!props.booking);
+
+	const pathname = usePathname();
 
 	const [_open, _setOpen] = React.useState(props.open);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -48,6 +49,10 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 			return;
 		}
 	}, [internalOpen, props.booking]);
+
+	useDidUpdate(() => {
+		setInternalOpen(false);
+	}, [pathname]);
 
 	return (
 		<>
@@ -75,7 +80,7 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="max-h-screen overflow-y-auto xl:max-w-2xl 2xl:max-w-3xl">
+				<DialogContent className="xl:max-w-2xl 2xl:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Booking</DialogTitle>
 						<DialogDescription>
@@ -88,9 +93,6 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 					<ManageBookingDialogForm
 						{...props}
 						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
 						setIsDirty={setIsDirty}
 						bookingTypes={props.bookingTypes}
 						isNew={isNew}
@@ -101,34 +103,36 @@ function ManageBookingDialog<BookingProp extends BookingById | undefined>(
 	);
 }
 
-interface ManageBookingDialogFormProps<BookingProp extends BookingById | undefined> extends UseManageBookingFormProps {
+interface ManageBookingDialogFormProps extends UseManageBookingFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
-	onSuccessfulSubmit?: (booking: BookingProp extends BookingById ? BookingUpdate : BookingInsert) => void;
-	dog?: BookingById["dog"];
+	disableDogSearch?: boolean;
 }
 
-function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
+function ManageBookingDialogForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	booking,
 	defaultValues,
 	bookingTypes,
 	isNew,
-	dog,
-}: ManageBookingDialogFormProps<BookingProp>) {
+	disableDogSearch,
+}: ManageBookingDialogFormProps) {
 	const { toast } = useToast();
 
 	const { form, onSubmit: _onSubmit } = useManageBookingForm({
 		booking,
-		defaultValues: { ...defaultValues, dogId: defaultValues?.dogId ?? dog?.id },
+		defaultValues,
 		onSubmit,
 		bookingTypes,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			setOpen(false);
+		},
 	});
 
 	React.useEffect(() => {
@@ -137,48 +141,21 @@ function ManageBookingDialogForm<BookingProp extends BookingById | undefined>({
 
 	return (
 		<Form {...form}>
-			<form
-				className="flex flex-col gap-4"
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
+			<form onSubmit={_onSubmit} className="flex flex-col gap-4">
+				<BookingFields variant="dialog" disableDogSearch={disableDogSearch} bookingTypes={bookingTypes} />
 
-					void form.handleSubmit(async (data) => {
-						const result = await _onSubmit(data);
-
-						if (result.success) {
-							if (result.data && onSuccessfulSubmit) {
-								onSuccessfulSubmit(result.data);
-							}
-
-							setOpen(false);
-						}
-					})(e);
-				}}
-			>
-				<BookingFields variant="dialog" dog={dog} bookingTypes={bookingTypes} />
-
-				<DialogFooter className="mt-2">
+				<DialogFooter className="mt-2 items-center">
 					{!isNew && (
-						<BookingDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-							}}
-						/>
+						<>
+							<BookingDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<Button
-						variant="outline"
-						onClick={() => {
-							if (form.formState.isDirty) {
-								onConfirmCancel();
-								return;
-							}
 
-							setOpen(false);
-						}}
-					>
-						Cancel
-					</Button>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

@@ -13,11 +13,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type ClientsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
-function createClientsTableColumns(
-	onDeleteClick: (client: ClientsList["data"][number]) => void,
-): ColumnDef<ClientsList["data"][number]>[] {
+type Client = RouterOutputs["app"]["clients"]["all"]["data"][number];
+
+function createClientsTableColumns(onDeleteClick: (client: Client) => void): ColumnDef<Client>[] {
 	return [
 		{
 			accessorKey: "fullName",
@@ -85,7 +85,7 @@ function createClientsTableColumns(
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href={`/client/${row.original.id}`} className="hover:cursor-pointer">
+									<Link href={`/clients/${row.original.id}`} className="hover:cursor-pointer">
 										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 										Edit
 									</Link>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 
 import { BOOKING_TYPES_COLORS } from "~/components/manage-booking-types/booking-types-fields";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,
@@ -14,12 +15,12 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type BookingTypesList } from "~/actions";
-import { cn, secondsToHumanReadable } from "~/utils";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
-function createBookingTypesTableColumns(
-	onDeleteClick: (bookingType: BookingTypesList["data"][number]) => void,
-): ColumnDef<BookingTypesList["data"][number]>[] {
+type BookingType = RouterOutputs["app"]["bookingTypes"]["all"]["data"][number];
+
+function createBookingTypesTableColumns(onDeleteClick: (bookingType: BookingType) => void): ColumnDef<BookingType>[] {
 	return [
 		{
 			accessorKey: "name",
@@ -30,8 +31,23 @@ function createBookingTypesTableColumns(
 			),
 			cell: ({ row }) => {
 				return (
-					<div className="flex max-w-[500px] flex-col">
+					<div className="flex max-w-[500px] items-center gap-2">
 						<span className="truncate font-medium">{row.getValue("name")}</span>
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "isDefault",
+			header: () => (
+				<div className="text-xs">
+					<span className="truncate">Status</span>
+				</div>
+			),
+			cell: ({ row }) => {
+				return (
+					<div className="relative flex items-center">
+						{row.original.isDefault && <Badge variant="default">Default</Badge>}
 					</div>
 				);
 			},
@@ -64,18 +80,19 @@ function createBookingTypesTableColumns(
 						{row.original.color in BOOKING_TYPES_COLORS && (
 							<div
 								className={cn(
-									"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+									"w-4 h-4 rounded-full absolute mt-0.5 left-0 flex items-center justify-center",
 									BOOKING_TYPES_COLORS[row.original.color as keyof typeof BOOKING_TYPES_COLORS],
 								)}
 							/>
 						)}
-						<span className={cn("truncate capitalize", row.original.color in BOOKING_TYPES_COLORS && "pl-8")}>
+						<span className={cn("truncate capitalize", row.original.color in BOOKING_TYPES_COLORS && "pl-6")}>
 							{row.getValue("color")}
 						</span>
 					</div>
 				);
 			},
 		},
+
 		{
 			id: "actions",
 			cell: ({ row }) => {
@@ -92,7 +109,7 @@ function createBookingTypesTableColumns(
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href={`/booking-type/${row.original.id}`} className="hover:cursor-pointer">
+									<Link href={`/booking-types/${row.original.id}`} className="hover:cursor-pointer">
 										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 										Edit
 									</Link>

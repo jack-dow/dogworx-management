@@ -14,11 +14,11 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type DogsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
 
-function createDogsTableColumns(
-	onDeleteClick: (dog: DogsList["data"][number]) => void,
-): ColumnDef<DogsList["data"][number]>[] {
+type Dog = RouterOutputs["app"]["dogs"]["all"]["data"][number];
+
+function createDogsTableColumns(onDeleteClick: (dog: Dog) => void): ColumnDef<Dog>[] {
 	return [
 		{
 			accessorKey: "givenName",
@@ -95,7 +95,7 @@ function createDogsTableColumns(
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem asChild>
-								<Link href={`/dog/${row.original.id}`} className="hover:cursor-pointer">
+								<Link href={`/dogs/${row.original.id}`} className="hover:cursor-pointer">
 									<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 									Edit
 								</Link>

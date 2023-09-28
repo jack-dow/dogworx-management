@@ -1,10 +1,8 @@
 import * as React from "react";
 import { type Metadata } from "next";
-import { desc } from "drizzle-orm";
 
 import { PageHeader } from "~/components/page-header";
-import { actions } from "~/actions";
-import { drizzle } from "~/db/drizzle";
+import { server } from "~/lib/trpc/server";
 import { ManageAccountForm } from "./_components/manage-account-form";
 
 export const metadata: Metadata = {
@@ -12,18 +10,13 @@ export const metadata: Metadata = {
 };
 
 async function AccountSettingsPage() {
-	const session = await actions.auth.sessions.current();
-
-	const userSessions = await drizzle.query.sessions.findMany({
-		where: (sessions, { eq }) => eq(sessions.userId, session.user.id),
-		orderBy: (sessions) => [desc(sessions.updatedAt), desc(sessions.createdAt), desc(sessions.id)],
-	});
+	const sessions = await server.auth.user.sessions.all.query();
 
 	return (
 		<>
 			<PageHeader title="Account settings" back={{ href: "/" }} />
 
-			<ManageAccountForm sessions={userSessions} />
+			<ManageAccountForm initialSessions={sessions} />
 		</>
 	);
 }

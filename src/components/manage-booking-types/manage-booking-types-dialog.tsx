@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import {
 	Dialog,
@@ -11,32 +12,30 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { type BookingTypeById, type BookingTypeInsert, type BookingTypeUpdate } from "~/actions";
+import { useDidUpdate } from "~/hooks/use-did-update";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
 import { Loader } from "../ui/loader";
+import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
-import { BookingTypeDeleteDialog } from "./booking-types-delete-dialog";
+import { BookingTypeDeleteDialog } from "./booking-type-delete-dialog";
 import { BookingTypeFields } from "./booking-types-fields";
 import { useManageBookingTypeForm, type UseManageBookingTypeFormProps } from "./use-manage-booking-types-form";
 
-interface ManageBookingTypeDialogProps<BookingTypeProp extends BookingTypeById | undefined>
-	extends Omit<
-		ManageBookingTypeDialogFormProps<BookingTypeProp>,
-		"setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"
-	> {
+interface ManageBookingTypeDialogProps
+	extends Omit<ManageBookingTypeDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
 	trigger?: React.ReactNode;
 }
 
-function ManageBookingTypeDialog<BookingTypeProp extends BookingTypeById | undefined>(
-	props: ManageBookingTypeDialogProps<BookingTypeProp>,
-) {
+function ManageBookingTypeDialog(props: ManageBookingTypeDialogProps) {
 	// This is in state so that we can use the booking type prop as the open state as well when using the sheet without having a flash between update/new state on sheet closing
 	const [isNew, setIsNew] = React.useState(!props.bookingType);
+
+	const pathname = usePathname();
 
 	const [_open, _setOpen] = React.useState(props.open);
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -51,6 +50,10 @@ function ManageBookingTypeDialog<BookingTypeProp extends BookingTypeById | undef
 			return;
 		}
 	}, [internalOpen, props.bookingType]);
+
+	useDidUpdate(() => {
+		setInternalOpen(false);
+	}, [pathname]);
 
 	return (
 		<>
@@ -78,7 +81,7 @@ function ManageBookingTypeDialog<BookingTypeProp extends BookingTypeById | undef
 					<DialogTrigger asChild>{props.trigger ?? <Button>Create booking type</Button>}</DialogTrigger>
 				)}
 
-				<DialogContent className="max-h-screen overflow-y-auto">
+				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>{isNew ? "Create" : "Manage"} Booking type</DialogTitle>
 						<DialogDescription>
@@ -88,45 +91,40 @@ function ManageBookingTypeDialog<BookingTypeProp extends BookingTypeById | undef
 					</DialogHeader>
 
 					{/* Put actual form in a separate component inside DialogContent so that it gets unmounted when the dialog is hidden, therefore resetting the form state */}
-					<ManageBookingTypeDialogForm
-						{...props}
-						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
-						setIsDirty={setIsDirty}
-						isNew={isNew}
-					/>
+					<ManageBookingTypeDialogForm {...props} setOpen={setInternalOpen} setIsDirty={setIsDirty} isNew={isNew} />
 				</DialogContent>
 			</Dialog>
 		</>
 	);
 }
 
-interface ManageBookingTypeDialogFormProps<BookingTypeProp extends BookingTypeById | undefined>
-	extends UseManageBookingTypeFormProps {
+interface ManageBookingTypeDialogFormProps extends UseManageBookingTypeFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
-	onSuccessfulSubmit?: (
-		bookingType: BookingTypeProp extends BookingTypeById ? BookingTypeUpdate : BookingTypeInsert,
-	) => void;
 }
 
-function ManageBookingTypeDialogForm<BookingTypeProp extends BookingTypeById | undefined>({
+function ManageBookingTypeDialogForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	bookingType,
 	defaultValues,
 	isNew,
-}: ManageBookingTypeDialogFormProps<BookingTypeProp>) {
+}: ManageBookingTypeDialogFormProps) {
 	const { toast } = useToast();
 
-	const { form, onSubmit: _onSubmit } = useManageBookingTypeForm({ bookingType, defaultValues, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageBookingTypeForm({
+		bookingType,
+		defaultValues,
+		onSubmit,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			setOpen(false);
+		},
+	});
 
 	React.useEffect(() => {
 		setIsDirty(form.formState.isDirty);
@@ -134,48 +132,20 @@ function ManageBookingTypeDialogForm<BookingTypeProp extends BookingTypeById | u
 
 	return (
 		<Form {...form}>
-			<form
-				className="grid gap-4"
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-
-					void form.handleSubmit(async (data) => {
-						const result = await _onSubmit(data);
-
-						if (result.success) {
-							if (result.data && onSuccessfulSubmit) {
-								onSuccessfulSubmit(result.data);
-							}
-
-							setOpen(false);
-						}
-					})(e);
-				}}
-			>
+			<form className="grid gap-4" onSubmit={_onSubmit}>
 				<BookingTypeFields variant="dialog" />
 
-				<DialogFooter className="mt-2">
+				<DialogFooter className="mt-2 items-center">
 					{!isNew && (
-						<BookingTypeDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-							}}
-						/>
+						<>
+							<BookingTypeDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<Button
-						variant="outline"
-						onClick={() => {
-							if (form.formState.isDirty) {
-								onConfirmCancel();
-								return;
-							}
-
-							setOpen(false);
-						}}
-					>
-						Cancel
-					</Button>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

@@ -9,8 +9,8 @@ import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { useSession } from "~/app/providers";
 import DogworxPawLogoGradient from "~/assets/dogworx-paw-logo-gradient.svg";
-import { signOut } from "~/lib/auth";
-import { cn } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn } from "~/lib/utils";
 import { navigation } from "./dark-desktop-sidebar";
 import {
 	DropdownMenu,
@@ -31,6 +31,8 @@ function MobileNavigation() {
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+	const signOutMutation = api.auth.user.signOut.useMutation();
 
 	return (
 		<Sheet>
@@ -57,6 +59,14 @@ function MobileNavigation() {
 							<ul role="list" className="-mx-2 space-y-1">
 								{Object.values(navigation).map((item) => {
 									const current = item.href === pathname || pathname.startsWith(`${item.href.slice(0, -1)}/`);
+
+									if (
+										item.adminOnly &&
+										session.user.organizationRole !== "owner" &&
+										session.user.organizationRole !== "admin"
+									) {
+										return null;
+									}
 
 									return (
 										<React.Fragment key={item.name}>
@@ -93,7 +103,9 @@ function MobileNavigation() {
 												<ul role="list" className="flex flex-1 flex-col gap-y-2">
 													{Object.values(item.subNavigation).map((subItem, index) => {
 														const current =
-															subItem.href === pathname || pathname.startsWith(`${subItem.href.slice(0, -1)}/`);
+															item.href === pathname ||
+															pathname.startsWith(item.href) ||
+															item.subNavigation?.some((subItem) => subItem.href === pathname);
 
 														const isLast = index === item.subNavigation.length - 1;
 
@@ -165,8 +177,8 @@ function MobileNavigation() {
 										)}
 										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
-											<span aria-hidden="true" className="block text-left text-xs text-muted-foreground">
-												Administrator
+											<span aria-hidden="true" className="block text-left text-xs capitalize text-muted-foreground">
+												{session.user.organizationRole}
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left">
 												{session.user.givenName} {session.user.familyName}
@@ -194,7 +206,8 @@ function MobileNavigation() {
 											e.preventDefault();
 											setIsSigningOut(true);
 
-											signOut()
+											signOutMutation
+												.mutateAsync()
 												.then(() => {
 													router.push("/sign-in");
 													router.refresh();

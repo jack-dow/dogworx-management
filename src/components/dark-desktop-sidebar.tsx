@@ -7,8 +7,9 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useSession } from "~/app/providers";
 import DogworxLogoWhite from "~/assets/dogworx-logo-white.svg";
-import { signOut } from "~/lib/auth";
-import { cn } from "~/utils";
+import { env } from "~/env.mjs";
+import { api } from "~/lib/trpc/client";
+import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 import {
 	DropdownMenu,
@@ -39,6 +40,7 @@ type Navigation = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	icon: (...args: any[]) => JSX.Element | React.ReactNode;
 	disabled: boolean;
+	adminOnly?: boolean;
 	subNavigation?: Array<{
 		name: string;
 		href: string;
@@ -54,10 +56,15 @@ export const navigation = [
 	{ name: "Bookings", href: "/bookings", icon: BookingIcon, disabled: false },
 	{
 		name: "Settings",
-		href: "/settings/booking-types",
+		href: "/settings/organization",
 		icon: SettingsIcon,
 		disabled: false,
+		adminOnly: true,
 		subNavigation: [
+			{
+				name: "Organization",
+				href: "/settings/organization",
+			},
 			{
 				name: "Booking types",
 				href: "/settings/booking-types",
@@ -73,6 +80,8 @@ function DarkDesktopSidebar() {
 	const { toast } = useToast();
 
 	const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+	const signOutMutation = api.auth.user.signOut.useMutation();
 
 	return (
 		<div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col 2xl:w-80">
@@ -94,7 +103,15 @@ function DarkDesktopSidebar() {
 									const current =
 										item.href === pathname ||
 										pathname.startsWith(item.href) ||
-										pathname.startsWith(`${item.href.slice(0, -1)}/`);
+										item.subNavigation?.some((subItem) => subItem.href === pathname);
+
+									if (
+										item.adminOnly &&
+										session.user.organizationRole !== "owner" &&
+										session.user.organizationRole !== "admin"
+									) {
+										return null;
+									}
 
 									return (
 										<React.Fragment key={"desktop-" + item.name}>
@@ -181,7 +198,7 @@ function DarkDesktopSidebar() {
 										</React.Fragment>
 									);
 								})}
-								{session.user.emailAddress === "jack.dowww@gmail.com" && (
+								{session.user.organizationId === env.NEXT_PUBLIC_ADMIN_ORG_ID && (
 									<li>
 										<a
 											href="/organizations"
@@ -232,8 +249,8 @@ function DarkDesktopSidebar() {
 										)}
 										<div className="flex flex-col justify-start">
 											<span className="sr-only">Open user settings</span>
-											<span aria-hidden="true" className="block text-left text-xs text-muted">
-												Administrator
+											<span aria-hidden="true" className="block text-left text-xs capitalize text-muted">
+												{session.user.organizationRole}
 											</span>
 											<span aria-hidden="true" className="mt-0.5 w-full text-left text-white">
 												{session.user.givenName} {session.user.familyName}
@@ -261,7 +278,8 @@ function DarkDesktopSidebar() {
 											e.preventDefault();
 											setIsSigningOut(true);
 
-											signOut()
+											signOutMutation
+												.mutateAsync()
 												.then(() => {
 													router.push("/sign-in");
 													router.refresh();

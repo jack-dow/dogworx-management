@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/button";
 import { ConfirmFormNavigationDialog } from "~/components/ui/confirm-form-navigation-dialog";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/utils";
+import { hasTrueValue } from "~/lib/utils";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
 import { ClientDeleteDialog } from "./client-delete-dialog";
@@ -15,13 +15,26 @@ import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { useManageClientForm, type UseManageClientFormProps } from "./use-manage-client-form";
 
-function ManageClientForm({ client, onSubmit }: UseManageClientFormProps) {
+function ManageClientForm({ client, onSubmit, onSuccessfulSubmit }: UseManageClientFormProps) {
 	const isNew = !client;
 
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const { form, onSubmit: _onSubmit } = useManageClientForm({ client, onSubmit });
+	const { form, onSubmit: _onSubmit } = useManageClientForm({
+		client,
+		onSubmit,
+		onSuccessfulSubmit: (data) => {
+			onSuccessfulSubmit?.(data);
+
+			if (isNew) {
+				router.replace(`/clients/${data.id}`);
+				return;
+			}
+
+			router.push("/clients");
+		},
+	});
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
@@ -39,24 +52,7 @@ function ManageClientForm({ client, onSubmit }: UseManageClientFormProps) {
 			/>
 
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						void form.handleSubmit(async (data) => {
-							const result = await _onSubmit(data);
-
-							if (result.success) {
-								if (isNew) {
-									router.replace(`/client/${data.id}`);
-									return;
-								}
-								router.push("/clients");
-							}
-						})(e);
-					}}
-					className="space-y-6 lg:space-y-10"
-				>
+				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
 					<ClientPersonalInformation variant="form" />
 
 					<Separator />
@@ -65,29 +61,19 @@ function ManageClientForm({ client, onSubmit }: UseManageClientFormProps) {
 						title="Manage Relationships"
 						description="Manage the relationships of this client between other dogs within the system."
 					>
-						<ClientToDogRelationships
-							existingDogToClientRelationships={client?.dogToClientRelationships}
-							variant="form"
-						/>
+						<ClientToDogRelationships isNew={isNew} variant="form" />
 					</FormSection>
 
 					<Separator />
 
-					<div className="flex justify-end space-x-4">
-						{!isNew && <ClientDeleteDialog />}
-						<Button
-							type="button"
-							onClick={() => {
-								if (isFormDirty) {
-									setIsConfirmNavigationDialogOpen(true);
-								} else {
-									router.back();
-								}
-							}}
-							variant="outline"
-						>
-							Back
-						</Button>
+					<div className="flex items-center justify-end space-x-3">
+						{!isNew && (
+							<>
+								<ClientDeleteDialog />
+								<Separator orientation="vertical" className="h-4" />
+							</>
+						)}
+
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

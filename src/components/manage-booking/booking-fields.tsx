@@ -7,10 +7,11 @@ import ms from "ms";
 import { useFormContext } from "react-hook-form";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { actions, type BookingById, type BookingTypesList } from "~/actions";
 import { useUser } from "~/app/providers";
 import { useDayjs, type Dayjs } from "~/hooks/use-dayjs";
-import { cn, secondsToHumanReadable } from "~/utils";
+import { api } from "~/lib/trpc/client";
+import { cn, secondsToHumanReadable } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 import { BOOKING_TYPES_COLORS } from "../manage-booking-types/booking-types-fields";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
@@ -54,18 +55,20 @@ function roundDateToNearest15Minutes(dayjs: Dayjs, date: Date) {
 }
 
 function BookingFields({
-	dog,
+	disableDogSearch,
 	bookingTypes,
 }: {
 	variant: "dialog" | "form";
-	dog?: BookingById["dog"];
-	bookingTypes: BookingTypesList["data"];
+	disableDogSearch?: boolean;
+	bookingTypes: RouterOutputs["app"]["bookingTypes"]["all"]["data"];
 }) {
 	const { dayjs } = useDayjs();
 	const router = useRouter();
 
 	const user = useUser();
 	const form = useFormContext<ManageBookingFormSchema>();
+
+	const context = api.useContext();
 
 	const [dateInputValue, setDateInputValue] = React.useState("");
 	const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
@@ -84,66 +87,104 @@ function BookingFields({
 			<FormField
 				control={form.control}
 				name="bookingTypeId"
-				render={({ field }) => (
-					<FormItem className="w-full">
-						<FormLabel>Booking Type</FormLabel>
-						<Select
-							onValueChange={(value) => {
-								field.onChange(value);
-							}}
-							value={field.value ?? undefined}
-						>
-							<FormControl>
-								<SelectTrigger className={cn("relative")}>
-									<SelectValue placeholder="Default Booking">
-										<span className="truncate capitalize">
-											{!field.value
-												? "Default Booking"
-												: bookingTypes.find((bookingType) => bookingType.id === field.value)!.name}
-										</span>
-									</SelectValue>
-								</SelectTrigger>
-							</FormControl>
-							<SelectContent align="start" className="max-w-[350px]">
-								<SelectGroup>
-									<SelectLabel>Booking types</SelectLabel>
-									<SelectItem value="" className={"pl-8 capitalize"}>
-										<div
-											className={cn(
-												"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
-											)}
-										/>
-										Default Booking
-									</SelectItem>
-
-									{bookingTypes?.map((bookingType) => (
-										<SelectItem
-											key={bookingType.id}
-											value={bookingType.id}
-											className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
-											onClick={() => {
-												if (form.getValues("duration") !== bookingType.duration) {
-													form.setValue("duration", bookingType.duration, { shouldDirty: true });
-													setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
-												}
-											}}
-										>
+				render={({ field }) => {
+					const bookingType = bookingTypes.find((bookingType) => bookingType.id === field.value)!;
+					const defaultBookingType = bookingTypes.find((bookingType) => bookingType.isDefault);
+					return (
+						<FormItem className="w-full">
+							<FormLabel>Booking Type</FormLabel>
+							<Select
+								onValueChange={(value) => {
+									field.onChange(value || null);
+								}}
+								value={field.value ?? undefined}
+							>
+								<FormControl>
+									<SelectTrigger className={cn("relative pl-8")}>
+										<SelectValue>
 											<div
 												className={cn(
 													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
-													bookingType.color in BOOKING_TYPES_COLORS &&
-														BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+													bookingType && bookingType?.color in BOOKING_TYPES_COLORS
+														? BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS]
+														: "bg-violet-200",
 												)}
 											/>
-											{bookingType.name}
-										</SelectItem>
-									))}
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-						<FormMessage />
-					</FormItem>
-				)}
+											<span className="truncate capitalize">
+												{!field.value ? "Default Booking" : bookingType?.name ?? "Deleted booking type"}
+											</span>
+										</SelectValue>
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent align="start" className="max-w-[350px]">
+									<SelectGroup>
+										<SelectLabel>Booking types</SelectLabel>
+
+										{defaultBookingType ? (
+											<SelectItem
+												key={defaultBookingType.id}
+												value={defaultBookingType.id}
+												className={cn("capitalize", defaultBookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+												onClick={() => {
+													if (form.getValues("duration") !== defaultBookingType.duration) {
+														form.setValue("duration", defaultBookingType.duration, { shouldDirty: true });
+														setDurationInputValue(ms(defaultBookingType.duration * 1000, { long: true }));
+													}
+												}}
+											>
+												<div
+													className={cn(
+														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+														defaultBookingType.color in BOOKING_TYPES_COLORS &&
+															BOOKING_TYPES_COLORS[defaultBookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+													)}
+												/>
+												{defaultBookingType.name}
+											</SelectItem>
+										) : (
+											<SelectItem value="" className={"pl-8 capitalize"}>
+												<div
+													className={cn(
+														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
+													)}
+												/>
+												Default Booking
+											</SelectItem>
+										)}
+
+										{bookingTypes?.map((bookingType) => {
+											if (bookingType.isDefault) return null;
+
+											return (
+												<SelectItem
+													key={bookingType.id}
+													value={bookingType.id}
+													className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+													onClick={() => {
+														if (form.getValues("duration") !== bookingType.duration) {
+															form.setValue("duration", bookingType.duration, { shouldDirty: true });
+															setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
+														}
+													}}
+												>
+													<div
+														className={cn(
+															"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+															bookingType.color in BOOKING_TYPES_COLORS &&
+																BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+														)}
+													/>
+													{bookingType.name}
+												</SelectItem>
+											);
+										})}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
 			/>
 
 			<div className="grid grid-cols-3 gap-4">
@@ -336,39 +377,38 @@ function BookingFields({
 					control={form.control}
 					name="dogId"
 					render={({ field }) => {
-						const defaultSelected = dog ?? form.getValues("dog");
+						const dogId = form.getValues("dogId");
+						const dog = form.getValues("dog");
 
 						return (
 							<FormItem>
 								<FormLabel>Dog</FormLabel>
 								<FormControl>
 									<SearchCombobox
-										disabled={dog !== undefined}
-										placeholder="Select dog"
+										disabled={disableDogSearch}
+										placeholder={disableDogSearch ? "" : "Select dog"}
 										onSearch={async (searchTerm) => {
-											const result = await actions.app.dogs.search(searchTerm);
-
-											if (!result.success) {
-												throw new Error("Failed to search dogs");
-											}
+											const result = await context.app.dogs.search.fetch({ searchTerm });
 
 											return result.data;
 										}}
-										resultLabel={(result) => `${result.givenName ?? "Unnamed Dog"} ${result.familyName}`}
+										resultLabel={(result) =>
+											result.givenName ? `${result.givenName} ${result.familyName}` : "Unnamed Dog"
+										}
 										onSelectChange={(result) => {
 											field.onChange(result?.id ?? "");
 										}}
 										renderActions={({ searchTerm }) => (
 											<SearchComboboxAction
 												onSelect={() => {
-													router.push(`/dog/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
+													router.push(`/dogs/new${searchTerm ? `?searchTerm=${searchTerm}` : ""}`);
 												}}
 											>
 												<PlusIcon className="mr-1 h-4 w-4" />
 												<span className="truncate">Create new dog {searchTerm && `"${searchTerm}"`}</span>
 											</SearchComboboxAction>
 										)}
-										defaultSelected={defaultSelected}
+										defaultSelected={dogId ? dog ?? undefined : undefined}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -380,39 +420,40 @@ function BookingFields({
 				<FormField
 					control={form.control}
 					name="assignedToId"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Assigned to</FormLabel>
-							<FormControl>
-								<SearchCombobox
-									placeholder="Select user"
-									onSearch={async (searchTerm) => {
-										const result = await actions.app.users.search(searchTerm);
+					render={({ field }) => {
+						const assignedToId = form.getValues("assignedToId");
+						const assignedTo = form.getValues("assignedTo");
 
-										if (!result.success) {
-											throw new Error("Failed to search users");
-										}
+						return (
+							<FormItem>
+								<FormLabel>Assigned to</FormLabel>
+								<FormControl>
+									<SearchCombobox
+										placeholder="Select user"
+										onSearch={async (searchTerm) => {
+											const result = await context.auth.organizations.users.search.fetch({ searchTerm });
 
-										return result.data;
-									}}
-									onBlur={({ setSearchTerm, setSelected, setResults }) => {
-										if (!form.getValues("assignedToId")) {
-											field.onChange(user?.id);
-											setSearchTerm(`${user.givenName} ${user.familyName}`);
-											setSelected(user);
-											setResults([user]);
-										}
-									}}
-									resultLabel={(result) => `${result.givenName} ${result.familyName}`}
-									onSelectChange={(result) => {
-										field.onChange(result?.id);
-									}}
-									defaultSelected={form.getValues("assignedTo")}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
+											return result.data;
+										}}
+										onBlur={({ setSearchTerm, setSelected, setResults }) => {
+											if (!form.getValues("assignedToId")) {
+												field.onChange(user?.id);
+												setSearchTerm(`${user.givenName} ${user.familyName}`);
+												setSelected(user);
+												setResults([user]);
+											}
+										}}
+										resultLabel={(result) => `${result.givenName} ${result.familyName}`}
+										onSelectChange={(result) => {
+											field.onChange(result?.id);
+										}}
+										defaultSelected={assignedToId ? assignedTo ?? undefined : user}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						);
+					}}
 				/>
 			</div>
 

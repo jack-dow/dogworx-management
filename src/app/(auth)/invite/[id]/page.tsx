@@ -4,28 +4,30 @@ import Link from "next/link";
 import { sql } from "drizzle-orm";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { actions } from "~/actions";
 import DogworxLogoGradient from "~/assets/dogworx-logo-gradient.svg";
 import { drizzle } from "~/db/drizzle";
-import { organizationInviteLinks } from "~/db/schema";
+import { organizationInviteLinks } from "~/db/schema/auth";
+import { server } from "~/lib/trpc/server";
 import { InviteForm } from "./_components/invite-form";
 
 export const metadata: Metadata = {
-	title: "Sign Up | Dogworx Management",
+	title: "Invalid Invite | Dogworx Management",
 };
 
 async function InvitePage({ params }: { params: { id: string } }) {
-	const response = await actions.auth.organizations.getInviteLink(params.id);
+	const response = await server.auth.organizations.inviteLinks.byId.query({ id: params.id });
 
 	if (
 		!response.data ||
 		(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
-		response.data.expiresAt < new Date()
+		response.data.createdAt.setSeconds(response.data.createdAt.getSeconds() + response.data.expiresAfter) <
+			new Date().getTime()
 	) {
 		if (response.data) {
 			if (
 				(response.data.maxUses && response.data.uses >= response.data.maxUses) ||
-				response.data?.expiresAt < new Date()
+				response.data.createdAt.setSeconds(response.data.createdAt.getSeconds() + response.data.expiresAfter) <
+					new Date().getTime()
 			) {
 				await drizzle.delete(organizationInviteLinks).where(sql`BINARY ${organizationInviteLinks.id} = ${params.id}`);
 			}
@@ -37,7 +39,7 @@ async function InvitePage({ params }: { params: { id: string } }) {
 					<Image src={DogworxLogoGradient as string} alt="Dogworx Logo (Gradient Version)" width={237} height={60} />
 				</div>
 				<Card className="w-full sm:max-w-lg">
-					<CardHeader className="space-y-1">
+					<CardHeader className="space-y-1 pb-4">
 						<CardTitle className="text-2xl">Invalid Invite</CardTitle>
 						<CardDescription>
 							This invite may have expired or is invalid. Please contact your organization owner for a new invite.

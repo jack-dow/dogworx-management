@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import duration from "dayjs/plugin/duration";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isToday from "dayjs/plugin/isToday";
 import relativeTime from "dayjs/plugin/relativeTime";
 import timezone from "dayjs/plugin/timezone";
@@ -21,6 +22,7 @@ dayjs.extend(utc);
 dayjs.updateLocale("en", {
 	weekStart: 1,
 });
+dayjs.extend(isSameOrBefore);
 
 export const useDayjs = () => {
 	const timezone = useTimezone();

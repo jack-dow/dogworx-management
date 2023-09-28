@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TRPCError } from "@trpc/server";
 import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
@@ -9,15 +11,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
-import { type OrganizationInviteLinkById } from "~/actions";
-import { VerifyEmailAddressAlertDialog } from "~/app/(auth)/_components/verify-email-address-dialog";
-import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/sign-in/magic-link/send/route";
-import { signUp } from "~/lib/auth";
-import { SignUpSchema } from "~/lib/validation";
+import { api } from "~/lib/trpc/client";
+import { SignUpSchema } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 
-function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) {
+function InviteForm({
+	inviteLink,
+}: {
+	inviteLink: NonNullable<RouterOutputs["auth"]["organizations"]["inviteLinks"]["byId"]["data"]>;
+}) {
 	const { toast } = useToast();
-	const [verifyEmail, setVerifyEmail] = React.useState<string | null>(null);
+	const router = useRouter();
 
 	const form = useForm<SignUpSchema>({
 		resolver: zodResolver(SignUpSchema),
@@ -27,6 +31,9 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 			emailAddress: "",
 		},
 	});
+
+	const signUpMutation = api.auth.user.create.useMutation();
+	const sendMagicLinkMutation = api.auth.signIn.magicLink.send.useMutation();
 
 	async function onSubmit(data: SignUpSchema) {
 		if (form.formState.errors.emailAddress) {
@@ -39,10 +46,24 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 		}
 
 		try {
-			const signUpResponse = await signUp(data, inviteLink);
+			await signUpMutation.mutateAsync({
+				inviteLinkId: inviteLink.id,
+				user: data,
+			});
 
-			if (!signUpResponse.success) {
-				if (signUpResponse.error.code === "AlreadyExists") {
+			await sendMagicLinkMutation.mutateAsync({
+				emailAddress: data.emailAddress,
+			});
+
+			router.push(`/verification-code?emailAddress=${encodeURIComponent(data.emailAddress)}`);
+
+			toast({
+				title: "Verification code sent",
+				description: "Please check your email for the code and magic link.",
+			});
+		} catch (error) {
+			if (error instanceof TRPCError) {
+				if (error.code === "CONFLICT") {
 					form.setError("emailAddress", {
 						type: "manual",
 						message: "Email already in use",
@@ -53,37 +74,15 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 						variant: "destructive",
 					});
 					return;
+				} else if (error.code === "BAD_REQUEST") {
+					toast({
+						title: "Something went wrong",
+						description: error.message,
+						variant: "destructive",
+					});
+					return;
 				}
-
-				toast({
-					title: "Something went wrong.",
-					description: "An unknown error ocurred and your sign up request failed. Please try again.",
-					variant: "destructive",
-				});
-				return;
 			}
-
-			const response = await fetch("/api/auth/sign-in/magic-link/send", {
-				method: "POST",
-				body: JSON.stringify({ emailAddress: data.emailAddress }),
-			});
-			const body = (await response.json()) as SendMagicLinkPOSTResponse;
-
-			if (body.success) {
-				setVerifyEmail(data.emailAddress);
-				toast({
-					title: "Verification code sent",
-					description: "Please check your email for the code and magic link.",
-				});
-				return;
-			}
-
-			toast({
-				title: "Something went wrong",
-				description: "An unknown error ocurred and your sign in request failed. Please try again.",
-				variant: "destructive",
-			});
-		} catch (error) {
 			toast({
 				title: `An unknown error occurred`,
 				description: "An unknown error ocurred, please try again.",
@@ -94,17 +93,6 @@ function InviteForm({ inviteLink }: { inviteLink: OrganizationInviteLinkById }) 
 
 	return (
 		<>
-			<VerifyEmailAddressAlertDialog
-				emailAddress={verifyEmail}
-				open={!!verifyEmail}
-				setOpen={(open) => {
-					if (!open) {
-						setVerifyEmail(null);
-					}
-				}}
-				type="sign-up"
-			/>
-
 			<Form {...form}>
 				<form
 					className="grid grid-cols-2 gap-4"

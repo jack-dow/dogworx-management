@@ -13,11 +13,13 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { EditIcon, EllipsisVerticalIcon, TrashIcon } from "~/components/ui/icons";
-import { type OrganizationsList } from "~/actions";
+import { type RouterOutputs } from "~/server";
+
+type Organization = RouterOutputs["auth"]["organizations"]["all"]["data"][number];
 
 function createOrganizationsTableColumns(
-	onDeleteClick: (organization: OrganizationsList["data"][number]) => void,
-): ColumnDef<OrganizationsList["data"][number]>[] {
+	onDeleteClick: (organization: Organization) => void,
+): ColumnDef<Organization>[] {
 	return [
 		{
 			accessorKey: "name",
@@ -45,7 +47,7 @@ function createOrganizationsTableColumns(
 				return (
 					<div className="flex items-center">
 						<span className="truncate">
-							{row.original.users.length}/{row.original.maxUsers}
+							{row.original.organizationUsers.length}/{row.original.maxUsers}
 						</span>
 					</div>
 				);
@@ -68,7 +70,7 @@ function createOrganizationsTableColumns(
 								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href={`/organization/${row.original.id}`} className="hover:cursor-pointer">
+									<Link href={`/organizations/${row.original.id}`} className="hover:cursor-pointer">
 										<EditIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 										Edit
 									</Link>

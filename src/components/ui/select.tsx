@@ -3,8 +3,9 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { CheckIcon, ChevronUpDownIcon } from "./icons";
+import { Loader } from "./loader";
 
 // HACK: Fixes select closing too quickly when clicking on an option causing the option to not be selected (or item behind select to be clicked instead)
 // SEE: https://github.com/radix-ui/primitives/pull/2085 - Hopefully will be fixed by this PR
@@ -103,8 +104,8 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
 const SelectItem = React.forwardRef<
 	React.ElementRef<typeof SelectPrimitive.Item>,
-	React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
+	React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & { isLoading?: boolean }
+>(({ className, children, isLoading, ...props }, ref) => (
 	<SelectPrimitive.Item
 		ref={ref}
 		className={cn(
@@ -118,6 +119,7 @@ const SelectItem = React.forwardRef<
 		) : (
 			<>
 				<span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+					{isLoading && <Loader size="sm" variant="black" />}
 					<SelectPrimitive.ItemIndicator>
 						<CheckIcon className="h-4 w-4" />
 					</SelectPrimitive.ItemIndicator>

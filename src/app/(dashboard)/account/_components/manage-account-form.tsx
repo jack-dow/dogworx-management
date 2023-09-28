@@ -1,43 +1,47 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { type z } from "zod";
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
-import { Form } from "~/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { useToast } from "~/components/ui/use-toast";
-import { actions } from "~/actions";
-import { type ProfileImageUrlGETResponse } from "~/app/api/auth/profile-image-url/route";
 import { useUser } from "~/app/providers";
-import { type sessions } from "~/db/schema";
-import { InsertUserSchema, SelectSessionSchema } from "~/db/validation";
-import { AccountDelete } from "./account-delete";
-import { AccountDisplayName } from "./account-display-name";
-import { AccountEmailAddress } from "./account-email-address";
+import { InsertUserSchema } from "~/db/validation/auth";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
+import { type RouterOutputs } from "~/server";
 import { AccountProfileImage } from "./account-profile-image";
 import { AccountSessions } from "./account-sessions";
 import { AccountVerifyNewEmailAddressDialog } from "./account-verify-new-email-address-dialog";
 
-type Session = typeof sessions.$inferSelect;
-
-const ManageAccountFormSchema = InsertUserSchema.extend({
-	sessions: z.array(SelectSessionSchema),
-});
+const ManageAccountFormSchema = InsertUserSchema;
 type ManageAccountFormSchema = z.infer<typeof ManageAccountFormSchema>;
 
-function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
+function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs["auth"]["user"]["sessions"]["all"] }) {
 	const user = useUser();
 	const { toast } = useToast();
+	const router = useRouter();
 	const form = useForm<ManageAccountFormSchema>({
 		resolver: zodResolver(ManageAccountFormSchema),
-		defaultValues: {
-			...user,
-			sessions,
-		},
+		defaultValues: user,
 	});
 
 	// Have to hold the file here because we need to upload as a File not a url and if you use a File in zod it errors when run on the server as File doesn't exist there
@@ -45,60 +49,53 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 
 	const [verifyNewEmail, setVerifyNewEmail] = React.useState<string | null>(null);
 
+	const [isDeletingAccount, setIsDeletingAccount] = React.useState(false);
+
+	const context = api.useContext();
+
+	const accountUpdateMutation = api.auth.user.update.useMutation({});
+	const accountDeleteMutation = api.auth.user.delete.useMutation({});
+
 	async function onSubmit(data: ManageAccountFormSchema) {
 		try {
 			let successfullyUploadedImage = false;
+
+			// If the profile image has changed, upload it
 			if (data.profileImageUrl !== user.profileImageUrl) {
-				const errorResponse = {
-					title: "Failed to upload profile image",
-					description: "An unknown error occurred while trying to upload your profile image. Please try again.",
-				};
 				if (uploadedProfileImage) {
-					const response = await fetch(
-						`/api/auth/profile-image-url?fileType=${encodeURIComponent(uploadedProfileImage.type)}`,
-						{
-							method: "GET",
-						},
-					);
+					try {
+						const { data: url } = await context.auth.user.getProfileImageUrl.fetch({
+							fileType: uploadedProfileImage.type,
+						});
 
-					const body = (await response.json()) as ProfileImageUrlGETResponse;
+						const uploadResponse = await fetch(url, {
+							method: "PUT",
+							body: uploadedProfileImage,
+						});
 
-					if (!body.success || !response.ok) {
-						toast(errorResponse);
-					} else {
-						try {
-							const url = body.data;
-							const response = await fetch(url, {
-								method: "PUT",
-								body: uploadedProfileImage,
-							});
-
-							if (!response.ok) {
-								toast(errorResponse);
-							} else {
-								function removeQueryParametersFromUrl(url: string) {
-									const index = url.indexOf("?");
-									if (index !== -1) {
-										return url.substring(0, index);
-									}
-									return url;
-								}
-
-								data.profileImageUrl = removeQueryParametersFromUrl(url);
-								successfullyUploadedImage = true;
-							}
-						} catch {
-							toast(errorResponse);
+						if (!uploadResponse.ok) {
+							throw new Error("Failed to upload profile image");
 						}
-					}
-				} else {
-					if (data.profileImageUrl != null) {
-						toast(errorResponse);
+
+						const index = url.indexOf("?");
+						if (index !== -1) {
+							data.profileImageUrl = url.substring(0, index);
+						} else {
+							data.profileImageUrl = url;
+						}
+						successfullyUploadedImage = true;
+					} catch (error) {
+						logInDevelopment(error);
+
+						toast({
+							title: "Failed to upload profile image",
+							description: "An unknown error occurred while trying to upload your profile image. Please try again.",
+						});
 					}
 				}
 			}
 
-			await actions.auth.user.update({
+			await accountUpdateMutation.mutateAsync({
 				...data,
 				emailAddress: user.emailAddress,
 				profileImageUrl:
@@ -119,6 +116,7 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 			});
 
 			form.reset(data);
+			router.refresh();
 		} catch (error) {
 			toast({
 				title: "Failed to update account",
@@ -134,11 +132,73 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 				onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
 				className="space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12"
 			>
-				<AccountDisplayName control={form.control} />
+				<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+					<div>
+						<h2 className="text-base font-semibold leading-7 text-foreground">Display name</h2>
+						<p className="text-sm leading-6 text-muted-foreground">This will be displayed publicly as your name.</p>
+					</div>
+
+					<div className="flex flex-col gap-2 xl:col-span-2 xl:flex-row xl:gap-4">
+						<div className="flex w-full flex-1">
+							<FormField
+								control={form.control}
+								name="givenName"
+								render={({ field }) => (
+									<FormItem className="w-full">
+										<FormLabel>First name</FormLabel>
+										<FormControl>
+											<Input {...field} value={field.value ?? ""} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
+						<div className="flex w-full flex-1">
+							<FormField
+								control={form.control}
+								name="familyName"
+								render={({ field }) => (
+									<FormItem className="w-full">
+										<FormLabel>Last name</FormLabel>
+										<FormControl>
+											<Input {...field} value={field.value ?? ""} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+					</div>
+				</div>
 
 				<Separator />
 
-				<AccountEmailAddress control={form.control} />
+				<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+					<div>
+						<h2 className="text-base font-semibold leading-7 text-foreground">Email address</h2>
+						<p className="text-sm leading-6 text-muted-foreground">
+							This will be used to sign in, provide reports and receipts, and send you notifications.
+						</p>
+					</div>
+
+					<div className="xl:col-span-2">
+						<FormField
+							control={form.control}
+							name="emailAddress"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel className="sr-only">Email address</FormLabel>
+									<FormControl>
+										<Input {...field} value={field.value ?? ""} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</div>
 				<AccountVerifyNewEmailAddressDialog
 					emailAddress={verifyNewEmail}
 					open={!!verifyNewEmail}
@@ -159,11 +219,82 @@ function ManageAccountForm({ sessions }: { sessions: Array<Session> }) {
 
 				<Separator />
 
-				<AccountSessions control={form.control} />
+				<AccountSessions initialSessions={initialSessions} />
 
 				<Separator className="hidden sm:flex" />
 
-				<AccountDelete />
+				<div className="grid grid-cols-1 items-center gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+					<div>
+						<h2 className="text-base font-semibold leading-7 text-foreground">Delete account</h2>
+						<p className="text-sm leading-6 text-muted-foreground">
+							Once you delete your account, there is no going back. All data associated with your account will be
+							permanently deleted.
+						</p>
+					</div>
+					<div className="flex flex-col space-y-4 xl:col-span-2">
+						{user.organizationRole === "owner" && (
+							<div className="shrink-0 text-sm">
+								Your account is currently the owner of the organization. You must transfer ownership of the organization
+								to another user before you can delete your account.
+							</div>
+						)}
+						<div>
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button disabled={user.organizationRole === "owner"} variant="destructive">
+										Delete your account
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent className="sm:max-w-[425px]">
+									<AlertDialogHeader>
+										<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+										<AlertDialogDescription>
+											Once you delete your account, it and all associated data will be permanently deleted.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogAction
+											variant="destructive"
+											disabled={isDeletingAccount}
+											onClick={(e) => {
+												e.preventDefault();
+												e.stopPropagation();
+												setIsDeletingAccount(true);
+
+												accountDeleteMutation
+													.mutateAsync()
+													.then(() => {
+														toast({
+															title: "Account deleted",
+															description: "Your account was successfully deleted.",
+														});
+														void router.push("/sign-in");
+													})
+													.catch((error) => {
+														logInDevelopment(error);
+
+														toast({
+															title: "Something went wrong",
+															description:
+																"An unknown error ocurred and we were unable to delete your account. Please try again.",
+															variant: "destructive",
+														});
+													})
+													.finally(() => {
+														setIsDeletingAccount(false);
+													});
+											}}
+										>
+											{isDeletingAccount && <Loader size="sm" />}
+											<span>Delete account</span>
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						</div>
+					</div>
+				</div>
 
 				<Separator className="my-8" />
 

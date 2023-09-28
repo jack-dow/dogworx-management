@@ -8,7 +8,7 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { TrashIcon } from "~/components/ui/icons";
 import { useToast } from "~/components/ui/use-toast";
-import { cn } from "~/utils";
+import { cn } from "~/lib/utils";
 import { type ManageAccountFormSchema } from "./manage-account-form";
 
 function AccountProfileImage({ setUploadedProfileImage }: { setUploadedProfileImage: (file: File | null) => void }) {
