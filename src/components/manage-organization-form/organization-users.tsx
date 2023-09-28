@@ -270,10 +270,7 @@ function OrganizationUserItem({
 								</div>
 							) : (
 								<p className="mt-1 text-xs leading-5 text-muted-foreground">
-									Last seen{" "}
-									<time dateTime={dayjs.tz(organizationUser.sessions[0].lastActiveAt).toISOString()}>
-										{dayjs.tz(organizationUser.sessions[0].lastActiveAt).fromNow()}
-									</time>
+									Last seen {dayjs.tz(organizationUser.sessions[0].lastActiveAt).fromNow()}
 								</p>
 							)}
 						</>

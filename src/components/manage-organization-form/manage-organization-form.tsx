@@ -109,7 +109,7 @@ function ManageOrganizationForm(props: ManageOrganizationFormProps) {
 					variant: "destructive",
 				});
 			}
-		});
+		})(e);
 	}
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);

@@ -294,7 +294,7 @@ function ManageOrganizationUserDialogForm({
 					variant: "destructive",
 				});
 			}
-		});
+		})(e);
 	}
 
 	return (

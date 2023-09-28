@@ -136,10 +136,7 @@ function SessionAccordionItem({ session, isCurrentSession = false, onDelete }: S
 							</div>
 						) : (
 							<p className="mt-1 text-xs leading-5 text-muted-foreground">
-								Last seen{" "}
-								<time dateTime={dayjs.tz(session.lastActiveAt).toISOString()}>
-									{dayjs.tz(session.lastActiveAt).fromNow()}
-								</time>
+								Last seen {dayjs.tz(session.lastActiveAt).fromNow()}
 							</p>
 						)}
 					</div>
