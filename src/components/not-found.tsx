@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useParams, usePathname } from "next/navigation";
 
 import NotFoundImage from "~/assets/not-found.svg";
-import { ExclamationTriangleIcon } from "./ui/icons";
+import { ExclamationTriangleOutlineIcon } from "./ui/icons";
 
 function NotFound() {
 	const pathname = usePathname();
@@ -15,7 +15,7 @@ function NotFound() {
 	return (
 		<div className="flex w-full flex-col items-center justify-center ">
 			<div className="max-w-md pb-8 text-center">
-				<ExclamationTriangleIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+				<ExclamationTriangleOutlineIcon className="mx-auto h-8 w-8 text-muted-foreground" />
 
 				<h2 className="mt-4 text-lg font-semibold leading-6 text-gray-900">
 					No {name?.split("-").join(" ")} found with id: &quot;{params.id}&quot;

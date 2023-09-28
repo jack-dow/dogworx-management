@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { bookingTypes } from "~/db/schema/app";
@@ -29,6 +29,7 @@ export const bookingTypesRouter = createTRPCRouter({
 				duration: true,
 				color: true,
 				showDetailsInCalendar: true,
+				isDefault: true,
 			},
 			limit: limit,
 			offset: (page - 1) * limit,
@@ -57,6 +58,7 @@ export const bookingTypesRouter = createTRPCRouter({
 				duration: true,
 				color: true,
 				showDetailsInCalendar: true,
+				isDefault: true,
 			},
 			limit: 20,
 			where: (bookingTypes, { and, eq, like }) =>
@@ -80,18 +82,51 @@ export const bookingTypesRouter = createTRPCRouter({
 	}),
 
 	insert: protectedProcedure.input(InsertBookingTypeSchema).mutation(async ({ ctx, input }) => {
-		await ctx.db.insert(bookingTypes).values({
-			...input,
-			organizationId: ctx.user.organizationId,
+		await ctx.db.transaction(async (trx) => {
+			await Promise.all([
+				input.isDefault
+					? await trx
+							.update(bookingTypes)
+							.set({ isDefault: false })
+							.where(
+								and(
+									eq(bookingTypes.organizationId, ctx.user.organizationId),
+									eq(bookingTypes.isDefault, true),
+									ne(bookingTypes.id, input.id),
+								),
+							)
+					: undefined,
+				trx.insert(bookingTypes).values({
+					...input,
+					organizationId: ctx.user.organizationId,
+				}),
+			]);
 		});
 	}),
 
 	update: protectedProcedure.input(UpdateBookingTypeSchema).mutation(async ({ ctx, input }) => {
 		const { id, ...data } = input;
-		await ctx.db
-			.update(bookingTypes)
-			.set(data)
-			.where(and(eq(bookingTypes.organizationId, ctx.user.organizationId), eq(bookingTypes.id, id)));
+
+		await ctx.db.transaction(async (trx) => {
+			await Promise.all([
+				input.isDefault
+					? await trx
+							.update(bookingTypes)
+							.set({ isDefault: false })
+							.where(
+								and(
+									eq(bookingTypes.organizationId, ctx.user.organizationId),
+									eq(bookingTypes.isDefault, true),
+									ne(bookingTypes.id, id),
+								),
+							)
+					: undefined,
+				trx
+					.update(bookingTypes)
+					.set(data)
+					.where(and(eq(bookingTypes.organizationId, ctx.user.organizationId), eq(bookingTypes.id, id))),
+			]);
+		});
 	}),
 
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {

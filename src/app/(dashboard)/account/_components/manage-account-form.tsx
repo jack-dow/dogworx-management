@@ -68,14 +68,10 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 							fileType: uploadedProfileImage.type,
 						});
 
-						console.log({ url });
-
 						const uploadResponse = await fetch(url, {
 							method: "PUT",
 							body: uploadedProfileImage,
 						});
-
-						console.log({ uploadResponse });
 
 						if (!uploadResponse.ok) {
 							throw new Error("Failed to upload profile image");
@@ -120,6 +116,7 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 			});
 
 			form.reset(data);
+			router.refresh();
 		} catch (error) {
 			toast({
 				title: "Failed to update account",

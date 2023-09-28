@@ -8,7 +8,8 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import { hasTrueValue } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
-import { Form, FormSection } from "../ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormSection } from "../ui/form";
+import { Switch } from "../ui/switch";
 import { useToast } from "../ui/use-toast";
 import { BookingTypeDeleteDialog } from "./booking-type-delete-dialog";
 import { BookingTypeFields } from "./booking-types-fields";
@@ -65,22 +66,34 @@ function ManageBookingTypeForm({ bookingType, onSubmit, onSuccessfulSubmit }: Us
 
 					<Separator />
 
-					<div className="flex justify-end space-x-4">
-						{!isNew && <BookingTypeDeleteDialog />}
-						<Button
-							type="button"
-							onClick={() => {
-								if (isFormDirty) {
-									setIsConfirmNavigationDialogOpen(true);
-									return;
-								}
+					<div className="flex items-center justify-end space-x-3">
+						<div className="flex items-center space-x-2">
+							<FormField
+								control={form.control}
+								name="isDefault"
+								render={({ field }) => (
+									<FormItem className="flex items-center space-x-2 space-y-0">
+										<FormLabel>Set to Default</FormLabel>
+										<FormControl>
+											<Switch
+												checked={field.value}
+												onCheckedChange={(checked) => {
+													field.onChange(checked);
+												}}
+											/>
+										</FormControl>
+									</FormItem>
+								)}
+							/>
+						</div>
+						<Separator orientation="vertical" className="h-4" />
+						{!isNew && (
+							<>
+								<BookingTypeDeleteDialog />
+								<Separator orientation="vertical" className="h-4" />
+							</>
+						)}
 
-								router.back();
-							}}
-							variant="outline"
-						>
-							Back
-						</Button>
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

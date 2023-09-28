@@ -89,6 +89,7 @@ function BookingFields({
 				name="bookingTypeId"
 				render={({ field }) => {
 					const bookingType = bookingTypes.find((bookingType) => bookingType.id === field.value)!;
+					const defaultBookingType = bookingTypes.find((bookingType) => bookingType.isDefault);
 					return (
 						<FormItem className="w-full">
 							<FormLabel>Booking Type</FormLabel>
@@ -118,37 +119,65 @@ function BookingFields({
 								<SelectContent align="start" className="max-w-[350px]">
 									<SelectGroup>
 										<SelectLabel>Booking types</SelectLabel>
-										<SelectItem value="" className={"pl-8 capitalize"}>
-											<div
-												className={cn(
-													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
-												)}
-											/>
-											Default Booking
-										</SelectItem>
 
-										{bookingTypes?.map((bookingType) => (
+										{defaultBookingType ? (
 											<SelectItem
-												key={bookingType.id}
-												value={bookingType.id}
-												className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+												key={defaultBookingType.id}
+												value={defaultBookingType.id}
+												className={cn("capitalize", defaultBookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
 												onClick={() => {
-													if (form.getValues("duration") !== bookingType.duration) {
-														form.setValue("duration", bookingType.duration, { shouldDirty: true });
-														setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
+													if (form.getValues("duration") !== defaultBookingType.duration) {
+														form.setValue("duration", defaultBookingType.duration, { shouldDirty: true });
+														setDurationInputValue(ms(defaultBookingType.duration * 1000, { long: true }));
 													}
 												}}
 											>
 												<div
 													className={cn(
 														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
-														bookingType.color in BOOKING_TYPES_COLORS &&
-															BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+														defaultBookingType.color in BOOKING_TYPES_COLORS &&
+															BOOKING_TYPES_COLORS[defaultBookingType.color as keyof typeof BOOKING_TYPES_COLORS],
 													)}
 												/>
-												{bookingType.name}
+												{defaultBookingType.name}
 											</SelectItem>
-										))}
+										) : (
+											<SelectItem value="" className={"pl-8 capitalize"}>
+												<div
+													className={cn(
+														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
+													)}
+												/>
+												Default Booking
+											</SelectItem>
+										)}
+
+										{bookingTypes?.map((bookingType) => {
+											if (bookingType.isDefault) return null;
+
+											return (
+												<SelectItem
+													key={bookingType.id}
+													value={bookingType.id}
+													className={cn("capitalize", bookingType.color in BOOKING_TYPES_COLORS && "pl-8")}
+													onClick={() => {
+														if (form.getValues("duration") !== bookingType.duration) {
+															form.setValue("duration", bookingType.duration, { shouldDirty: true });
+															setDurationInputValue(ms(bookingType.duration * 1000, { long: true }));
+														}
+													}}
+												>
+													<div
+														className={cn(
+															"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
+															bookingType.color in BOOKING_TYPES_COLORS &&
+																BOOKING_TYPES_COLORS[bookingType.color as keyof typeof BOOKING_TYPES_COLORS],
+														)}
+													/>
+													{bookingType.name}
+												</SelectItem>
+											);
+										})}
 									</SelectGroup>
 								</SelectContent>
 							</Select>

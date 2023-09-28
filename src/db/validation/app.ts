@@ -299,6 +299,8 @@ export const UpdateBookingTypeSchema = InsertBookingTypeSchema.pick({
 	color: true,
 	duration: true,
 	details: true,
+	showDetailsInCalendar: true,
+	isDefault: true,
 })
 	.partial()
 	.extend({

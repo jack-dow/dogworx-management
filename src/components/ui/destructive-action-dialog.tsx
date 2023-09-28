@@ -10,13 +10,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "./dialog";
+import { TrashIcon } from "./icons";
 import { Loader } from "./loader";
 
 type DestructiveActionDialogProps = {
 	name: string;
 	requiresSaveOf?: string;
 	withoutTrigger?: boolean;
-	trigger?: React.ReactNode;
+	trigger?: "trash";
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	onConfirm: () => Promise<void> | void;
@@ -42,7 +43,16 @@ function DestructiveActionDialog({
 	return (
 		<Dialog open={internalOpen} onOpenChange={internalOnOpenChange}>
 			{!withoutTrigger && (
-				<DialogTrigger asChild>{trigger ?? <Button variant="destructive">Delete {name}</Button>}</DialogTrigger>
+				<DialogTrigger asChild>
+					{trigger === "trash" ? (
+						<Button variant="outline" size="icon">
+							<span className="sr-only">Delete {name}</span>
+							<TrashIcon className="h-4 w-4" />
+						</Button>
+					) : (
+						<Button variant="destructive">Delete {name}</Button>
+					)}
+				</DialogTrigger>
 			)}
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>

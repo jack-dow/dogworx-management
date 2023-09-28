@@ -66,21 +66,14 @@ function ManageClientForm({ client, onSubmit, onSuccessfulSubmit }: UseManageCli
 
 					<Separator />
 
-					<div className="flex justify-end space-x-4">
-						{!isNew && <ClientDeleteDialog />}
-						<Button
-							type="button"
-							onClick={() => {
-								if (isFormDirty) {
-									setIsConfirmNavigationDialogOpen(true);
-								} else {
-									router.back();
-								}
-							}}
-							variant="outline"
-						>
-							Back
-						</Button>
+					<div className="flex items-center justify-end space-x-3">
+						{!isNew && (
+							<>
+								<ClientDeleteDialog />
+								<Separator orientation="vertical" className="h-4" />
+							</>
+						)}
+
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

@@ -215,40 +215,34 @@ export const userRouter = createTRPCRouter({
 				}
 
 				if (input?.validate) {
-					const session = await ctx.db.query.sessions.findFirst({
-						where: (sessions, { eq }) => eq(sessions.id, ctx.session!.id),
-						with: {
-							user: true,
-						},
-					});
-
-					console.log({ session, ctx: ctx.session });
-
-					if (
-						!session ||
-						session.expiresAt < new Date() ||
-						!session.user ||
-						(session.user.bannedAt && !session.user.bannedUntil) ||
-						(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date())
-					) {
-						if (session) {
-							await ctx.db.delete(schema.sessions).where(eq(schema.sessions.id, ctx.session.id));
-						}
-
-						cookies().set({
-							...sessionCookieOptions,
-							value: "",
+					// SEE: ~/lib/utils for why we don't include exp in the jwt.
+					if (Math.floor(Date.now() / 1000) - ctx.session.iat > sessionJWTExpiry) {
+						const session = await ctx.db.query.sessions.findFirst({
+							where: (sessions, { eq }) => eq(sessions.id, ctx.session!.id),
+							with: {
+								user: true,
+							},
 						});
 
-						return { data: null };
-					}
+						if (
+							!session ||
+							session.expiresAt < new Date() ||
+							!session.user ||
+							(session.user.bannedAt && !session.user.bannedUntil) ||
+							(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date())
+						) {
+							if (session) {
+								await ctx.db.delete(schema.sessions).where(eq(schema.sessions.id, ctx.session.id));
+							}
 
-					// SEE: ../../utils for why we don't include exp in the jwt.
-					if (
-						Math.floor(Date.now() / 1000) - ctx.session.iat > sessionJWTExpiry ||
-						session.updatedAt > new Date(ctx.session.iat * 1000) ||
-						session.user.updatedAt > new Date(ctx.session.iat * 1000)
-					) {
+							cookies().set({
+								...sessionCookieOptions,
+								value: "",
+							});
+
+							return { data: null };
+						}
+
 						const newSession = {
 							id: session.id,
 							user: session.user,
@@ -284,6 +278,7 @@ export const userRouter = createTRPCRouter({
 
 						return {
 							data: { ...newSession, iat: new Date().getTime(), nbf: new Date().getTime() } satisfies SessionCookie,
+							token: newSessionToken,
 						};
 					}
 				}

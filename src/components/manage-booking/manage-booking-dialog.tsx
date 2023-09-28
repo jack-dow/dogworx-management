@@ -17,13 +17,13 @@ import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
 import { Loader } from "../ui/loader";
+import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
-interface ManageBookingDialogProps
-	extends Omit<ManageBookingDialogFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+interface ManageBookingDialogProps extends Omit<ManageBookingDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -93,9 +93,6 @@ function ManageBookingDialog(props: ManageBookingDialogProps) {
 					<ManageBookingDialogForm
 						{...props}
 						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
 						setIsDirty={setIsDirty}
 						bookingTypes={props.bookingTypes}
 						isNew={isNew}
@@ -109,7 +106,6 @@ function ManageBookingDialog(props: ManageBookingDialogProps) {
 interface ManageBookingDialogFormProps extends UseManageBookingFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
 	disableDogSearch?: boolean;
 }
@@ -117,7 +113,6 @@ interface ManageBookingDialogFormProps extends UseManageBookingFormProps {
 function ManageBookingDialogForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	booking,
@@ -149,27 +144,18 @@ function ManageBookingDialogForm({
 			<form onSubmit={_onSubmit} className="flex flex-col gap-4">
 				<BookingFields variant="dialog" disableDogSearch={disableDogSearch} bookingTypes={bookingTypes} />
 
-				<DialogFooter className="mt-2">
+				<DialogFooter className="mt-2 items-center">
 					{!isNew && (
-						<BookingDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-							}}
-						/>
+						<>
+							<BookingDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<Button
-						variant="outline"
-						onClick={() => {
-							if (form.formState.isDirty) {
-								onConfirmCancel();
-								return;
-							}
 
-							setOpen(false);
-						}}
-					>
-						Cancel
-					</Button>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

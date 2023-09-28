@@ -70,7 +70,6 @@ async function sign<Token extends Record<string, unknown>>(payload: Token) {
 	const iat = Math.floor(Date.now() / 1000);
 
 	// Didn't include exp here because jose throws error if exp is passed and we want to be able to access the payload of expired jwt's in middleware
-	// To delete all user sessions if the user's token is stolen
 	return new SignJWT(payload)
 		.setProtectedHeader({ alg: "HS256", typ: "JWT" })
 		.setIssuedAt(iat)

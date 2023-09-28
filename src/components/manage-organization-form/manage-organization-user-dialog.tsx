@@ -38,6 +38,7 @@ import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
 import { api } from "~/lib/trpc/client";
 import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
+import { Separator } from "../ui/separator";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 const ManageOrganizationUserFormSchema = InsertUserSchema;
@@ -45,7 +46,7 @@ const ManageOrganizationUserFormSchema = InsertUserSchema;
 type ManageOrganizationUserFormSchema = z.infer<typeof ManageOrganizationUserFormSchema>;
 
 interface ManageOrganizationUserDialogProps
-	extends Omit<ManageOrganizationUserDialogFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+	extends Omit<ManageOrganizationUserDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -115,9 +116,6 @@ function ManageOrganizationUserDialog(props: ManageOrganizationUserDialogProps) 
 					<ManageOrganizationUserDialogForm
 						{...props}
 						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
 						setIsDirty={setIsDirty}
 						isNew={isNew}
 					/>
@@ -130,7 +128,6 @@ function ManageOrganizationUserDialog(props: ManageOrganizationUserDialogProps) 
 type ManageOrganizationUserDialogFormProps = {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
 	isOrganizationNew: boolean;
 	organizationUser?: ManageOrganizationFormSchema["organizationUsers"][number];
@@ -142,7 +139,6 @@ type ManageOrganizationUserDialogFormProps = {
 function ManageOrganizationUserDialogForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	isNew,
 	isOrganizationNew,
 	organizationUser,
@@ -422,32 +418,23 @@ function ManageOrganizationUserDialogForm({
 						)}
 					/>
 
-					<DialogFooter className="mt-2">
+					<DialogFooter className="mt-2 items-center">
 						{!isNew &&
 							onDelete &&
 							organizationUser?.organizationRole !== "owner" &&
 							(user.organizationRole === "owner" || organizationUser?.organizationRole === "member") && (
-								<DestructiveActionDialog
-									name="user"
-									onConfirm={async () => {
-										await onDelete(form.getValues("id"));
-									}}
-								/>
+								<>
+									<DestructiveActionDialog
+										name="user"
+										trigger="trash"
+										onConfirm={async () => {
+											await onDelete(form.getValues("id"));
+										}}
+									/>
+									<Separator orientation="vertical" className="hidden h-4 sm:block" />
+								</>
 							)}
 
-						<Button
-							variant="outline"
-							onClick={() => {
-								if (form.formState.isDirty) {
-									onConfirmCancel();
-									return;
-								}
-
-								setOpen(false);
-							}}
-						>
-							Cancel
-						</Button>
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

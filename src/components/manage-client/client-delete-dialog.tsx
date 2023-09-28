@@ -21,6 +21,7 @@ function ClientDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =>
 	return (
 		<DestructiveActionDialog
 			name="client"
+			trigger="trash"
 			onConfirm={async () => {
 				try {
 					await deleteMutation.mutateAsync({ id: form.getValues("id") });

@@ -8,7 +8,6 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import {
 	Sheet,
-	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetFooter,
@@ -27,8 +26,7 @@ import { VetDeleteDialog } from "./vet-delete-dialog";
 import { VetToDogRelationships } from "./vet-to-dog-relationships";
 import { VetToVetClinicRelationships } from "./vet-to-vet-clinic-relationships";
 
-interface ManageVetSheetProps
-	extends Omit<ManageVetSheetFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+interface ManageVetSheetProps extends Omit<ManageVetSheetFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -94,15 +92,7 @@ function ManageVetSheet(props: ManageVetSheetProps) {
 
 					<Separator className="my-4" />
 
-					<ManageVetSheetForm
-						{...props}
-						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
-						setIsDirty={setIsDirty}
-						isNew={isNew}
-					/>
+					<ManageVetSheetForm {...props} setOpen={setInternalOpen} setIsDirty={setIsDirty} isNew={isNew} />
 				</SheetContent>
 			</Sheet>
 		</>
@@ -112,7 +102,6 @@ function ManageVetSheet(props: ManageVetSheetProps) {
 interface ManageVetSheetFormProps extends UseManageVetFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
 	onDelete?: (id: string) => void;
 }
@@ -120,7 +109,6 @@ interface ManageVetSheetFormProps extends UseManageVetFormProps {
 function ManageVetSheetForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	onDelete,
@@ -161,31 +149,19 @@ function ManageVetSheetForm({
 
 				<Separator className="my-4" />
 
-				<SheetFooter>
+				<SheetFooter className="items-center">
 					{!isNew && (
-						<VetDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-								onDelete?.(form.getValues("id"));
-							}}
-						/>
+						<>
+							<VetDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+									onDelete?.(form.getValues("id"));
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<SheetClose asChild>
-						<Button
-							variant="outline"
-							onClick={(e) => {
-								e.preventDefault();
-								if (isFormDirty) {
-									onConfirmCancel();
-									return;
-								}
 
-								setOpen(false);
-							}}
-						>
-							Cancel
-						</Button>
-					</SheetClose>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

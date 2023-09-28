@@ -8,7 +8,6 @@ import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
 import {
 	Sheet,
-	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetFooter,
@@ -26,8 +25,7 @@ import { ClientPersonalInformation } from "./client-personal-information";
 import { ClientToDogRelationships } from "./client-to-dog-relationships";
 import { useManageClientForm, type UseManageClientFormProps } from "./use-manage-client-form";
 
-interface ManageClientSheetProps
-	extends Omit<ManageClientSheetFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+interface ManageClientSheetProps extends Omit<ManageClientSheetFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -95,15 +93,7 @@ function ManageClientSheet(props: ManageClientSheetProps) {
 
 					<Separator className="my-4" />
 
-					<ManageClientSheetForm
-						{...props}
-						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
-						setIsDirty={setIsDirty}
-						isNew={isNew}
-					/>
+					<ManageClientSheetForm {...props} setOpen={setInternalOpen} setIsDirty={setIsDirty} isNew={isNew} />
 				</SheetContent>
 			</Sheet>
 		</>
@@ -113,7 +103,6 @@ function ManageClientSheet(props: ManageClientSheetProps) {
 interface ManageClientSheetFormProps extends UseManageClientFormProps {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
 	onClientDelete?: (id: string) => void;
 }
@@ -121,7 +110,6 @@ interface ManageClientSheetFormProps extends UseManageClientFormProps {
 function ManageClientSheetForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	onSubmit,
 	onSuccessfulSubmit,
 	onClientDelete,
@@ -158,31 +146,19 @@ function ManageClientSheetForm({
 
 				<Separator className="my-4" />
 
-				<SheetFooter>
+				<SheetFooter className="items-center">
 					{!isNew && (
-						<ClientDeleteDialog
-							onSuccessfulDelete={() => {
-								setOpen(false);
-								onClientDelete?.(form.getValues("id"));
-							}}
-						/>
+						<>
+							<ClientDeleteDialog
+								onSuccessfulDelete={() => {
+									setOpen(false);
+									onClientDelete?.(form.getValues("id"));
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
-					<SheetClose asChild>
-						<Button
-							variant="outline"
-							onClick={(e) => {
-								e.preventDefault();
-								if (isFormDirty) {
-									onConfirmCancel();
-									return;
-								}
 
-								setOpen(false);
-							}}
-						>
-							Cancel
-						</Button>
-					</SheetClose>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

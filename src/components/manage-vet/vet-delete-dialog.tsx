@@ -21,6 +21,7 @@ function VetDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () => vo
 	return (
 		<DestructiveActionDialog
 			name="vet"
+			trigger="trash"
 			onConfirm={async () => {
 				try {
 					await deleteMutation.mutateAsync({ id: form.getValues("id") });

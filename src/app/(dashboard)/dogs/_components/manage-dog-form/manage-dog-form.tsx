@@ -185,46 +185,37 @@ function ManageDogForm({
 
 					<Separator />
 
-					<div className="flex justify-end space-x-4">
+					<div className="flex items-center justify-end space-x-3">
 						{!isNew && (
-							<DestructiveActionDialog
-								name="dog"
-								onConfirm={async () => {
-									try {
-										await deleteMutation.mutateAsync({ id: form.getValues("id") });
-										toast({
-											title: `Dog deleted`,
-											description: `Successfully deleted dog "${form.getValues("givenName")}".`,
-										});
-										router.push("/dogs");
-									} catch (error) {
-										logInDevelopment(error);
+							<>
+								<DestructiveActionDialog
+									name="dog"
+									trigger="trash"
+									onConfirm={async () => {
+										try {
+											await deleteMutation.mutateAsync({ id: form.getValues("id") });
+											toast({
+												title: `Dog deleted`,
+												description: `Successfully deleted dog "${form.getValues("givenName")}".`,
+											});
+											router.push("/dogs");
+										} catch (error) {
+											logInDevelopment(error);
 
-										toast({
-											title: `Dog deletion failed`,
-											description: `There was an error deleting dog "${form.getValues(
-												"givenName",
-											)}". Please try again.`,
-											variant: "destructive",
-										});
-									}
-								}}
-							/>
+											toast({
+												title: `Dog deletion failed`,
+												description: `There was an error deleting dog "${form.getValues(
+													"givenName",
+												)}". Please try again.`,
+												variant: "destructive",
+											});
+										}
+									}}
+								/>
+								<Separator orientation="vertical" className="h-4" />
+							</>
 						)}
 
-						<Button
-							type="button"
-							onClick={() => {
-								if (isFormDirty) {
-									setIsConfirmNavigationDialogOpen(true);
-								} else {
-									router.back();
-								}
-							}}
-							variant="outline"
-						>
-							Back
-						</Button>
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}

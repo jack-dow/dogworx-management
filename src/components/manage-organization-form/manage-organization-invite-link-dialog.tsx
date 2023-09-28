@@ -27,6 +27,7 @@ import { InsertOrganizationInviteLinkSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { api } from "~/lib/trpc/client";
 import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/lib/utils";
+import { Separator } from "../ui/separator";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 const createInviteLinkCode = init({
@@ -38,7 +39,7 @@ const ManageOrganizationInviteLinkFormSchema = InsertOrganizationInviteLinkSchem
 type ManageOrganizationInviteLinkFormSchema = z.infer<typeof ManageOrganizationInviteLinkFormSchema>;
 
 interface ManageOrganizationInviteLinkDialogProps
-	extends Omit<ManageOrganizationInviteLinkDialogFormProps, "setOpen" | "onConfirmCancel" | "setIsDirty" | "isNew"> {
+	extends Omit<ManageOrganizationInviteLinkDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
 	open?: boolean;
 	setOpen?: (open: boolean) => void;
 	withoutTrigger?: boolean;
@@ -108,9 +109,6 @@ function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkD
 					<ManageOrganizationInviteLinkDialogForm
 						{...props}
 						setOpen={setInternalOpen}
-						onConfirmCancel={() => {
-							setIsConfirmCloseDialogOpen(true);
-						}}
 						setIsDirty={setIsDirty}
 						isNew={isNew}
 					/>
@@ -123,7 +121,6 @@ function ManageOrganizationInviteLinkDialog(props: ManageOrganizationInviteLinkD
 type ManageOrganizationInviteLinkDialogFormProps = {
 	setOpen: (open: boolean) => void;
 	setIsDirty: (isDirty: boolean) => void;
-	onConfirmCancel: () => void;
 	isNew: boolean;
 	organizationInviteLink?: ManageOrganizationFormSchema["organizationInviteLinks"][number];
 	defaultValues?: Partial<ManageOrganizationInviteLinkFormSchema>;
@@ -135,7 +132,6 @@ type ManageOrganizationInviteLinkDialogFormProps = {
 function ManageOrganizationInviteLinkDialogForm({
 	setOpen,
 	setIsDirty,
-	onConfirmCancel,
 	isNew,
 	isNewOrganization,
 	organizationInviteLink,
@@ -278,29 +274,20 @@ function ManageOrganizationInviteLinkDialogForm({
 					)}
 				/>
 
-				<DialogFooter className="mt-2">
+				<DialogFooter className="mt-2 items-center">
 					{!isNew && onDelete && (
-						<DestructiveActionDialog
-							name="invite link"
-							onConfirm={async () => {
-								await onDelete(form.getValues("id"));
-							}}
-						/>
+						<>
+							<DestructiveActionDialog
+								name="invite link"
+								trigger="trash"
+								onConfirm={async () => {
+									await onDelete(form.getValues("id"));
+								}}
+							/>
+							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+						</>
 					)}
 
-					<Button
-						variant="outline"
-						onClick={() => {
-							if (form.formState.isDirty) {
-								onConfirmCancel();
-								return;
-							}
-
-							setOpen(false);
-						}}
-					>
-						Cancel
-					</Button>
 					<Button
 						type="submit"
 						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}

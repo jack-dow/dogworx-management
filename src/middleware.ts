@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { server } from "./lib/trpc/server";
+import { sessionCookieOptions } from "./lib/utils";
 
 export async function middleware(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
@@ -14,21 +15,27 @@ export async function middleware(request: NextRequest) {
 
 	const signInUrl = new URL(`/sign-in?from=${encodeURIComponent(from)}`, request.url);
 
-	const { data: session } = await server.auth.user.sessions.current.query({ validate: true });
+	const { data: session, token } = await server.auth.user.sessions.current.query({ validate: true });
 
 	if (!session && !isAuthPage) {
 		return NextResponse.redirect(signInUrl);
 	}
 
-	if (session && (isAuthPage || pathname === "/")) {
-		if (process.env.NODE_ENV !== "development") {
-			return NextResponse.redirect(new URL("/calendar/week", request.url));
-		} else {
-			return NextResponse.redirect(new URL("/test", request.url));
-		}
+	const response =
+		isAuthPage || pathname === "/"
+			? process.env.NODE_ENV !== "development"
+				? NextResponse.redirect(new URL("/calendar/week", request.url))
+				: NextResponse.redirect(new URL("/test", request.url))
+			: NextResponse.next();
+
+	if (token) {
+		response.cookies.set({
+			...sessionCookieOptions,
+			value: token,
+		});
 	}
 
-	return NextResponse.next();
+	return response;
 }
 
 export const config = {
