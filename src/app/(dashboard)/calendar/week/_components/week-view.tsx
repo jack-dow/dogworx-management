@@ -625,7 +625,7 @@ function WeekView({
 																	{bookingType?.showDetailsInCalendar ? (
 																		booking.details ? (
 																			<div
-																				className={cn("prose prose-sm whitespace-pre-wrap", colors.text)}
+																				className={cn("prose prose-sm whitespace-pre-wrap text-left", colors.text)}
 																				dangerouslySetInnerHTML={{ __html: booking.details }}
 																			/>
 																		) : (

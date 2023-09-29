@@ -83,7 +83,16 @@ export const createTRPCContext = async (opts: Opts) => {
 	const timezone = getTimezone();
 	const source = opts.request?.headers.get("x-trpc-source") ?? "unknown";
 
-	logInDevelopment(">>> tRPC Request from", source, "by", `${session?.user.givenName} ${session?.user.familyName}`);
+	logInDevelopment(
+		">>> tRPC Request from",
+		source,
+		"by",
+		`${session?.user.givenName} ${session?.user.familyName}`,
+		"to",
+		opts.request?.headers.get("x-invoke-path"),
+		"from",
+		opts.request?.headers.get("referer"),
+	);
 
 	return createInnerTRPCContext({
 		session,
