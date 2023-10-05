@@ -271,7 +271,7 @@ function WeekView({
 								</Button>
 							</div>
 
-							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+							<Separator orientation="vertical" className="h-4" />
 
 							<ManageBookingDialog trigger={<Button size="sm">Create Booking</Button>} bookingTypes={bookingTypes} />
 						</div>

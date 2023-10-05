@@ -158,7 +158,7 @@ function ManageVetSheetForm({
 									onDelete?.(form.getValues("id"));
 								}}
 							/>
-							<Separator orientation="vertical" className="hidden h-4 sm:block" />
+							<Separator orientation="vertical" className="h-4" />
 						</>
 					)}
 

@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
-import { hasTrueValue } from "~/lib/utils";
+import { api } from "~/lib/trpc/client";
+import { hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form, FormSection } from "../ui/form";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
+import { ConfirmOverlappingBookingDialog } from "./confirm-overlapping-bookng-dialog";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
 function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit }: UseManageBookingFormProps) {
@@ -38,6 +40,10 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 	const isFormDirty = hasTrueValue(form.formState.dirtyFields);
 
 	const [isConfirmNavigationDialogOpen, setIsConfirmNavigationDialogOpen] = React.useState(false);
+	const [isConfirmOverlappingBookingDialogOpen, setIsConfirmOverlappingBookingDialogOpen] = React.useState(false);
+	const [isCheckingForOverlappingBookings, setIsCheckingForOverlappingBookings] = React.useState(false);
+
+	const context = api.useContext();
 
 	return (
 		<>
@@ -51,8 +57,47 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 				}}
 			/>
 
+			<ConfirmOverlappingBookingDialog
+				open={isConfirmOverlappingBookingDialogOpen}
+				onOpenChange={setIsConfirmOverlappingBookingDialogOpen}
+				assignedTo={form.getValues("assignedTo")}
+				onConfirm={() => {
+					_onSubmit();
+				}}
+			/>
+
 			<Form {...form}>
-				<form onSubmit={_onSubmit} className="space-y-6 lg:space-y-10">
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+
+						setIsCheckingForOverlappingBookings(true);
+
+						context.app.bookings.checkForOverlaps
+							.fetch({
+								assignedToId: form.getValues("assignedToId"),
+								date: form.getValues("date"),
+								duration: form.getValues("duration"),
+							})
+							.then((res) => {
+								if (res.data.length > 0) {
+									setIsConfirmOverlappingBookingDialogOpen(true);
+								} else {
+									_onSubmit(e);
+								}
+							})
+							.catch((err) => {
+								logInDevelopment(err);
+
+								_onSubmit(e);
+							})
+							.finally(() => {
+								setIsCheckingForOverlappingBookings(false);
+							});
+					}}
+					className="space-y-6 lg:space-y-10"
+				>
 					<FormSection
 						title="Booking Information"
 						description={`
@@ -84,7 +129,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 						</Button>
 						<Button
 							type="submit"
-							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty)}
+							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty) || isCheckingForOverlappingBookings}
 							onClick={() => {
 								const numOfErrors = Object.keys(form.formState.errors).length;
 								if (numOfErrors > 0) {
@@ -98,7 +143,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 								}
 							}}
 						>
-							{form.formState.isSubmitting && <Loader size="sm" />}
+							{(form.formState.isSubmitting || isCheckingForOverlappingBookings) && <Loader size="sm" />}
 							{isNew ? "Create" : "Update"} booking
 						</Button>
 					</div>

@@ -135,7 +135,7 @@ function SessionAccordionItem({ session, isCurrentSession = false, onDelete }: S
 								<p className="text-xs leading-5 text-muted-foreground">Online</p>
 							</div>
 						) : (
-							<p className="mt-1 text-xs leading-5 text-muted-foreground">
+							<p className="mt-1 text-left text-xs leading-5 text-muted-foreground">
 								Last seen {dayjs.tz(session.lastActiveAt).fromNow()}
 							</p>
 						)}

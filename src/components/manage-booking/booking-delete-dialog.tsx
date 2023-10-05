@@ -20,6 +20,7 @@ function BookingDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =
 	return (
 		<DestructiveActionDialog
 			name="booking"
+			trigger="trash"
 			onConfirm={async () => {
 				try {
 					await deleteMutation.mutateAsync({

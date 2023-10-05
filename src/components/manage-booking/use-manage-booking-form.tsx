@@ -50,9 +50,9 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 					(bt) => bt.id === booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
 				)?.duration ?? 1800,
 			details: "",
+			bookingTypeId: defaultBookingType?.id ?? null,
 			...props.defaultValues,
 			...booking,
-			bookingTypeId: props.defaultValues?.bookingTypeId || booking?.bookingTypeId || (defaultBookingType?.id ?? null),
 			assignedToId: props.defaultValues?.assignedToId || booking?.assignedToId || user.id,
 			assignedTo: props.defaultValues?.assignedTo || booking?.assignedTo || user,
 			id: props.defaultValues?.id || booking?.id || generateId(),
@@ -76,9 +76,9 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 		}
 	}, [booking, form]);
 
-	function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-		e.preventDefault();
-		e.stopPropagation();
+	function onSubmit(e?: React.FormEvent<HTMLFormElement>) {
+		e?.preventDefault();
+		e?.stopPropagation();
 
 		void form.handleSubmit(async (data) => {
 			try {

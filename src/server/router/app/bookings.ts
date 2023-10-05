@@ -4,9 +4,10 @@ import updateLocale from "dayjs/plugin/updateLocale";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
+import { type SendBookingConfirmationPOSTResponse } from "~/app/api/emails/booking-confirmation/route";
 import { bookings } from "~/db/schema/app";
 import { InsertBookingSchema, UpdateBookingSchema } from "~/db/validation/app";
-import { PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
+import { getBaseUrl, PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { BOOKINGS_SORTABLE_COLUMNS } from "../sortable-columns";
 
@@ -16,6 +17,29 @@ dayjs.updateLocale("en", {
 });
 
 export const bookingsRouter = createTRPCRouter({
+	testConfirmationEmail: protectedProcedure
+		.input(z.object({ bookingId: z.string() }))
+		.mutation(async ({ input, ctx }) => {
+			const response = await fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
+				method: "POST",
+				credentials: "include",
+				headers: {
+					cookie: ctx.request.headers.get("cookie") ?? "",
+				},
+				body: JSON.stringify({ bookingId: input.bookingId }),
+			});
+
+			const result = (await response.json()) as SendBookingConfirmationPOSTResponse;
+
+			if (result.success === false) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Error sending email",
+				});
+			}
+
+			return {};
+		}),
 	all: protectedProcedure
 		.input(
 			PaginationOptionsSchema.extend({
@@ -96,6 +120,31 @@ export const bookingsRouter = createTRPCRouter({
 					sortBy,
 					sortDirection,
 				},
+				data,
+			};
+		}),
+
+	checkForOverlaps: protectedProcedure
+		.input(
+			z.object({
+				assignedToId: z.string(),
+				date: z.date(),
+				duration: z.number(),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const { assignedToId, date, duration } = input;
+
+			const data = await ctx.db.query.bookings.findMany({
+				where: and(
+					eq(bookings.organizationId, ctx.user.organizationId),
+					eq(bookings.assignedToId, assignedToId),
+					gte(bookings.date, dayjs(date).toDate()),
+					lt(bookings.date, dayjs(date).add(duration, "minutes").toDate()),
+				),
+			});
+
+			return {
 				data,
 			};
 		}),

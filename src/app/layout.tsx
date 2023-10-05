@@ -3,13 +3,13 @@ import "~/styles/prosemirror.css";
 
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 
 import { TailwindIndicator } from "~/components/ui/tailwind-indicator";
 import { Toaster } from "~/components/ui/toaster";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
-import { TimezoneProvider, TRPCReactProvider } from "./providers";
+import { TRPCReactProvider } from "./providers";
 
 export const metadata: Metadata = {
 	title: "Dogworx Management",
@@ -19,20 +19,16 @@ export const metadata: Metadata = {
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 function RootLayout({ children }: { children: React.ReactNode }) {
-	const cookieStore = cookies();
-
 	return (
 		<html lang="en" suppressHydrationWarning className="h-full">
 			<TRPCReactProvider headers={headers()}>
-				<TimezoneProvider timezone={cookieStore.get("timezone")?.value ?? null}>
-					<TooltipProvider>
-						<body className={cn("min-h-full font-sans antialiased  flex flex-col text-slate-600", fontSans.variable)}>
-							{children}
-							<TailwindIndicator />
-							<Toaster />
-						</body>
-					</TooltipProvider>
-				</TimezoneProvider>
+				<TooltipProvider>
+					<body className={cn("min-h-full font-sans antialiased  flex flex-col text-slate-600", fontSans.variable)}>
+						{children}
+						<TailwindIndicator />
+						<Toaster />
+					</body>
+				</TooltipProvider>
 			</TRPCReactProvider>
 		</html>
 	);

@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 // import { DarkDesktopSidebar } from "~/components/dark-desktop-sidebar";
 import { DesktopSidebar } from "~/components/desktop-sidebar";
 import { MobileNavigation } from "~/components/mobile-navigation";
+import { UpdateTimezoneDialog } from "~/components/update-timezone-dialog";
 import { server } from "~/lib/trpc/server";
 import { cn } from "~/lib/utils";
 import { SessionProvider } from "../providers";
@@ -49,10 +51,14 @@ async function DashboardLayout({ children }: DashboardLayoutProps) {
 		redirect("/sign-in");
 	}
 
+	const cookieStore = cookies();
+	const timezoneDialogCookie = cookieStore.get("__timezone-dialog")?.value ?? "0";
+
 	const prefersDarkMode = session.user?.organizationId !== "mslu0ytyi8i2g7u1rdvooe55";
 
 	return (
 		<SessionProvider session={session}>
+			<UpdateTimezoneDialog timezoneDialogCookie={timezoneDialogCookie} />
 			<div className={cn(prefersDarkMode ? "bg-slate-900" : "bg-white")}>
 				<MobileNavigation />
 				{prefersDarkMode ? <DarkDesktopSidebar /> : <DesktopSidebar />}

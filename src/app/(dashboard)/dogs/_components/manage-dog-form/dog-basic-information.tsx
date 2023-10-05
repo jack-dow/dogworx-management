@@ -107,13 +107,12 @@ function DogBasicInformation() {
 									onValueChange={(value) => {
 										field.onChange(value as typeof field.value);
 									}}
-									value={field.value ?? ""}
+									value={field.value}
 								>
 									<FormControl>
 										<SelectTrigger>
-											<SelectValue>
-												{/* This is required because field is black for a second on page load otherwise */}
-												<span className={cn(field.value && "capitalize")}>{field.value ?? "Select sex"}</span>
+											<SelectValue placeholder="Select a sex">
+												<span className={cn(field.value && "capitalize")}>{field.value}</span>
 											</SelectValue>
 										</SelectTrigger>
 									</FormControl>

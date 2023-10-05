@@ -8,6 +8,8 @@ export async function verifyAPISession() {
 	const sessionCookie = cookieStore.get(sessionCookieOptions.name);
 
 	const sessionToken = sessionCookie?.value;
+
+	console.log(sessionToken);
 	if (!sessionToken) {
 		return {
 			success: false,
@@ -19,15 +21,14 @@ export async function verifyAPISession() {
 		} as const;
 	}
 
-	const sessionTokenData = (await jwt.verify(sessionToken)) as SessionCookie;
+	const session = (await jwt.verify(sessionToken)) as SessionCookie;
 
 	if (
-		Math.floor(Date.now() / 1000) - sessionTokenData.iat > sessionJWTExpiry ||
-		!sessionTokenData.user ||
-		(sessionTokenData.user.bannedAt && !sessionTokenData.user.bannedUntil) ||
-		(sessionTokenData.user.bannedAt &&
-			sessionTokenData.user.bannedUntil &&
-			sessionTokenData.user.bannedUntil < new Date())
+		(Math.floor(Date.now() / 1000) - session.iat > sessionJWTExpiry,
+		!session ||
+			!session.user ||
+			(session.user.bannedAt && !session.user.bannedUntil) ||
+			(session.user.bannedAt && session.user.bannedUntil && session.user.bannedUntil < new Date()))
 	) {
 		return {
 			success: false,
@@ -41,7 +42,7 @@ export async function verifyAPISession() {
 
 	return {
 		success: true,
-		data: sessionTokenData,
+		data: session,
 	} as const;
 }
 

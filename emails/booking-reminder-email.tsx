@@ -59,14 +59,18 @@ interface BookingConfirmationEmailProps {
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-const BookingConfirmationEmail = ({
+const BookingReminderEmail = ({
 	bookingType,
 	booking,
 	assignedTo,
 	dog,
 	organization,
 }: BookingConfirmationEmailProps) => {
-	const previewText = `A new booking has been scheduled for ${dog.givenName} ${dog.familyName} at ${organization.name}`;
+	const previewText = `Reminder for your upcoming booking at ${organization.name} on ${booking.date.toLocaleDateString(
+		"en-US",
+		{ weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: organization.timezone },
+	)} at ${booking.date.toLocaleTimeString("en-US", { timeStyle: "short", timeZone: organization.timezone })}
+		 `;
 
 	const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
 		`${organization.streetAddress}, ${organization.city}, ${organization.state} ${organization.postalCode}`,
@@ -89,7 +93,7 @@ const BookingConfirmationEmail = ({
 							/>
 						</Section>
 						<Heading className="mx-0 my-8 p-0 text-center text-[24px] font-medium text-black">
-							A new booking has been scheduled
+							Reminder for your upcoming booking
 						</Heading>
 
 						<Hr className="mx-0 my-[20px] w-full border border-solid border-[#eaeaea]" />
@@ -152,5 +156,5 @@ const BookingConfirmationEmail = ({
 		</Html>
 	);
 };
-export { BookingConfirmationEmail };
-export default BookingConfirmationEmail;
+export { BookingReminderEmail };
+export default BookingReminderEmail;

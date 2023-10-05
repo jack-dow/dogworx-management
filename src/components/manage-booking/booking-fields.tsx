@@ -90,18 +90,19 @@ function BookingFields({
 				render={({ field }) => {
 					const bookingType = bookingTypes.find((bookingType) => bookingType.id === field.value)!;
 					const defaultBookingType = bookingTypes.find((bookingType) => bookingType.isDefault);
+
 					return (
 						<FormItem className="w-full">
 							<FormLabel>Booking Type</FormLabel>
 							<Select
 								onValueChange={(value) => {
-									field.onChange(value || null);
+									field.onChange(value !== "default" ? value : null);
 								}}
-								value={field.value ?? undefined}
+								value={field.value ?? "default"}
 							>
 								<FormControl>
 									<SelectTrigger className={cn("relative pl-8")}>
-										<SelectValue>
+										<SelectValue placeholder="Default">
 											<div
 												className={cn(
 													"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center",
@@ -119,8 +120,7 @@ function BookingFields({
 								<SelectContent align="start" className="max-w-[350px]">
 									<SelectGroup>
 										<SelectLabel>Booking types</SelectLabel>
-
-										{defaultBookingType ? (
+										{defaultBookingType && (
 											<SelectItem
 												key={defaultBookingType.id}
 												value={defaultBookingType.id}
@@ -141,8 +141,9 @@ function BookingFields({
 												/>
 												{defaultBookingType.name}
 											</SelectItem>
-										) : (
-											<SelectItem value="" className={"pl-8 capitalize"}>
+										)}{" "}
+										{(!defaultBookingType || !field.value) && (
+											<SelectItem value="default" className={"pl-8 capitalize"}>
 												<div
 													className={cn(
 														"w-4 h-4 rounded-full absolute mt-0.5 left-2 flex items-center justify-center bg-violet-200",
@@ -151,7 +152,6 @@ function BookingFields({
 												Default Booking
 											</SelectItem>
 										)}
-
 										{bookingTypes?.map((bookingType) => {
 											if (bookingType.isDefault) return null;
 

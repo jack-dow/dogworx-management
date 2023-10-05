@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { and, eq, sql } from "drizzle-orm";
+import ms from "ms";
 import { z } from "zod";
 
 import { schema } from "~/db/drizzle";
@@ -104,52 +105,41 @@ export const userRouter = createTRPCRouter({
 
 	update: publicProcedure
 		.input(
-			UpdateUserSchema.pick({ givenName: true, familyName: true, emailAddress: true, profileImageUrl: true }).extend({
-				timezone: z.string().optional(),
+			// Only pick the fields that the user can update themselves
+			UpdateUserSchema.pick({
+				givenName: true,
+				familyName: true,
+				emailAddress: true,
+				profileImageUrl: true,
+				timezone: true,
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { timezone, ...data } = input;
+			await ctx.db.update(users).set(input).where(eq(users.id, ctx.user!.id));
 
-			if (timezone) {
-				try {
-					// If timezone is invalid, this will throw an error
-					dayjs().tz(timezone, true);
+			const newSessionToken = await createSessionJWT({
+				id: ctx.session!.id,
+				user: {
+					...ctx.user!,
+					...input,
+				},
+			});
 
-					cookies().set("timezone", timezone, {
-						httpOnly: true,
-						path: "/",
-						sameSite: "lax",
-						secure: process.env.NODE_ENV === "production",
-						maxAge: 60 * 60 * 24 * 365,
-					});
-				} catch (error) {
-					throw new TRPCError({
-						code: "BAD_REQUEST",
-						message: "Invalid timezone",
-					});
-				}
-			}
-
-			if (ctx.session) {
-				if (Object.keys(data).length > 0) {
-					await ctx.db.update(users).set(input).where(eq(users.id, ctx.user!.id));
-
-					const newSessionToken = await createSessionJWT({
-						id: ctx.session!.id,
-						user: {
-							...ctx.user!,
-							...input,
-						},
-					});
-
-					cookies().set({
-						...sessionCookieOptions,
-						value: newSessionToken,
-					});
-				}
-			}
+			cookies().set({
+				...sessionCookieOptions,
+				value: newSessionToken,
+			});
 		}),
+
+	setDoNotShowUpdateTimezoneDialog: protectedProcedure.mutation(() => {
+		cookies().set({
+			name: "__timezone-dialog",
+			value: "1",
+			httpOnly: true,
+			maxAge: ms("30d"),
+			path: "/",
+		});
+	}),
 
 	delete: protectedProcedure.mutation(async ({ ctx }) => {
 		if (ctx.user.organizationRole === "owner") {

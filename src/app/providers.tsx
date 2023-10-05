@@ -4,14 +4,12 @@
 // This file exists because Providers must be exported from a client component
 // -----------------------------------------------------------------------------
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
 import { httpBatchLink, loggerLink, splitLink, unstable_httpBatchStreamLink } from "@trpc/client";
 import superjson from "superjson";
 
-import { useToast } from "~/components/ui/use-toast";
 import { env } from "~/env.mjs";
 import { api } from "~/lib/trpc/client";
 import { type SessionCookie } from "~/lib/utils";
@@ -133,61 +131,4 @@ export const SessionProvider = ({ children, session }: ProviderProps<{ session: 
 	}, [session]);
 
 	return <SessionContext.Provider value={{ session: _session }}>{children}</SessionContext.Provider>;
-};
-
-// -----------------------------------------------------------------------------
-// Timezone Offset Context
-// -----------------------------------------------------------------------------
-type TimezoneContextProps = {
-	timezone: string;
-};
-
-const TimezoneContext = React.createContext<TimezoneContextProps | null>(null);
-
-function useTimezoneContext() {
-	const context = React.useContext(TimezoneContext);
-
-	if (!context) {
-		throw new Error("useTimezoneContext must be used within a TimezoneProvider");
-	}
-
-	return context;
-}
-
-export function useTimezone() {
-	const context = useTimezoneContext();
-
-	return context.timezone;
-}
-
-export const TimezoneProvider = ({ children, timezone }: ProviderProps<{ timezone: string | null }>) => {
-	const { toast } = useToast();
-	const router = useRouter();
-
-	const updateUserMutation = api.auth.user.update.useMutation({
-		onSuccess: () => {
-			router.refresh();
-		},
-		onError: () => {
-			toast({
-				title: "Error updating timezone",
-				description: `We were unable to update your timezone so it has been set to "Australia/Brisbane".`,
-			});
-		},
-	});
-
-	React.useEffect(() => {
-		const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-		if (userTimezone !== timezone) {
-			updateUserMutation.mutate({ timezone: userTimezone });
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	return (
-		<TimezoneContext.Provider value={{ timezone: timezone ?? "Australia/Brisbane" }}>
-			{children}
-		</TimezoneContext.Provider>
-	);
 };

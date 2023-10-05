@@ -9,7 +9,7 @@ import timezone from "dayjs/plugin/timezone";
 import updateLocale from "dayjs/plugin/updateLocale";
 import utc from "dayjs/plugin/utc";
 
-import { useTimezone } from "~/app/providers";
+import { useUser } from "~/app/providers";
 
 dayjs.extend(advancedFormat);
 dayjs.extend(customParseFormat);
@@ -25,9 +25,9 @@ dayjs.updateLocale("en", {
 dayjs.extend(isSameOrBefore);
 
 export const useDayjs = () => {
-	const timezone = useTimezone();
+	const user = useUser();
 
-	dayjs.tz.setDefault(timezone);
+	dayjs.tz.setDefault(user.timezone);
 
 	return { dayjs };
 };

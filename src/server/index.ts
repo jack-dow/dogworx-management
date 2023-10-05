@@ -4,6 +4,7 @@ import { bookingTypesRouter } from "./router/app/booking-types";
 import { bookingsRouter } from "./router/app/bookings";
 import { clientsRouter } from "./router/app/clients";
 import { dogsRouter } from "./router/app/dogs";
+import { timezonesRouter } from "./router/app/timezones";
 import { vetClinicsRouter } from "./router/app/vet-clinics";
 import { vetsRouter } from "./router/app/vets";
 import { organizationsRouter } from "./router/auth/organizations";
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
 		bookings: bookingsRouter,
 		clients: clientsRouter,
 		dogs: dogsRouter,
+		timezones: timezonesRouter,
 		vetClinics: vetClinicsRouter,
 		vets: vetsRouter,
 	}),

@@ -20,6 +20,7 @@ import { Input } from "~/components/ui/input";
 import { useUser } from "~/app/providers";
 import { env } from "~/env.mjs";
 import { RichTextEditor } from "../ui/rich-text-editor";
+import { TimezoneSelect } from "../ui/timezone-select";
 import { type ManageOrganizationFormSchema } from "./manage-organization-form";
 
 function OrganizationGeneralSettings() {
@@ -150,6 +151,29 @@ function OrganizationGeneralSettings() {
 								<FormLabel>Postal Code</FormLabel>
 								<FormControl>
 									<Input {...field} value={field.value ?? ""} autoComplete="off" />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				<div className="sm:col-span-6">
+					<FormField
+						control={form.control}
+						name="timezone"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Timezone</FormLabel>
+								<FormControl>
+									<TimezoneSelect
+										value={field.value ?? null}
+										onChange={(e) => {
+											if (e) {
+												field.onChange(e.value);
+											}
+										}}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>

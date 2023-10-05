@@ -1,14 +1,21 @@
+// import React from "react";
 import { cookies, headers } from "next/headers";
+// import { renderAsync } from "@react-email/components";
 import { TRPCError } from "@trpc/server";
+// import cryptoRandomString from "crypto-random-string";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { eq } from "drizzle-orm";
+// import MagicLinkEmail from "emails/magic-link-email";
+// import ms from "ms";
+// import { Resend } from "resend";
 import { z } from "zod";
 
 import { type SendMagicLinkPOSTResponse } from "~/app/api/auth/emails/magic-link/route";
 import { type SendVerificationCodePOSTResponse } from "~/app/api/auth/emails/verification-code/route";
 import { schema } from "~/db/drizzle";
+// import { env } from "~/env.mjs";
 import { createSessionJWT, generateId, getBaseUrl, logInDevelopment, sessionCookieOptions } from "~/lib/utils";
 import { createTRPCRouter, publicProcedure } from "../../trpc";
 
@@ -152,7 +159,7 @@ export const signInRouter = createTRPCRouter({
 	}),
 
 	verificationCode: createTRPCRouter({
-		send: publicProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input }) => {
+		send: publicProcedure.input(z.object({ emailAddress: z.string().email() })).mutation(async ({ input, ctx }) => {
 			try {
 				// ----------------------------------------------------------------------------------------------
 				// Had to move this into API routes to due issues with react-email and next.js/trpc being on the edge.
@@ -161,6 +168,10 @@ export const signInRouter = createTRPCRouter({
 				// ----------------------------------------------------------------------------------------------
 				const response = await fetch(getBaseUrl() + "/api/auth/emails/verification-code", {
 					method: "POST",
+					credentials: "include",
+					headers: {
+						cookie: ctx.request.headers.get("cookie") ?? "",
+					},
 					body: JSON.stringify({ emailAddress: input.emailAddress }),
 				});
 				const body = (await response.json()) as SendVerificationCodePOSTResponse;

@@ -1,6 +1,8 @@
 import { relations, sql } from "drizzle-orm";
 import { boolean, char, customType, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
+import { env } from "~/env.mjs";
+
 // -----------------------------------------------------------------------------
 // NOTE: As Planetscale does not support foreign keys, table rows that represent a relationship to another table
 // should not be marked with notNull() even though they should not be null, as we want the types to show that
@@ -55,6 +57,7 @@ const users = mysqlTable("auth_users", {
 	familyName: varchar("family_name", { length: 50 }).notNull().default(""),
 	emailAddress: varchar("email_address", { length: 100 }).notNull().unique(),
 	organizationRole: mysqlEnum("organization_role", organizationRoleOptions).notNull(),
+	timezone: varchar("timezone", { length: 50 }).notNull().default(env.NEXT_PUBLIC_DEFAULT_TIMEZONE),
 	bannedAt: timestamp("banned_at"),
 	bannedUntil: timestamp("banned_until"),
 	profileImageUrl: varchar("profile_image_url", { length: 255 }),
@@ -143,6 +146,7 @@ const organizations = mysqlTable("auth_organizations", {
 	state: varchar("state", { length: 30 }).notNull().default(""),
 	postalCode: varchar("postal_code", { length: 10 }).notNull().default(""),
 	notes: text("notes"),
+	timezone: varchar("timezone", { length: 50 }).notNull().default(env.NEXT_PUBLIC_DEFAULT_TIMEZONE),
 });
 
 const organizationsRelations = relations(organizations, ({ many }) => ({

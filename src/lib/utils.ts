@@ -33,7 +33,7 @@ export function getBaseUrl(options?: { absolute?: boolean }) {
 	return `http://localhost:${env.PORT}`; // dev SSR should use localhost
 }
 
-export function secondsToHumanReadable(seconds: number): string {
+export function secondsToHumanReadable(seconds: number, options?: { nonPlural?: boolean }): string {
 	if (seconds === 86400) {
 		return "1 day";
 	}
@@ -43,13 +43,13 @@ export function secondsToHumanReadable(seconds: number): string {
 
 	const formattedTime = [];
 	if (hours > 0) {
-		formattedTime.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+		formattedTime.push(`${hours} hour${!options?.nonPlural && hours > 1 ? "s" : ""}`);
 	}
 	if (minutes > 0) {
-		formattedTime.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+		formattedTime.push(`${minutes} minute${!options?.nonPlural && minutes > 1 ? "s" : ""}`);
 	}
 	if (remainingSeconds > 0 || formattedTime.length === 0) {
-		formattedTime.push(`${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`);
+		formattedTime.push(`${remainingSeconds} second${!options?.nonPlural && remainingSeconds !== 1 ? "s" : ""}`);
 	}
 
 	return formattedTime.join(", ");

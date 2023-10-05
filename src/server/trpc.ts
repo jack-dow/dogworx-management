@@ -27,7 +27,6 @@ import { jwt, logInDevelopment, sessionCookieOptions, type SessionCookie } from 
 interface CreateContextOptions {
 	session: SessionCookie | null;
 	user: SessionCookie["user"] | null;
-	timezone: string | null;
 	request: NextRequest;
 }
 
@@ -39,7 +38,6 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
 	return {
 		session: opts.session,
 		user: opts.user,
-		timezone: opts.timezone,
 		db: drizzle,
 		request: opts.request,
 	};
@@ -71,16 +69,8 @@ async function getServerSession() {
 	return sessionTokenData;
 }
 
-function getTimezone() {
-	const cookieStore = cookies();
-	const timezoneCookie = cookieStore.get("timezone");
-
-	return timezoneCookie?.value ?? null;
-}
-
 export const createTRPCContext = async (opts: Opts) => {
 	const session = await getServerSession();
-	const timezone = getTimezone();
 	const source = opts.request?.headers.get("x-trpc-source") ?? "unknown";
 
 	logInDevelopment(
@@ -97,7 +87,6 @@ export const createTRPCContext = async (opts: Opts) => {
 	return createInnerTRPCContext({
 		session,
 		user: session?.user ?? null,
-		timezone,
 		request: opts.request,
 	});
 };

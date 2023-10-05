@@ -13,6 +13,8 @@ import {
 	DialogTrigger,
 } from "~/components/ui/dialog";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { api } from "~/lib/trpc/client";
+import { logInDevelopment } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
 import { Form } from "../ui/form";
@@ -21,6 +23,7 @@ import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
+import { ConfirmOverlappingBookingDialog } from "./confirm-overlapping-bookng-dialog";
 import { useManageBookingForm, type UseManageBookingFormProps } from "./use-manage-booking-form";
 
 interface ManageBookingDialogProps extends Omit<ManageBookingDialogFormProps, "setOpen" | "setIsDirty" | "isNew"> {
@@ -122,6 +125,8 @@ function ManageBookingDialogForm({
 	disableDogSearch,
 }: ManageBookingDialogFormProps) {
 	const { toast } = useToast();
+	const [isConfirmOverlappingBookingDialogOpen, setIsConfirmOverlappingBookingDialogOpen] = React.useState(false);
+	const [isCheckingForOverlappingBookings, setIsCheckingForOverlappingBookings] = React.useState(false);
 
 	const { form, onSubmit: _onSubmit } = useManageBookingForm({
 		booking,
@@ -139,45 +144,90 @@ function ManageBookingDialogForm({
 		setIsDirty(form.formState.isDirty);
 	}, [form.formState.isDirty, setIsDirty]);
 
+	const context = api.useContext();
+
 	return (
-		<Form {...form}>
-			<form onSubmit={_onSubmit} className="flex flex-col gap-4">
-				<BookingFields variant="dialog" disableDogSearch={disableDogSearch} bookingTypes={bookingTypes} />
+		<>
+			<ConfirmOverlappingBookingDialog
+				open={isConfirmOverlappingBookingDialogOpen}
+				onOpenChange={setIsConfirmOverlappingBookingDialogOpen}
+				assignedTo={form.getValues("assignedTo")}
+				onConfirm={() => {
+					_onSubmit();
+				}}
+			/>
 
-				<DialogFooter className="mt-2 items-center">
-					{!isNew && (
-						<>
-							<BookingDeleteDialog
-								onSuccessfulDelete={() => {
-									setOpen(false);
-								}}
-							/>
-							<Separator orientation="vertical" className="hidden h-4 sm:block" />
-						</>
-					)}
+			<Form {...form}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
 
-					<Button
-						type="submit"
-						disabled={form.formState.isSubmitting || (!isNew && !form.formState.isDirty)}
-						onClick={() => {
-							const numOfErrors = Object.keys(form.formState.errors).length;
-							if (numOfErrors > 0) {
-								toast({
-									title: `Form submission errors`,
-									description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
-										numOfErrors > 1 ? "s" : ""
-									} with your submission. Please fix them and resubmit.`,
-									variant: "destructive",
-								});
+						setIsCheckingForOverlappingBookings(true);
+
+						context.app.bookings.checkForOverlaps
+							.fetch({
+								assignedToId: form.getValues("assignedToId"),
+								date: form.getValues("date"),
+								duration: form.getValues("duration"),
+							})
+							.then((res) => {
+								if (res.data.length > 0) {
+									setIsConfirmOverlappingBookingDialogOpen(true);
+								} else {
+									_onSubmit(e);
+								}
+							})
+							.catch((err) => {
+								logInDevelopment(err);
+
+								_onSubmit(e);
+							})
+							.finally(() => {
+								setIsCheckingForOverlappingBookings(false);
+							});
+					}}
+					className="flex flex-col gap-4"
+				>
+					<BookingFields variant="dialog" disableDogSearch={disableDogSearch} bookingTypes={bookingTypes} />
+
+					<DialogFooter className="mt-2 items-center">
+						{!isNew && (
+							<>
+								<BookingDeleteDialog
+									onSuccessfulDelete={() => {
+										setOpen(false);
+									}}
+								/>
+								<Separator orientation="vertical" className="h-4" />
+							</>
+						)}
+
+						<Button
+							type="submit"
+							disabled={
+								form.formState.isSubmitting || (!isNew && !form.formState.isDirty) || isCheckingForOverlappingBookings
 							}
-						}}
-					>
-						{form.formState.isSubmitting && <Loader size="sm" />}
-						{!isNew ? "Update booking" : "Create booking"}
-					</Button>
-				</DialogFooter>
-			</form>
-		</Form>
+							onClick={() => {
+								const numOfErrors = Object.keys(form.formState.errors).length;
+								if (numOfErrors > 0) {
+									toast({
+										title: `Form submission errors`,
+										description: `There ${numOfErrors === 1 ? "is" : "are"} ${numOfErrors} error${
+											numOfErrors > 1 ? "s" : ""
+										} with your submission. Please fix them and resubmit.`,
+										variant: "destructive",
+									});
+								}
+							}}
+						>
+							{(form.formState.isSubmitting || isCheckingForOverlappingBookings) && <Loader size="sm" />}
+							{!isNew ? "Update booking" : "Create booking"}
+						</Button>
+					</DialogFooter>
+				</form>
+			</Form>
+		</>
 	);
 }
 

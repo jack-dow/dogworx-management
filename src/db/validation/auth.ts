@@ -35,6 +35,7 @@ export const UpdateUserSchema = InsertUserSchema.pick({
 	bannedAt: true,
 	bannedUntil: true,
 	profileImageUrl: true,
+	timezone: true,
 })
 	.partial()
 	.extend({

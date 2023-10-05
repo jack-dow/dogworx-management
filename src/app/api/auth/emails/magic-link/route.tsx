@@ -71,7 +71,7 @@ async function POST(request: NextRequest): Promise<NextResponse<SendMagicLinkPOS
 			expiresAt: new Date(Date.now() + ms("5m")),
 		});
 
-		await resend.sendEmail({
+		await resend.emails.send({
 			from: "Dogworx Management <accounts@dogworx.com.au>",
 			to: emailAddress,
 			subject: `Your Dogworx Management Login`,

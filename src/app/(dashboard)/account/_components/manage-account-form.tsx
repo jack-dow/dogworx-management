@@ -22,6 +22,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { Separator } from "~/components/ui/separator";
+import { TimezoneSelect } from "~/components/ui/timezone-select";
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertUserSchema } from "~/db/validation/auth";
@@ -55,6 +56,7 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 
 	const accountUpdateMutation = api.auth.user.update.useMutation({});
 	const accountDeleteMutation = api.auth.user.delete.useMutation({});
+	const updateTimezoneDialogCookie = api.auth.user.setDoNotShowUpdateTimezoneDialog.useMutation();
 
 	async function onSubmit(data: ManageAccountFormSchema) {
 		try {
@@ -105,6 +107,10 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 							: user.profileImageUrl
 						: null,
 			});
+
+			if (data.timezone !== user.timezone) {
+				updateTimezoneDialogCookie.mutate();
+			}
 
 			if (data.emailAddress !== user.emailAddress) {
 				setVerifyNewEmail(data.emailAddress);
@@ -208,6 +214,40 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 						}
 					}}
 				/>
+
+				<Separator />
+
+				<div className="grid grid-cols-1 gap-2 xl:grid-cols-3 xl:gap-8 xl:gap-x-24">
+					<div>
+						<h2 className="text-base font-semibold leading-7 text-foreground">Timezone</h2>
+						<p className="text-sm leading-6 text-muted-foreground">
+							This will be used to display times in your local timezone.
+						</p>
+					</div>
+
+					<div className="xl:col-span-2">
+						<FormField
+							control={form.control}
+							name="timezone"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Timezone</FormLabel>
+									<FormControl>
+										<TimezoneSelect
+											value={field.value ?? null}
+											onChange={(e) => {
+												if (e) {
+													field.onChange(e.value);
+												}
+											}}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</div>
 
 				<Separator />
 
