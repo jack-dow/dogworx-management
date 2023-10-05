@@ -4,7 +4,6 @@ import updateLocale from "dayjs/plugin/updateLocale";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { type SendBookingConfirmationPOSTResponse } from "~/app/api/emails/booking-confirmation/route";
 import { bookings } from "~/db/schema/app";
 import { InsertBookingSchema, UpdateBookingSchema } from "~/db/validation/app";
 import { getBaseUrl, PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
@@ -17,29 +16,6 @@ dayjs.updateLocale("en", {
 });
 
 export const bookingsRouter = createTRPCRouter({
-	testConfirmationEmail: protectedProcedure
-		.input(z.object({ bookingId: z.string() }))
-		.mutation(async ({ input, ctx }) => {
-			const response = await fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
-				method: "POST",
-				credentials: "include",
-				headers: {
-					cookie: ctx.request.headers.get("cookie") ?? "",
-				},
-				body: JSON.stringify({ bookingId: input.bookingId }),
-			});
-
-			const result = (await response.json()) as SendBookingConfirmationPOSTResponse;
-
-			if (result.success === false) {
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "Error sending email",
-				});
-			}
-
-			return {};
-		}),
 	all: protectedProcedure
 		.input(
 			PaginationOptionsSchema.extend({
@@ -310,6 +286,15 @@ export const bookingsRouter = createTRPCRouter({
 		await ctx.db.insert(bookings).values({
 			...input,
 			organizationId: ctx.user.organizationId,
+		});
+
+		await fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
+			method: "POST",
+			credentials: "include",
+			headers: {
+				cookie: ctx.request.headers.get("cookie") ?? "",
+			},
+			body: JSON.stringify({ bookingId: input.id }),
 		});
 	}),
 
