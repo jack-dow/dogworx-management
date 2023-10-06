@@ -111,13 +111,37 @@ export const bookingsRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const { assignedToId, date, duration } = input;
 
+			const endDate = dayjs(date).add(duration, "seconds").toDate();
+
 			const data = await ctx.db.query.bookings.findMany({
-				where: and(
-					eq(bookings.organizationId, ctx.user.organizationId),
-					eq(bookings.assignedToId, assignedToId),
-					gte(bookings.date, dayjs(date).toDate()),
-					lt(bookings.date, dayjs(date).add(duration, "minutes").toDate()),
-				),
+				columns: {
+					id: true,
+				},
+				extras: {
+					endDate: sql<Date>`date_add(${bookings.date}, INTERVAL ${bookings.duration} SECOND)`.as("end_date"),
+				},
+				where: (bookings, { and, eq, or, lte, gt, gte }) =>
+					and(
+						eq(bookings.organizationId, ctx.user.organizationId),
+						eq(bookings.assignedToId, assignedToId),
+						or(
+							// Check if new booking starts during an existing booking
+							and(
+								lte(bookings.date, date),
+								gt(sql<Date>`date_add(${bookings.date}, INTERVAL ${bookings.duration} SECOND)`, date),
+							),
+							// Check if new booking ends during an existing booking
+							and(
+								lt(bookings.date, endDate),
+								gte(sql<Date>`date_add(${bookings.date}, INTERVAL ${bookings.duration} SECOND)`, endDate),
+							),
+							// Check if new booking completely overlaps with an existing booking
+							and(
+								gte(bookings.date, date),
+								lte(sql<Date>`date_add(${bookings.date}, INTERVAL ${bookings.duration} SECOND)`, endDate),
+							),
+						),
+					),
 			});
 
 			return {
@@ -288,14 +312,16 @@ export const bookingsRouter = createTRPCRouter({
 			organizationId: ctx.user.organizationId,
 		});
 
-		await fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
-			method: "POST",
-			credentials: "include",
-			headers: {
-				cookie: ctx.request.headers.get("cookie") ?? "",
-			},
-			body: JSON.stringify({ bookingId: input.id }),
-		});
+		if (input.date > new Date()) {
+			void fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
+				method: "POST",
+				credentials: "include",
+				headers: {
+					cookie: ctx.request.headers.get("cookie") ?? "",
+				},
+				body: JSON.stringify({ bookingId: input.id }),
+			});
+		}
 	}),
 
 	update: protectedProcedure.input(UpdateBookingSchema).mutation(async ({ ctx, input }) => {
