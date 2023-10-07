@@ -66,11 +66,7 @@ const BookingReminderEmail = ({
 	dog,
 	organization,
 }: BookingConfirmationEmailProps) => {
-	const previewText = `Reminder for your upcoming booking at ${organization.name} on ${booking.date.toLocaleDateString(
-		"en-US",
-		{ weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: organization.timezone },
-	)} at ${booking.date.toLocaleTimeString("en-US", { timeStyle: "short", timeZone: organization.timezone })}
-		 `;
+	const previewText = `Your booking for ${dog.givenName} ${dog.familyName} at ${organization.name} has been cancelled`;
 
 	const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
 		`${organization.streetAddress}, ${organization.city}, ${organization.state} ${organization.postalCode}`,
@@ -93,7 +89,7 @@ const BookingReminderEmail = ({
 							/>
 						</Section>
 						<Heading className="mx-0 my-8 p-0 text-center text-[24px] font-medium text-black">
-							Reminder for your upcoming booking
+							Your booking has been cancelled
 						</Heading>
 
 						<Hr className="mx-0 my-[20px] w-full border border-solid border-[#eaeaea]" />
@@ -140,16 +136,6 @@ const BookingReminderEmail = ({
 								</Link>
 							</Text>
 						</Section>
-
-						<Hr className="mx-0 my-[20px] w-full border border-solid border-[#eaeaea]" />
-						<Text className="mb-0 mt-2 text-[14px] font-medium">Need to make a change?</Text>
-						<Text className="mt-0 text-[12px] text-[#666666]">
-							To make changes to this booking, please contact{" "}
-							<Link href={`mailto:${organization.emailAddress}`} className="text-blue-600 underline">
-								{organization.emailAddress}
-							</Link>
-							.
-						</Text>
 					</Container>
 				</Body>
 			</Tailwind>

@@ -6,7 +6,8 @@ import { z } from "zod";
 
 import { bookings } from "~/db/schema/app";
 import { InsertBookingSchema, UpdateBookingSchema } from "~/db/validation/app";
-import { getBaseUrl, PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
+import { env } from "~/env.mjs";
+import { getBaseUrl, logInDevelopment, PaginationOptionsSchema, validatePaginationSearchParams } from "~/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { BOOKINGS_SORTABLE_COLUMNS } from "../sortable-columns";
 
@@ -103,6 +104,7 @@ export const bookingsRouter = createTRPCRouter({
 	checkForOverlaps: protectedProcedure
 		.input(
 			z.object({
+				bookingId: z.string(),
 				assignedToId: z.string(),
 				date: z.date(),
 				duration: z.number(),
@@ -120,8 +122,9 @@ export const bookingsRouter = createTRPCRouter({
 				extras: {
 					endDate: sql<Date>`date_add(${bookings.date}, INTERVAL ${bookings.duration} SECOND)`.as("end_date"),
 				},
-				where: (bookings, { and, eq, or, lte, gt, gte }) =>
+				where: (bookings, { and, eq, or, lte, gt, gte, ne }) =>
 					and(
+						ne(bookings.id, input.bookingId),
 						eq(bookings.organizationId, ctx.user.organizationId),
 						eq(bookings.assignedToId, assignedToId),
 						or(
@@ -306,39 +309,73 @@ export const bookingsRouter = createTRPCRouter({
 		return { data };
 	}),
 
-	insert: protectedProcedure.input(InsertBookingSchema).mutation(async ({ ctx, input }) => {
-		await ctx.db.insert(bookings).values({
-			...input,
-			organizationId: ctx.user.organizationId,
-		});
+	insert: protectedProcedure
+		.input(InsertBookingSchema.extend({ sendConfirmationEmail: z.boolean().default(true) }))
+		.mutation(async ({ ctx, input }) => {
+			const { sendConfirmationEmail, ...data } = input;
 
-		if (input.date > new Date()) {
-			void fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
-				method: "POST",
-				credentials: "include",
-				headers: {
-					cookie: ctx.request.headers.get("cookie") ?? "",
-				},
-				body: JSON.stringify({ bookingId: input.id }),
+			await ctx.db.insert(bookings).values({
+				...data,
+				organizationId: ctx.user.organizationId,
 			});
-		}
-	}),
 
-	update: protectedProcedure.input(UpdateBookingSchema).mutation(async ({ ctx, input }) => {
-		const { id, ...data } = input;
+			if (env.NODE_ENV !== "development" && sendConfirmationEmail && data.date > new Date()) {
+				void fetch(getBaseUrl() + "/api/emails/booking-confirmation", {
+					method: "POST",
+					credentials: "include",
+					headers: {
+						cookie: ctx.request.headers.get("cookie") ?? "",
+					},
+					body: JSON.stringify({ bookingId: data.id }),
+				});
+			}
+		}),
 
-		await ctx.db
-			.update(bookings)
-			.set(data)
-			.where(and(eq(bookings.organizationId, ctx.user.organizationId), eq(bookings.id, id)));
-	}),
+	update: protectedProcedure
+		.input(UpdateBookingSchema.extend({ sendEmailUpdates: z.boolean().default(true) }))
+		.mutation(async ({ ctx, input }) => {
+			const { id, sendEmailUpdates, ...data } = input;
+
+			await ctx.db
+				.update(bookings)
+				.set(data)
+				.where(and(eq(bookings.organizationId, ctx.user.organizationId), eq(bookings.id, id)));
+
+			if (env.NODE_ENV !== "development" && sendEmailUpdates) {
+				void fetch(getBaseUrl() + "/api/emails/booking-updated", {
+					method: "POST",
+					credentials: "include",
+					headers: {
+						cookie: ctx.request.headers.get("cookie") ?? "",
+					},
+					body: JSON.stringify({ bookingId: id }),
+				});
+			}
+		}),
 
 	delete: protectedProcedure
-		.input(z.object({ id: z.string(), dogId: z.string().optional() }))
+		.input(z.object({ id: z.string(), dogId: z.string().optional(), sendCancellationEmail: z.boolean().default(true) }))
 		.mutation(async ({ ctx, input }) => {
+			const { id, sendCancellationEmail } = input;
+
+			if (env.NODE_ENV !== "development" && sendCancellationEmail) {
+				try {
+					await fetch(getBaseUrl() + "/api/emails/booking-cancellation", {
+						method: "POST",
+						credentials: "include",
+						headers: {
+							cookie: ctx.request.headers.get("cookie") ?? "",
+						},
+						body: JSON.stringify({ bookingId: id }),
+					});
+				} catch (error) {
+					logInDevelopment(error);
+				}
+			}
+
 			await ctx.db
 				.delete(bookings)
-				.where(and(eq(bookings.organizationId, ctx.user.organizationId), eq(bookings.id, input.id)));
+				.where(and(eq(bookings.organizationId, ctx.user.organizationId), eq(bookings.id, id)));
 
 			const countQuery = await ctx.db
 				.select({

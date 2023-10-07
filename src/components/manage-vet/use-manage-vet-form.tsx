@@ -2,20 +2,19 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { InsertVetSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 const ManageVetFormSchema = z.intersection(
 	InsertVetSchema.extend({
-		givenName: z.string().max(50).nonempty({ message: "Required" }),
+		givenName: z.string().min(1, { message: "Required" }).max(50),
 		familyName: z.string().max(50).or(z.literal("")).optional(),
 		notes: z.string().max(100000).nullish(),
 	}),
@@ -46,8 +45,8 @@ function useManageVetForm(props: UseManageVetFormProps) {
 	);
 	const vet = result.data?.data;
 
-	const form = useForm<ManageVetFormSchema>({
-		resolver: zodResolver(ManageVetFormSchema),
+	const form = useZodForm({
+		schema: ManageVetFormSchema,
 		defaultValues: {
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,

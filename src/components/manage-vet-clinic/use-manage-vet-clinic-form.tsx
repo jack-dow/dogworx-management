@@ -2,20 +2,19 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { InsertVetClinicSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 const ManageVetClinicFormSchema = z.intersection(
 	InsertVetClinicSchema.extend({
-		name: z.string().max(50).nonempty({ message: "Required" }),
+		name: z.string().min(1, { message: "Required" }).max(50),
 		notes: z.string().max(100000).nullish(),
 	}),
 	EmailOrPhoneNumberSchema,
@@ -45,13 +44,13 @@ function useManageVetClinicForm(props: UseManageVetClinicFormProps) {
 	);
 	const vetClinic = result.data?.data;
 
-	const form = useForm<ManageVetClinicFormSchema>({
-		resolver: zodResolver(ManageVetClinicFormSchema),
+	const form = useZodForm({
+		schema: ManageVetClinicFormSchema,
 		defaultValues: {
 			name: searchTerm,
+			vetToVetClinicRelationships: [],
 			...props.defaultValues,
 			...vetClinic,
-			vetToVetClinicRelationships: [],
 			id: vetClinic?.id ?? generateId(),
 		},
 	});

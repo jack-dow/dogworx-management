@@ -2,20 +2,19 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { InsertClientSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { EmailOrPhoneNumberSchema, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 const ManageClientFormSchema = z.intersection(
 	InsertClientSchema.extend({
-		givenName: z.string().max(50).nonempty({ message: "Required" }),
+		givenName: z.string().min(1, { message: "Required" }).max(50),
 		familyName: z.string().max(50).or(z.literal("")).optional(),
 		streetAddress: z.string().max(255).optional(),
 		city: z.string().max(50).optional(),
@@ -50,8 +49,8 @@ function useManageClientForm(props: UseManageClientFormProps) {
 	);
 	const client = result.data?.data;
 
-	const form = useForm<ManageClientFormSchema>({
-		resolver: zodResolver(ManageClientFormSchema),
+	const form = useZodForm({
+		schema: ManageClientFormSchema,
 		defaultValues: {
 			givenName: searchTerm.split(" ").length === 1 ? searchTerm : searchTerm?.split(" ").slice(0, -1).join(" "),
 			familyName: searchTerm.split(" ").length > 1 ? searchTerm?.split(" ").pop() : undefined,

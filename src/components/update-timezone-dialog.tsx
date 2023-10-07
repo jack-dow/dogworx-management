@@ -26,7 +26,6 @@ export function UpdateTimezoneDialog({ timezoneDialogCookie }: { timezoneDialogC
 	const [open, onOpenChange] = React.useState(user.timezone !== localTimezone && timezoneDialogCookie !== "1");
 
 	React.useEffect(() => {
-		console.log(localTimezone && user.timezone !== localTimezone && timezoneDialogCookie !== "1");
 		if (localTimezone && user.timezone !== localTimezone && timezoneDialogCookie !== "1") {
 			onOpenChange(true);
 		}

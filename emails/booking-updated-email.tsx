@@ -66,11 +66,7 @@ const BookingReminderEmail = ({
 	dog,
 	organization,
 }: BookingConfirmationEmailProps) => {
-	const previewText = `Reminder for your upcoming booking at ${organization.name} on ${booking.date.toLocaleDateString(
-		"en-US",
-		{ weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: organization.timezone },
-	)} at ${booking.date.toLocaleTimeString("en-US", { timeStyle: "short", timeZone: organization.timezone })}
-		 `;
+	const previewText = `Your booking for ${dog.givenName} ${dog.familyName} at ${organization.name} has been updated`;
 
 	const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
 		`${organization.streetAddress}, ${organization.city}, ${organization.state} ${organization.postalCode}`,
@@ -93,7 +89,7 @@ const BookingReminderEmail = ({
 							/>
 						</Section>
 						<Heading className="mx-0 my-8 p-0 text-center text-[24px] font-medium text-black">
-							Reminder for your upcoming booking
+							Your booking has been updated
 						</Heading>
 
 						<Hr className="mx-0 my-[20px] w-full border border-solid border-[#eaeaea]" />

@@ -2,15 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { TRPCError } from "@trpc/server";
-import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { SignUpSchema } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
@@ -23,8 +22,8 @@ function InviteForm({
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const form = useForm<SignUpSchema>({
-		resolver: zodResolver(SignUpSchema),
+	const form = useZodForm({
+		schema: SignUpSchema,
 		defaultValues: {
 			givenName: "",
 			familyName: "",

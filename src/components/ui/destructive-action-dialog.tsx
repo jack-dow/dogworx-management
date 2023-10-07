@@ -21,6 +21,7 @@ type DestructiveActionDialogProps = {
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	onConfirm: () => Promise<void> | void;
+	children?: React.ReactNode;
 };
 
 function DestructiveActionDialog({
@@ -31,6 +32,7 @@ function DestructiveActionDialog({
 	trigger,
 	open,
 	onOpenChange,
+	children,
 }: DestructiveActionDialogProps) {
 	const [_open, _setOpen] = React.useState(false);
 	const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -63,6 +65,7 @@ function DestructiveActionDialog({
 							: `This action will permanently delete this ${name} and any associated data. This action cannot be undone.`}
 					</DialogDescription>
 				</DialogHeader>
+				{children}
 				<DialogFooter>
 					<Button
 						variant="outline"

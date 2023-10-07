@@ -131,7 +131,7 @@ export const SignInSchema = z.object({
 export type SignInSchema = z.infer<typeof SignInSchema>;
 
 export const SignUpSchema = SignInSchema.extend({
-	givenName: z.string().max(50).nonempty({ message: "Required" }),
+	givenName: z.string().min(1, { message: "Required" }).max(50),
 	familyName: z.string().max(50).or(z.literal("")).optional(),
 });
 export type SignUpSchema = z.infer<typeof SignUpSchema>;

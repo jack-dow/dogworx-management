@@ -73,7 +73,7 @@ function ManageBookingTypeForm({ bookingType, onSubmit, onSuccessfulSubmit }: Us
 								name="isDefault"
 								render={({ field }) => (
 									<FormItem className="flex items-center space-x-2 space-y-0">
-										<FormLabel>Set to Default</FormLabel>
+										<FormLabel>Set to default</FormLabel>
 										<FormControl>
 											<Switch
 												checked={field.value}

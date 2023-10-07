@@ -9,7 +9,8 @@ import { Separator } from "~/components/ui/separator";
 import { api } from "~/lib/trpc/client";
 import { hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { ConfirmFormNavigationDialog } from "../ui/confirm-form-navigation-dialog";
-import { Form, FormSection } from "../ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormSection } from "../ui/form";
+import { Switch } from "../ui/switch";
 import { useToast } from "../ui/use-toast";
 import { BookingDeleteDialog } from "./booking-delete-dialog";
 import { BookingFields } from "./booking-fields";
@@ -76,6 +77,7 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 
 						context.app.bookings.checkForOverlaps
 							.fetch({
+								bookingId: form.getValues("id"),
 								assignedToId: form.getValues("assignedToId"),
 								date: form.getValues("date"),
 								duration: form.getValues("duration"),
@@ -112,21 +114,53 @@ function ManageBookingForm({ booking, onSubmit, bookingTypes, onSuccessfulSubmit
 					<Separator />
 
 					<div className="flex justify-end space-x-4">
-						{!isNew && <BookingDeleteDialog />}
-						<Button
-							type="button"
-							onClick={() => {
-								if (isFormDirty) {
-									setIsConfirmNavigationDialogOpen(true);
-									return;
-								}
+						{!isNew && (
+							<>
+								<FormField
+									control={form.control}
+									name="sendEmailUpdates"
+									render={({ field }) => (
+										<FormItem className="flex items-center space-x-2 space-y-0">
+											<FormLabel>Send email updates</FormLabel>
+											<FormControl>
+												<Switch
+													checked={field.value}
+													onCheckedChange={(checked) => {
+														form.setValue("sendEmailUpdates", checked, { shouldDirty: false });
+													}}
+												/>
+											</FormControl>
+										</FormItem>
+									)}
+								/>
+								<Separator orientation="vertical" className="h-4" />
+							</>
+						)}
 
-								router.back();
-							}}
-							variant="outline"
-						>
-							Back
-						</Button>
+						{isNew ? (
+							<FormField
+								control={form.control}
+								name="sendConfirmationEmail"
+								render={({ field }) => (
+									<FormItem className="flex items-center space-x-2 space-y-0">
+										<FormLabel>Send confirmation email</FormLabel>
+										<FormControl>
+											<Switch
+												checked={field.value}
+												onCheckedChange={(checked) => {
+													form.setValue("sendConfirmationEmail", checked, { shouldDirty: false });
+												}}
+											/>
+										</FormControl>
+									</FormItem>
+								)}
+							/>
+						) : (
+							<BookingDeleteDialog />
+						)}
+
+						<Separator orientation="vertical" className="h-4" />
+
 						<Button
 							type="submit"
 							disabled={form.formState.isSubmitting || (!isNew && !isFormDirty) || isCheckingForOverlappingBookings}

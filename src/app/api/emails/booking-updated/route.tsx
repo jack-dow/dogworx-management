@@ -1,6 +1,6 @@
 import { env } from "process";
 import { NextResponse, type NextRequest } from "next/server";
-import BookingConfirmationEmail from "emails/booking-confirmation-email";
+import BookingUpdatedEmail from "emails/booking-updated-email";
 import { Resend } from "resend";
 import { z } from "zod";
 
@@ -9,18 +9,18 @@ import { drizzle } from "~/db/drizzle";
 import { secondsToHumanReadable } from "~/lib/utils";
 import { verifyAPISession } from "../../_utils";
 
-const SendBookingConfirmationBodySchema = z.object({
+const SendBookingUpdatedBodySchema = z.object({
 	bookingId: z.string(),
 });
 
-type SendBookingConfirmationPOSTResponse = APIResponse<undefined, "BookingNotFound" | "InvalidBooking" | "PastBooking">;
+type SendBookingUpdatedPOSTResponse = APIResponse<undefined, "BookingNotFound" | "InvalidBooking" | "PastBooking">;
 
 const resend = new Resend(env.RESEND_API_KEY);
 
-async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfirmationPOSTResponse>> {
+async function POST(request: NextRequest): Promise<NextResponse<SendBookingUpdatedPOSTResponse>> {
 	const body = (await request.json()) as unknown;
 
-	const validation = SendBookingConfirmationBodySchema.safeParse(body);
+	const validation = SendBookingUpdatedBodySchema.safeParse(body);
 
 	if (!validation.success) {
 		return NextResponse.json(
@@ -161,7 +161,7 @@ async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfi
 				booking.bookingType ? booking.bookingType.name.toLowerCase() : "booking"
 			} for ${booking.dog.givenName}`,
 			react: (
-				<BookingConfirmationEmail
+				<BookingUpdatedEmail
 					bookingType={booking.bookingType ?? { name: "booking" }}
 					booking={booking}
 					assignedTo={booking.assignedTo}
@@ -188,4 +188,4 @@ async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfi
 	}
 }
 
-export { POST, type SendBookingConfirmationPOSTResponse };
+export { POST, type SendBookingUpdatedPOSTResponse };

@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
@@ -16,6 +14,7 @@ import { useUser } from "~/app/providers";
 import { InsertOrganizationSchema } from "~/db/validation/auth";
 import { env } from "~/env.mjs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
@@ -24,7 +23,7 @@ import { OrganizationInviteLinks } from "./organization-invite-links";
 import { OrganizationUsers } from "./organization-users";
 
 const ManageOrganizationFormSchema = InsertOrganizationSchema.extend({
-	name: z.string().max(50).nonempty({ message: "Required" }),
+	name: z.string().min(1, { message: "Required" }).max(50),
 });
 type ManageOrganizationFormSchema = z.infer<typeof ManageOrganizationFormSchema>;
 
@@ -46,8 +45,8 @@ function ManageOrganizationForm(props: ManageOrganizationFormProps) {
 	);
 	const organization = result.data?.data;
 
-	const form = useForm<ManageOrganizationFormSchema>({
-		resolver: zodResolver(ManageOrganizationFormSchema),
+	const form = useZodForm({
+		schema: ManageOrganizationFormSchema,
 		defaultValues: {
 			maxUsers: 1,
 			organizationInviteLinks: [],

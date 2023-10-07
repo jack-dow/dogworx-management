@@ -49,7 +49,7 @@ const dogs = mysqlTable("dogs", {
 		.notNull(),
 	organizationId: char("organization_id", { length: 24 }).notNull(),
 	givenName: varchar("given_name", { length: 50 }).notNull(),
-	familyName: varchar("family_name", { length: 100 }).notNull().default(""),
+	familyName: varchar("family_name", { length: 100 }),
 	breed: varchar("breed", { length: 50 }).notNull(),
 	age: date("age").notNull(),
 	isAgeEstimate: boolean("is_age_estimate").notNull(),

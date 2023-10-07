@@ -1,6 +1,6 @@
 import { env } from "process";
 import { NextResponse, type NextRequest } from "next/server";
-import BookingConfirmationEmail from "emails/booking-confirmation-email";
+import BookingCancellationEmail from "emails/booking-cancellation-email";
 import { Resend } from "resend";
 import { z } from "zod";
 
@@ -9,18 +9,18 @@ import { drizzle } from "~/db/drizzle";
 import { secondsToHumanReadable } from "~/lib/utils";
 import { verifyAPISession } from "../../_utils";
 
-const SendBookingConfirmationBodySchema = z.object({
+const SendBookingCancellationBodySchema = z.object({
 	bookingId: z.string(),
 });
 
-type SendBookingConfirmationPOSTResponse = APIResponse<undefined, "BookingNotFound" | "InvalidBooking" | "PastBooking">;
+type SendBookingCancellationPOSTResponse = APIResponse<undefined, "BookingNotFound" | "InvalidBooking" | "PastBooking">;
 
 const resend = new Resend(env.RESEND_API_KEY);
 
-async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfirmationPOSTResponse>> {
+async function POST(request: NextRequest): Promise<NextResponse<SendBookingCancellationPOSTResponse>> {
 	const body = (await request.json()) as unknown;
 
-	const validation = SendBookingConfirmationBodySchema.safeParse(body);
+	const validation = SendBookingCancellationBodySchema.safeParse(body);
 
 	if (!validation.success) {
 		return NextResponse.json(
@@ -157,11 +157,11 @@ async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfi
 				// ...booking.dog.dogToClientRelationships.map((relationship) => relationship.client.emailAddress),
 				"bookings@dogworx.com.au",
 			],
-			subject: `${secondsToHumanReadable(booking.duration, { nonPlural: true })} ${
+			subject: `Cancelled: ${secondsToHumanReadable(booking.duration, { nonPlural: true })} ${
 				booking.bookingType ? booking.bookingType.name.toLowerCase() : "booking"
 			} for ${booking.dog.givenName}`,
 			react: (
-				<BookingConfirmationEmail
+				<BookingCancellationEmail
 					bookingType={booking.bookingType ?? { name: "booking" }}
 					booking={booking}
 					assignedTo={booking.assignedTo}
@@ -188,4 +188,4 @@ async function POST(request: NextRequest): Promise<NextResponse<SendBookingConfi
 	}
 }
 
-export { POST, type SendBookingConfirmationPOSTResponse };
+export { POST, type SendBookingCancellationPOSTResponse };

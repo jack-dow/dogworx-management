@@ -1,19 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { InsertBookingTypeSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 const ManageBookingTypeFormSchema = InsertBookingTypeSchema.extend({
-	name: z.string().max(100).nonempty({ message: "Required" }),
+	name: z.string().min(1, { message: "Required" }).max(100),
 	details: z.string().max(100000, { message: "Details must be less than 100,000 characters long." }).nullable(),
 	duration: z.number().nonnegative({
 		message: "Duration must be a positive number",
@@ -40,8 +39,8 @@ function useManageBookingTypeForm(props: UseManageBookingTypeFormProps) {
 	);
 	const bookingType = result.data?.data;
 
-	const form = useForm<ManageBookingTypeFormSchema>({
-		resolver: zodResolver(ManageBookingTypeFormSchema),
+	const form = useZodForm({
+		schema: ManageBookingTypeFormSchema,
 		defaultValues: {
 			details: "",
 			...props.defaultValues,

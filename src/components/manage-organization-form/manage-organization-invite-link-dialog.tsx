@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { init } from "@paralleldrive/cuid2";
-import { useForm } from "react-hook-form";
 import { type z } from "zod";
 
 import { Button } from "~/components/ui/button";
@@ -25,6 +23,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertOrganizationInviteLinkSchema } from "~/db/validation/auth";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { cn, hasTrueValue, logInDevelopment, secondsToHumanReadable } from "~/lib/utils";
 import { Separator } from "../ui/separator";
@@ -143,8 +142,8 @@ function ManageOrganizationInviteLinkDialogForm({
 
 	const user = useUser();
 
-	const form = useForm<ManageOrganizationInviteLinkFormSchema>({
-		resolver: zodResolver(ManageOrganizationInviteLinkFormSchema),
+	const form = useZodForm({
+		schema: ManageOrganizationInviteLinkFormSchema,
 		defaultValues: {
 			organizationId: user.organizationId,
 			maxUses: null,

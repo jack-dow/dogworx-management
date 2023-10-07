@@ -1,23 +1,26 @@
 "use client";
 
-import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import type * as React from "react";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { useForm } from "react-hook-form";
-import { type z } from "zod";
+import { z } from "zod";
 
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertBookingSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
+import { useDidUpdate } from "~/hooks/use-did-update";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
 
 dayjs.extend(customParseFormat);
 
-const ManageBookingFormSchema = InsertBookingSchema;
+const ManageBookingFormSchema = InsertBookingSchema.extend({
+	sendEmailUpdates: z.boolean().optional().default(true),
+	sendConfirmationEmail: z.boolean().optional().default(true),
+});
 type ManageBookingFormSchema = z.infer<typeof ManageBookingFormSchema>;
 
 type UseManageBookingFormProps = {
@@ -42,9 +45,11 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 
 	const defaultBookingType = props.bookingTypes.find((bt) => bt.isDefault);
 
-	const form = useForm<ManageBookingFormSchema>({
-		resolver: zodResolver(ManageBookingFormSchema),
+	const form = useZodForm({
+		schema: ManageBookingFormSchema,
 		defaultValues: {
+			sendConfirmationEmail: true,
+			sendEmailUpdates: true,
 			duration:
 				props.bookingTypes.find(
 					(bt) => bt.id === booking?.bookingTypeId || bt.id === props.defaultValues?.bookingTypeId,
@@ -67,11 +72,12 @@ function useManageBookingForm(props: UseManageBookingFormProps) {
 	const insertMutation = api.app.bookings.insert.useMutation();
 	const updateMutation = api.app.bookings.update.useMutation();
 
-	React.useEffect(() => {
+	useDidUpdate(() => {
 		if (booking) {
 			form.reset(booking, {
 				keepDirty: true,
 				keepDirtyValues: true,
+				keepDefaultValues: true,
 			});
 		}
 	}, [booking, form]);

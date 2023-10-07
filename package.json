@@ -7,6 +7,7 @@
 		"clean": "rm -rf .next node_modules/ .react-email",
 		"db:generate": "pnpm drizzle-kit generate:mysql --config=./drizzle.config.ts",
 		"db:push": "pnpm with-env drizzle-kit push:mysql --config=./drizzle.config.ts",
+		"db:seed": "pnpm with-env tsx ./src/db/seed/seed.ts",
 		"dev": "next dev",
 		"dev:email": "email dev",
 		"lint": "next lint",
@@ -105,6 +106,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@faker-js/faker": "^8.1.0",
 		"@ianvs/prettier-plugin-sort-imports": "^4.1.0",
 		"@types/cookie": "^0.5.2",
 		"@types/eslint": "^8.44.3",
@@ -129,6 +131,7 @@
 		"prettier": "^3.0.3",
 		"prettier-plugin-packagejson": "^2.4.6",
 		"tailwindcss": "^3.3.3",
+		"tsx": "^3.13.0",
 		"typescript": "^5.2.2"
 	}
 }

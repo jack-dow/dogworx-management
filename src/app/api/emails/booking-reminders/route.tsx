@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { type APIResponse } from "~/app/api/_utils";
 import { drizzle } from "~/db/drizzle";
 import { env } from "~/env.mjs";
-import { secondsToHumanReadable } from "~/lib/utils";
+import { logInDevelopment, secondsToHumanReadable } from "~/lib/utils";
 
 type SendBookingRemindersPOSTResponse = APIResponse<undefined>;
 
@@ -28,26 +28,41 @@ async function GET(request: NextRequest): Promise<NextResponse<SendBookingRemind
 	}
 
 	try {
+		console.log(
+			"2 day",
+			new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000),
+			new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000),
+		);
+		console.log(
+			"7 day",
+			new Date(new Date().getTime() + 6 * 24 * 60 * 60 * 1000),
+			new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+		);
+
 		const bookings = await drizzle.query.bookings.findMany({
 			columns: {
 				duration: true,
 				date: true,
 			},
 			// Get all bookings that are in either 2 days time or 7 days time
-			where: (bookings, { or, lt, gt, between }) =>
-				or(
-					// 2 days time
-					between(
-						bookings.date,
-						new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000),
-						new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000),
-					),
+			where: (bookings, { or, between, and, eq, ne }) =>
+				and(
+					eq(bookings.organizationId, env.NEXT_PUBLIC_ADMIN_ORG_ID),
+					ne(bookings.dogId, ""),
+					or(
+						// 2 days time
+						between(
+							bookings.date,
+							new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000),
+							new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000),
+						),
 
-					// 7 days time
-					between(
-						bookings.date,
-						gt(bookings.date, new Date(new Date().getTime() + 6 * 24 * 60 * 60 * 1000)),
-						lt(bookings.date, new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)),
+						// 7 days time
+						between(
+							bookings.date,
+							new Date(new Date().getTime() + 6 * 24 * 60 * 60 * 1000),
+							new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+						),
 					),
 				),
 			with: {
@@ -116,7 +131,7 @@ async function GET(request: NextRequest): Promise<NextResponse<SendBookingRemind
 						"bookings@dogworx.com.au",
 					],
 					subject: `${secondsToHumanReadable(booking.duration, { nonPlural: true })} ${
-						booking.bookingType ? booking.bookingType.name : "booking"
+						booking.bookingType ? booking.bookingType.name.toLowerCase() : "booking"
 					} for ${booking.dog.givenName}`,
 					react: (
 						<BookingReminderEmail
@@ -133,6 +148,7 @@ async function GET(request: NextRequest): Promise<NextResponse<SendBookingRemind
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
+		logInDevelopment(error);
 		return NextResponse.json(
 			{
 				success: false,

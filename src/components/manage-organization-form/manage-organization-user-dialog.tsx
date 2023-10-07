@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { TRPCError } from "@trpc/server";
 import { useDropzone, type FileRejection } from "react-dropzone";
-import { useForm, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { UAParser } from "ua-parser-js";
 import { type z } from "zod";
 
@@ -36,6 +35,7 @@ import { InsertUserSchema } from "~/db/validation/auth";
 import { env } from "~/env.mjs";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDayjs } from "~/hooks/use-dayjs";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { cn, generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { Separator } from "../ui/separator";
@@ -155,8 +155,8 @@ function ManageOrganizationUserDialogForm({
 
 	const [isConfirmOwnershipChangeDialogOpen, setIsConfirmOwnershipChangeDialogOpen] = React.useState(false);
 
-	const form = useForm<ManageOrganizationUserFormSchema>({
-		resolver: zodResolver(ManageOrganizationUserFormSchema),
+	const form = useZodForm({
+		schema: ManageOrganizationUserFormSchema,
 		defaultValues: {
 			organizationId: user.organizationId,
 			organizationRole: "member",

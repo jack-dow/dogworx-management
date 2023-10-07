@@ -97,7 +97,7 @@ const BookingConfirmationEmail = ({
 						<Section>
 							<Text className="mb-2 text-base font-medium leading-none">What</Text>
 							<Text className="mb-8 mt-2">
-								{secondsToHumanReadable(booking.duration)} {bookingType.name}
+								{secondsToHumanReadable(booking.duration)} {bookingType.name.toLowerCase()}
 							</Text>
 
 							<Text className="mb-2 text-base font-medium leading-none">When</Text>
@@ -140,7 +140,7 @@ const BookingConfirmationEmail = ({
 						<Hr className="mx-0 my-[20px] w-full border border-solid border-[#eaeaea]" />
 						<Text className="mb-0 mt-2 text-[14px] font-medium">Need to make a change?</Text>
 						<Text className="mt-0 text-[12px] text-[#666666]">
-							To make changes to this booking, please contact us at{" "}
+							To make changes to this booking, please contact{" "}
 							<Link href={`mailto:${organization.emailAddress}`} className="text-blue-600 underline">
 								{organization.emailAddress}
 							</Link>

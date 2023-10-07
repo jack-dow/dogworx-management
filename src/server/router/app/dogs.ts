@@ -26,16 +26,18 @@ function constructFamilyName(
 	dogToClientRelationships: Array<{ relationship: string; client: { familyName: string | undefined } | null }>,
 	updatedFamilyName?: string,
 ) {
-	return [
-		...new Set(
-			dogToClientRelationships
-				.filter(({ relationship, client }) => relationship === "owner" && client != null && !!client.familyName)
-				.map(({ client }) => client!.familyName)
-				.concat(updatedFamilyName ?? []),
-		),
-	]
-		.sort()
-		.join("/");
+	return (
+		[
+			...new Set(
+				dogToClientRelationships
+					.filter(({ relationship, client }) => relationship === "owner" && client != null && !!client.familyName)
+					.map(({ client }) => client!.familyName)
+					.concat(updatedFamilyName ?? []),
+			),
+		]
+			.sort()
+			.join("/") ?? ""
+	);
 }
 
 export async function updateDogsFamilyName({ id, db }: { id: string; db: typeof drizzle }) {

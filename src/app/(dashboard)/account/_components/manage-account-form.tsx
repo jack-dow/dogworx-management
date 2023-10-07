@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { type z } from "zod";
 
 import {
@@ -26,6 +24,7 @@ import { TimezoneSelect } from "~/components/ui/timezone-select";
 import { useToast } from "~/components/ui/use-toast";
 import { useUser } from "~/app/providers";
 import { InsertUserSchema } from "~/db/validation/auth";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
@@ -40,8 +39,9 @@ function ManageAccountForm({ initialSessions }: { initialSessions: RouterOutputs
 	const user = useUser();
 	const { toast } = useToast();
 	const router = useRouter();
-	const form = useForm<ManageAccountFormSchema>({
-		resolver: zodResolver(ManageAccountFormSchema),
+
+	const form = useZodForm({
+		schema: ManageAccountFormSchema,
 		defaultValues: user,
 	});
 

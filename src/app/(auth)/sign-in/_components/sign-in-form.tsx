@@ -2,15 +2,14 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { TRPCError } from "@trpc/server";
-import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Loader } from "~/components/ui/loader";
 import { useToast } from "~/components/ui/use-toast";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { SignInSchema } from "~/lib/utils";
 
@@ -19,8 +18,8 @@ function SignInForm() {
 	const searchParams = useSearchParams();
 	const { toast } = useToast();
 
-	const form = useForm<SignInSchema>({
-		resolver: zodResolver(SignInSchema),
+	const form = useZodForm({
+		schema: SignInSchema,
 		defaultValues: {
 			emailAddress: "",
 		},

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useFormContext } from "react-hook-form";
 
@@ -25,6 +26,7 @@ function BookingDeleteDialog({ onSuccessfulDelete }: { onSuccessfulDelete?: () =
 				try {
 					await deleteMutation.mutateAsync({
 						id: form.getValues("id"),
+						sendCancellationEmail: form.getValues("sendEmailUpdates"),
 					});
 					toast({
 						title: `Booking deleted`,

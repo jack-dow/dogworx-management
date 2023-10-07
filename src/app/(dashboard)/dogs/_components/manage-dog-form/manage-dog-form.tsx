@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "~/components/ui/button";
@@ -24,6 +22,7 @@ import { useToast } from "~/components/ui/use-toast";
 import { InsertDogSchema } from "~/db/validation/app";
 import { useConfirmPageNavigation } from "~/hooks/use-confirm-page-navigation";
 import { useDidUpdate } from "~/hooks/use-did-update";
+import { useZodForm } from "~/hooks/use-zod-form";
 import { api } from "~/lib/trpc/client";
 import { generateId, hasTrueValue, logInDevelopment } from "~/lib/utils";
 import { type RouterOutputs } from "~/server";
@@ -33,9 +32,9 @@ import { DogToClientRelationships } from "./dog-to-client-relationships";
 import { DogToVetRelationships } from "./dog-to-vet-relationships";
 
 const ManageDogFormSchema = InsertDogSchema.extend({
-	givenName: z.string().max(50).nonempty({ message: "Required" }),
-	breed: z.string().max(50).nonempty({ message: "Required" }),
-	color: z.string().max(25).nonempty({ message: "Required" }),
+	givenName: z.string().min(1, { message: "Required" }).max(50),
+	breed: z.string().min(1, { message: "Required" }).max(50),
+	color: z.string().min(1, { message: "Required" }).max(25),
 	notes: z.string().max(100000).nullish(),
 });
 type ManageDogFormSchema = z.infer<typeof ManageDogFormSchema>;
@@ -59,8 +58,8 @@ function ManageDogForm({
 	const result = api.app.dogs.byId.useQuery({ id: params.id as string }, { initialData, enabled: !isNew });
 	const dog = result.data?.data;
 
-	const form = useForm<ManageDogFormSchema>({
-		resolver: zodResolver(ManageDogFormSchema),
+	const form = useZodForm({
+		schema: ManageDogFormSchema,
 		defaultValues: {
 			id: dog?.id || generateId(),
 			givenName: searchParams.get("searchTerm") ?? undefined,

@@ -4,6 +4,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import { ItemIndicator } from "@radix-ui/react-select";
 import {
 	flexRender,
 	getCoreRowModel,
@@ -17,6 +18,7 @@ import {
 } from "@tanstack/react-table";
 
 import {
+	CheckIcon,
 	ChevronDoubleLeftIcon,
 	ChevronDoubleRightIcon,
 	ChevronLeftIcon,
@@ -313,9 +315,9 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 		<div className="flex w-full items-center justify-between space-x-6 lg:space-x-8">
 			<div className="flex items-center space-x-2">
 				<Label htmlFor="pagination-limit-select-trigger">Rows per page</Label>
-				<Select>
+				<Select defaultValue={String(limit)}>
 					<SelectTrigger id="pagination-limit-select-trigger" className="h-8 w-[70px]">
-						<SelectValue>{limit}</SelectValue>
+						<SelectValue>{String(limit)}</SelectValue>
 					</SelectTrigger>
 					<SelectContent className="pointer-events-none">
 						{[20, 30, 40, 50].map((pageSize) => {
@@ -323,7 +325,7 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 							const newPage = Math.floor(currentOffset / Number(pageSize)) + 1;
 
 							return (
-								<SelectItem value={`${pageSize}`} key={pageSize} asChild>
+								<SelectItem value={String(pageSize)} key={pageSize} asChild>
 									<Link
 										href={`${pathname}?${setSearchParams(params, {
 											page: newPage,
@@ -332,6 +334,11 @@ function DataTablePagination({ page, maxPage, limit, setIsLoading }: DataTablePa
 										onClick={() => setIsLoading(true)}
 										className="hover:cursor-pointer"
 									>
+										<span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+											<ItemIndicator>
+												<CheckIcon className="h-4 w-4" />
+											</ItemIndicator>
+										</span>
 										{pageSize}
 									</Link>
 								</SelectItem>
